@@ -59,6 +59,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 public class IntegrationTest {
+    static {
+        System.setProperty("index.disableViabilityPrecheck", "true");
+    }
+
     IntegrationTestModule testModule;
     @Inject
     DomainProcessor domainProcessor;

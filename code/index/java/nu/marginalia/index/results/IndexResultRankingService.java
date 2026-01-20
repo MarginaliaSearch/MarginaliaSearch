@@ -29,7 +29,6 @@ import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.idx.WordFlags;
-import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.SequenceOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -255,14 +254,14 @@ public class IndexResultRankingService {
 
         long docId = UrlIdCodec.removeRank(combinedId);
         long docMetadata = index.getDocumentMetadata(combinedId);
-        int htmlFeatures = index.getHtmlFeatures(docId);
+        int htmlFeatures = index.getHtmlFeatures(combinedId);
 
-        int docSize = index.getDocumentSize(docId);
+        int docSize = index.getDocumentSize(combinedId);
         if (docSize <= 0) docSize = 5000;
 
         if (debugRankingFactors != null) {
-            debugRankingFactors.addDocumentFactor("doc.docId", Long.toString(combinedId));
-            debugRankingFactors.addDocumentFactor("doc.combinedId", Long.toString(docId));
+            debugRankingFactors.addDocumentFactor("doc.docId", Long.toString(docId));
+            debugRankingFactors.addDocumentFactor("doc.combinedId", Long.toString(combinedId));
         }
 
         var params = rankingContext.params;

@@ -33,9 +33,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 
 /** A reader for the combined forward and reverse indexes.
@@ -295,6 +293,8 @@ public class CombinedIndexReader {
     }
 
     /** Retrieves the document spans for the specified documents */
+
+    @Nullable
     public DecodableDocumentSpans getDocumentSpans(Arena arena, long documentId) {
         return forwardIndexReader.getDocumentSpans(arena, documentId);
     }

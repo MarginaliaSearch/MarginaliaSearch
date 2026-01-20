@@ -13,14 +13,17 @@ import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.results.IndexResultRankingService;
 import nu.marginalia.index.reverse.query.IndexQuery;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
+import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.piping.*;
 import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.skiplist.SkipListConstants;
 import nu.marginalia.skiplist.SkipListReader;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.lang.foreign.Arena;
 import java.sql.SQLException;
 import java.time.Duration;
@@ -32,6 +35,7 @@ import java.util.concurrent.*;
 public class IndexQueryExecution {
 
     private static final boolean printDebugSummary = Boolean.getBoolean("index.printDebugSummary");
+    private static final boolean disableViabilityPrecheck = Boolean.getBoolean("index.disableViabilityPrecheck");
 
     private static final int maxSimultaneousQueries = Integer.getInteger("index.maxSimultaneousQueries", 4);
     private static final Semaphore simultaneousRequests = new Semaphore(maxSimultaneousQueries);
@@ -253,6 +257,8 @@ public class IndexQueryExecution {
 
 
         private boolean isViable(long[] metadata) {
+            if (disableViabilityPrecheck)
+                return true;
 
             long combinedMasks = 0L;
             long bestFlagsCount = 0L;
@@ -289,8 +295,14 @@ public class IndexQueryExecution {
         @Override
         public void process(RankableDocument rankableDocument) {
             try (var arena = Arena.ofConfined()) {
-                rankableDocument.positions = getPositions(arena, rankableDocument.positionOffsets);
-                rankableDocument.documentSpans = getSpans(arena, rankableDocument.combinedDocumentId);
+                IntList[] positions = getPositions(arena, rankableDocument.positionOffsets);
+                @Nullable
+                DocumentSpans spans = getSpans(arena, rankableDocument.combinedDocumentId);
+
+                if (null == spans) return;
+
+                rankableDocument.documentSpans = spans;
+                rankableDocument.positions = positions;
             }
 
             SearchResultItem resultItem = rankingService.calculateScore(
@@ -302,11 +314,17 @@ public class IndexQueryExecution {
             }
         }
 
+        @Nullable
         private DocumentSpans getSpans(Arena arena, long combinedDocumentId) {
             DecodableDocumentSpans codedSpans = currentIndex.getDocumentSpans(arena, combinedDocumentId);
+
+            if (codedSpans == null)
+                return null;
+
             return codedSpans.decode(pool::get);
         }
 
+        @NotNull
         private IntList[] getPositions(Arena arena, long[] positionOffsets) {
             CodedSequence[] codedPositions = currentIndex.getTermPositions(arena, positionOffsets);
             IntList[] ret = new IntList[codedPositions.length];

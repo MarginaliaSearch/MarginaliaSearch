@@ -1,6 +1,7 @@
 package nu.marginalia.asyncio;
 
 import nu.marginalia.ffi.LinuxSystemCalls;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.lang.foreign.Arena;
@@ -14,6 +15,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 class UringExecutionQueueTest {
     @Test
+    @Disabled
     public void test() {
         int fd = LinuxSystemCalls.openBuffered(Path.of("/home/vlofgren/Downloads/pycharm-2025.3.tar.gz"));
 

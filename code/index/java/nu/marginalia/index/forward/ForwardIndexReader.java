@@ -5,14 +5,16 @@ import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.ffi.LinuxSystemCalls;
 import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
-import nu.marginalia.index.forward.spans.IndexSpansReader;
+import nu.marginalia.index.forward.spans.SpansCodec;
 import nu.marginalia.index.searchset.DomainRankings;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -33,8 +35,9 @@ public class ForwardIndexReader {
 
     private volatile Long2IntOpenHashMap idsMap;
 
-    private final IndexSpansReader spansReader;
     private final DomainRankings domainRankings;
+
+    private final int spansFd;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -45,24 +48,24 @@ public class ForwardIndexReader {
             logger.warn("Failed to create ForwardIndexReader, {} is absent", dataFile);
             ids = null;
             data = null;
-            spansReader = null;
             domainRankings = null;
+            spansFd = -1;
             return;
         }
         else if (!Files.exists(idsFile)) {
             logger.warn("Failed to create ForwardIndexReader, {} is absent", idsFile);
             ids = null;
             data = null;
-            spansReader = null;
             domainRankings = null;
+            spansFd = -1;
             return;
         }
         else if (!Files.exists(spansFile)) {
             logger.warn("Failed to create ForwardIndexReader, {} is absent", spansFile);
             ids = null;
             data = null;
-            spansReader = null;
             domainRankings = null;
+            spansFd = -1;
             return;
         }
 
@@ -77,7 +80,8 @@ public class ForwardIndexReader {
         LinuxSystemCalls.madviseRandom(data.getMemorySegment());
         LinuxSystemCalls.madviseRandom(ids.getMemorySegment());
 
-        spansReader = IndexSpansReader.open(spansFile);
+        spansFd = LinuxSystemCalls.openBuffered(spansFile);
+        LinuxSystemCalls.fadviseWillneed(spansFd);
 
         Thread.ofPlatform().start(this::createIdsMap);
     }
@@ -174,16 +178,24 @@ public class ForwardIndexReader {
         return (int) offset;
     }
 
-
+    @Nullable
     public DecodableDocumentSpans getDocumentSpans(Arena arena, long documentId) {
 
-        long offset = idxForDoc(documentId);
-        if (offset < 0) {
+        long fwdIdxOffset = idxForDoc(documentId);
+        if (fwdIdxOffset < 0) {
             return null;
         }
 
-        long dataOffset = data.get(ENTRY_SIZE * offset + SPANS_OFFSET);
-        return spansReader.readSpan(arena, dataOffset);
+        long encodedOffset = data.get(ENTRY_SIZE * fwdIdxOffset + SPANS_OFFSET);
+
+        long readOffset = SpansCodec.decodeStartOffset(encodedOffset);
+        int readSize = SpansCodec.decodeSize(encodedOffset);
+
+        MemorySegment segment = arena.allocate(readSize, 8);
+
+        LinuxSystemCalls.readAt(spansFd, segment, readOffset);
+
+        return new DecodableDocumentSpans(segment);
     }
 
     public int totalDocCount() {
@@ -191,6 +203,9 @@ public class ForwardIndexReader {
     }
 
     public void close() {
+        if (spansFd >= 0)
+            LinuxSystemCalls.closeFd(spansFd);
+
         if (data != null)
             data.close();
         if (ids != null)

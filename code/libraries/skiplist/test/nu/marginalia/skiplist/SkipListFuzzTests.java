@@ -382,13 +382,13 @@ public class SkipListFuzzTests {
                  Arena arena = Arena.ofConfined()
             ) {
                 writer.padDocuments(r.nextInt(0, SkipListConstants.BLOCK_SIZE/8) * 8);
-                offsets.add(writer.writeList(createArray(arena, keys, keys), 0, keys.length));
+                offsets.add(writer.writeList(createArray(arena, keys, keys),  keys.length));
             }
 
             try (var writer = new SkipListWriter(docsFile, valuesFile);
                  Arena arena = Arena.ofConfined()
             ) {
-                offsets.add(writer.writeList(createArray(arena, keys, keys), 0, keys.length));
+                offsets.add(writer.writeList(createArray(arena, keys, keys),  keys.length));
             }
 
             try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
