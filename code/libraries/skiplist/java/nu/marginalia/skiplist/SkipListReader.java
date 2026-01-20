@@ -22,9 +22,6 @@ public class SkipListReader {
 
     static final int BLOCK_STRIDE = BLOCK_SIZE;
 
-    private static final boolean enableValuePrefetching = Boolean.getBoolean("index.enableValuePrefetching");
-    private static final boolean enableIndexPrefetching = Boolean.getBoolean("index.enableIndexPrefetching");
-
     private final BufferPool indexPool;
     private final BufferPool valuesPool;
 
@@ -52,10 +49,6 @@ public class SkipListReader {
         currentBlock = blockStart & -BLOCK_SIZE;
         currentBlockOffset = (int) (blockStart & (BLOCK_SIZE - 1));
         atEnd = false;
-
-        if (enableIndexPrefetching) {
-            indexPool.prefetch(currentBlock);
-        }
 
         currentBlockIdx = 0;
     }
@@ -124,10 +117,6 @@ public class SkipListReader {
             }
             else {
                 nextBlock = currentBlock + BLOCK_STRIDE;
-            }
-
-            if (enableIndexPrefetching && (flags & FLAG_END_BLOCK) == 0) {
-                indexPool.prefetch(nextBlock);
             }
 
             if (data.currentValue() > maxVal || retainInPage(page, flags, dataOffset, n, data)) {
@@ -349,14 +338,6 @@ public class SkipListReader {
                                 oLen+=entrySize;
                             }
                             else {
-                                long nextBlock = valueOffsets[vPos] & -VALUE_BLOCK_SIZE;
-                                if (nextBlock != valBlock) {
-                                    if (enableValuePrefetching) {
-                                        valuesPool.prefetch(nextBlock);
-                                    }
-                                    break;
-                                }
-
                                 int offsetBase = (int) (valueOffsets[vPos] & (VALUE_BLOCK_SIZE - 1));
                                 for (int j = 0; j < RECORD_SIZE - 1; j++) {
                                     outValues[oLen + j] = page.getLong(offsetBase + 8*j);
@@ -435,10 +416,6 @@ public class SkipListReader {
                     }
 
                 }
-            }
-
-            if (!atEnd && offsetPos < inputKeys.length && enableIndexPrefetching) {
-                indexPool.prefetch(currentBlock);
             }
         }
 
@@ -669,10 +646,6 @@ public class SkipListReader {
                 nextBlock = currentBlock + BLOCK_STRIDE;
             }
 
-            if (enableIndexPrefetching && (flags & FLAG_END_BLOCK) == 0) {
-                indexPool.prefetch(nextBlock);
-            }
-
             if (data.currentValue() > maxVal || rejectInPage(page, flags, dataOffset, n, data)) {
                 atEnd = (flags & FLAG_END_BLOCK) != 0;
                 if (atEnd) {
@@ -820,10 +793,6 @@ public class SkipListReader {
 
                 assert fc >= 0;
                 byte flags = (byte) headerFlags(page, currentBlockOffset);
-
-                if (enableIndexPrefetching && (flags & FLAG_END_BLOCK) == 0) {
-                    indexPool.prefetch(currentBlock + BLOCK_STRIDE);
-                }
 
                 int dataOffset = pageDataOffset(currentBlockOffset, fc);
 

@@ -1,6 +1,5 @@
 package nu.marginalia.array.pool;
 
-import nu.marginalia.buffering.LongRingBuffer;
 import nu.marginalia.ffi.LinuxSystemCalls;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,11 +11,8 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.LockSupport;
 
 public class BufferPool implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(BufferPool.class);
@@ -34,8 +30,6 @@ public class BufferPool implements AutoCloseable {
     private final AtomicInteger cacheReadCount = new AtomicInteger();
     private final AtomicInteger prefetchReadCount = new AtomicInteger();
 
-    private final Prefetcher prefetcher;
-
     private volatile boolean running = true;
 
     /** Unassociate all buffers with their addresses, ensuring they will not be cacheable */
@@ -49,7 +43,6 @@ public class BufferPool implements AutoCloseable {
             throw new RuntimeException(e);
         }
         poolLru = new PoolLru(pages);
-        prefetcher.reset();
     }
 
 
@@ -108,7 +101,6 @@ public class BufferPool implements AutoCloseable {
             }
         });
 
-        this.prefetcher = new Prefetcher(2);
     }
 
     public void close() {
@@ -128,8 +120,6 @@ public class BufferPool implements AutoCloseable {
         try {
             monitorThread.interrupt();
             monitorThread.join();
-
-            prefetcher.stop();
         }
         catch (InterruptedException ex) {
             throw new RuntimeException(ex);
@@ -174,12 +164,6 @@ public class BufferPool implements AutoCloseable {
 
         return buffer;
     }
-
-    public void prefetch(long address) {
-        prefetcher.requestPrefetch(address);
-    }
-
-
 
     private MemoryPage read(long address, boolean acquire) {
         // If the page is not available, read it from the caller's thread
@@ -251,75 +235,6 @@ public class BufferPool implements AutoCloseable {
                 catch (InterruptedException ex) {
                     throw new RuntimeException(ex);
                 }
-            }
-        }
-    }
-
-    class Prefetcher {
-        private final List<Thread> threads;
-        private final int nThreads;
-        private final LongRingBuffer prefetchQueue;
-
-        public Prefetcher(int nThreads) {
-            this.threads = new ArrayList<>(nThreads);
-            this.prefetchQueue = new LongRingBuffer(nThreads);
-            this.nThreads = nThreads;
-
-            start(nThreads);
-        }
-
-        public void reset() throws InterruptedException {
-            stop();
-            start(nThreads);
-        }
-
-        public void stop() throws InterruptedException {
-            var iter = threads.iterator();
-            while (iter.hasNext()) {
-                var thread = iter.next();
-                thread.interrupt();
-                thread.join();
-                iter.remove();
-            }
-        }
-
-        private void start(int n) {
-            for (int i = 0; i < n; i++) {
-                threads.add(Thread.ofPlatform().name("BufferPool:Prefetcher").daemon().start(this::prefetchThread));
-            }
-        }
-
-        private void prefetchThread() {
-            int idleCycles = 0;
-
-            long[] vals = new long[1];
-            while (!Thread.interrupted()) {
-                int n = prefetchQueue.takeNonBlock(vals);
-                if (n == 0) {
-                    idleCycles++;
-                    if (idleCycles < 128)
-                        Thread.onSpinWait();
-                    else
-                        LockSupport.parkNanos(10_000);
-                }
-                else {
-                    idleCycles = 0;
-                    long address = vals[0];
-
-                    // Look through available pages for the one we're looking for
-                    MemoryPage buffer = poolLru.get(address);
-
-                    if (buffer == null)
-                        read(address, false);
-                }
-            }
-        }
-
-        public void requestPrefetch(long address) {
-            prefetchQueue.putNP(address);
-
-            for (var thread: threads) {
-                LockSupport.unpark(thread);
             }
         }
     }
