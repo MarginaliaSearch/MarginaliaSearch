@@ -63,7 +63,6 @@ public class SkipListWriter implements AutoCloseable {
         valuesChannel.close();
 
         // Pad docs file to block size alignment
-        System.out.println("Size0: " + documentsChannel.position());
         blockRemaining = (int) (BLOCK_SIZE - (documentsChannel.position() & (BLOCK_SIZE - 1)));
         docsBuffer.position(0);
         docsBuffer.limit(blockRemaining);
@@ -75,7 +74,6 @@ public class SkipListWriter implements AutoCloseable {
         if ((documentsChannel.position() & (BLOCK_SIZE-1)) != 0) {
             throw new IllegalStateException("Wrote a documents file that was not aligned with block size " + BLOCK_SIZE);
         }
-        System.out.println("Size: " + documentsChannel.position());
         documentsChannel.close();
     }
 

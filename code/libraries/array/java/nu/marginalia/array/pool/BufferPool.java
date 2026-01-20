@@ -28,7 +28,6 @@ public class BufferPool implements AutoCloseable {
 
     private final AtomicInteger diskReadCount = new AtomicInteger();
     private final AtomicInteger cacheReadCount = new AtomicInteger();
-    private final AtomicInteger prefetchReadCount = new AtomicInteger();
 
     private volatile boolean running = true;
 
@@ -82,7 +81,6 @@ public class BufferPool implements AutoCloseable {
                 }
 
                 int diskRead = diskReadCount.get();
-                int prefetchRead = prefetchReadCount.get();
                 int cacheRead = cacheReadCount.get();
                 int heldCount = 0;
                 for (var page : pages) {
@@ -92,9 +90,9 @@ public class BufferPool implements AutoCloseable {
                 }
 
                 if (diskRead != diskReadOld || cacheRead != cacheReadOld) {
-                    logger.info("[#{}:{}] Disk/Prefetched/Cached: {}/{}/{}, heldCount={}/{}, fqs={}, rcc={}",
+                    logger.info("[#{}:{}] Disk/Cached: {}/{}, heldCount={}/{}, fqs={}, rcc={}",
                             hashCode(), pageSizeBytes,
-                            diskRead, prefetchRead, cacheRead,
+                            diskRead, cacheRead,
                             heldCount, pages.length,
                             poolLru.getFreeQueueSize(), poolLru.getReclaimCycles());
                 }
@@ -159,13 +157,13 @@ public class BufferPool implements AutoCloseable {
         MemoryPage buffer = getExistingBufferForReading(address);
 
         if (buffer == null) {
-            buffer = read(address, true);
+            buffer = read(address);
         }
 
         return buffer;
     }
 
-    private MemoryPage read(long address, boolean acquire) {
+    private MemoryPage read(long address) {
         // If the page is not available, read it from the caller's thread
         if (address + pageSizeBytes > fileSize) {
             throw new RuntimeException("Address " + address + " too large for page size " + pageSizeBytes + " and file size " + fileSize);
@@ -177,19 +175,10 @@ public class BufferPool implements AutoCloseable {
         poolLru.register(buffer);
         populateBuffer(buffer);
 
-        if (acquire) {
-            if (!buffer.pinCount().compareAndSet(-1, 1)) {
-                throw new IllegalStateException("Panic! Write lock was not held during write!");
-            }
-            diskReadCount.incrementAndGet();
+        if (!buffer.pinCount().compareAndSet(-1, 1)) {
+            throw new IllegalStateException("Panic! Write lock was not held during write!");
         }
-        else {
-            if (!buffer.pinCount().compareAndSet(-1, 0)) {
-                throw new IllegalStateException("Panic! Write lock was not held during write!");
-            }
-            prefetchReadCount.incrementAndGet();
-        }
-
+        diskReadCount.incrementAndGet();
 
         return buffer;
     }
