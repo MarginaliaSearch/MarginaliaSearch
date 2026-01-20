@@ -3,25 +3,26 @@ package nu.marginalia.skiplist.compression.output;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public class CompressorBuffer {
+public class ByteBufferCompressorBuffer implements ReadableCompressorBufferIf, WritableCompressorBufferIf {
     private final ByteBuffer buffer;
 
-    public CompressorBuffer(ByteBuffer buffer) {
+    public ByteBufferCompressorBuffer(ByteBuffer buffer) {
         buffer.order(ByteOrder.nativeOrder());
 
         this.buffer = buffer;
     }
 
-    public int getPos() {
+    public long getPos() {
         return buffer.position();
     }
-    public void setPos(int pos) {
-        buffer.position(pos);
+    public void setPos(long pos) {
+        buffer.position((int) pos);
     }
     public void advancePos(int n) {
         buffer.position(buffer.position() + n);
     }
 
+    @Override
     public void put(long val, int bytes) {
         switch (bytes) {
             case 1 -> buffer.put((byte) (val & 0xFFL));
@@ -48,6 +49,7 @@ public class CompressorBuffer {
         }
     }
 
+    @Override
     public long get(int bytes) {
         return switch (bytes) {
             case 1 -> buffer.get() & 0xFFL;
@@ -79,6 +81,8 @@ public class CompressorBuffer {
         };
     }
 
+
+    @Override
     public void padToLong() {
         // listen, I wouldn't worry about it
         put(0, (8 - buffer.position() & 7) & 7);

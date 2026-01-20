@@ -6,12 +6,9 @@ import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.array.pool.BufferPool;
 import nu.marginalia.array.pool.MemoryPage;
 import nu.marginalia.skiplist.compression.DocIdCompressor;
-import nu.marginalia.skiplist.compression.input.CompressorInput;
-import nu.marginalia.skiplist.compression.output.CompressorBuffer;
 import nu.marginalia.skiplist.compression.output.SegmentCompressorBuffer;
 import org.jetbrains.annotations.NotNull;
 
-import javax.print.Doc;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.util.ArrayList;

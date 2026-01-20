@@ -5,7 +5,7 @@ import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public class SegmentCompressorBuffer {
+public class SegmentCompressorBuffer implements ReadableCompressorBufferIf {
     private final MemorySegment segment;
     private long pos;
 

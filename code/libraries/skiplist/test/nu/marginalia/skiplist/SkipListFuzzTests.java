@@ -1,7 +1,6 @@
 package nu.marginalia.skiplist;
 
-import it.unimi.dsi.fastutil.longs.LongAVLTreeSet;
-import it.unimi.dsi.fastutil.longs.LongSortedSet;
+import it.unimi.dsi.fastutil.longs.*;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.array.page.LongQueryBuffer;
@@ -350,6 +349,90 @@ public class SkipListFuzzTests {
                     reader.parseBlocks(indexPool, offset);
                 }
                 System.out.println("OK");
+            }
+        }
+    }
+
+    @Test
+    @Tag("slow")
+    public void testValueFuzz() throws IOException {
+
+        long seedOffset = System.nanoTime();
+        for (int seed = 0; seed < 100000; seed++) {
+            System.out.println("Seed: " + (seed + seedOffset));
+
+            Random r = new Random(seed);
+
+            List<long[]> keysForBlocks = new ArrayList<>();
+
+
+            int nVals = r.nextInt(8, 32*SkipListConstants.MAX_RECORDS_PER_BLOCK);
+            long[] keys = new long[nVals];
+            for (int ki = 0; ki < keys.length; ki++) {
+                keys[ki] = r.nextLong(0, Long.MAX_VALUE);
+            }
+
+            Arrays.sort(keys);
+            keysForBlocks.add(keys);
+
+            List<Long> offsets = new ArrayList<>();
+            Files.delete(docsFile);
+
+            try (var writer = new SkipListWriter(docsFile, valuesFile);
+                 Arena arena = Arena.ofConfined()
+            ) {
+                writer.padDocuments(r.nextInt(0, SkipListConstants.BLOCK_SIZE/8) * 8);
+                offsets.add(writer.writeList(createArray(arena, keys, keys), 0, keys.length));
+            }
+
+            try (var writer = new SkipListWriter(docsFile, valuesFile);
+                 Arena arena = Arena.ofConfined()
+            ) {
+                offsets.add(writer.writeList(createArray(arena, keys, keys), 0, keys.length));
+            }
+
+            try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+                 var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+                for (var offset: offsets) {
+                    var reader = new SkipListReader(indexPool, valuePool, offset);
+
+                    LongOpenHashSet keysSet = new LongOpenHashSet(new LongArrayList(keys));
+
+                    LongOpenHashSet querySet = new LongOpenHashSet();
+                    LongOpenHashSet existing = new LongOpenHashSet();
+                    int n = r.nextInt(1, keys.length/2);
+
+                    while (querySet.size() < n) {
+                        long val = keys[r.nextInt(0, keys.length)];
+                        querySet.add(val);
+                        existing.add(val);
+                    }
+
+                    while (querySet.size() < 1.5*n) {
+                        long val = r.nextLong(0, Long.MAX_VALUE);
+                        if (!keysSet.contains(val)) {
+                            querySet.add(val);
+                        }
+                    }
+
+                    long[] queryKeys = querySet.toLongArray();
+                    long[] expectedVals = new long[queryKeys.length];
+                    Arrays.sort(queryKeys);
+
+                    for (int i = 0; i < expectedVals.length; i++) {
+                        if (existing.contains(queryKeys[i])) {
+                            expectedVals[i] = queryKeys[i];
+                        }
+                    }
+
+                    var ret = reader.getAllValues(queryKeys);
+                    var vals = Arrays.copyOfRange(ret, 0, queryKeys.length);
+//                    if (!Arrays.equals(expectedVals, vals)) {
+//                        System.out.println(Arrays.toString(expectedVals));
+//                        System.out.println(Arrays.toString(vals));
+//                    }
+                    Assertions.assertArrayEquals(vals, expectedVals);
+                }
             }
         }
     }

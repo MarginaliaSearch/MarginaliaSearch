@@ -3,7 +3,7 @@ package nu.marginalia.skiplist;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.skiplist.compression.DocIdCompressor;
-import nu.marginalia.skiplist.compression.output.CompressorBuffer;
+import nu.marginalia.skiplist.compression.output.ByteBufferCompressorBuffer;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -405,7 +405,7 @@ public class SkipListWriter implements AutoCloseable {
     }
 
     private void writeDocIds(StaggeredCompressorInput compressorInput, int n) {
-        var cb = new CompressorBuffer(docsBuffer);
+        var cb = new ByteBufferCompressorBuffer(docsBuffer);
         DocIdCompressor.compress(compressorInput, n, cb);
         cb.padToLong();
 

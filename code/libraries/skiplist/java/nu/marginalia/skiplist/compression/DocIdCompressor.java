@@ -1,16 +1,15 @@
 package nu.marginalia.skiplist.compression;
 
-import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.longs.LongList;
 import nu.marginalia.skiplist.compression.input.CompressorInput;
-import nu.marginalia.skiplist.compression.output.CompressorBuffer;
+import nu.marginalia.skiplist.compression.output.ReadableCompressorBufferIf;
 import nu.marginalia.skiplist.compression.output.SegmentCompressorBuffer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import nu.marginalia.skiplist.compression.output.WritableCompressorBufferIf;
 
+/** Document ID compressor that encodes 10 variable-byte values with a single 32 bit control word,
+ * allowing for 3 bits per value to encode their byte sizes with (1-8).
+ * */
 public class DocIdCompressor {
-
-    private static final Logger log = LoggerFactory.getLogger(DocIdCompressor.class);
 
     /** Given a max capacity, calculate how much of the input array would fit */
     public static int calcMaxEntries(CompressorInput input, int capacity) {
@@ -45,17 +44,24 @@ public class DocIdCompressor {
         return nItems;
     }
 
-    public static int compress(CompressorInput input, int n, CompressorBuffer output) {
+    /** Compress at most n items from the give input, into the provided output
+     *
+     * @return the number of bytes written
+     * */
+    public static long compress(CompressorInput input, int n, WritableCompressorBufferIf output) {
         assert n <= input.size();
 
-        byte[] sizes = new byte[10];
+        final long offsetStart = output.getPos();
+
+        final byte[] sizes = new byte[10];
+
         long prev = 0;
 
         int i = 0;
         while (i < n) {
 
             // save space for control word
-            int reservePos = output.getPos();
+            long reservePos = output.getPos();
             output.advancePos(4);
 
             int j;
@@ -68,37 +74,40 @@ public class DocIdCompressor {
                 output.put(delta, sizes[j]);
             }
 
-            int endPos = output.getPos();
+            long endPos = output.getPos();
             output.setPos(reservePos);
             output.put(encodeControlWord(sizes, j), 4);
             output.setPos(endPos);
         }
 
-        return output.getPos();
+        return output.getPos() - offsetStart;
     }
 
+    /** Decompress n items from the provided input to the array */
     public static void decompress(SegmentCompressorBuffer input, int n, long[] output) {
-        int oi = 0;
+        int outIdx = 0;
         long val = 0L;
-        while (oi < n) {
+        while (outIdx < n) {
             long controlWord = input.get(4);
-            for (int j = 0; j < 10 && oi < n; j++, oi++) {
+            for (int j = 0; j < 10 && outIdx < n; j++, outIdx++) {
                 int size = 1 + (int) (controlWord & 0x7);
 
                 val += input.get(size);
-                output[oi] = val;
+                output[outIdx] = val;
 
                 controlWord >>>= 3;
             }
         }
     }
 
-    public static void decompress(SegmentCompressorBuffer input, int n, LongList output) {
-        int oi = 0;
+    /** Decompress n items from the provided input to the LongList */
+    public static void decompress(ReadableCompressorBufferIf input, int n, LongList output) {
+        int outIdx = 0;
         long val = 0L;
-        while (oi < n) {
+
+        while (outIdx < n) {
             long controlWord = input.get(4);
-            for (int j = 0; j < 10 && oi < n; j++, oi++) {
+            for (int j = 0; j < 10 && outIdx < n; j++, outIdx++) {
                 int size = 1 + (int) (controlWord & 0x7);
 
                 val += input.get(size);

@@ -1,14 +1,13 @@
 package nu.marginalia.skiplist.compression;
 
 import nu.marginalia.skiplist.compression.input.ArrayCompressorInput;
-import nu.marginalia.skiplist.compression.output.CompressorBuffer;
+import nu.marginalia.skiplist.compression.output.ByteBufferCompressorBuffer;
 import nu.marginalia.skiplist.compression.output.SegmentCompressorBuffer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -18,7 +17,7 @@ class DocIdCompressorTest {
     public void testCompressTrivial() {
         MemorySegment seg = Arena.ofAuto().allocate(1024, 1);
 
-        System.out.println(DocIdCompressor.compress(new ArrayCompressorInput(1, 5, 1000, 99999, 1000_000L, 1000_500L), 6, new CompressorBuffer(seg.asByteBuffer())));
+        System.out.println(DocIdCompressor.compress(new ArrayCompressorInput(1, 5, 1000, 99999, 1000_000L, 1000_500L), 6, new ByteBufferCompressorBuffer(seg.asByteBuffer())));
 
         long[] out = new long[6];
         DocIdCompressor.decompress(new SegmentCompressorBuffer(seg, 0), 6, out);
@@ -29,7 +28,7 @@ class DocIdCompressorTest {
     public void testCompress0() {
         MemorySegment seg = Arena.ofAuto().allocate(1024, 1);
 
-        System.out.println(DocIdCompressor.compress(new ArrayCompressorInput(), 0, new CompressorBuffer(seg.asByteBuffer())));
+        System.out.println(DocIdCompressor.compress(new ArrayCompressorInput(), 0, new ByteBufferCompressorBuffer(seg.asByteBuffer())));
 
         long[] out = new long[0];
         DocIdCompressor.decompress(new SegmentCompressorBuffer(seg, 0), 0, out);
@@ -53,7 +52,7 @@ class DocIdCompressorTest {
                 in[i] = in[i-1] + r.nextLong(0, Long.MAX_VALUE);
             }
 
-            DocIdCompressor.compress(new ArrayCompressorInput(in), in.length, new CompressorBuffer(seg.asByteBuffer()));
+            DocIdCompressor.compress(new ArrayCompressorInput(in), in.length, new ByteBufferCompressorBuffer(seg.asByteBuffer()));
 
             long[] out = new long[n];
             DocIdCompressor.decompress(new SegmentCompressorBuffer(seg, 0), n, out);

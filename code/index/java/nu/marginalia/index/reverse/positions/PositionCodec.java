@@ -1,8 +1,8 @@
 package nu.marginalia.index.reverse.positions;
 
 /** A utility class for encoding and decoding position data offsets,
- * the data is encoded by using the highest 16 bits to store the offset,
- * and the remaining 48 bits to store the size of the data.
+ * the data is encoded by using the highest 16 bits to store the size,
+ * and the remaining 48 bits to store the size of the offset.
  * <p></p>
  * This lets us address 256 TB of data, with up to 64 KB of position data for each term,
  * which is ample headroom for both the size of the data and the number of positions.

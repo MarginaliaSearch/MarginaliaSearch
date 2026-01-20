@@ -3,6 +3,7 @@ package nu.marginalia.converting;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.processor.DomainProcessor;
@@ -16,6 +17,7 @@ import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.crawldata.CrawledDomain;
 import nu.marginalia.model.crawldata.SerializableCrawlData;
+import nu.marginalia.sequence.VarintCodedSequence;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -59,17 +61,30 @@ public class ConvertingIntegrationTest {
     public void testBuggyCase() throws IOException {
 
         // Test used to inspect processing of crawl data, change path below to use
-        Path problemCase = Path.of("/home/vlofgren/TestEnv/index-1/storage/crawl-data__25-09-15T16_33_57.245/46/64/4664ef43-blog.fermi.chat.slop.zip");
+        Path problemCase = Path.of("/home/vlofgren/fd3af69-2jk.org.slop.zip");
         if (!Files.exists(problemCase))
             return;
 
         ProcessedDomain result = domainProcessor.fullProcessing(SerializableCrawlDataStream.openDataStream(problemCase));
         for (ProcessedDocument doc : result.documents) {
+            if (!doc.url.path.contains("chinaman"))
+                continue;
+
             System.out.println(doc.url);
             if (doc.details == null) continue;
 
-            System.out.println(doc.details.features);
-            System.out.println(HtmlFeature.encode(doc.details.features) & HtmlFeature.AFFILIATE_LINK.getFeatureBit());
+
+
+            var built = doc.words.build();
+            for (int i = 0; i < built.size(); i++) {
+                String keyword = built.keywords().get(i);
+                long meta = built.metadata()[i];
+                IntList pos = built.positions().get(i).values();
+
+                if ("mechanical".equals(keyword) || "keyboard".equals(keyword)) {
+                    System.out.println(keyword + ": " + meta + ", " + pos);
+                }
+            }
         }
     }
 

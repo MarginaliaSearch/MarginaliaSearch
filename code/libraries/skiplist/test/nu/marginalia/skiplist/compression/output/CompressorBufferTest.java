@@ -16,7 +16,7 @@ class CompressorBufferTest {
 
     @Test
     public void testPut1() {
-        var co = new CompressorBuffer(bb);
+        var co = new ByteBufferCompressorBuffer(bb);
         co.put(254, 1);
         co.put(120, 1);
         co.put(99, 1);
@@ -29,7 +29,7 @@ class CompressorBufferTest {
 
     @Test
     public void testPut2() {
-        var co = new CompressorBuffer(bb);
+        var co = new ByteBufferCompressorBuffer(bb);
         co.put(1254, 2);
         co.put(120, 2);
         co.setPos(5);
@@ -45,7 +45,7 @@ class CompressorBufferTest {
 
     @Test
     public void testPut3() {
-        var co = new CompressorBuffer(bb);
+        var co = new ByteBufferCompressorBuffer(bb);
         co.setPos(0);
         co.put(0xFA_0533L, 3);
         co.setPos(4);
@@ -59,7 +59,7 @@ class CompressorBufferTest {
 
     @Test
     public void testPut4() {
-        var co = new CompressorBuffer(bb);
+        var co = new ByteBufferCompressorBuffer(bb);
         co.setPos(0);
         co.put(0xFE1A_0533L, 4);
         co.setPos(5);
@@ -73,7 +73,7 @@ class CompressorBufferTest {
 
     @Test
     public void testPut5() {
-        var co = new CompressorBuffer(bb);
+        var co = new ByteBufferCompressorBuffer(bb);
         co.setPos(0);
         co.put(0xF0FE1A_0533L, 5);
         co.setPos(8);
@@ -87,7 +87,7 @@ class CompressorBufferTest {
 
     @Test
     public void testPut6() {
-        var co = new CompressorBuffer(bb);
+        var co = new ByteBufferCompressorBuffer(bb);
         co.setPos(0);
         co.put(0xF3F0FE1A_0533L, 6);
         co.setPos(8);
@@ -101,7 +101,7 @@ class CompressorBufferTest {
 
     @Test
     public void testPut7() {
-        var co = new CompressorBuffer(bb);
+        var co = new ByteBufferCompressorBuffer(bb);
         co.setPos(0);
         co.put(0xFEF3F0FE1A_0533L, 7);
         co.setPos(8);
