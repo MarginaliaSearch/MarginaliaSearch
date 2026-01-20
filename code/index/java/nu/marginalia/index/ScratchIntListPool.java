@@ -2,6 +2,8 @@ package nu.marginalia.index;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
+/** Resettable pool for IntArrays
+ * */
 public class ScratchIntListPool {
     private final IntArrayList[] pool;
     private int pos = 0;

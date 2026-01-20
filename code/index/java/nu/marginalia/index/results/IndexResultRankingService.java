@@ -229,13 +229,13 @@ public class IndexResultRankingService {
         }
 
         long[] wordFlags = document.termFlags;
-        CodedSequence[] positions = document.positions;
-        DocumentSpans spans = document.documentSpans.decode(intListPool::get);
+        IntList[] positions = document.positions;
+        DocumentSpans spans = document.documentSpans;
 
         QueryParams queryParams = rankingContext.queryParams;
         CompiledQuery<String> compiledQuery = rankingContext.compiledQuery;
 
-        CompiledQuery<CodedSequence> positionsQuery = compiledQuery.forData(positions);
+        CompiledQuery<IntList> positionsQuery = compiledQuery.forData(positions);
 
         // If the document is not relevant to the query, abort early to reduce allocations and
         // avoid unnecessary calculations
@@ -247,7 +247,7 @@ public class IndexResultRankingService {
 
         boolean allSynthetic = booleanAggregate(wordFlagsQuery, flags -> WordFlags.Synthetic.isPresent((byte) flags));
         int minFlagsCount = intMaxMinAggregate(wordFlagsQuery, flags -> Long.bitCount(flags & 0xff));
-        int minPositionsCount = intMaxMinAggregate(positionsQuery, pos -> pos == null ? 0 : pos.valueCount());
+        int minPositionsCount = intMaxMinAggregate(positionsQuery, pos -> pos == null ? 0 : pos.size());
 
         if (minFlagsCount == 0 && !allSynthetic && minPositionsCount == 0) {
             return null;
@@ -265,27 +265,14 @@ public class IndexResultRankingService {
             debugRankingFactors.addDocumentFactor("doc.combinedId", Long.toString(docId));
         }
 
-        // Decode the coded positions lists into plain IntLists as at this point we will be
-        // going over them multiple times
-        IntList[] decodedPositions = new IntList[positions.length];
-        for (int i = 0; i < positions.length; i++) {
-            if (positions[i] != null) {
-                decodedPositions[i] = positions[i].values();
-            }
-            else {
-                decodedPositions[i] = IntList.of();
-            }
-        }
-
-
         var params = rankingContext.params;
 
         double documentBonus = calculateDocumentBonus(docMetadata, htmlFeatures, docSize, params, debugRankingFactors);
 
-        VerbatimMatches verbatimMatches = new VerbatimMatches(intListPool, decodedPositions, rankingContext.phraseConstraints, spans);
-        UnorderedMatches unorderedMatches = new UnorderedMatches(decodedPositions, compiledQuery, rankingContext.regularMask, spans);
+        VerbatimMatches verbatimMatches = new VerbatimMatches(intListPool, positions, rankingContext.phraseConstraints, spans);
+        UnorderedMatches unorderedMatches = new UnorderedMatches(positions, compiledQuery, rankingContext.regularMask, spans);
 
-        float proximitiyFac = getProximitiyFac(decodedPositions, rankingContext.phraseConstraints, verbatimMatches, unorderedMatches, spans);
+        float proximitiyFac = getProximitiyFac(positions, rankingContext.phraseConstraints, verbatimMatches, unorderedMatches, spans);
 
         double score_firstPosition = params.getTcfFirstPositionWeight() * (1.0 / Math.sqrt(unorderedMatches.firstPosition));
         double score_verbatim = params.getTcfVerbatimWeight() * verbatimMatches.getScore();
@@ -350,13 +337,13 @@ public class IndexResultRankingService {
 
                 if (positions[i] != null) {
                     debugRankingFactors.addTermFactor(termId, "positions.all", positions[i].iterator());
-                    debugRankingFactors.addTermFactor(termId, "positions.title", SequenceOperations.findIntersections(intListPool.get(), spans.title.positionValues(), decodedPositions[i]).iterator());
-                    debugRankingFactors.addTermFactor(termId, "positions.heading", SequenceOperations.findIntersections(intListPool.get(), spans.heading.positionValues(), decodedPositions[i]).iterator());
-                    debugRankingFactors.addTermFactor(termId, "positions.anchor", SequenceOperations.findIntersections(intListPool.get(), spans.anchor.positionValues(), decodedPositions[i]).iterator());
-                    debugRankingFactors.addTermFactor(termId, "positions.code", SequenceOperations.findIntersections(intListPool.get(), spans.code.positionValues(), decodedPositions[i]).iterator());
-                    debugRankingFactors.addTermFactor(termId, "positions.nav", SequenceOperations.findIntersections(intListPool.get(), spans.nav.positionValues(), decodedPositions[i]).iterator());
-                    debugRankingFactors.addTermFactor(termId, "positions.body", SequenceOperations.findIntersections(intListPool.get(), spans.body.positionValues(), decodedPositions[i]).iterator());
-                    debugRankingFactors.addTermFactor(termId, "positions.externalLinkText", SequenceOperations.findIntersections(intListPool.get(), spans.externalLinkText.positionValues(), decodedPositions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.title", SequenceOperations.findIntersections(intListPool.get(), spans.title.positionValues(), positions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.heading", SequenceOperations.findIntersections(intListPool.get(), spans.heading.positionValues(), positions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.anchor", SequenceOperations.findIntersections(intListPool.get(), spans.anchor.positionValues(), positions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.code", SequenceOperations.findIntersections(intListPool.get(), spans.code.positionValues(), positions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.nav", SequenceOperations.findIntersections(intListPool.get(), spans.nav.positionValues(), positions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.body", SequenceOperations.findIntersections(intListPool.get(), spans.body.positionValues(), positions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.externalLinkText", SequenceOperations.findIntersections(intListPool.get(), spans.externalLinkText.positionValues(), positions[i]).iterator());
                 }
             }
         }
@@ -365,7 +352,7 @@ public class IndexResultRankingService {
                 docMetadata,
                 htmlFeatures,
                 score,
-                calculatePositionsMask(intListPool, decodedPositions, rankingContext.phraseConstraints)
+                calculatePositionsMask(intListPool, positions, rankingContext.phraseConstraints)
         );
 
         if (null != debugRankingFactors) {
