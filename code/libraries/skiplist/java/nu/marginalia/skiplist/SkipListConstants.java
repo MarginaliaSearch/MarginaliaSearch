@@ -7,7 +7,6 @@ public class SkipListConstants {
     public static final int BLOCK_SIZE = Integer.getInteger("index.documentsSkipListBlockSize", 8192);
 
     static final int DATA_BLOCK_HEADER_SIZE = 16;
-    static final int VALUE_BLOCK_HEADER_SIZE = 8;
 
     static final int RECORD_SIZE = 3;
     public static final int MAX_RECORDS_PER_BLOCK = (BLOCK_SIZE/8 - 3);
