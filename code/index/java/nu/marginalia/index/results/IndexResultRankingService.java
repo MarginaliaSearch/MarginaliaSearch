@@ -92,20 +92,23 @@ public class IndexResultRankingService {
 
         if (searchContext.params.getExportDebugData()) {
             // Re-rank the results while gathering debugging data
-            CombinedIndexReader index = statefulIndex.get();
 
-            // Iterate over documents by their index in the combinedDocIds, as we need the index for the
-            // term data arrays as well
+            try (var indexRef = statefulIndex.get()) {
+                CombinedIndexReader index = indexRef.get();
 
-            ScratchIntListPool pool = new ScratchIntListPool(128);
-            for (var doc : results) {
-                pool.reset();
-                SearchResultItem score = calculateScore(new DebugRankingFactors(), pool, index, searchContext, doc);
-                if (score != null) {
-                    doc.item = score;
+                // Iterate over documents by their index in the combinedDocIds, as we need the index for the
+                // term data arrays as well
+
+                ScratchIntListPool pool = new ScratchIntListPool(128);
+                for (var doc : results) {
+                    pool.reset();
+                    SearchResultItem score = calculateScore(new DebugRankingFactors(), pool, index, searchContext, doc);
+                    if (score != null) {
+                        doc.item = score;
+                    }
                 }
-            }
 
+            }
         }
 
         // Fetch the document details for the selected results in one go, from the local document database

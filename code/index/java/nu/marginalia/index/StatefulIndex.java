@@ -4,11 +4,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.service.control.ServiceEventLog;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -70,12 +72,22 @@ public class StatefulIndex {
         try {
             lock.lock();
 
-            if (combinedIndexReader != null)
-                combinedIndexReader.close();
+            CombinedIndexReader oldIndex = combinedIndexReader;
 
             servicesFactory.switchFiles();
 
-            combinedIndexReader = servicesFactory.getCombinedIndexReader();
+            CombinedIndexReader nextIndex = servicesFactory.getCombinedIndexReader();
+
+            while (!nextIndex.isLoaded()) {
+                LockSupport.parkNanos(100_000);
+            }
+            combinedIndexReader = nextIndex;
+
+            if (oldIndex != null) {
+                Thread.ofPlatform()
+                        .name("IndexCloser")
+                        .start(oldIndex::close);
+            }
 
             eventLog.logEvent("INDEX-SWITCH-OK", "");
         }
@@ -101,11 +113,57 @@ public class StatefulIndex {
         return combinedIndexReader != null && combinedIndexReader.isLoaded();
     }
 
-    /** Returns the current index reader.  It is acceptable to hold the returned value for the duration of the query,
-     * but not share it between queries
+    /** Returns a reference to the current index.  As long as the reference is not closed,
+     * the system guarantees the index will not be closed.  It is very important that this is handled correctly,
+     * as we do unsafe and native calls referencing memory mapped regions during index queries,
+     * and closing these while the queries execute generally leads to a JVM SIGSEGV.
      */
-    public CombinedIndexReader get() {
-        return combinedIndexReader;
+    public IndexReference get() {
+        if (!isLoaded()) {
+            return new IndexReference(null, null);
+        }
+
+        for (;;) {
+            Lock useLock = combinedIndexReader.useLock();
+            if (useLock.tryLock()) {
+                return new IndexReference(combinedIndexReader, useLock);
+            }
+            Thread.onSpinWait();
+        }
+
+    }
+
+    public static class IndexReference implements AutoCloseable {
+        @Nullable
+        private final CombinedIndexReader index;
+        @Nullable
+        private final Lock useLock;
+
+        public IndexReference(
+                @Nullable CombinedIndexReader index,
+                @Nullable Lock useLock) {
+            this.index = index;
+            this.useLock = useLock;
+        }
+
+        public boolean isAvailable() {
+            return index != null && index.isLoaded();
+        }
+
+        @NotNull
+        public CombinedIndexReader get() {
+            if (index == null || !index.isLoaded())
+                throw new IllegalStateException("Index not available");
+
+            return index;
+        }
+
+        public void close() {
+            if (useLock != null) {
+                useLock.unlock();
+            }
+        }
+
     }
 
 }

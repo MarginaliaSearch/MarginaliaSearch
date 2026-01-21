@@ -7,12 +7,10 @@ import nu.marginalia.api.searchquery.model.query.SpecificationLimitType;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
-import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.model.*;
 import nu.marginalia.index.reverse.FullReverseIndexReader;
 import nu.marginalia.index.reverse.IndexLanguageContext;
 import nu.marginalia.index.reverse.PrioReverseIndexReader;
-import nu.marginalia.index.reverse.WordLexicon;
 import nu.marginalia.index.reverse.query.IndexQuery;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.index.reverse.query.filter.QueryFilterStepIf;
@@ -34,6 +32,10 @@ import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Predicate;
 
 /** A reader for the combined forward and reverse indexes.
@@ -48,6 +50,15 @@ public class CombinedIndexReader {
     private final ForwardIndexReader forwardIndexReader;
     private final FullReverseIndexReader reverseIndexFullReader;
     private final PrioReverseIndexReader reverseIndexPriorityReader;
+
+    private final ReadWriteLock leaseLock = new ReentrantReadWriteLock();
+
+    public final Lock useLock() {
+        return leaseLock.readLock();
+    }
+    public final Lock closeLock() {
+        return leaseLock.writeLock();
+    }
 
     public CombinedIndexReader(ForwardIndexReader forwardIndexReader,
                                FullReverseIndexReader reverseIndexFullReader,
@@ -303,32 +314,14 @@ public class CombinedIndexReader {
         return reverseIndexFullReader.getTermPositions(arena, codedOffsets);
     }
 
-    /** Close the indexes (this is not done immediately)
+    /** Close the indexes.  This blocks the calling thread until all users are finished.
      * */
     public void close() {
-       /* Delay the invocation of close method to allow for a clean shutdown of the service.
-        *
-        * This is especially important when using Unsafe-based LongArrays, since we have
-        * concurrent access to the underlying memory-mapped file.  If pull the rug from
-        * under the caller by closing the file, we'll get a SIGSEGV.  Even with MemorySegment,
-        * we'll get ugly stacktraces if we close the file while a thread is still accessing it.
-        */
+        closeLock().lock();
 
-        delayedCall(forwardIndexReader::close, Duration.ofMinutes(1));
-        delayedCall(reverseIndexFullReader::close, Duration.ofMinutes(1));
-        delayedCall(reverseIndexPriorityReader::close, Duration.ofMinutes(1));
-    }
-
-
-    private void delayedCall(Runnable call, Duration delay) {
-        Thread.ofPlatform().start(() -> {
-            try {
-                TimeUnit.SECONDS.sleep(delay.toSeconds());
-                call.run();
-            } catch (InterruptedException e) {
-                logger.error("Interrupted", e);
-            }
-        });
+        forwardIndexReader.close();
+        reverseIndexFullReader.close();
+        reverseIndexPriorityReader.close();
     }
 
     /** Returns true if index data is available */
