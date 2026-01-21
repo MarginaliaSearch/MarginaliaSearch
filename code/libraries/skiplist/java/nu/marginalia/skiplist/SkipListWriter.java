@@ -24,6 +24,8 @@ public class SkipListWriter implements AutoCloseable {
     private final FileChannel documentsChannel;
     private final FileChannel valuesChannel;
 
+    private static final int VALUE_BLOCK_SIZE = 4096;
+
     private final ByteBuffer docsBuffer = ByteBuffer.allocateDirect(BLOCK_SIZE).order(ByteOrder.nativeOrder());
     private final ByteBuffer valuesBuffer = ByteBuffer.allocateDirect(VALUE_BLOCK_SIZE).order(ByteOrder.nativeOrder());
 

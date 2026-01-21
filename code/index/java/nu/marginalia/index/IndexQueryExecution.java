@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.sql.SQLException;
 import java.time.Duration;
@@ -203,7 +204,7 @@ public class IndexQueryExecution {
     private class PreparationStage implements BufferPipe.IntermediateFunction<CombinedDocIdList, RankableDocument> {
 
         @Override
-        public void process(CombinedDocIdList docIds, PipeDrain<RankableDocument> output) {
+        public void process(CombinedDocIdList docIds, PipeDrain<RankableDocument> output) throws IOException {
 
 
             /** Create bit sets for the priority terms */

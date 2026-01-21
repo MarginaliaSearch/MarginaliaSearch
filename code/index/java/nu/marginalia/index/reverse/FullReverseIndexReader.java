@@ -13,10 +13,7 @@ import nu.marginalia.index.reverse.query.filter.QueryFilterNoPass;
 import nu.marginalia.index.reverse.query.filter.QueryFilterStepIf;
 import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.VarintCodedSequence;
-import nu.marginalia.skiplist.SkipListConstants;
-import nu.marginalia.skiplist.SkipListReader;
-import nu.marginalia.skiplist.SkipListValueRanges;
-import nu.marginalia.skiplist.SkipListWriter;
+import nu.marginalia.skiplist.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +36,7 @@ public class FullReverseIndexReader {
     private final LongArray documents;
     private final int positionsFileFd;
     private final BufferPool dataPool;
-    private final BufferPool valuesPool;
+    private final SkipListValueReader valueReader;
     private final String name;
 
     public FullReverseIndexReader(String name,
@@ -54,7 +51,7 @@ public class FullReverseIndexReader {
         if (!Files.exists(documents) || !Files.exists(documentValues) || !validateDocumentsFooter(documents)) {
             this.documents = null;
             this.dataPool = null;
-            this.valuesPool = null;
+            this.valueReader = null;
             this.positionsFileFd = -1;
             this.wordLexiconMap = Map.of();
 
@@ -72,12 +69,12 @@ public class FullReverseIndexReader {
 
         LinuxSystemCalls.madviseRandom(this.documents.getMemorySegment());
 
+        valueReader = new SkipListValueReader(documentValues);
+
         dataPool = new BufferPool(documents, SkipListConstants.BLOCK_SIZE,
                 (int) (Long.getLong("index.bufferPoolSize", 512*1024*1024L) / SkipListConstants.BLOCK_SIZE)
         );
-        valuesPool = new BufferPool(documentValues, SkipListConstants.VALUE_BLOCK_SIZE,
-                (int) (Long.getLong("index.bufferValuePoolSize", 4*1024*1024L) / SkipListConstants.VALUE_BLOCK_SIZE)
-        );
+
     }
 
     private boolean validateDocumentsFooter(Path documents) {
@@ -94,7 +91,6 @@ public class FullReverseIndexReader {
     public void reset() {
         try {
             dataPool.reset();
-            valuesPool.reset();
         }
         catch (InterruptedException ex) {
             throw new RuntimeException(ex);
@@ -198,7 +194,7 @@ public class FullReverseIndexReader {
 
     /** Create a BTreeReader for the document offset associated with a termId */
     private SkipListReader getReader(long offset) {
-        return new SkipListReader(dataPool, valuesPool, offset);
+        return new SkipListReader(dataPool, valueReader, offset);
     }
 
     @Nullable
@@ -237,13 +233,8 @@ public class FullReverseIndexReader {
             logger.warn("Error while closing documents bufferPool", e);
         }
 
-        try {
-            if(valuesPool != null)
-                valuesPool.close();
-        }
-        catch (Exception e) {
-            logger.warn("Error while closing values bufferPool", e);
-        }
+        if(valueReader != null)
+            valueReader.close();
 
         if (documents != null)
             documents.close();

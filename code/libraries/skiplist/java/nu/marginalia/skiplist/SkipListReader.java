@@ -9,6 +9,8 @@ import nu.marginalia.skiplist.compression.DocIdCompressor;
 import nu.marginalia.skiplist.compression.output.SegmentCompressorBuffer;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.util.ArrayList;
@@ -23,7 +25,7 @@ public class SkipListReader {
     static final int BLOCK_STRIDE = BLOCK_SIZE;
 
     private final BufferPool indexPool;
-    private final BufferPool valuesPool;
+    private final SkipListValueReader valuesReader;
 
     private final long blockStart;
 
@@ -39,9 +41,11 @@ public class SkipListReader {
     public int[] __stats_match_histo_retain = new int[512];
     public int[] __stats_match_histo_reject = new int[512];
 
-    public SkipListReader(BufferPool indexPool, BufferPool valuesPool, long blockStart) {
+    public SkipListReader(BufferPool indexPool,
+                          SkipListValueReader valuesReader,
+                          long blockStart) {
         this.indexPool = indexPool;
-        this.valuesPool = valuesPool;
+        this.valuesReader = valuesReader;
         this.blockStart = blockStart;
 
         currentBlock = blockStart & -BLOCK_SIZE;
@@ -578,7 +582,11 @@ public class SkipListReader {
 
 
     public class ValueReader {
+        private static final int VALUE_BLOCK_SIZE = 4096;
+
         private final int entrySize = (SkipListConstants.RECORD_SIZE - 1);
+
+        private final MemorySegment valueSegment = Arena.ofAuto().allocate(VALUE_BLOCK_SIZE, 8);
 
         private final long[] inputKeys;
         private int iPos = -1;
@@ -605,7 +613,7 @@ public class SkipListReader {
 
         }
 
-        public boolean advance() {
+        public boolean advance() throws IOException {
             oPos += entrySize;
             iPos++;
 
@@ -635,7 +643,7 @@ public class SkipListReader {
             return iPos;
         }
 
-        private void copyValuesFromBlock() {
+        private void copyValuesFromBlock() throws IOException {
             while (vPos < vLen && oLen == 0) {
                 if (valueOffsets[vPos] < 0) {
                     Arrays.fill(outValues, oLen, oLen + entrySize, 0);
@@ -645,28 +653,26 @@ public class SkipListReader {
                 else {
                     long valBlock = valueOffsets[vPos] & -VALUE_BLOCK_SIZE;
 
-                    try (var page = valuesPool.get(valBlock)) {
+                    valuesReader.read(valueSegment, valBlock);
 
-                        for (; vPos < vLen; vPos++) {
-                            if (valueOffsets[vPos] < 0) {
-                                Arrays.fill(outValues, oLen, oLen + entrySize, 0);
-                                oLen+=entrySize;
+                    for (; vPos < vLen; vPos++) {
+                        if (valueOffsets[vPos] < 0) {
+                            Arrays.fill(outValues, oLen, oLen + entrySize, 0);
+                            oLen+=entrySize;
+                        }
+                        else {
+                            long nextBlock = valueOffsets[vPos] & -VALUE_BLOCK_SIZE;
+                            if (nextBlock != valBlock) {
+                                break;
                             }
-                            else {
-                                long nextBlock = valueOffsets[vPos] & -VALUE_BLOCK_SIZE;
-                                if (nextBlock != valBlock) {
-                                    break;
-                                }
 
-                                int offsetBase = (int) (valueOffsets[vPos] & (VALUE_BLOCK_SIZE - 1));
-                                for (int j = 0; j < RECORD_SIZE - 1; j++) {
-                                    outValues[oLen + j] = page.getLong(offsetBase + 8*j);
-                                }
-                                oLen+=entrySize;
+                            int offsetBase = (int) (valueOffsets[vPos] & (VALUE_BLOCK_SIZE - 1));
+                            for (int j = 0; j < RECORD_SIZE - 1; j++) {
+                                outValues[oLen + j] = valueSegment.get(ValueLayout.JAVA_LONG, offsetBase + 8*j);
                             }
+                            oLen+=entrySize;
                         }
                     }
-
                 }
             }
 
@@ -809,7 +815,7 @@ public class SkipListReader {
      * de-interleaved in the result array, so for a record size of 3,
      * the result array will look like [ 1, 2, 3, 4, ..., 1, 2, 3, 4, ... ]
      * */
-    public long[] getAllValues(long[] keys) {
+    public long[] getAllValues(long[] keys) throws IOException {
         var reader = getValueReader(keys);
         long[] vals = new long[keys.length * (RECORD_SIZE-1)];
 

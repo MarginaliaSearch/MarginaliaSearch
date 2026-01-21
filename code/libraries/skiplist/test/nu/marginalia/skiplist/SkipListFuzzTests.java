@@ -21,7 +21,6 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
 import static nu.marginalia.skiplist.SkipListConstants.RECORD_SIZE;
-import static nu.marginalia.skiplist.SkipListConstants.VALUE_BLOCK_SIZE;
 
 @Tag("slow")
 public class SkipListFuzzTests {
@@ -113,8 +112,8 @@ public class SkipListFuzzTests {
             }
 
             try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-                 var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-                var reader = new SkipListReader(indexPool, valuePool, 0);
+                 var valueReader = new SkipListValueReader(valuesFile)) {
+                var reader = new SkipListReader(indexPool, valueReader, 0);
                 LongQueryBuffer lqb = new LongQueryBuffer(qbSet.toLongArray(), qbSet.size());
 
                 System.out.println("Keys: " + Arrays.toString(keysSet.toLongArray()));
@@ -166,8 +165,8 @@ public class SkipListFuzzTests {
             }
 
             try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-                 var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-                var reader = new SkipListReader(indexPool, valuePool, off);
+                 var valueReader = new SkipListValueReader(valuesFile)) {
+                var reader = new SkipListReader(indexPool, valueReader, off);
                 LongQueryBuffer lqb = new LongQueryBuffer(qbs, 1);
 
                 reader.retainData(lqb);
@@ -214,9 +213,9 @@ public class SkipListFuzzTests {
             }
 
             try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-                 var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+                 var valueReader = new SkipListValueReader(valuesFile)) {
 
-                var reader = new SkipListReader(indexPool, valuePool, off);
+                var reader = new SkipListReader(indexPool, valueReader, off);
                 LongQueryBuffer lqb = new LongQueryBuffer(qbs, 1);
 
                 reader.rejectData(lqb);
@@ -277,9 +276,9 @@ public class SkipListFuzzTests {
             }
 
             try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-                 var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+                 var valueReader = new SkipListValueReader(valuesFile)) {
 
-                var reader = new SkipListReader(indexPool, valuePool, blockStart);
+                var reader = new SkipListReader(indexPool, valueReader, blockStart);
                 try (var page = indexPool.get(blockStart & -SkipListConstants.BLOCK_SIZE)) {
                     reader.parseBlock(page.getMemorySegment(), (int) blockStart & (SkipListConstants.BLOCK_SIZE - 1));
                 }
@@ -343,9 +342,9 @@ public class SkipListFuzzTests {
             }
 
             try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-                 var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+                 var valueReader = new SkipListValueReader(valuesFile)) {
                 for (var offset: offsets) {
-                    var reader = new SkipListReader(indexPool, valuePool, offset);
+                    var reader = new SkipListReader(indexPool, valueReader, offset);
                     reader.parseBlocks(indexPool, offset);
                 }
                 System.out.println("OK");
@@ -392,9 +391,9 @@ public class SkipListFuzzTests {
             }
 
             try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-                 var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+                 var valueReader = new SkipListValueReader(valuesFile)) {
                 for (var offset: offsets) {
-                    var reader = new SkipListReader(indexPool, valuePool, offset);
+                    var reader = new SkipListReader(indexPool, valueReader, offset);
 
                     LongOpenHashSet keysSet = new LongOpenHashSet(new LongArrayList(keys));
 
@@ -449,8 +448,8 @@ public class SkipListFuzzTests {
         Random r = new Random();
 
         try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(indexPool, valuePool, 0);
+             var valueReader = new SkipListValueReader(valuesFile)) {
+            var reader = new SkipListReader(indexPool, valueReader, 0);
 
             for (int i = 0; i < 1000; i++) {
                 long[] queryKeys = new long[]{r.nextLong(0, 32000) * 2, r.nextLong(0, 32000) * 2};
@@ -489,8 +488,8 @@ public class SkipListFuzzTests {
 
 
             try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-                 var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-                var reader = new SkipListReader(indexPool, valuePool, 0);
+                 var valueReader = new SkipListValueReader(valuesFile)) {
+                var reader = new SkipListReader(indexPool, valueReader, 0);
 
                 for (int iter = 0; iter < 100_000; iter++) {
                     long[] queryKeys = new long[]{r.nextLong(0, size) * 2, r.nextLong(0, size) * 2, 0, 0};
@@ -545,8 +544,8 @@ public class SkipListFuzzTests {
 
 
             try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 512);
-                 var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 512)) {
-                var reader = new SkipListReader(indexPool, valuePool, 0);
+                 var valueReader = new SkipListValueReader(valuesFile)) {
+                var reader = new SkipListReader(indexPool, valueReader, 0);
 
                 long[] queryKeys = new long[64];
                 long[] expectedVals = new long[128];
@@ -555,9 +554,9 @@ public class SkipListFuzzTests {
 
                     for (int i = 0; i < 16; i++) {
                         queryKeys[i] = r.nextLong(0, size) * 2;
-                        queryKeys[16+i] = queryKeys[i] + r.nextLong(0, VALUE_BLOCK_SIZE);
-                        queryKeys[24+i] = queryKeys[i] + r.nextLong(0, VALUE_BLOCK_SIZE);
-                        queryKeys[32+i] = queryKeys[i] + r.nextLong(0, VALUE_BLOCK_SIZE);
+                        queryKeys[16+i] = queryKeys[i] + r.nextLong(0, 4096);
+                        queryKeys[24+i] = queryKeys[i] + r.nextLong(0, 4096);
+                        queryKeys[32+i] = queryKeys[i] + r.nextLong(0, 4096);
                     }
 
                     Arrays.sort(queryKeys);

@@ -72,8 +72,8 @@ public class SkipListReaderTest {
 
 
         try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(indexPool, valuePool,  0);
+             var valueReader = new SkipListValueReader(valuesFile)) {
+            var reader = new SkipListReader(indexPool, valueReader,  0);
             LongQueryBuffer lqb = new LongQueryBuffer(20);
 
             SkipListValueRanges ranges = new SkipListValueRanges(new long[] { 0, 100, 995 }, new long[] { 6, 106, 1000 });
@@ -108,8 +108,8 @@ public class SkipListReaderTest {
 
 
         try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(indexPool, valuePool,  0);
+             var valueReader = new SkipListValueReader(valuesFile)) {
+            var reader = new SkipListReader(indexPool, valueReader,  0);
             LongQueryBuffer lqb = new LongQueryBuffer(20);
 
             SkipListValueRanges ranges = new SkipListValueRanges(new long[] { 0, 101, 995 }, new long[] { 6, 107, 1000 });
@@ -144,8 +144,8 @@ public class SkipListReaderTest {
 
 
         try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(indexPool, valuePool,  0);
+             var valueReader = new SkipListValueReader(valuesFile)) {
+            var reader = new SkipListReader(indexPool, valueReader,  0);
             LongQueryBuffer lqb = new LongQueryBuffer(20);
 
             SkipListValueRanges ranges = new SkipListValueRanges(new long[] { -2, 998 }, new long[] { 2, 1002 });
@@ -176,8 +176,8 @@ public class SkipListReaderTest {
         LongSet expectedKeys = new LongArraySet();
 
         try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(indexPool, valuePool,  0);
+             var valueReader = new SkipListValueReader(valuesFile)) {
+            var reader = new SkipListReader(indexPool, valueReader,  0);
             LongQueryBuffer lqb = new LongQueryBuffer(20);
 
             int nValuesInFirstBlock = SkipListReader.parseBlocks(indexPool, 0).getFirst().n();
@@ -213,8 +213,8 @@ public class SkipListReaderTest {
         LongSet expectedKeys = new LongArraySet();
 
         try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(indexPool, valuePool,  0);
+             var valueReader = new SkipListValueReader(valuesFile)) {
+            var reader = new SkipListReader(indexPool, valueReader,  0);
             LongQueryBuffer lqb = new LongQueryBuffer(20);
 
             var thirdBlock = SkipListReader.parseBlocks(indexPool, 0).get(2);
@@ -252,8 +252,8 @@ public class SkipListReaderTest {
         LongSet expectedKeys = new LongArraySet();
 
         try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(indexPool, valuePool,  0);
+             var valueReader = new SkipListValueReader(valuesFile)) {
+            var reader = new SkipListReader(indexPool, valueReader,  0);
             LongQueryBuffer lqb = new LongQueryBuffer(20);
 
             var thirdBlock = SkipListReader.parseBlocks(indexPool, 0).get(2);
@@ -288,8 +288,8 @@ public class SkipListReaderTest {
         LongSet expectedKeys = new LongArraySet(LongList.of(keys));
 
         try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(indexPool, valuePool,  0);
+             var valueReader = new SkipListValueReader(valuesFile)) {
+            var reader = new SkipListReader(indexPool, valueReader,  0);
             LongQueryBuffer lqb = new LongQueryBuffer(20);
             while (!reader.atEnd()) {
                 reader.getKeys(lqb);
@@ -318,8 +318,8 @@ public class SkipListReaderTest {
         long[] expectedResult = new long[] { 4, 30, 270, 300, 8000, 16600 };
 
         try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(indexPool, valuePool,  0);
+             var valueReader = new SkipListValueReader(valuesFile)) {
+            var reader = new SkipListReader(indexPool, valueReader,  0);
             LongQueryBuffer lqb = new LongQueryBuffer(requestKeys, requestKeys.length);
             reader.retainData(lqb);
             lqb.finalizeFiltering();
@@ -344,8 +344,8 @@ public class SkipListReaderTest {
         }
 
         try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(indexPool, valuePool,  start);
+             var valueReader = new SkipListValueReader(valuesFile)) {
+            var reader = new SkipListReader(indexPool, valueReader,  start);
             long[] values = LongStream.range(0, 4059).toArray();
             LongQueryBuffer lqb = new LongQueryBuffer(values, values.length);
 
@@ -372,8 +372,8 @@ public class SkipListReaderTest {
         }
 
         try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(indexPool, valuePool,  0);
+             var valueReader = new SkipListValueReader(valuesFile)) {
+            var reader = new SkipListReader(indexPool, valueReader,  0);
             long[] queryKeys = new long[] { 4, 5, 30, 39, 270, 300, 551 };
             long[] queryVals = reader.getAllValues(queryKeys);
             long[] expectedVals = new long[] { -4, 0, -30, 0, -270, -300, 0,
@@ -399,8 +399,8 @@ public class SkipListReaderTest {
         Random r = new Random();
 
         try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(indexPool, valuePool,  0);
+             var valueReader = new SkipListValueReader(valuesFile)) {
+            var reader = new SkipListReader(indexPool, valueReader,  0);
 
             SkipListReader.parseBlocks(indexPool, 0).forEach(System.out::println);
 
@@ -428,8 +428,8 @@ public class SkipListReaderTest {
         }
 
         try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(indexPool, valuePool,  0);
+             var valueReader = new SkipListValueReader(valuesFile)) {
+            var reader = new SkipListReader(indexPool, valueReader,  0);
 
             long[] queryKeys = new long[]{ 21312, 29194, 42856, 47940 };
             long[] expectedVals = new long[]{ -21312, -29194, -42856, -47940,
@@ -458,8 +458,8 @@ public class SkipListReaderTest {
         }
 
         try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(indexPool, valuePool,  pos);
+             var valueReader = new SkipListValueReader(valuesFile)) {
+            var reader = new SkipListReader(indexPool, valueReader,  pos);
             LongQueryBuffer lqb = new LongQueryBuffer(4);
             reader.getKeys(lqb);
             System.out.println(Arrays.toString(lqb.copyData()));
@@ -489,8 +489,8 @@ public class SkipListReaderTest {
         }
 
             try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-                 var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(indexPool, valuePool,  4104);
+                 var valueReader = new SkipListValueReader(valuesFile)) {
+            var reader = new SkipListReader(indexPool, valueReader,  4104);
             long[] queryKeys = new long[] { 100 };
             var lqb = new LongQueryBuffer(32);
             reader.getKeys(lqb);
@@ -514,8 +514,8 @@ public class SkipListReaderTest {
         long[] expectedResult = new long[] { 5, 39, 551, 9981 };
 
             try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-                 var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(indexPool, valuePool,  0);
+                 var valueReader = new SkipListValueReader(valuesFile)) {
+            var reader = new SkipListReader(indexPool, valueReader,  0);
             LongQueryBuffer lqb = new LongQueryBuffer(requestKeys, requestKeys.length);
             reader.rejectData(lqb);
             lqb.finalizeFiltering();
@@ -540,8 +540,8 @@ public class SkipListReaderTest {
         }
 
             try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-                 var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(indexPool, valuePool,  0);
+                 var valueReader = new SkipListValueReader(valuesFile)) {
+            var reader = new SkipListReader(indexPool, valueReader,  0);
             var qb = new LongQueryBuffer(qbdata, qbdata.length);
             reader.retainData(qb);
             System.out.println(Arrays.toString(qb.copyData()));
@@ -592,9 +592,9 @@ public class SkipListReaderTest {
         }
 
         try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+             var valueReader = new SkipListValueReader(valuesFile)) {
 
-            var reader = new SkipListReader(indexPool, valuePool, blockStart);
+            var reader = new SkipListReader(indexPool, valueReader, blockStart);
             try (var page = indexPool.get(blockStart & -SkipListConstants.BLOCK_SIZE)) {
                 reader.parseBlock(page.getMemorySegment(), (int) blockStart & (SkipListConstants.BLOCK_SIZE - 1));
             }
