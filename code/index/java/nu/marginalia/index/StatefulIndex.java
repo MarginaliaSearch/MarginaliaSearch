@@ -66,7 +66,7 @@ public class StatefulIndex {
         }
     }
 
-    public boolean switchIndex() throws IOException {
+    public boolean switchIndex() {
         eventLog.logEvent("INDEX-SWITCH-BEGIN", "");
         Lock lock = indexReplacementLock.writeLock();
         try {
