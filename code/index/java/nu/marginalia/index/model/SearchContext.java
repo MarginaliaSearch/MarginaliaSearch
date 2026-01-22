@@ -126,7 +126,7 @@ public class SearchContext {
         this.docCount = currentIndex.totalDocCount();
         this.languageContext = currentIndex.createLanguageContext(langIsoCode);
 
-        this.budget = new IndexSearchBudget(Math.max(limits.getTimeoutMs()/2, limits.getTimeoutMs()-50));
+        this.budget = new IndexSearchBudget(Math.max(limits.getTimeoutMs()/2, limits.getTimeoutMs()-10));
         this.queryTerms = query;
         this.params = rankingParams;
         this.queryParams = queryParams;
