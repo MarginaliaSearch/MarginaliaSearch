@@ -60,7 +60,7 @@ public class SearchService extends JoobyService {
                          SearchQueryService searchQueryService)
     throws Exception {
         super(params,
-                ServicePartition.any(),
+                ServicePartition.partition(params.configuration.node()),
                 List.of(), // No GRPC services
                 List.of(new SearchFrontPageService_(frontPageService),
                         new SearchQueryService_(searchQueryService),

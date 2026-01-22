@@ -62,6 +62,18 @@ public class GrpcServer {
                     config.externalAddress()
             );
 
+            if (partition.identifier().equals("*")) {
+                logger.warn("Service is only registered as a wildcard, direct node communication will not be possible");
+            }
+            else {
+                // also register on the "any" partition to allow discovery when we don't care about which node we talk to
+                serviceRegistry.registerService(
+                        ServiceKey.forServiceDescriptor(svc.getServiceDescriptor(), ServicePartition.any()),
+                        config.instanceUuid(),
+                        config.externalAddress()
+                );
+            }
+
             grpcServerBuilder.addService(svc);
         }
         server = grpcServerBuilder.build();

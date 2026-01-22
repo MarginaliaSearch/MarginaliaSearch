@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.service.client.GrpcChannelPoolFactory;
 import nu.marginalia.service.client.GrpcSingleNodeChannelPool;
 import nu.marginalia.service.discovery.property.ServiceKey;
@@ -25,7 +26,7 @@ public class DomSampleClient {
     private static final Logger logger = LoggerFactory.getLogger(DomSampleClient.class);
 
     @Inject
-    public DomSampleClient(GrpcChannelPoolFactory factory) {
+    public DomSampleClient(GrpcChannelPoolFactory factory, NodeConfigurationService service) {
 
         // The client is only interested in the primary node
         var key = ServiceKey.forGrpcApi(DomSampleApiGrpc.class, ServicePartition.any());

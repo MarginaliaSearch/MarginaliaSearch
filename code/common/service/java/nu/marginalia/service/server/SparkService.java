@@ -138,7 +138,7 @@ public class SparkService {
     public SparkService(BaseServiceParams params) throws Exception {
         this(params,
                 SparkService::defaultSparkConfig,
-                ServicePartition.any(),
+                ServicePartition.partition(params.configuration.node()),
                 List.of());
     }
 
