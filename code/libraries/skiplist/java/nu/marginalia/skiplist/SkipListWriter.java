@@ -278,7 +278,7 @@ public class SkipListWriter implements AutoCloseable {
         }
 
 
-        if (dataSpaceRemaining + 8 * POINTER_TARGET_COUNT < 64) {
+        if (dataSpaceRemaining - 8 * POINTER_TARGET_COUNT < 64) {
             // Add padding if we cannot reclaim the remaining parts of this block
 
             docsBuffer.clear();
