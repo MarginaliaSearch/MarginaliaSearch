@@ -32,6 +32,7 @@ import java.time.Duration;
 import java.util.BitSet;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.Lock;
 
 /** Performs an index query */
 public class IndexQueryExecution {
@@ -110,7 +111,6 @@ public class IndexQueryExecution {
 
     public List<RpcDecoratedResultItem> run() throws InterruptedException, SQLException, TooManySimultaneousQueriesException {
 
-
         if (!simultaneousRequests.tryAcquire(budget.timeLeft() / 2, TimeUnit.MILLISECONDS)) {
             index_execution_rejected_queries
                     .labelValues(nodeName)
@@ -152,6 +152,14 @@ public class IndexQueryExecution {
 
     private class LookupStage implements BufferPipe.IntermediateFunction<IndexQuery, CombinedDocIdList> {
         final LongQueryBuffer buffer = new LongQueryBuffer(lookupBatchSize);
+        final Lock indexLock = currentIndex.useLock();
+
+        public LookupStage() {
+            if (!indexLock.tryLock()) {
+                throw new IllegalStateException("Index lock could not be acquired");
+            }
+        }
+
 
         @Override
         public void process(IndexQuery query, PipeDrain<CombinedDocIdList> output) {
@@ -171,6 +179,7 @@ public class IndexQueryExecution {
         @Override
         public void cleanUp() {
             buffer.dispose();
+            indexLock.unlock();
         }
     }
 
@@ -202,6 +211,15 @@ public class IndexQueryExecution {
 
 
     private class PreparationStage implements BufferPipe.IntermediateFunction<CombinedDocIdList, RankableDocument> {
+
+        private final Lock indexLock = currentIndex.useLock();
+
+        public PreparationStage() {
+            if (!indexLock.tryLock()) {
+                throw new IllegalStateException("Index lock could not be acquired");
+            }
+        }
+
 
         @Override
         public void process(CombinedDocIdList docIds, PipeDrain<RankableDocument> output) throws IOException {
@@ -315,11 +333,24 @@ public class IndexQueryExecution {
             return combinedMasks != 0L || bestFlagsCount > 0;
         }
 
+        @Override
+        public void cleanUp() {
+            indexLock.unlock();
+        }
     }
 
     private class RankingStage implements BufferPipe.FinalFunction<RankableDocument> {
 
         private final ScratchIntListPool pool = new ScratchIntListPool(64);
+        private final Lock indexLock = currentIndex.useLock();
+
+        public RankingStage() {
+            if (!indexLock.tryLock()) {
+                throw new IllegalStateException("Index lock could not be acquired");
+            }
+        }
+
+
 
         @Override
         public void process(RankableDocument rankableDocument) {
@@ -364,6 +395,11 @@ public class IndexQueryExecution {
                 }
             }
             return ret;
+        }
+
+        @Override
+        public void cleanUp() {
+            indexLock.unlock();
         }
     }
 
