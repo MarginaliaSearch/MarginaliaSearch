@@ -77,6 +77,10 @@ public class FullReverseIndexReader {
 
     }
 
+    public boolean isLoaded() {
+        return this.valueReader != null;
+    }
+
     private boolean validateDocumentsFooter(Path documents) {
         try {
             SkipListWriter.validateFooter(documents, "skplist-docs-file");
