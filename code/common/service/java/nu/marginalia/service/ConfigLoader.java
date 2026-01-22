@@ -12,6 +12,9 @@ public class ConfigLoader {
     public static Path getConfigPath(String configName) {
         return WmsaHome.getHomePath().resolve("conf/properties/" + configName + ".properties");
     }
+    public static Path getConfigPath(String configName, int node) {
+        return WmsaHome.getHomePath().resolve("conf/properties/" + configName + "-" + node +  ".properties");
+    }
 
     public static void loadConfig(Path configPath) {
         if (!Files.exists(configPath)) {

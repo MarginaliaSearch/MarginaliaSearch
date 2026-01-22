@@ -3,6 +3,7 @@ package nu.marginalia.service;
 import io.prometheus.metrics.instrumentation.jvm.JvmMetrics;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
 import nu.marginalia.service.module.ServiceConfiguration;
+import nu.marginalia.service.module.ServiceConfigurationModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +30,10 @@ public abstract class MainClass {
 
         ConfigLoader.loadConfig(
                 ConfigLoader.getConfigPath(id.serviceName)
+        );
+
+        ConfigLoader.loadConfig(
+                ConfigLoader.getConfigPath(id.serviceName, ServiceConfigurationModule.getNode())
         );
 
         initJdbc();
