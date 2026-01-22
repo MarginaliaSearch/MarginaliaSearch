@@ -25,6 +25,12 @@ public class LiveCaptureConfig {
         try {
             NodeConfiguration nodeConfig = nodeConfigurationService.get(node);
             isEnabled = (nodeConfig.profile() == NodeProfile.REALTIME);
+            if (isEnabled) {
+                logger.info("Running on profile {} -- enabling live capture features", nodeConfig.profile());
+            }
+            else {
+                logger.info("Running on profile {} -- disabling live capture features", nodeConfig.profile());
+            }
         } catch (SQLException e) {
             logger.error("Failed to read node configuration, disabling live capture");
         }

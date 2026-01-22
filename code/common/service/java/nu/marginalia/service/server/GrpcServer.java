@@ -9,6 +9,8 @@ import nu.marginalia.service.discovery.property.ServiceKey;
 import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.util.NamedExecutorFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -18,7 +20,7 @@ import java.util.concurrent.Executors;
 
 public class GrpcServer {
     private final Server server;
-
+    private static final Logger logger = LoggerFactory.getLogger(GrpcServer.class);
     private static final boolean useLoom = Boolean.getBoolean("system.experimentalUseLoom");
 
     public GrpcServer(ServiceConfiguration config,
@@ -45,7 +47,11 @@ public class GrpcServer {
         for (var grpcService : grpcServices) {
 
             if (!grpcService.shouldRegisterService()) {
+                logger.info("Omitting {}", grpcService.getClass().getSimpleName());
                 continue;
+            }
+            else {
+                logger.info("Registering {}", grpcService.getClass().getSimpleName());
             }
 
             var svc = grpcService.bindService();
