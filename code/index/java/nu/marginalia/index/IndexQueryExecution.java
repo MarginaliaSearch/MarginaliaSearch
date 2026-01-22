@@ -45,8 +45,7 @@ public class IndexQueryExecution {
 
     private static final int lookupBatchSize = SkipListConstants.MAX_RECORDS_PER_BLOCK;
 
-    private static final ExecutorService threadPool =
-            new ThreadPoolExecutor(16, 256, 60L, TimeUnit.SECONDS, new SynchronousQueue<>());
+    private static final ExecutorService threadPool = Executors.newCachedThreadPool();
 
     private static final Logger log = LoggerFactory.getLogger(IndexQueryExecution.class);
 
