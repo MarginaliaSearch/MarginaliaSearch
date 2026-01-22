@@ -11,9 +11,6 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -31,9 +28,6 @@ public class BufferPool implements AutoCloseable {
 
     private final AtomicInteger diskReadCount = new AtomicInteger();
     private final AtomicInteger cacheReadCount = new AtomicInteger();
-    private final AtomicInteger prefetchReadCount = new AtomicInteger();
-
-    private final Prefetcher prefetcher;
 
     private volatile boolean running = true;
 
@@ -48,7 +42,6 @@ public class BufferPool implements AutoCloseable {
             throw new RuntimeException(e);
         }
         poolLru = new PoolLru(pages);
-        prefetcher.reset();
     }
 
 
@@ -88,7 +81,6 @@ public class BufferPool implements AutoCloseable {
                 }
 
                 int diskRead = diskReadCount.get();
-                int prefetchRead = prefetchReadCount.get();
                 int cacheRead = cacheReadCount.get();
                 int heldCount = 0;
                 for (var page : pages) {
@@ -98,16 +90,15 @@ public class BufferPool implements AutoCloseable {
                 }
 
                 if (diskRead != diskReadOld || cacheRead != cacheReadOld) {
-                    logger.info("[#{}:{}] Disk/Prefetched/Cached: {}/{}/{}, heldCount={}/{}, fqs={}, rcc={}",
+                    logger.info("[#{}:{}] Disk/Cached: {}/{}, heldCount={}/{}, fqs={}, rcc={}",
                             hashCode(), pageSizeBytes,
-                            diskRead, prefetchRead, cacheRead,
+                            diskRead, cacheRead,
                             heldCount, pages.length,
                             poolLru.getFreeQueueSize(), poolLru.getReclaimCycles());
                 }
             }
         });
 
-        this.prefetcher = new Prefetcher(Math.max(1, 128*1024/pageSizeBytes));
     }
 
     public void close() {
@@ -127,8 +118,6 @@ public class BufferPool implements AutoCloseable {
         try {
             monitorThread.interrupt();
             monitorThread.join();
-
-            prefetcher.stop();
         }
         catch (InterruptedException ex) {
             throw new RuntimeException(ex);
@@ -168,30 +157,13 @@ public class BufferPool implements AutoCloseable {
         MemoryPage buffer = getExistingBufferForReading(address);
 
         if (buffer == null) {
-            buffer = read(address, true);
+            buffer = read(address);
         }
 
         return buffer;
     }
 
-    public void prefetch(long address) {
-        prefetcher.requestPrefetch(address);
-    }
-
-    private void prefetchNow(long address) {
-        // Look through available pages for the one we're looking for
-        MemoryPage buffer = poolLru.get(address);
-
-        if (buffer != null) // already cached
-            return;
-
-        // buffer is read unacquired, no need to close the return value
-        read(address, false);
-
-    }
-
-
-    private MemoryPage read(long address, boolean acquire) {
+    private MemoryPage read(long address) {
         // If the page is not available, read it from the caller's thread
         if (address + pageSizeBytes > fileSize) {
             throw new RuntimeException("Address " + address + " too large for page size " + pageSizeBytes + " and file size " + fileSize);
@@ -203,19 +175,10 @@ public class BufferPool implements AutoCloseable {
         poolLru.register(buffer);
         populateBuffer(buffer);
 
-        if (acquire) {
-            if (!buffer.pinCount().compareAndSet(-1, 1)) {
-                throw new IllegalStateException("Panic! Write lock was not held during write!");
-            }
-            diskReadCount.incrementAndGet();
+        if (!buffer.pinCount().compareAndSet(-1, 1)) {
+            throw new IllegalStateException("Panic! Write lock was not held during write!");
         }
-        else {
-            if (!buffer.pinCount().compareAndSet(-1, 0)) {
-                throw new IllegalStateException("Panic! Write lock was not held during write!");
-            }
-            prefetchReadCount.incrementAndGet();
-        }
-
+        diskReadCount.incrementAndGet();
 
         return buffer;
     }
@@ -247,6 +210,12 @@ public class BufferPool implements AutoCloseable {
             return;
         }
 
+        for (int iter = 0; iter < 1000; iter++) {
+            if (!page.dirty())
+                return;
+            Thread.yield();
+        }
+
         synchronized (page) {
             while (page.dirty()) {
                 try {
@@ -256,60 +225,6 @@ public class BufferPool implements AutoCloseable {
                     throw new RuntimeException(ex);
                 }
             }
-        }
-    }
-
-    class Prefetcher {
-        private final List<Thread> threads;
-        private final int nThreads;
-        private final ArrayBlockingQueue<Long> prefetchQueue;
-
-        public Prefetcher(int nThreads) {
-            this.threads = new ArrayList<>(nThreads);
-            this.prefetchQueue = new ArrayBlockingQueue<>(4*nThreads);
-            this.nThreads = nThreads;
-
-            start(nThreads);
-        }
-
-        public void reset() throws InterruptedException {
-            stop();
-            start(nThreads);
-        }
-
-        public void stop() throws InterruptedException {
-            var iter = threads.iterator();
-            while (iter.hasNext()) {
-                var thread = iter.next();
-                thread.interrupt();
-                thread.join();
-                iter.remove();
-            }
-        }
-
-        private void start(int n) {
-            for (int i = 0; i < n; i++) {
-                threads.add(Thread.ofPlatform().name("BufferPool:Prefetcher").daemon().start(this::prefetchThread));
-            }
-        }
-
-        private void prefetchThread() {
-            try {
-                for (;;) {
-                    Long address = prefetchQueue.poll(1, TimeUnit.SECONDS);
-                    if (null == address) {
-                        continue;
-                    }
-                    prefetchNow(address);
-                }
-            }
-            catch (InterruptedException ex) {
-                //
-            }
-        }
-
-        public void requestPrefetch(long address) {
-            prefetchQueue.offer(address);
         }
     }
 

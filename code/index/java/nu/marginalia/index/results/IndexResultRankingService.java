@@ -6,7 +6,6 @@ import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
@@ -17,6 +16,7 @@ import nu.marginalia.api.searchquery.model.query.QueryStrategy;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.api.searchquery.model.results.debug.DebugRankingFactors;
 import nu.marginalia.index.CombinedIndexReader;
+import nu.marginalia.index.ScratchIntListPool;
 import nu.marginalia.index.StatefulIndex;
 import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.model.*;
@@ -29,18 +29,13 @@ import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.idx.WordFlags;
-import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.SequenceOperations;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.lang.foreign.Arena;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates.booleanAggregate;
 import static nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates.intMaxMinAggregate;
@@ -63,155 +58,23 @@ public class IndexResultRankingService {
         this.domainRankingOverrides = domainRankingOverrides;
     }
 
-    public RankingData prepareRankingData(SearchContext rankingContext, CombinedDocIdList resultIds) throws TimeoutException {
-        return new RankingData(rankingContext, resultIds);
-    }
-
-    public final class RankingData implements AutoCloseable {
-        final Arena arena;
-        private static final DocumentSpans emptySpansInstance = new DocumentSpans();
-        private final int numPriorityTerms;
-
-        private final CombinedTermMetadata termMetadata;
-        private final DocumentSpans[] documentSpans;
-        private final long[] flags;
-        private final BitSet priorityTermsPresent;
-        private final CodedSequence[] positions;
-        private final CombinedDocIdList resultIds;
-
-        private AtomicBoolean closed = new AtomicBoolean(false);
-        int pos = -1;
-
-        public RankingData(SearchContext rankingContext, CombinedDocIdList resultIds) throws TimeoutException {
-            this.resultIds = resultIds;
-            this.arena = Arena.ofShared();
-
-            this.numPriorityTerms = rankingContext.termIdsPriority.size();
-            final int termCount = rankingContext.termIdsAll.size();
-
-            this.priorityTermsPresent = new BitSet(rankingContext.termIdsPriority.size());
-            this.flags = new long[termCount];
-            this.positions = new CodedSequence[termCount];
-
-            // Get the current index reader, which is the one we'll use for this calculation,
-            // this may change during the calculation, but we don't want to switch over mid-calculation
-
-            final CombinedIndexReader currentIndex = statefulIndex.get();
-
-            // Perform expensive I/O operations
-
-            try {
-                this.termMetadata = currentIndex.getTermMetadata(arena, rankingContext, resultIds);
-
-                @NotNull
-                BitSet documentMask = termMetadata.viableDocuments();
-
-                this.documentSpans = currentIndex.getDocumentSpans(arena, rankingContext.budget, resultIds, documentMask);
-            }
-            catch (TimeoutException|RuntimeException ex) {
-                arena.close();
-                throw ex;
-            }
-        }
-
-        public CodedSequence[] positions() {
-            return positions;
-        }
-        public long[] flags() {
-            return flags;
-        }
-        public BitSet priorityTermsPresent() { return priorityTermsPresent; }
-        public long resultId() {
-            return resultIds.at(pos);
-        }
-        public DocumentSpans documentSpans() {
-            return Objects.requireNonNullElse(documentSpans[pos], emptySpansInstance);
-        }
-
-        public boolean next() {
-            BitSet viableDocuments = termMetadata.viableDocuments();
-
-            do {
-                if (++pos >= resultIds.size()) {
-                    return false;
-                }
-            } while (!viableDocuments.get(pos));
-
-
-            for (int ti = 0; ti < flags.length; ti++) {
-                var tfd = termMetadata.termMetadata(ti);
-
-                assert tfd != null : "No term data for term " + ti;
-
-                flags[ti] = tfd.flag(pos);
-                positions[ti] = tfd.position(pos);
-            }
-
-            priorityTermsPresent.clear();
-
-            for (int ti = 0; ti < numPriorityTerms; ti++) {
-                if (termMetadata.priorityTermsPresent(ti, pos)) {
-                    priorityTermsPresent.set(ti);
-                }
-            }
-
-            return true;
-        }
-
-        public int size() {
-            return termMetadata.viableDocuments().cardinality();
-        }
-
-        public void close() {
-            if (closed.compareAndSet(false, true)) {
-                arena.close();
-            }
-        }
-
-    }
-
-    public List<SearchResultItem> rankResults(
-            SearchContext rankingContext,
-            RankingData rankingData)
-    {
-        List<SearchResultItem> results = new ArrayList<>(rankingData.size());
-        CombinedIndexReader index = statefulIndex.get();
-
-        // Iterate over documents by their index in the combinedDocIds, as we need the index for the
-        // term data arrays as well
-
-        while (rankingData.next() && rankingContext.budget.hasTimeLeft()) {
-
-            // Ignore documents that don't match the mandatory constraints
-            if (!rankingContext.phraseConstraints.testMandatory(rankingData.positions())) {
-                continue;
-            }
-
-            SearchResultItem score = calculateScore(null, index, rankingData.resultId(), rankingContext, rankingData);
-            if (score != null) {
-                results.add(score);
-            }
-        }
-
-        return results;
-    }
 
     public List<RpcDecoratedResultItem> selectBestResults(int limitByDomain,
                                                           int limitTotal,
                                                           SearchContext searchContext,
-                                                          List<SearchResultItem> results) throws SQLException {
+                                                          List<RankableDocument> results) throws SQLException {
 
 
-        List<SearchResultItem> resultsList = new ArrayList<>(results.size());
+        List<RankableDocument> resultsList = new ArrayList<>(results.size());
         TLongList idsList = new TLongArrayList(limitTotal);
 
         IndexResultDomainDeduplicator domainCountFilter = new IndexResultDomainDeduplicator(limitByDomain);
         for (var item : results) {
-            if (domainCountFilter.test(item)) {
+            if (domainCountFilter.test(item.item)) {
 
                 if (resultsList.size() < limitTotal) {
                     resultsList.add(item);
-                    idsList.add(item.getDocumentId());
+                    idsList.add(item.item.getDocumentId());
                 }
                 //
                 // else { break; } <-- don't add this even though it looks like it should be present!
@@ -228,36 +91,24 @@ public class IndexResultRankingService {
         // discard along the way
 
         if (searchContext.params.getExportDebugData()) {
-            var combinedIdsList = new LongArrayList(resultsList.size());
-            for (var item : resultsList) {
-                combinedIdsList.add(item.combinedId);
-            }
-            combinedIdsList.sort(Long::compareTo);
-
-            resultsList.clear();
-
             // Re-rank the results while gathering debugging data
-            try (RankingData rankingData = prepareRankingData(searchContext,  new CombinedDocIdList(combinedIdsList))) {
-                CombinedIndexReader index = statefulIndex.get();
+
+            try (var indexRef = statefulIndex.get()) {
+                CombinedIndexReader index = indexRef.get();
 
                 // Iterate over documents by their index in the combinedDocIds, as we need the index for the
                 // term data arrays as well
 
-                while (rankingData.next()) {
-                    if (!searchContext.phraseConstraints.testMandatory(rankingData.positions())) {
-                        continue;
-                    }
-
-                    SearchResultItem score = calculateScore(new DebugRankingFactors(), index, rankingData.resultId(), searchContext, rankingData);
+                ScratchIntListPool pool = new ScratchIntListPool(128);
+                for (var doc : results) {
+                    pool.reset();
+                    SearchResultItem score = calculateScore(new DebugRankingFactors(), pool, index, searchContext, doc);
                     if (score != null) {
-                        resultsList.add(score);
+                        doc.item = score;
                     }
                 }
-            }
-            catch (TimeoutException ex) {
-                // this won't happen since we passed null for budget
-            }
 
+            }
         }
 
         // Fetch the document details for the selected results in one go, from the local document database
@@ -271,7 +122,8 @@ public class IndexResultRankingService {
         LongOpenHashSet seenDocumentHashes = new LongOpenHashSet(resultsList.size());
 
         // Decorate the results with the document details
-        for (SearchResultItem result : resultsList) {
+        for (RankableDocument doc : resultsList) {
+            var result = doc.item;
             final long id = result.getDocumentId();
             final DocdbUrlDetail docData = detailsById.get(id);
 
@@ -367,19 +219,25 @@ public class IndexResultRankingService {
 
     @Nullable
     public SearchResultItem calculateScore(@Nullable DebugRankingFactors debugRankingFactors,
+                                           ScratchIntListPool intListPool,
                                            CombinedIndexReader index,
-                                           long combinedId,
                                            SearchContext rankingContext,
-                                           IndexResultRankingService.RankingData rankingData)
+                                           RankableDocument document)
     {
-        long[] wordFlags = rankingData.flags();
-        CodedSequence[] positions = rankingData.positions();
-        DocumentSpans spans = rankingData.documentSpans();
+        final long combinedId = document.combinedDocumentId;
+
+        if (!rankingContext.phraseConstraints.testMandatory(document.positions)) {
+            return null;
+        }
+
+        long[] wordFlags = document.termFlags;
+        IntList[] positions = document.positions;
+        DocumentSpans spans = document.documentSpans;
 
         QueryParams queryParams = rankingContext.queryParams;
         CompiledQuery<String> compiledQuery = rankingContext.compiledQuery;
 
-        CompiledQuery<CodedSequence> positionsQuery = compiledQuery.forData(positions);
+        CompiledQuery<IntList> positionsQuery = compiledQuery.forData(positions);
 
         // If the document is not relevant to the query, abort early to reduce allocations and
         // avoid unnecessary calculations
@@ -391,7 +249,7 @@ public class IndexResultRankingService {
 
         boolean allSynthetic = booleanAggregate(wordFlagsQuery, flags -> WordFlags.Synthetic.isPresent((byte) flags));
         int minFlagsCount = intMaxMinAggregate(wordFlagsQuery, flags -> Long.bitCount(flags & 0xff));
-        int minPositionsCount = intMaxMinAggregate(positionsQuery, pos -> pos == null ? 0 : pos.valueCount());
+        int minPositionsCount = intMaxMinAggregate(positionsQuery, pos -> pos == null ? 0 : pos.size());
 
         if (minFlagsCount == 0 && !allSynthetic && minPositionsCount == 0) {
             return null;
@@ -399,36 +257,24 @@ public class IndexResultRankingService {
 
         long docId = UrlIdCodec.removeRank(combinedId);
         long docMetadata = index.getDocumentMetadata(combinedId);
-        int htmlFeatures = index.getHtmlFeatures(docId);
+        int htmlFeatures = index.getHtmlFeatures(combinedId);
 
-        int docSize = index.getDocumentSize(docId);
+        int docSize = index.getDocumentSize(combinedId);
         if (docSize <= 0) docSize = 5000;
 
         if (debugRankingFactors != null) {
-            debugRankingFactors.addDocumentFactor("doc.docId", Long.toString(combinedId));
-            debugRankingFactors.addDocumentFactor("doc.combinedId", Long.toString(docId));
-        }
-
-        // Decode the coded positions lists into plain IntLists as at this point we will be
-        // going over them multiple times
-        IntList[] decodedPositions = new IntList[positions.length];
-        for (int i = 0; i < positions.length; i++) {
-            if (positions[i] != null) {
-                decodedPositions[i] = positions[i].values();
-            }
-            else {
-                decodedPositions[i] = IntList.of();
-            }
+            debugRankingFactors.addDocumentFactor("doc.docId", Long.toString(docId));
+            debugRankingFactors.addDocumentFactor("doc.combinedId", Long.toString(combinedId));
         }
 
         var params = rankingContext.params;
 
         double documentBonus = calculateDocumentBonus(docMetadata, htmlFeatures, docSize, params, debugRankingFactors);
 
-        VerbatimMatches verbatimMatches = new VerbatimMatches(decodedPositions, rankingContext.phraseConstraints, spans);
-        UnorderedMatches unorderedMatches = new UnorderedMatches(decodedPositions, compiledQuery, rankingContext.regularMask, spans);
+        VerbatimMatches verbatimMatches = new VerbatimMatches(intListPool, positions, rankingContext.phraseConstraints, spans);
+        UnorderedMatches unorderedMatches = new UnorderedMatches(positions, compiledQuery, rankingContext.regularMask, spans);
 
-        float proximitiyFac = getProximitiyFac(decodedPositions, rankingContext.phraseConstraints, verbatimMatches, unorderedMatches, spans);
+        float proximitiyFac = getProximitiyFac(positions, rankingContext.phraseConstraints, verbatimMatches, unorderedMatches, spans);
 
         double score_firstPosition = params.getTcfFirstPositionWeight() * (1.0 / Math.sqrt(unorderedMatches.firstPosition));
         double score_verbatim = params.getTcfVerbatimWeight() * verbatimMatches.getScore();
@@ -443,10 +289,10 @@ public class IndexResultRankingService {
         double rankingAdjustment = domainRankingOverrides.getRankingFactor(UrlIdCodec.getDomainId(combinedId));
 
         double priorityTermAdjustment = 0.;
-        BitSet priorityTermsPresent = rankingData.priorityTermsPresent();
+        boolean[] priorityTermsPresent = document.priorityTermsPresent;
 
         for (int i = 0; i < rankingContext.termIdsPriority.size(); i++) {
-            if (priorityTermsPresent.get(i))
+            if (priorityTermsPresent[i])
                 priorityTermAdjustment += rankingContext.termIdsPriorityWeights.getFloat(i);
         }
 
@@ -493,13 +339,13 @@ public class IndexResultRankingService {
 
                 if (positions[i] != null) {
                     debugRankingFactors.addTermFactor(termId, "positions.all", positions[i].iterator());
-                    debugRankingFactors.addTermFactor(termId, "positions.title", SequenceOperations.findIntersections(spans.title.positionValues(), decodedPositions[i]).iterator());
-                    debugRankingFactors.addTermFactor(termId, "positions.heading", SequenceOperations.findIntersections(spans.heading.positionValues(), decodedPositions[i]).iterator());
-                    debugRankingFactors.addTermFactor(termId, "positions.anchor", SequenceOperations.findIntersections(spans.anchor.positionValues(), decodedPositions[i]).iterator());
-                    debugRankingFactors.addTermFactor(termId, "positions.code", SequenceOperations.findIntersections(spans.code.positionValues(), decodedPositions[i]).iterator());
-                    debugRankingFactors.addTermFactor(termId, "positions.nav", SequenceOperations.findIntersections(spans.nav.positionValues(), decodedPositions[i]).iterator());
-                    debugRankingFactors.addTermFactor(termId, "positions.body", SequenceOperations.findIntersections(spans.body.positionValues(), decodedPositions[i]).iterator());
-                    debugRankingFactors.addTermFactor(termId, "positions.externalLinkText", SequenceOperations.findIntersections(spans.externalLinkText.positionValues(), decodedPositions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.title", SequenceOperations.findIntersections(intListPool.get(), spans.title.positionValues(), positions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.heading", SequenceOperations.findIntersections(intListPool.get(), spans.heading.positionValues(), positions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.anchor", SequenceOperations.findIntersections(intListPool.get(), spans.anchor.positionValues(), positions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.code", SequenceOperations.findIntersections(intListPool.get(), spans.code.positionValues(), positions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.nav", SequenceOperations.findIntersections(intListPool.get(), spans.nav.positionValues(), positions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.body", SequenceOperations.findIntersections(intListPool.get(), spans.body.positionValues(), positions[i]).iterator());
+                    debugRankingFactors.addTermFactor(termId, "positions.externalLinkText", SequenceOperations.findIntersections(intListPool.get(), spans.externalLinkText.positionValues(), positions[i]).iterator());
                 }
             }
         }
@@ -508,7 +354,7 @@ public class IndexResultRankingService {
                 docMetadata,
                 htmlFeatures,
                 score,
-                calculatePositionsMask(decodedPositions, rankingContext.phraseConstraints)
+                calculatePositionsMask(intListPool, positions, rankingContext.phraseConstraints)
         );
 
         if (null != debugRankingFactors) {
@@ -557,12 +403,12 @@ public class IndexResultRankingService {
     /** Calculate a bitmask illustrating the intersected positions of the search terms in the document.
      *  This is used in the GUI.
      * */
-    private long calculatePositionsMask(IntList[] positions, PhraseConstraintGroupList phraseConstraints) {
+    private long calculatePositionsMask(ScratchIntListPool intListPool, IntList[] positions, PhraseConstraintGroupList phraseConstraints) {
 
         long result = 0;
         int bit = 0;
 
-        IntIterator intersection = phraseConstraints.getFullGroup().findIntersections(positions, 64).intIterator();
+        IntIterator intersection = phraseConstraints.getFullGroup().findIntersections(intListPool, positions, 64).intIterator();
 
         while (intersection.hasNext() && bit < 64) {
             bit = (int) (Math.sqrt(intersection.nextInt()));
@@ -712,11 +558,11 @@ public class IndexResultRankingService {
             }
         }
 
-        public VerbatimMatches(IntList[] positions, PhraseConstraintGroupList constraints, DocumentSpans spans) {
+        public VerbatimMatches(ScratchIntListPool intListPool, IntList[] positions, PhraseConstraintGroupList constraints, DocumentSpans spans) {
             matches = new BitSet(HtmlTag.includedTags.length);
 
             PhraseConstraintGroupList.PhraseConstraintGroup fullGroup = constraints.getFullGroup();
-            IntList fullGroupIntersections = fullGroup.findIntersections(positions);
+            IntList fullGroupIntersections = fullGroup.findIntersections(intListPool, positions);
 
             if (fullGroup.size == 1) {
                 var titleSpan = spans.getSpan(HtmlTag.TITLE);
@@ -767,7 +613,7 @@ public class IndexResultRankingService {
             for (PhraseConstraintGroupList.PhraseConstraintGroup optionalGroup : constraints.getOptionalGroups()) {
                 float sizeScalingFactor = (float) Math.sqrt(optionalGroup.size / (float) fullGroup.size);
 
-                IntList intersections = optionalGroup.findIntersections(positions);
+                IntList intersections = optionalGroup.findIntersections(intListPool, positions);
 
                 if (intersections.isEmpty())
                     continue;

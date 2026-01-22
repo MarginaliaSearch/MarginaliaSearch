@@ -3,6 +3,7 @@ package nu.marginalia.index.model;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
+import nu.marginalia.index.ScratchIntListPool;
 import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.SequenceOperations;
@@ -53,6 +54,16 @@ public class PhraseConstraintGroupList {
         return true;
     }
 
+    public boolean testMandatory(IntList[] positions) {
+
+        for (var constraint : mandatoryGroups) {
+            if (!constraint.test(positions)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
     public static final class PhraseConstraintGroup {
         private final int[] offsets;
         private final BitSet present;
@@ -120,18 +131,17 @@ public class PhraseConstraintGroupList {
             return SequenceOperations.intersectSequences(sequences);
         }
 
-
-        public IntList findIntersections(IntList[] positions) {
-            IntList[] sequences = new IntList[presentCardinality];
-            int[] iterOffsets = new int[sequences.length];
+        public boolean test(IntList[] positions) {
+            int[] offsets = new int[positions.length];
+            IntIterator[] sequences = new IntIterator[presentCardinality];
 
             for (int oi = 0, si = 0; oi < offsets.length; oi++) {
                 if (!present.get(oi)) {
                     continue;
                 }
-                int offset = offsets[oi];
+                int offset = this.offsets[oi];
                 if (offset < 0)
-                    return IntList.of();
+                    return false;
 
                 // Create iterators that are offset by their relative position in the
                 // sequence.  This is done by subtracting the index from the offset,
@@ -140,17 +150,17 @@ public class PhraseConstraintGroupList {
 
                 var posForTerm = positions[offset];
                 if (posForTerm == null) {
-                    return IntList.of();
+                    return false;
                 }
-                sequences[si++] = posForTerm;
-                iterOffsets[si - 1] = -oi;
+                sequences[si] = posForTerm.iterator();
+                offsets[si++] = -oi;
             }
 
-            return SequenceOperations.findIntersections(sequences, iterOffsets, Integer.MAX_VALUE);
+            return SequenceOperations.intersectOffsetSequences(sequences, offsets);
         }
 
 
-        public IntList findIntersections(IntList[] positions, int n) {
+        public IntList findIntersections(ScratchIntListPool pool, IntList[] positions) {
             IntList[] sequences = new IntList[presentCardinality];
             int[] iterOffsets = new int[sequences.length];
 
@@ -175,7 +185,36 @@ public class PhraseConstraintGroupList {
                 iterOffsets[si - 1] = -oi;
             }
 
-            return SequenceOperations.findIntersections(sequences, iterOffsets, n);
+            return SequenceOperations.findIntersections(pool.get(), sequences, iterOffsets, Integer.MAX_VALUE);
+        }
+
+
+        public IntList findIntersections(ScratchIntListPool pool, IntList[] positions, int n) {
+            IntList[] sequences = new IntList[presentCardinality];
+            int[] iterOffsets = new int[sequences.length];
+
+            for (int oi = 0, si = 0; oi < offsets.length; oi++) {
+                if (!present.get(oi)) {
+                    continue;
+                }
+                int offset = offsets[oi];
+                if (offset < 0)
+                    return IntList.of();
+
+                // Create iterators that are offset by their relative position in the
+                // sequence.  This is done by subtracting the index from the offset,
+                // so that when we intersect them, an overlap means that the terms are
+                // in the correct order.  Note the offset is negative!
+
+                var posForTerm = positions[offset];
+                if (posForTerm == null) {
+                    return IntList.of();
+                }
+                sequences[si++] = posForTerm;
+                iterOffsets[si - 1] = -oi;
+            }
+
+            return SequenceOperations.findIntersections(pool.get(), sequences, iterOffsets, n);
         }
 
         public int minDistance(IntList[] positions) {

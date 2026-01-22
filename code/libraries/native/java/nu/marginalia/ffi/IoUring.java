@@ -25,8 +25,13 @@ public class IoUring {
 
     private static boolean useIoUring = !Boolean.getBoolean("system.disableIoUring");
 
-    public final MethodHandle uringInit;
+    public final MethodHandle uringInitRegisteredFd;
+    public final MethodHandle uringInitUnregistered;
     public final MethodHandle uringClose;
+
+    public final MethodHandle uringJustPoll;
+    public final MethodHandle uringReadAndPoll;
+
     private final MethodHandle uringReadBuffered;
     private final MethodHandle uringReadDirect;
     private final MethodHandle uringReadSubstitute;
@@ -60,8 +65,34 @@ public class IoUring {
             handle = libraryLookup.findOrThrow("uring_read_direct");
             uringReadDirect = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT, ADDRESS, ADDRESS, ADDRESS));
 
+            handle = libraryLookup.findOrThrow("uring_read_submit_and_poll");
+
+            uringReadAndPoll = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(
+                    JAVA_INT,
+                    ADDRESS,  // io_uring* ring
+                    ADDRESS,  // long* result_ids
+                    JAVA_INT, // int in_flight_requests
+                    JAVA_INT, // int read_count
+                    ADDRESS,  // long* read_batch_ids
+                    ADDRESS,  // int* read_fds
+                    ADDRESS,  // void** read_buffers
+                    ADDRESS,  // unsigned int** read_sizes
+                    ADDRESS  // long* read_offsets
+            ));
+            handle = libraryLookup.findOrThrow("uring_poll");
+
+            uringJustPoll = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(
+                    JAVA_INT,
+                    ADDRESS,  // io_uring* ring
+                    ADDRESS   // long* result_ids
+            ));
+
             handle = libraryLookup.findOrThrow("initialize_uring_single_file");
-            uringInit = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(ADDRESS, JAVA_INT, JAVA_INT));
+            uringInitRegisteredFd = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(ADDRESS, JAVA_INT, JAVA_INT));
+
+            handle = libraryLookup.findOrThrow("initialize_uring_unregistered");
+            uringInitUnregistered = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(ADDRESS, JAVA_INT));
+
 
             handle = libraryLookup.findOrThrow("close_uring");
             uringClose = nativeLinker.downcallHandle(handle, FunctionDescriptor.ofVoid(ADDRESS));
@@ -70,10 +101,13 @@ public class IoUring {
             uringReadSubstitute = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS, ADDRESS, ADDRESS));
         }
         else {
-            uringInit = null;
+            uringInitRegisteredFd = null;
+            uringInitUnregistered = null;
             uringClose = null;
             uringReadDirect = null;
             uringReadBuffered = null;
+            uringReadAndPoll = null;
+            uringJustPoll = null;
 
             handle = libraryLookup.findOrThrow("substitute_uring_read");
             uringReadSubstitute = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS, ADDRESS, ADDRESS));
@@ -126,7 +160,7 @@ public class IoUring {
     public static UringQueue uringOpen(int fd, int queueSize) {
         if (useIoUring) {
             try {
-                return new UringQueue((MemorySegment) instance.uringInit.invoke(queueSize, fd), fd);
+                return new UringQueue((MemorySegment) instance.uringInitRegisteredFd.invoke(queueSize, fd), fd);
             } catch (Throwable t) {
                 throw new RuntimeException("Failed to invoke native function", t);
             }

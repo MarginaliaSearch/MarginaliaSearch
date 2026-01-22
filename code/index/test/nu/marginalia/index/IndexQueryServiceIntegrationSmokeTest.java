@@ -50,6 +50,10 @@ import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 @Execution(SAME_THREAD)
 public class IndexQueryServiceIntegrationSmokeTest {
 
+    static {
+        System.setProperty("index.disableViabilityPrecheck", "true");
+    }
+
     @Inject
     Initialization initialization;
 
@@ -360,7 +364,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
                 DocIdRewriter.identity(),
                 tmpDir);
 
-        constructor.createReverseIndex(new FakeProcessHeartbeat(), "createReverseIndexFull", IndexJournal.findJournal(workDir, "en").orElseThrow(), workDir);
+        constructor.createReverseIndex(new FakeProcessHeartbeat(), "createReverseIndexFull", IndexJournal.findJournal(workDir, "en").orElseThrow());
 
     }
 

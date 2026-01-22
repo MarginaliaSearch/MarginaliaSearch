@@ -6,7 +6,7 @@ import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggre
 import nu.marginalia.api.searchquery.model.query.SpecificationLimitType;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.forward.ForwardIndexReader;
-import nu.marginalia.index.forward.spans.DocumentSpans;
+import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
 import nu.marginalia.index.model.*;
 import nu.marginalia.index.reverse.FullReverseIndexReader;
 import nu.marginalia.index.reverse.IndexLanguageContext;
@@ -16,20 +16,23 @@ import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.index.reverse.query.filter.QueryFilterStepIf;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentMetadata;
+import nu.marginalia.sequence.CodedSequence;
+import nu.marginalia.skiplist.SkipListReader;
 import nu.marginalia.skiplist.SkipListValueRanges;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.CheckReturnValue;
 import java.lang.foreign.Arena;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Predicate;
 
 /** A reader for the combined forward and reverse indexes.
@@ -44,6 +47,15 @@ public class CombinedIndexReader {
     private final ForwardIndexReader forwardIndexReader;
     private final FullReverseIndexReader reverseIndexFullReader;
     private final PrioReverseIndexReader reverseIndexPriorityReader;
+
+    private final ReadWriteLock leaseLock = new ReentrantReadWriteLock();
+
+    public final Lock useLock() {
+        return leaseLock.readLock();
+    }
+    public final Lock closeLock() {
+        return leaseLock.writeLock();
+    }
 
     public CombinedIndexReader(ForwardIndexReader forwardIndexReader,
                                FullReverseIndexReader reverseIndexFullReader,
@@ -256,13 +268,16 @@ public class CombinedIndexReader {
         return new ParamMatchingQueryFilter(params, forwardIndexReader);
     }
 
-    /** Retrieves the term metadata for the specified word for the provided documents */
-    public CombinedTermMetadata getTermMetadata(Arena arena,
-                                                SearchContext searchContext,
-                                                CombinedDocIdList docIds)
-    throws TimeoutException
-    {
-        return reverseIndexFullReader.getTermData(arena, searchContext, docIds);
+    @Nullable
+    @CheckReturnValue
+    public SkipListReader.ValueReader getValueReader(SearchContext searchContext,
+                                                     long termId,
+                                                     CombinedDocIdList keys) {
+        return reverseIndexFullReader.getValueReader(searchContext, termId, keys);
+    }
+
+    public BitSet getValuePresence(SearchContext searchContext, long termId, CombinedDocIdList keys) {
+        return reverseIndexFullReader.getValuePresence(searchContext, termId, keys);
     }
 
     /** Retrieves the document metadata for the specified document */
@@ -286,40 +301,24 @@ public class CombinedIndexReader {
     }
 
     /** Retrieves the document spans for the specified documents */
-    public DocumentSpans[] getDocumentSpans(Arena arena,
-                                            IndexSearchBudget budget,
-                                            CombinedDocIdList docIds,
-                                            BitSet docIdsMask
-                                            ) throws TimeoutException {
-        return forwardIndexReader.getDocumentSpans(arena, budget, docIds, docIdsMask);
+
+    @Nullable
+    public DecodableDocumentSpans getDocumentSpans(Arena arena, long documentId) {
+        return forwardIndexReader.getDocumentSpans(arena, documentId);
     }
 
-    /** Close the indexes (this is not done immediately)
+    public CodedSequence[] getTermPositions(Arena arena, long[] codedOffsets) {
+        return reverseIndexFullReader.getTermPositions(arena, codedOffsets);
+    }
+
+    /** Close the indexes.  This blocks the calling thread until all users are finished.
      * */
     public void close() {
-       /* Delay the invocation of close method to allow for a clean shutdown of the service.
-        *
-        * This is especially important when using Unsafe-based LongArrays, since we have
-        * concurrent access to the underlying memory-mapped file.  If pull the rug from
-        * under the caller by closing the file, we'll get a SIGSEGV.  Even with MemorySegment,
-        * we'll get ugly stacktraces if we close the file while a thread is still accessing it.
-        */
+        closeLock().lock();
 
-        delayedCall(forwardIndexReader::close, Duration.ofMinutes(1));
-        delayedCall(reverseIndexFullReader::close, Duration.ofMinutes(1));
-        delayedCall(reverseIndexPriorityReader::close, Duration.ofMinutes(1));
-    }
-
-
-    private void delayedCall(Runnable call, Duration delay) {
-        Thread.ofPlatform().start(() -> {
-            try {
-                TimeUnit.SECONDS.sleep(delay.toSeconds());
-                call.run();
-            } catch (InterruptedException e) {
-                logger.error("Interrupted", e);
-            }
-        });
+        forwardIndexReader.close();
+        reverseIndexFullReader.close();
+        reverseIndexPriorityReader.close();
     }
 
     /** Returns true if index data is available */

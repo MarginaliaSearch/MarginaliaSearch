@@ -1,13 +1,16 @@
 package nu.marginalia.skiplist;
 
-import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongList;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.array.pool.BufferPool;
 import nu.marginalia.array.pool.MemoryPage;
+import nu.marginalia.skiplist.compression.DocIdCompressor;
+import nu.marginalia.skiplist.compression.output.SegmentCompressorBuffer;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.util.ArrayList;
@@ -21,11 +24,8 @@ public class SkipListReader {
 
     static final int BLOCK_STRIDE = BLOCK_SIZE;
 
-    private static final boolean enableValuePrefetching = Boolean.getBoolean("index.enableValuePrefetching");
-    private static final boolean enableIndexPrefetching = Boolean.getBoolean("index.enableIndexPrefetching");
-
     private final BufferPool indexPool;
-    private final BufferPool valuesPool;
+    private final SkipListValueReader valuesReader;
 
     private final long blockStart;
 
@@ -35,23 +35,22 @@ public class SkipListReader {
 
     private boolean atEnd;
 
+    private long lastDecompressedBlock = -1;
+    private final long[] decompressedData = new long[BLOCK_SIZE];
+
     public int[] __stats_match_histo_retain = new int[512];
     public int[] __stats_match_histo_reject = new int[512];
 
-    public int __stats__valueReads = 0;
-
-    public SkipListReader(BufferPool indexPool, BufferPool valuesPool, long blockStart) {
+    public SkipListReader(BufferPool indexPool,
+                          SkipListValueReader valuesReader,
+                          long blockStart) {
         this.indexPool = indexPool;
-        this.valuesPool = valuesPool;
+        this.valuesReader = valuesReader;
         this.blockStart = blockStart;
 
         currentBlock = blockStart & -BLOCK_SIZE;
         currentBlockOffset = (int) (blockStart & (BLOCK_SIZE - 1));
         atEnd = false;
-
-        if (enableIndexPrefetching) {
-            indexPool.prefetch(currentBlock);
-        }
 
         currentBlockIdx = 0;
     }
@@ -99,22 +98,30 @@ public class SkipListReader {
 
             int dataOffset = pageDataOffset(currentBlockOffset, fc);
 
-            long maxVal = maxValueInBlock(page, fc, n);
-            long targetValue = data.peekValueLt(maxVal);
+            long maxVal;
             long nextBlock;
 
-            if (targetValue > maxVal) {
+            if (FLAG_COMPRESSED_BLOCK == (flags & FLAG_COMPRESSED_BLOCK)) {
+                if (lastDecompressedBlock != currentBlock) {
+                    SegmentCompressorBuffer buffer = new SegmentCompressorBuffer(page.getMemorySegment(), dataOffset);
+                    DocIdCompressor.decompress(buffer, n, decompressedData);
+                    lastDecompressedBlock = currentBlock;
+                }
+
+                maxVal = decompressedData[n-1];
+            }
+            else {
+                maxVal = maxValueInBlock(page, fc, n);
+            }
+
+            if (data.peekValueLt(maxVal) > maxVal) {
                 nextBlock = findNextBlock(page, fc, maxVal);
             }
             else {
                 nextBlock = currentBlock + BLOCK_STRIDE;
             }
 
-            if (enableIndexPrefetching && (flags & FLAG_END_BLOCK) == 0) {
-                indexPool.prefetch(nextBlock);
-            }
-
-            if (data.currentValue() > maxVal || retainInPage(page, dataOffset, n, data)) {
+            if (data.currentValue() > maxVal || retainInPage(page, flags, dataOffset, n, data)) {
                 atEnd = (flags & FLAG_END_BLOCK) != 0;
                 if (atEnd) {
                     while (data.hasMore())
@@ -140,7 +147,16 @@ public class SkipListReader {
         while (tryRetainData(data));
     }
 
-    boolean retainInPage(MemoryPage page, int dataOffset, int n, LongQueryBuffer data) {
+    boolean retainInPage(MemoryPage page, int flags, int dataOffset, int n, LongQueryBuffer data) {
+        if (FLAG_COMPRESSED_BLOCK == (flags & FLAG_COMPRESSED_BLOCK)) {
+            return retainInPage_Compressed(n, data);
+        }
+        else {
+            return retainInPage_Plain(page, dataOffset, n, data);
+        }
+    }
+
+    boolean retainInPage_Plain(MemoryPage page, int dataOffset, int n, LongQueryBuffer data) {
 
         int matches = 0;
 
@@ -182,233 +198,48 @@ public class SkipListReader {
         return currentBlockIdx >= n;
     }
 
-    /** Gets all of the values associated with the keys provided as input.
-     * Values that are not found in the skip list index are set to zero.
-     *
-     * To help with cache locality when utilizing the data, the values are
-     * de-interleaved in the result array, so for a record size of 3,
-     * the result array will look like [ 1, 2, 3, 4, ..., 1, 2, 3, 4, ... ]
-     * */
-    public long[] getAllValues(long[] keys) {
-        int pos = 0;
+    boolean retainInPage_Compressed(int n, LongQueryBuffer data) {
 
-        long[] vals = new long[keys.length * (RECORD_SIZE-1)];
-        Arrays.fill(vals, 0, keys.length, -1L);
+        int matches = 0;
 
-        if (getClass().desiredAssertionStatus()) {
-            for (int i = 1; i < keys.length; i++) {
-                assert keys[i] >= keys[i-1] : "Not ascending: " + Arrays.toString(keys);
-            }
-        }
-
-        long lastValueBlock = -1;
-
-        LongArrayFIFOQueue prefetchBlocks = enableValuePrefetching ? new LongArrayFIFOQueue() : null;
-
-        while (pos < keys.length) {
-            try (var page = indexPool.get(currentBlock)) {
-                MemorySegment ms = page.getMemorySegment();
-                assert ms.get(ValueLayout.JAVA_INT, currentBlockOffset) != 0 : "Likely reading zero space @ " + currentBlockOffset + " starting at " + blockStart + " -- " + parseBlock(ms, currentBlockOffset);
-                int n = headerNumRecords(page, currentBlockOffset);
-                int fc = headerForwardCount(page, currentBlockOffset);
-                byte flags = (byte) headerFlags(page, currentBlockOffset);
-
-                long valuesOffset = headerValueOffset(page, currentBlockOffset);
-
-                if (n == 0) {
-                    throw new IllegalStateException("Reading null memory!");
-                }
-
-                int dataOffset = pageDataOffset(currentBlockOffset, fc);
-
-                int remainingToRead = n - currentBlockIdx;
-                if (remainingToRead <= 0)
-                    break;
-
-                int searchStart = currentBlockIdx;
-
-                outer:
-                while (pos < keys.length) {
-                    long kv = keys[pos];
-
-                    for (; currentBlockIdx < searchStart + remainingToRead; currentBlockIdx++) {
-                        long pv = page.getLong( dataOffset + currentBlockIdx * 8);
-                        if (kv < pv) {
-                            pos++;
-                            continue outer;
-                        }
-                        else if (kv == pv) {
-                            long val = valuesOffset + 8L * (currentBlockIdx - searchStart) * (RECORD_SIZE-1);
-                            vals[pos] = val;
-
-                            if (enableValuePrefetching) {
-                                long valBlock = val & -VALUE_BLOCK_SIZE;
-                                if (valBlock != lastValueBlock) {
-                                    if (lastValueBlock < 0) { // prefetch the first block immediately
-                                        valuesPool.prefetch(valBlock);
-                                    }
-                                    else {
-                                        prefetchBlocks.enqueue(valBlock);
-                                    }
-
-                                    lastValueBlock = valBlock;
-
-                                }
-                            }
-
-                            pos++;
-                            continue outer;
-                        }
-                    }
-                    break;
-                }
-
-                if (currentBlockIdx >= n) {
-                    atEnd = (flags & FLAG_END_BLOCK) != 0;
-                    if (atEnd) {
-                        break;
-                    }
-
-                    if (pos >= keys.length) {
-                        currentBlock += BLOCK_STRIDE;
-                        currentBlockOffset = 0;
-                        currentBlockIdx = 0;
-                    }
-                    else {
-                        long nextBlock = currentBlock + (long) BLOCK_STRIDE;
-                        long currentValue = keys[pos];
-                        for (int i = 0; i < fc; i++) {
-                            long blockMaxValue = page.getLong(currentBlockOffset + DATA_BLOCK_HEADER_SIZE + 8 * i);
-                            nextBlock = currentBlock + (long) BLOCK_STRIDE * skipOffsetForPointer(Math.max(0, i-1));
-                            if (blockMaxValue >= currentValue) {
-                                break;
-                            }
-                        }
-                        currentBlockOffset = 0;
-                        currentBlockIdx = 0;
-                        currentBlock = nextBlock;
-                    }
-                }
-            }
-        }
-
-        int i = 0;
-        while (i < keys.length) {
-            if (vals[i] < 0) {
-                vals[i] = 0;
-                i++;
+        while (data.hasMore()
+                && n > (currentBlockIdx = binarySearchUB(decompressedData, data.currentValue(), currentBlockIdx, n)))
+        {
+            if (data.currentValue() != decompressedData[currentBlockIdx]) {
+                data.rejectAndAdvance();
             }
             else {
-                long valBlock = vals[i] & -VALUE_BLOCK_SIZE;
-
-                if (enableValuePrefetching && !prefetchBlocks.isEmpty()) {
-                    for (int prefetchIter = 0; prefetchIter < 2 && !prefetchBlocks.isEmpty(); prefetchIter++) {
-                        valuesPool.prefetch(prefetchBlocks.dequeueLong());
-                    }
-                }
-
-                try (var page = valuesPool.get(valBlock)) {
-
-                    for (; i < keys.length; i++) {
-                        if (vals[i] < 0) {
-                            vals[i] = 0;
-                        }
-                        else {
-                            if ((vals[i] & -VALUE_BLOCK_SIZE) != valBlock)
-                                break;
-
-                            int offsetBase = (int) (vals[i] & (VALUE_BLOCK_SIZE - 1));
-                            for (int j = 0; j < RECORD_SIZE - 1; j++) {
-                                vals[i + j * keys.length] = page.getLong(offsetBase + 8*j);
-                            }
-                        }
-                    }
-                }
+                data.retainAndAdvance();
+                matches++;
+                break;
             }
         }
-        return vals;
+
+        outer:
+        while (data.hasMore()) {
+            long bv = data.currentValue();
+
+            for (; currentBlockIdx < n; currentBlockIdx++) {
+                long pv = decompressedData[currentBlockIdx];
+                if (bv < pv) {
+                    data.rejectAndAdvance();
+                    continue outer;
+                }
+                else if (bv == pv) {
+                    data.retainAndAdvance();
+                    matches++;
+                    currentBlockIdx++;
+                    continue outer;
+                }
+            }
+            break;
+        }
+
+        __stats_match_histo_retain[Math.min(matches, __stats_match_histo_retain.length-1)]++;
+
+        return currentBlockIdx >= n;
     }
 
-    public BitSet getAllPresentValues(long[] keys) {
-        int pos = 0;
-        BitSet ret = new BitSet(keys.length);
-
-        if (getClass().desiredAssertionStatus()) {
-            for (int i = 1; i < keys.length; i++) {
-                assert keys[i] >= keys[i-1] : "Not ascending: " + Arrays.toString(keys);
-            }
-        }
-
-        while (pos < keys.length) {
-            try (var page = indexPool.get(currentBlock)) {
-                MemorySegment ms = page.getMemorySegment();
-                assert ms.get(ValueLayout.JAVA_INT, currentBlockOffset) != 0 : "Likely reading zero space @ " + currentBlockOffset + " starting at " + blockStart + " -- " + parseBlock(ms, currentBlockOffset);
-                int n = headerNumRecords(page, currentBlockOffset);
-                int fc = headerForwardCount(page, currentBlockOffset);
-                byte flags = (byte) headerFlags(page, currentBlockOffset);
-
-                if (n == 0) {
-                    throw new IllegalStateException("Reading null memory!");
-                }
-
-                int dataOffset = pageDataOffset(currentBlockOffset, fc);
-
-                int remainingToRead = n - currentBlockIdx;
-                if (remainingToRead <= 0)
-                    break;
-
-                int searchStart = currentBlockIdx;
-
-                outer:
-                while (pos < keys.length) {
-                    long kv = keys[pos];
-
-                    for (; currentBlockIdx < searchStart + remainingToRead; currentBlockIdx++) {
-                        long pv = page.getLong( dataOffset + currentBlockIdx * 8);
-                        if (kv < pv) {
-                            pos++;
-                            continue outer;
-                        }
-                        else if (kv == pv) {
-                            ret.set(pos);
-                            pos++;
-                            continue outer;
-                        }
-                    }
-                    break;
-                }
-
-                if (currentBlockIdx >= n) {
-                    atEnd = (flags & FLAG_END_BLOCK) != 0;
-                    if (atEnd) {
-                        break;
-                    }
-
-                    if (pos >= keys.length) {
-                        currentBlock += BLOCK_STRIDE;
-                        currentBlockOffset = 0;
-                        currentBlockIdx = 0;
-                    }
-                    else {
-                        long nextBlock = currentBlock + (long) BLOCK_STRIDE;
-                        long currentValue = keys[pos];
-                        for (int i = 0; i < fc; i++) {
-                            long blockMaxValue = page.getLong(currentBlockOffset + DATA_BLOCK_HEADER_SIZE + 8 * i);
-                            nextBlock = currentBlock + (long) BLOCK_STRIDE * skipOffsetForPointer(Math.max(0, i-1));
-                            if (blockMaxValue >= currentValue) {
-                                break;
-                            }
-                        }
-                        currentBlockOffset = 0;
-                        currentBlockIdx = 0;
-                        currentBlock = nextBlock;
-                    }
-                }
-            }
-        }
-
-        return ret;
-    }
 
     /** The retain operation keeps all keys in the provided LongQueryBuffer that also
      * exist in the skip list index.  This operation will return after intersecting with
@@ -427,22 +258,29 @@ public class SkipListReader {
 
             int dataOffset = pageDataOffset(currentBlockOffset, fc);
 
-            long maxVal = maxValueInBlock(page, fc, n);
-            long targetValue = data.peekValueLt(maxVal);
+            long maxVal;
+            if (FLAG_COMPRESSED_BLOCK == (flags & FLAG_COMPRESSED_BLOCK)) {
+                if (lastDecompressedBlock != currentBlock) {
+                    SegmentCompressorBuffer buffer = new SegmentCompressorBuffer(page.getMemorySegment(), dataOffset);
+                    DocIdCompressor.decompress(buffer, n, decompressedData);
+                    lastDecompressedBlock = currentBlock;
+                }
+                maxVal = decompressedData[n-1];
+            }
+            else {
+                maxVal = maxValueInBlock(page, fc, n);
+            }
+
             long nextBlock;
 
-            if (targetValue > maxVal) {
+            if (data.peekValueLt(maxVal) > maxVal) {
                 nextBlock = findNextBlock(page, fc, maxVal);
             }
             else {
                 nextBlock = currentBlock + BLOCK_STRIDE;
             }
 
-            if (enableIndexPrefetching && (flags & FLAG_END_BLOCK) == 0) {
-                indexPool.prefetch(nextBlock);
-            }
-
-            if (data.currentValue() > maxVal || rejectInPage(page, dataOffset, n, data)) {
+            if (data.currentValue() > maxVal || rejectInPage(page, flags, dataOffset, n, data)) {
                 atEnd = (flags & FLAG_END_BLOCK) != 0;
                 if (atEnd) {
                     while (data.hasMore())
@@ -466,7 +304,64 @@ public class SkipListReader {
         while (tryRejectData(data));
     }
 
-    boolean rejectInPage(MemoryPage page, int dataOffset, int n, LongQueryBuffer data) {
+    boolean rejectInPage(MemoryPage page, int flags, int dataOffset, int n, LongQueryBuffer data) {
+        if (FLAG_COMPRESSED_BLOCK == (flags & FLAG_COMPRESSED_BLOCK)) {
+
+            if (lastDecompressedBlock != currentBlock) {
+                SegmentCompressorBuffer buffer = new SegmentCompressorBuffer(page.getMemorySegment(), dataOffset);
+                DocIdCompressor.decompress(buffer, n, decompressedData);
+                lastDecompressedBlock = currentBlock;
+            }
+
+            return rejectInPage_Compressed(n, data);
+        }
+        else {
+            return rejectInPage_Plain(page, dataOffset, n, data);
+        }
+    }
+
+    boolean rejectInPage_Compressed(int n, LongQueryBuffer data) {
+
+        int matches = 0;
+
+        while (data.hasMore()
+                && n > (currentBlockIdx = binarySearchUB(decompressedData, data.currentValue(), currentBlockIdx, n)))
+        {
+            if (data.currentValue() != decompressedData[currentBlockIdx]) {
+                data.retainAndAdvance();
+            }
+            else {
+                data.rejectAndAdvance();
+                matches++;
+                break;
+            }
+        }
+
+        outer:
+        while (data.hasMore()) {
+            long bv = data.currentValue();
+
+            for (; currentBlockIdx < n; currentBlockIdx++) {
+                long pv = decompressedData[currentBlockIdx];
+                if (bv < pv) {
+                    data.retainAndAdvance();
+                    continue outer;
+                }
+                else if (bv == pv) {
+                    data.rejectAndAdvance();
+                    matches++;
+                    currentBlockIdx++;
+                    continue outer;
+                }
+            }
+            break;
+        }
+
+        __stats_match_histo_reject[Math.min(matches, __stats_match_histo_reject.length-1)]++;
+        return currentBlockIdx >= n;
+    }
+
+    boolean rejectInPage_Plain(MemoryPage page, int dataOffset, int n, LongQueryBuffer data) {
 
         int matches = 0;
 
@@ -533,15 +428,23 @@ public class SkipListReader {
                 assert fc >= 0;
                 byte flags = (byte) headerFlags(page, currentBlockOffset);
 
-                if (enableIndexPrefetching && (flags & FLAG_END_BLOCK) == 0) {
-                    indexPool.prefetch(currentBlock + BLOCK_STRIDE);
-                }
-
                 int dataOffset = pageDataOffset(currentBlockOffset, fc);
 
-                int nCopied = dest.addData(ms, dataOffset + currentBlockIdx * 8L, n - currentBlockIdx);
-                currentBlockIdx += nCopied;
-                totalCopied += nCopied;
+                if (FLAG_COMPRESSED_BLOCK == (flags & FLAG_COMPRESSED_BLOCK)) {
+                    if (lastDecompressedBlock != currentBlock) {
+                        SegmentCompressorBuffer buffer = new SegmentCompressorBuffer(page.getMemorySegment(), dataOffset);
+                        DocIdCompressor.decompress(buffer, n, decompressedData);
+                        lastDecompressedBlock = currentBlock;
+                    }
+                    int nCopied = dest.addData(decompressedData, currentBlockIdx, n - currentBlockIdx);
+                    currentBlockIdx += nCopied;
+                    totalCopied += nCopied;
+                }
+                else {
+                    int nCopied = dest.addData(ms, dataOffset + currentBlockIdx * 8L, n - currentBlockIdx);
+                    currentBlockIdx += nCopied;
+                    totalCopied += nCopied;
+                }
 
                 if (currentBlockIdx >= n) {
                     atEnd = (flags & FLAG_END_BLOCK) != 0;
@@ -585,36 +488,71 @@ public class SkipListReader {
 
                 assert fc >= 0;
                 byte flags = (byte) headerFlags(page, currentBlockOffset);
-
+                boolean inRange = false;
                 int dataOffset = pageDataOffset(currentBlockOffset, fc);
 
-                long blockMinValue = ms.get(ValueLayout.JAVA_LONG, dataOffset);
-                boolean inRange = false;
-
-                do {
-                    long rangeEnd;
-                    while ((rangeEnd = ranges.end()) < blockMinValue) {
-                        if (!ranges.next()) break outer;
+                if (FLAG_COMPRESSED_BLOCK == (flags & FLAG_COMPRESSED_BLOCK)) {
+                    if (lastDecompressedBlock != currentBlock) {
+                        SegmentCompressorBuffer buffer = new SegmentCompressorBuffer(page.getMemorySegment(), dataOffset);
+                        DocIdCompressor.decompress(buffer, n, decompressedData);
+                        lastDecompressedBlock = currentBlock;
                     }
 
-                    long rangeStart = ranges.start();
+                    do {
+                        long blockMinValue = decompressedData[currentBlockIdx];
+                        long rangeEnd;
+                        while ((rangeEnd = ranges.end()) < blockMinValue) {
+                            if (!ranges.next()) break outer;
+                        }
 
-                    int dataStart = page.binarySearchLong(rangeStart, dataOffset, 0, n);
+                        long rangeStart = ranges.start();
 
-                    if (dataStart == n) {
-                        break;
-                    }
+                        int dataStart = binarySearchUB(decompressedData, rangeStart, currentBlockIdx, n);
 
-                    int dataEnd = page.binarySearchLong(rangeEnd, dataOffset, dataStart, n);
-                    if (dataStart != dataEnd) {
-                        totalCopied += dest.addData(ms, dataOffset + dataStart * 8, (dataEnd - dataStart));
-                        if (dataEnd == n) {
-                            inRange = true;
+                        if (dataStart == n) {
                             break;
                         }
-                    }
-                } while (ranges.next());
 
+                        int dataEnd = binarySearchUB(decompressedData, rangeEnd, dataStart, n);
+                        if (dataStart != dataEnd) {
+                            int nCopied = dest.addData(decompressedData, dataStart, dataEnd - dataStart);
+
+                            totalCopied += nCopied;
+                            currentBlockIdx += nCopied;
+
+                            if (dataEnd == n) {
+                                inRange = true;
+                                break;
+                            }
+                        }
+                    } while (ranges.next());
+                }
+                else {
+                    long blockMinValue = ms.get(ValueLayout.JAVA_LONG, dataOffset);
+                    do {
+                        long rangeEnd;
+                        while ((rangeEnd = ranges.end()) < blockMinValue) {
+                            if (!ranges.next()) break outer;
+                        }
+
+                        long rangeStart = ranges.start();
+
+                        int dataStart = page.binarySearchLong(rangeStart, dataOffset, 0, n);
+
+                        if (dataStart == n) {
+                            break;
+                        }
+
+                        int dataEnd = page.binarySearchLong(rangeEnd, dataOffset, dataStart, n);
+                        if (dataStart != dataEnd) {
+                            totalCopied += dest.addData(ms, dataOffset + dataStart * 8L, (dataEnd - dataStart));
+                            if (dataEnd == n) {
+                                inRange = true;
+                                break;
+                            }
+                        }
+                    } while (ranges.next());
+                }
                 atEnd = (flags & FLAG_END_BLOCK) != 0 || ranges.atEnd();
 
                 if (atEnd)
@@ -642,6 +580,358 @@ public class SkipListReader {
         return totalCopied;
     }
 
+
+    public class ValueReader {
+        private static final int VALUE_BLOCK_SIZE = 4096;
+
+        private final int entrySize = (SkipListConstants.RECORD_SIZE - 1);
+
+        private final MemorySegment valueSegment = Arena.ofAuto().allocate(VALUE_BLOCK_SIZE, 8);
+
+        private final long[] inputKeys;
+        private int iPos = -1;
+        private int offsetPos = 0;
+
+        private final long[] valueOffsets;
+        private int vPos = 0;
+        private int vLen = 0;
+
+        private final long[] outValues;
+        private int oPos = -entrySize;
+        private int oLen = 0;
+
+        ValueReader() {
+            inputKeys = new long[0];
+            valueOffsets = new long[0];
+            outValues = new long[0];
+        }
+
+        ValueReader(long[] inputKeys) {
+            this.inputKeys = inputKeys;
+            this.valueOffsets = new long[inputKeys.length];
+            this.outValues = new long[inputKeys.length * (RECORD_SIZE-1)];
+
+        }
+
+        public boolean advance() throws IOException {
+            oPos += entrySize;
+            iPos++;
+
+            if (oPos < oLen) return true;
+
+            oPos = oLen = 0;
+
+            if (vPos == vLen) readOffsets();
+            if (vPos != vLen) {
+                copyValuesFromBlock();
+
+                return oLen > 0;
+            }
+            else {
+                return false;
+            }
+        }
+
+        public long getValue(int idx) {
+            assert idx >= 0;
+            assert idx < entrySize;
+
+            return outValues[oPos + idx];
+        }
+
+        public int getIndex() {
+            return iPos;
+        }
+
+        private void copyValuesFromBlock() throws IOException {
+            while (vPos < vLen && oLen == 0) {
+                if (valueOffsets[vPos] < 0) {
+                    Arrays.fill(outValues, oLen, oLen + entrySize, 0);
+                    oLen+=entrySize;
+                    vPos++;
+                }
+                else {
+                    long valBlock = valueOffsets[vPos] & -VALUE_BLOCK_SIZE;
+
+                    valuesReader.read(valueSegment, valBlock);
+
+                    for (; vPos < vLen; vPos++) {
+                        if (valueOffsets[vPos] < 0) {
+                            Arrays.fill(outValues, oLen, oLen + entrySize, 0);
+                            oLen+=entrySize;
+                        }
+                        else {
+                            long nextBlock = valueOffsets[vPos] & -VALUE_BLOCK_SIZE;
+                            if (nextBlock != valBlock) {
+                                break;
+                            }
+
+                            int offsetBase = (int) (valueOffsets[vPos] & (VALUE_BLOCK_SIZE - 1));
+                            for (int j = 0; j < RECORD_SIZE - 1; j++) {
+                                outValues[oLen + j] = valueSegment.get(ValueLayout.JAVA_LONG, offsetBase + 8*j);
+                            }
+                            oLen+=entrySize;
+                        }
+                    }
+                }
+            }
+
+        }
+
+        private void readOffsets() {
+
+            final int vLen0 = vLen;
+            while (vLen == vLen0 && offsetPos < inputKeys.length && !atEnd) {
+                try (var page = indexPool.get(currentBlock)) {
+                    MemorySegment ms = page.getMemorySegment();
+                    assert ms.get(ValueLayout.JAVA_INT, currentBlockOffset) != 0 : "Likely reading zero space @ " + currentBlockOffset + " starting at " + blockStart + " -- " + parseBlock(ms, currentBlockOffset);
+                    int n = headerNumRecords(page, currentBlockOffset);
+                    int fc = headerForwardCount(page, currentBlockOffset);
+                    byte flags = (byte) headerFlags(page, currentBlockOffset);
+
+                    long valuesOffset = headerValueOffset(page, currentBlockOffset);
+
+                    if (n == 0) {
+                        throw new IllegalStateException("Reading null memory!");
+                    }
+
+                    int dataOffset = pageDataOffset(currentBlockOffset, fc);
+
+                    int remainingToRead = n - currentBlockIdx;
+                    if (remainingToRead <= 0)
+                        return;
+
+                    if (FLAG_COMPRESSED_BLOCK == (flags & FLAG_COMPRESSED_BLOCK)) {
+                        if (lastDecompressedBlock != currentBlock) {
+                            SegmentCompressorBuffer buffer = new SegmentCompressorBuffer(page.getMemorySegment(), dataOffset);
+                            DocIdCompressor.decompress(buffer, n, decompressedData);
+                            lastDecompressedBlock = currentBlock;
+                        }
+
+                        readOffsetsForBlock_Compressed(n, valuesOffset);
+                    }
+                    else {
+                        readOffsetsForBlock_Plain(page, n, dataOffset, valuesOffset);
+                    }
+
+                    if (currentBlockIdx >= n) {
+                        atEnd = (flags & FLAG_END_BLOCK) != 0;
+                        if (atEnd) {
+                            return;
+                        }
+
+                        if (offsetPos >= inputKeys.length) {
+                            currentBlock += BLOCK_STRIDE;
+                            currentBlockOffset = 0;
+                            currentBlockIdx = 0;
+                        } else {
+                            long nextBlock = currentBlock + (long) BLOCK_STRIDE;
+                            long currentValue = inputKeys[offsetPos];
+                            for (int i = 0; i < fc; i++) {
+                                long blockMaxValue = page.getLong(currentBlockOffset + DATA_BLOCK_HEADER_SIZE + 8 * i);
+                                nextBlock = currentBlock + (long) BLOCK_STRIDE * skipOffsetForPointer(Math.max(0, i - 1));
+                                if (blockMaxValue >= currentValue) {
+                                    break;
+                                }
+                            }
+
+                            currentBlockOffset = 0;
+                            currentBlockIdx = 0;
+                            currentBlock = nextBlock;
+                        }
+                    }
+
+                }
+            }
+        }
+
+        private void readOffsetsForBlock_Compressed(int n, long valuesOffset) {
+            int searchStart = currentBlockIdx;
+            int remainingToRead = n - currentBlockIdx;
+
+            outer:
+            while (offsetPos < inputKeys.length) {
+                long kv = inputKeys[offsetPos];
+
+                for (; currentBlockIdx < searchStart + remainingToRead; currentBlockIdx++) {
+                    long pv = decompressedData[currentBlockIdx];
+                    if (kv < pv) {
+                        offsetPos++;
+                        valueOffsets[vLen++] = -1;
+                        continue outer;
+                    } else if (kv == pv) {
+                        long val = valuesOffset + 8L * (currentBlockIdx - searchStart) * (RECORD_SIZE - 1);
+                        valueOffsets[vLen++] = val;
+                        offsetPos++;
+
+                        continue outer;
+                    }
+                }
+                break;
+            }
+        }
+
+        private void readOffsetsForBlock_Plain(MemoryPage page, int n, int dataOffset, long valuesOffset) {
+            int remainingToRead = n - currentBlockIdx;
+
+            int searchStart = currentBlockIdx;
+
+            outer:
+            while (offsetPos < inputKeys.length) {
+                long kv = inputKeys[offsetPos];
+
+                for (; currentBlockIdx < searchStart + remainingToRead; currentBlockIdx++) {
+                    long pv = page.getLong(dataOffset + currentBlockIdx * 8);
+                    if (kv < pv) {
+                        offsetPos++;
+                        valueOffsets[vLen++] = -1;
+                        continue outer;
+                    } else if (kv == pv) {
+                        long val = valuesOffset + 8L * (currentBlockIdx - searchStart) * (RECORD_SIZE - 1);
+                        valueOffsets[vLen++] = val;
+                        offsetPos++;
+
+                        continue outer;
+                    }
+                }
+                break;
+            }
+        }
+
+    }
+
+    public ValueReader getValueReader(long[] keys) {
+        return new ValueReader(keys);
+    }
+
+    public ValueReader getEmptyValueReader() {
+        return new ValueReader();
+    }
+
+    /** Gets all of the values associated with the keys provided as input.
+     * Values that are not found in the skip list index are set to zero.
+     *
+     * To help with cache locality when utilizing the data, the values are
+     * de-interleaved in the result array, so for a record size of 3,
+     * the result array will look like [ 1, 2, 3, 4, ..., 1, 2, 3, 4, ... ]
+     * */
+    public long[] getAllValues(long[] keys) throws IOException {
+        var reader = getValueReader(keys);
+        long[] vals = new long[keys.length * (RECORD_SIZE-1)];
+
+        while (reader.advance()) {
+            vals[reader.getIndex()] = reader.getValue(0);
+            vals[keys.length + reader.getIndex()] = reader.getValue(1);
+        }
+
+        return vals;
+    }
+
+    public BitSet getAllPresentValues(long[] keys) {
+        BitSet ret = new BitSet(keys.length);
+
+        if (getClass().desiredAssertionStatus()) {
+            for (int i = 1; i < keys.length; i++) {
+                assert keys[i] >= keys[i-1] : "Not ascending: " + Arrays.toString(keys);
+            }
+        }
+
+        for (int pos = 0; pos < keys.length; ) {
+            try (var page = indexPool.get(currentBlock)) {
+                MemorySegment ms = page.getMemorySegment();
+                assert ms.get(ValueLayout.JAVA_INT, currentBlockOffset) != 0 : "Likely reading zero space @ " + currentBlockOffset + " starting at " + blockStart + " -- " + parseBlock(ms, currentBlockOffset);
+                int n = headerNumRecords(page, currentBlockOffset);
+                int fc = headerForwardCount(page, currentBlockOffset);
+                byte flags = (byte) headerFlags(page, currentBlockOffset);
+
+                if (n == 0) {
+                    throw new IllegalStateException("Reading null memory!");
+                }
+
+                int dataOffset = pageDataOffset(currentBlockOffset, fc);
+
+                int remainingToRead = n - currentBlockIdx;
+                if (remainingToRead <= 0)
+                    break;
+
+                int searchStart = currentBlockIdx;
+
+                if (FLAG_COMPRESSED_BLOCK == (flags & FLAG_COMPRESSED_BLOCK)) {
+                    if (lastDecompressedBlock != currentBlock) {
+                        SegmentCompressorBuffer buffer = new SegmentCompressorBuffer(page.getMemorySegment(), dataOffset);
+                        DocIdCompressor.decompress(buffer, n, decompressedData);
+                        lastDecompressedBlock = currentBlock;
+                    }
+                    outer:
+                    while (pos < keys.length) {
+                        long kv = keys[pos];
+
+                        for (; currentBlockIdx < searchStart + remainingToRead; currentBlockIdx++) {
+                            long pv = decompressedData[currentBlockIdx];
+                            if (kv < pv) {
+                                pos++;
+                                continue outer;
+                            } else if (kv == pv) {
+                                ret.set(pos);
+                                pos++;
+                                continue outer;
+                            }
+                        }
+                        break;
+                    }
+                }
+                else {
+                    outer:
+                    while (pos < keys.length) {
+                        long kv = keys[pos];
+
+                        for (; currentBlockIdx < searchStart + remainingToRead; currentBlockIdx++) {
+                            long pv = page.getLong(dataOffset + currentBlockIdx * 8);
+                            if (kv < pv) {
+                                pos++;
+                                continue outer;
+                            } else if (kv == pv) {
+                                ret.set(pos);
+                                pos++;
+                                continue outer;
+                            }
+                        }
+                        break;
+                    }
+                }
+
+                if (currentBlockIdx >= n) {
+                    atEnd = (flags & FLAG_END_BLOCK) != 0;
+                    if (atEnd) {
+                        break;
+                    }
+
+                    if (pos >= keys.length) {
+                        currentBlock += BLOCK_STRIDE;
+                        currentBlockOffset = 0;
+                        currentBlockIdx = 0;
+                    }
+                    else {
+                        long nextBlock = currentBlock + (long) BLOCK_STRIDE;
+                        long currentValue = keys[pos];
+                        for (int i = 0; i < fc; i++) {
+                            long blockMaxValue = page.getLong(currentBlockOffset + DATA_BLOCK_HEADER_SIZE + 8 * i);
+                            nextBlock = currentBlock + (long) BLOCK_STRIDE * skipOffsetForPointer(Math.max(0, i-1));
+                            if (blockMaxValue >= currentValue) {
+                                break;
+                            }
+                        }
+                        currentBlockOffset = 0;
+                        currentBlockIdx = 0;
+                        currentBlock = nextBlock;
+                    }
+                }
+            }
+        }
+
+        return ret;
+    }
+
     /** Return the last (and largest) value in this page */
     private long maxValueInBlock(MemoryPage page, int fc, int n) {
         return page.getLong(pageDataOffset(currentBlockOffset, fc) + 8*(n-1));
@@ -658,6 +948,33 @@ public class SkipListReader {
             }
         }
         return nextBlock;
+    }
+
+
+    /** Binary search function with the same semantics as
+     * MemoryPage.binarySearchLong, which are not the same as
+     * Arrays.binarySearch
+     * */
+    public int binarySearchUB(long[] data, long key, int fromIndex, int toIndex) {
+        assert fromIndex <= toIndex;
+        assert fromIndex >= 0;
+
+        int low = 0;
+        int len = toIndex - fromIndex;
+
+        while (len > 0) {
+            var half = len / 2;
+            long val = data[fromIndex + low + half];
+            if (val < key) {
+                low += len - half;
+            } else if (val == key) {
+                low += half;
+                break;
+            }
+            len = half;
+        }
+
+        return fromIndex + low;
     }
 
 
@@ -681,29 +998,35 @@ public class SkipListReader {
         int flags = headerFlags(seg, (int) offset);
         long valueOffset = headerValueOffset(seg, (int) offset);
         long recordOffset = offset;
+        long recordEnd = BLOCK_SIZE - offset;
 
-        assert n <= MAX_RECORDS_PER_BLOCK : "Invalid header, n = " + n;
+        // assert n <= MAX_RECORDS_PER_BLOCK : "Invalid header, n = " + n;
         assert (flags & FLAG_VALUE_BLOCK) == 0 : "Attempting to parse value block";
 
         offset += DATA_BLOCK_HEADER_SIZE;
 
-        LongList forwardPointers = new LongArrayList();
+        LongList forwardPointers = new LongArrayList(fc);
         for (int i = 0; i < fc; i++) {
             forwardPointers.add(seg.get(ValueLayout.JAVA_LONG, offset + 8L*i));
         }
-        offset += 8*fc;
+        offset += 8L*fc;
 
-        LongList docIds = new LongArrayList();
+        LongList docIds = new LongArrayList(n);
 
-        long currentBlock = offset & -BLOCK_SIZE;
-        long lastDataBlock = (offset + 8L * (n-1)) & - BLOCK_SIZE;
-
-        if (currentBlock != lastDataBlock) {
-            throw new IllegalStateException("Last data block is not the same as the current data block (n=" + n +", flags=" + flags + ")" + " for block offset " + (offset & (BLOCK_SIZE - 1)));
+        if ((flags & FLAG_COMPRESSED_BLOCK) == FLAG_COMPRESSED_BLOCK) {
+            DocIdCompressor.decompress(new SegmentCompressorBuffer(seg, offset), n, docIds);
         }
+        else {
+            long currentBlock = offset & - BLOCK_SIZE;
+            long lastDataBlock = (offset + 8L * (n-1)) & - BLOCK_SIZE;
 
-        for (int i = 0; i < n; i++) {
-            docIds.add(seg.get(ValueLayout.JAVA_LONG, offset + 8L * i));
+            if (currentBlock != lastDataBlock) {
+                throw new IllegalStateException("Last data block is not the same as the current data block (n=" + n +", flags=" + flags + ")" + " for block offset " + (offset & (BLOCK_SIZE - 1)));
+            }
+
+            for (int i = 0; i < n; i++) {
+                docIds.add(seg.get(ValueLayout.JAVA_LONG, offset + 8L * i));
+            }
         }
 
         for (int i = 1; i < docIds.size(); i++) {

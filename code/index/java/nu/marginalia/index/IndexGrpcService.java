@@ -92,19 +92,16 @@ public class IndexGrpcService
                     .labelValues(nodeName, "GRPC")
                     .time(() -> {
                         // Perform the search
-                        try {
-                            if (!statefulIndex.isLoaded()) {
-                                // Short-circuit if the index is not loaded, as we trivially know that there can be no results
+                        try (StatefulIndex.IndexReference indexReference = statefulIndex.get()) {
+                            if (!indexReference.isAvailable()) {
                                 return List.of();
                             }
 
-                            CombinedIndexReader indexReader = statefulIndex.get();
+                            CombinedIndexReader index = indexReference.get();
 
-                            SearchContext rankingContext =
-                                    SearchContext.create(indexReader, hasher, request, getSearchSet(request));
+                            SearchContext rankingContext = SearchContext.create(index, hasher, request, getSearchSet(request));
 
-                            IndexQueryExecution queryExecution =
-                                    new IndexQueryExecution(indexReader, rankingService, rankingContext, nodeId);
+                            IndexQueryExecution queryExecution = new IndexQueryExecution(index, rankingService, rankingContext, nodeId);
 
                             return queryExecution.run();
                         }
@@ -155,13 +152,11 @@ public class IndexGrpcService
 
     // exists for test access
     public List<RpcDecoratedResultItem> justQuery(RpcIndexQuery request) {
-        try {
-            if (!statefulIndex.isLoaded()) {
-                // Short-circuit if the index is not loaded, as we trivially know that there can be no results
+        try (var indexReference = statefulIndex.get()) {
+            if (!indexReference.isAvailable())
                 return List.of();
-            }
 
-            CombinedIndexReader currentIndex = statefulIndex.get();
+            CombinedIndexReader currentIndex = indexReference.get();
 
             SearchContext context = SearchContext.create(currentIndex,
                     keywordHasherByLangIso.get("en"), request, getSearchSet(request));

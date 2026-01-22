@@ -22,6 +22,7 @@ dependencies {
     implementation libs.guava
 
     implementation project(':code:libraries:native')
+    implementation project(':code:libraries:buffering')
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit

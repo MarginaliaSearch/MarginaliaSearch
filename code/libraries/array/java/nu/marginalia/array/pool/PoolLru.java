@@ -18,7 +18,7 @@ public class PoolLru {
     private final MemoryPage[] pages;
 
     private final int[] freeQueue;
-    private volatile long reclaimCycles;
+    private final AtomicLong reclaimCycles;
     private final AtomicLong clockWriteIdx;
     private final AtomicLong clockReadIdx;
 
@@ -44,6 +44,7 @@ public class PoolLru {
 
         clockReadIdx = new AtomicLong();
         clockWriteIdx = new AtomicLong(freeQueue.length);
+        reclaimCycles = new AtomicLong();
 
         reclaimThread = Thread.ofPlatform().start(this::reclaimThread);
     }
@@ -108,21 +109,18 @@ public class PoolLru {
      * @return An unheld buffer, or null if the attempt failed
      * */
     public MemoryPage getFree() {
-        for (;;) {
+        for (int iter = 0;; iter++) {
             var readIdx = clockReadIdx.get();
             var writeIdx = clockWriteIdx.get();
 
             if (writeIdx - readIdx == freeQueue.length / 4) {
                 LockSupport.unpark(reclaimThread);
             } else if (readIdx == writeIdx) {
-                LockSupport.unpark(reclaimThread);
-                synchronized (this) {
-                    try {
-                        wait(0, 1000);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
+                if ((iter % 10000) == 0) {
+                    LockSupport.unpark(reclaimThread);
                 }
+
+                Thread.yield();
                 continue;
             }
 
@@ -135,14 +133,16 @@ public class PoolLru {
     private void reclaimThread() {
         int pageIdx = 0;
 
+        int targetQueueSize = freeQueue.length / 2;
+
         while (running && !Thread.interrupted()) {
             long readIdx = clockReadIdx.get();
             long writeIdx = clockWriteIdx.get();
+
             int queueSize = (int) (writeIdx - readIdx);
-            int targetQueueSize = freeQueue.length / 2;
 
             if (queueSize >= targetQueueSize) {
-                LockSupport.parkNanos(100_000);
+                LockSupport.parkNanos(10_000);
                 continue;
             }
 
@@ -150,7 +150,8 @@ public class PoolLru {
             if (toClaim == 0)
                 continue;
 
-            ++reclaimCycles;
+            reclaimCycles.incrementAndGet();
+
             do {
                 if (++pageIdx >= pages.length) {
                     pageIdx = 0;
@@ -169,10 +170,6 @@ public class PoolLru {
                 }
 
             } while (running && toClaim >= 0);
-
-            synchronized (this) {
-                notifyAll();
-            }
         }
     }
 
@@ -181,6 +178,6 @@ public class PoolLru {
     }
 
     public long getReclaimCycles() {
-        return reclaimCycles;
+        return reclaimCycles.get();
     }
 }

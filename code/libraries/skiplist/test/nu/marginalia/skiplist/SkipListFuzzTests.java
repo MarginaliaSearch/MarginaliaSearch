@@ -1,7 +1,6 @@
 package nu.marginalia.skiplist;
 
-import it.unimi.dsi.fastutil.longs.LongAVLTreeSet;
-import it.unimi.dsi.fastutil.longs.LongSortedSet;
+import it.unimi.dsi.fastutil.longs.*;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.array.page.LongQueryBuffer;
@@ -22,7 +21,6 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
 import static nu.marginalia.skiplist.SkipListConstants.RECORD_SIZE;
-import static nu.marginalia.skiplist.SkipListConstants.VALUE_BLOCK_SIZE;
 
 @Tag("slow")
 public class SkipListFuzzTests {
@@ -110,12 +108,12 @@ public class SkipListFuzzTests {
             try (var writer = new SkipListWriter(docsFile, valuesFile);
                  Arena arena = Arena.ofConfined()
             ) {
-                writer.writeList(createArray(arena, keys, keys), 0, keys.length);
+                writer.writeList(createArray(arena, keys, keys),  keys.length);
             }
 
             try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-                 var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-                var reader = new SkipListReader(indexPool, valuePool, 0);
+                 var valueReader = new SkipListValueReader(valuesFile)) {
+                var reader = new SkipListReader(indexPool, valueReader, 0);
                 LongQueryBuffer lqb = new LongQueryBuffer(qbSet.toLongArray(), qbSet.size());
 
                 System.out.println("Keys: " + Arrays.toString(keysSet.toLongArray()));
@@ -163,12 +161,12 @@ public class SkipListFuzzTests {
                  Arena arena = Arena.ofConfined()
             ) {
                 writer.padDocuments(8*r.nextInt(0, SkipListConstants.BLOCK_SIZE/8));
-                off = writer.writeList(createArray(arena, keys, keys), 0, keys.length);
+                off = writer.writeList(createArray(arena, keys, keys),  keys.length);
             }
 
             try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-                 var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-                var reader = new SkipListReader(indexPool, valuePool, off);
+                 var valueReader = new SkipListValueReader(valuesFile)) {
+                var reader = new SkipListReader(indexPool, valueReader, off);
                 LongQueryBuffer lqb = new LongQueryBuffer(qbs, 1);
 
                 reader.retainData(lqb);
@@ -211,13 +209,13 @@ public class SkipListFuzzTests {
                  Arena arena = Arena.ofConfined()
             ) {
                 writer.padDocuments(8*r.nextInt(0, SkipListConstants.BLOCK_SIZE/8));
-                off = writer.writeList(createArray(arena, keys, keys), 0, keys.length);
+                off = writer.writeList(createArray(arena, keys, keys),  keys.length);
             }
 
             try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-                 var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+                 var valueReader = new SkipListValueReader(valuesFile)) {
 
-                var reader = new SkipListReader(indexPool, valuePool, off);
+                var reader = new SkipListReader(indexPool, valueReader, off);
                 LongQueryBuffer lqb = new LongQueryBuffer(qbs, 1);
 
                 reader.rejectData(lqb);
@@ -274,13 +272,13 @@ public class SkipListFuzzTests {
                  Arena arena = Arena.ofConfined()
             ) {
                 writer.padDocuments(r.nextInt(0, 4096/8) * 8);
-                blockStart = writer.writeList(createArray(arena, keys, keys), 0, keys.length);
+                blockStart = writer.writeList(createArray(arena, keys, keys),  keys.length);
             }
 
             try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-                 var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+                 var valueReader = new SkipListValueReader(valuesFile)) {
 
-                var reader = new SkipListReader(indexPool, valuePool, blockStart);
+                var reader = new SkipListReader(indexPool, valueReader, blockStart);
                 try (var page = indexPool.get(blockStart & -SkipListConstants.BLOCK_SIZE)) {
                     reader.parseBlock(page.getMemorySegment(), (int) blockStart & (SkipListConstants.BLOCK_SIZE - 1));
                 }
@@ -339,15 +337,100 @@ public class SkipListFuzzTests {
             ) {
                 writer.padDocuments(r.nextInt(0, SkipListConstants.BLOCK_SIZE/8) * 8);
                 for (var block : keysForBlocks) {
-                    offsets.add(writer.writeList(createArray(arena, block, block), 0, block.length));
+                    offsets.add(writer.writeList(createArray(arena, block, block),  block.length));
                 }
             }
 
             try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-                 var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
+                 var valueReader = new SkipListValueReader(valuesFile)) {
                 for (var offset: offsets) {
-                    var reader = new SkipListReader(indexPool, valuePool, offset);
+                    var reader = new SkipListReader(indexPool, valueReader, offset);
                     reader.parseBlocks(indexPool, offset);
+                }
+                System.out.println("OK");
+            }
+        }
+    }
+
+    @Test
+    @Tag("slow")
+    public void testValueFuzz() throws IOException {
+
+        long seedOffset = System.nanoTime();
+        for (int seed = 0; seed < 100000; seed++) {
+            System.out.println("Seed: " + (seed + seedOffset));
+
+            Random r = new Random(seed);
+
+            List<long[]> keysForBlocks = new ArrayList<>();
+
+
+            int nVals = r.nextInt(8, 32*SkipListConstants.MAX_RECORDS_PER_BLOCK);
+            long[] keys = new long[nVals];
+            for (int ki = 0; ki < keys.length; ki++) {
+                keys[ki] = r.nextLong(0, Long.MAX_VALUE);
+            }
+
+            Arrays.sort(keys);
+            keysForBlocks.add(keys);
+
+            List<Long> offsets = new ArrayList<>();
+            Files.delete(docsFile);
+
+            try (var writer = new SkipListWriter(docsFile, valuesFile);
+                 Arena arena = Arena.ofConfined()
+            ) {
+                writer.padDocuments(r.nextInt(0, SkipListConstants.BLOCK_SIZE/8) * 8);
+                offsets.add(writer.writeList(createArray(arena, keys, keys),  keys.length));
+            }
+
+            try (var writer = new SkipListWriter(docsFile, valuesFile);
+                 Arena arena = Arena.ofConfined()
+            ) {
+                offsets.add(writer.writeList(createArray(arena, keys, keys),  keys.length));
+            }
+
+            try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+                 var valueReader = new SkipListValueReader(valuesFile)) {
+                for (var offset: offsets) {
+                    var reader = new SkipListReader(indexPool, valueReader, offset);
+
+                    LongOpenHashSet keysSet = new LongOpenHashSet(new LongArrayList(keys));
+
+                    LongOpenHashSet querySet = new LongOpenHashSet();
+                    LongOpenHashSet existing = new LongOpenHashSet();
+                    int n = r.nextInt(1, keys.length/2);
+
+                    while (querySet.size() < n) {
+                        long val = keys[r.nextInt(0, keys.length)];
+                        querySet.add(val);
+                        existing.add(val);
+                    }
+
+                    while (querySet.size() < 1.5*n) {
+                        long val = r.nextLong(0, Long.MAX_VALUE);
+                        if (!keysSet.contains(val)) {
+                            querySet.add(val);
+                        }
+                    }
+
+                    long[] queryKeys = querySet.toLongArray();
+                    long[] expectedVals = new long[queryKeys.length];
+                    Arrays.sort(queryKeys);
+
+                    for (int i = 0; i < expectedVals.length; i++) {
+                        if (existing.contains(queryKeys[i])) {
+                            expectedVals[i] = queryKeys[i];
+                        }
+                    }
+
+                    var ret = reader.getAllValues(queryKeys);
+                    var vals = Arrays.copyOfRange(ret, 0, queryKeys.length);
+//                    if (!Arrays.equals(expectedVals, vals)) {
+//                        System.out.println(Arrays.toString(expectedVals));
+//                        System.out.println(Arrays.toString(vals));
+//                    }
+                    Assertions.assertArrayEquals(vals, expectedVals);
                 }
             }
         }
@@ -359,14 +442,14 @@ public class SkipListFuzzTests {
         long[] vals = LongStream.range(0, 32000).map(v -> -2*v).toArray();
 
         try (var writer = new SkipListWriter(docsFile, valuesFile)) {
-            writer.writeList(createArray(keys, vals), 0, keys.length);
+            writer.writeList(createArray(keys, vals), keys.length);
         }
 
         Random r = new Random();
 
         try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-             var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-            var reader = new SkipListReader(indexPool, valuePool, 0);
+             var valueReader = new SkipListValueReader(valuesFile)) {
+            var reader = new SkipListReader(indexPool, valueReader, 0);
 
             for (int i = 0; i < 1000; i++) {
                 long[] queryKeys = new long[]{r.nextLong(0, 32000) * 2, r.nextLong(0, 32000) * 2};
@@ -400,13 +483,13 @@ public class SkipListFuzzTests {
             Files.deleteIfExists(docsFile);
 
             try (var writer = new SkipListWriter(docsFile, valuesFile)) {
-                writer.writeList(createArray(keys, vals), 0, keys.length);
+                writer.writeList(createArray(keys, vals), keys.length);
             }
 
 
             try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
-                 var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 8)) {
-                var reader = new SkipListReader(indexPool, valuePool, 0);
+                 var valueReader = new SkipListValueReader(valuesFile)) {
+                var reader = new SkipListReader(indexPool, valueReader, 0);
 
                 for (int iter = 0; iter < 100_000; iter++) {
                     long[] queryKeys = new long[]{r.nextLong(0, size) * 2, r.nextLong(0, size) * 2, 0, 0};
@@ -456,13 +539,13 @@ public class SkipListFuzzTests {
             Files.deleteIfExists(valuesFile);
 
             try (var writer = new SkipListWriter(docsFile, valuesFile); Arena a = Arena.ofConfined()) {
-                writer.writeList(createArray2v(a, keys, vals1, vals2), 0, keys.length);
+                writer.writeList(createArray2v(a, keys, vals1, vals2), keys.length);
             }
 
 
             try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 512);
-                 var valuePool = new BufferPool(valuesFile, SkipListConstants.VALUE_BLOCK_SIZE, 512)) {
-                var reader = new SkipListReader(indexPool, valuePool, 0);
+                 var valueReader = new SkipListValueReader(valuesFile)) {
+                var reader = new SkipListReader(indexPool, valueReader, 0);
 
                 long[] queryKeys = new long[64];
                 long[] expectedVals = new long[128];
@@ -471,9 +554,9 @@ public class SkipListFuzzTests {
 
                     for (int i = 0; i < 16; i++) {
                         queryKeys[i] = r.nextLong(0, size) * 2;
-                        queryKeys[16+i] = queryKeys[i] + r.nextLong(0, VALUE_BLOCK_SIZE);
-                        queryKeys[24+i] = queryKeys[i] + r.nextLong(0, VALUE_BLOCK_SIZE);
-                        queryKeys[32+i] = queryKeys[i] + r.nextLong(0, VALUE_BLOCK_SIZE);
+                        queryKeys[16+i] = queryKeys[i] + r.nextLong(0, 4096);
+                        queryKeys[24+i] = queryKeys[i] + r.nextLong(0, 4096);
+                        queryKeys[32+i] = queryKeys[i] + r.nextLong(0, 4096);
                     }
 
                     Arrays.sort(queryKeys);

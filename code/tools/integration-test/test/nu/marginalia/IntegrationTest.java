@@ -59,6 +59,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 public class IntegrationTest {
+    static {
+        System.setProperty("index.disableViabilityPrecheck", "true");
+    }
+
     IntegrationTestModule testModule;
     @Inject
     DomainProcessor domainProcessor;
@@ -226,7 +230,7 @@ public class IntegrationTest {
 
         /** QUERY */
 
-        {
+        try (var indexReference = statefulIndex.get()) {
             var request = RpcQsQuery.newBuilder()
                     .setQueryLimits(RpcQueryLimits.newBuilder()
                             .setTimeoutMs(1000)
@@ -240,13 +244,13 @@ public class IntegrationTest {
             var query = queryFactory.createQuery(request, CompiledSearchFilterSpec.builder("test", "test").build(), null);
             System.out.println(query);
 
-            var rs = new IndexQueryExecution(statefulIndex.get(), rankingService, SearchContext.create(statefulIndex.get(), new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny()), 1).run();
+            var rs = new IndexQueryExecution(indexReference.get(), rankingService, SearchContext.create(indexReference.get(), new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny()), 1).run();
 
             System.out.println(rs);
             Assertions.assertEquals(1, rs.size());
         }
 
-        {
+        try (var indexReference = statefulIndex.get()) {
             var request = RpcQsQuery.newBuilder()
                     .setQueryLimits(RpcQueryLimits.newBuilder()
                             .setTimeoutMs(1000)
@@ -261,7 +265,7 @@ public class IntegrationTest {
 
             System.out.println(query);
 
-            var rs = new IndexQueryExecution(statefulIndex.get(), rankingService, SearchContext.create(statefulIndex.get(), new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny()), 1).run();
+            var rs = new IndexQueryExecution(indexReference.get(), rankingService, SearchContext.create(indexReference.get(), new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny()), 1).run();
 
             System.out.println(rs);
             Assertions.assertEquals(1, rs.size());
@@ -312,7 +316,7 @@ public class IntegrationTest {
 
         var processedDomain = domainProcessor.fullProcessing(SerializableCrawlDataStream.openDataStream(crawlDataParquet));
 
-        System.out.println(processedDomain);
+//        System.out.println(processedDomain);
 
         /** WRITE PROCESSED DATA */
 
@@ -357,10 +361,10 @@ public class IntegrationTest {
 
         /** QUERY */
 
-        {
+        try (var indexReference = statefulIndex.get()) {
             var request = RpcQsQuery.newBuilder()
                     .setQueryLimits(RpcQueryLimits.newBuilder()
-                            .setTimeoutMs(10000000)
+                            .setTimeoutMs(10_000_000)
                             .setResultsTotal(100)
                             .setResultsByDomain(10)
                             .build())
@@ -370,9 +374,9 @@ public class IntegrationTest {
 
             var query = queryFactory.createQuery(request, CompiledSearchFilterSpec.builder("test", "test").build(), null);
 
-            System.out.println(query);
+//            System.out.println(query);
 
-            var rs = new IndexQueryExecution(statefulIndex.get(), rankingService, SearchContext.create(statefulIndex.get(), new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny()), 1).run();
+            var rs = new IndexQueryExecution(indexReference.get(), rankingService, SearchContext.create(indexReference.get(), new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny()), 1).run();
 
             System.out.println(rs);
 
@@ -407,7 +411,7 @@ public class IntegrationTest {
                     this::addRankToIdEncoding,
                     tmpDir);
 
-            constructor.createReverseIndex(new FakeProcessHeartbeat(), "createReverseIndexFull", IndexJournal.findJournal(workDir, lang).orElseThrow(), workDir);
+            constructor.createReverseIndex(new FakeProcessHeartbeat(), "createReverseIndexFull", IndexJournal.findJournal(workDir, lang).orElseThrow());
         }
     }
 
