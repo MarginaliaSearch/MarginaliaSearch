@@ -656,7 +656,7 @@ public class IndexResultRankingService {
 
         // Give bonus proximity score if all keywords are in the title
         if (!verbatimMatches.get(HtmlTag.TITLE)
-                && unorderedMatches.searchableKeywordCount > 2
+                && unorderedMatches.searchableKeywordCount >= 2
                 && unorderedMatches.getObservationCount(HtmlTag.TITLE) == unorderedMatches.searchableKeywordCount) {
             proximitiyFac += unorderedMatches.getObservationCount(HtmlTag.TITLE)
                     * (2.5f + 2.f / Math.max(1, spans.title.length()));
@@ -726,13 +726,9 @@ public class IndexResultRankingService {
                     score += 4; // If the title is a single word and the same as the query, we give it a verbatim bonus
                 }
 
-                var extLinkSpan = spans.getSpan(HtmlTag.EXTERNAL_LINKTEXT);
-                if (extLinkSpan.length() >= fullGroup.size) {
-                    int cnt = extLinkSpan.containsRangeExact(fullGroupIntersections, fullGroup.size);
-                    if (cnt > 0) {
-                        score += 2 * cnt;
-                    }
-                }
+                score += 2 * spans
+                            .getSpan(HtmlTag.EXTERNAL_LINKTEXT)
+                            .containsRangeExact(fullGroupIntersections, fullGroup.size);
 
                 return;
             }
