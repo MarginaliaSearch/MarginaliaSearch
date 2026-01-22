@@ -751,7 +751,7 @@ public class IndexResultRankingService {
                     int cnts = spans.getSpan(tag).countRangeMatches(fullGroupIntersections, fullGroup.size);
                     if (cnts > 0) {
                         matches.set(tag.ordinal());
-                        score += (float) (weights_full[tag.ordinal()] * fullGroup.size + (1 + Math.log(2 + cnts)));
+                        score += (float) (weights_full[tag.ordinal()] * fullGroup.size * (1 + Math.log(2 + cnts)));
                         totalFullCnts += cnts;
                     }
                 }
@@ -778,7 +778,7 @@ public class IndexResultRankingService {
 
                 int totalCnts = 0;
                 for (var tag : HtmlTag.includedTags) {
-                    int cnts =  spans.getSpan(tag).countRangeMatches(intersections, fullGroup.size);
+                    int cnts =  spans.getSpan(tag).countRangeMatches(intersections, optionalGroup.size);
                     if (cnts == 0) continue;
 
                     score += (float) (weights_partial[tag.ordinal()] * optionalGroup.size * sizeScalingFactor * (1 + Math.log(2 + cnts)));
@@ -898,10 +898,9 @@ public class IndexResultRankingService {
         if (!isForum && !isWiki && !isDocs && size > 400) {
             // Long urls-that-look-like-this tend to be poor search results
             if (DocumentMetadata.hasFlags(featureFlags, HtmlFeature.KEBAB_CASE_URL.getFeatureBit()))
-                penalty += 30.0;
+                penalty += 5.0;
             else if (DocumentMetadata.hasFlags(featureFlags, HtmlFeature.LONG_URL.getFeatureBit()))
-                penalty += 30.;
-            else penalty += 5.;
+                penalty += 5.0;
 
             largeSiteFactor = 2;
         }
