@@ -1,6 +1,5 @@
 package nu.marginalia.lsh;
 
-import nu.marginalia.lsh.EasyLSH;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;

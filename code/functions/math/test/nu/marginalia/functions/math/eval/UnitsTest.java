@@ -1,7 +1,5 @@
 package nu.marginalia.functions.math.eval;
 
-import nu.marginalia.functions.math.eval.MathParser;
-import nu.marginalia.functions.math.eval.Units;
 import org.junit.jupiter.api.Test;
 
 class UnitsTest {

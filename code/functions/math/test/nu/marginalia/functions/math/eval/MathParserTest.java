@@ -1,6 +1,5 @@
 package nu.marginalia.functions.math.eval;
 
-import nu.marginalia.functions.math.eval.MathParser;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

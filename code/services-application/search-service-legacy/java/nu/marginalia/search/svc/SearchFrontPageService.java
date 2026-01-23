@@ -5,7 +5,6 @@ import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
-import nu.marginalia.search.svc.SearchQueryCountService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;

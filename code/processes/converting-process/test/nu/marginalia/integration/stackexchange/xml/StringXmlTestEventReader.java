@@ -1,7 +1,5 @@
 package nu.marginalia.integration.stackexchange.xml;
 
-import nu.marginalia.integration.stackexchange.xml.XmlEventReaderSource;
-
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;

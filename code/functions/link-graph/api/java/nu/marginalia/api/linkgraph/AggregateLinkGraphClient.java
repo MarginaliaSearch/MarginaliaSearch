@@ -2,7 +2,6 @@ package nu.marginalia.api.linkgraph;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.api.linkgraph.LinkGraphApiGrpc;
 import nu.marginalia.service.client.GrpcChannelPoolFactory;
 import nu.marginalia.service.client.GrpcSingleNodeChannelPool;
 import nu.marginalia.service.discovery.property.ServiceKey;

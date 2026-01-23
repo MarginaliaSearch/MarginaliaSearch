@@ -1,6 +1,5 @@
 package nu.marginalia.converting.processor.summary.heuristic;
 
-import nu.marginalia.converting.processor.summary.heuristic.HeuristicTextUtil;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;

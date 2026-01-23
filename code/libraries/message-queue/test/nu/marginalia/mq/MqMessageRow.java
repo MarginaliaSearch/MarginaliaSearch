@@ -1,7 +1,5 @@
 package nu.marginalia.mq;
 
-import nu.marginalia.mq.MqMessageState;
-
 import javax.annotation.Nullable;
 
 public record MqMessageRow (

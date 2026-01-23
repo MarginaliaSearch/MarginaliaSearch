@@ -1,6 +1,5 @@
 package nu.marginalia.link_parser;
 
-import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.EdgeUrl;
 import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
