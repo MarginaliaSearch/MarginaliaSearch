@@ -9,6 +9,7 @@ import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.RpcSpecLimit;
 import nu.marginalia.api.searchquery.model.SearchFilterDefaults;
 import nu.marginalia.db.DbDomainQueries;
+import nu.marginalia.language.NounVariants;
 import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
 import nu.marginalia.functions.searchquery.searchfilter.SearchFilterCache;
 import nu.marginalia.functions.searchquery.searchfilter.SearchFilterParser;
@@ -59,7 +60,7 @@ class QueryGRPCServiceTest {
         LanguageConfiguration languageConfiguration = new LanguageConfiguration(WmsaHome.getLanguageModels(), new LanguageConfigLocation.Experimental());
         TermFrequencyDict termFrequencyDict = new TermFrequencyDict(WmsaHome.getLanguageModels());
         NgramLexicon ngramLexicon = new NgramLexicon(WmsaHome.getLanguageModels());
-
+        NounVariants nounVariants = new NounVariants();
         DbDomainQueries domainQueries = new DbDomainQueries(dataSource);
 
         var filterStore = new SearchFilterStore(dataSource, new SearchFilterParser());
@@ -67,7 +68,7 @@ class QueryGRPCServiceTest {
 
         service = new QueryGRPCService(
                 new QueryFactory(
-                        new QueryExpansion(termFrequencyDict, ngramLexicon),
+                        new QueryExpansion(termFrequencyDict, nounVariants, ngramLexicon),
                         domainQueries,
                         languageConfiguration
                 ),

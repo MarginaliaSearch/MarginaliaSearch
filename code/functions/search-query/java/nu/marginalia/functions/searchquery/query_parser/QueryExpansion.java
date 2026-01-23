@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import nu.marginalia.functions.searchquery.query_parser.model.QWord;
 import nu.marginalia.functions.searchquery.query_parser.model.QWordGraph;
 import nu.marginalia.functions.searchquery.query_parser.model.QWordPathsRenderer;
+import nu.marginalia.language.NounVariants;
 import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.apache.commons.lang3.StringUtils;
@@ -19,21 +20,26 @@ import java.util.stream.Collectors;
 public class QueryExpansion {
     private static final PorterStemmer ps = new PorterStemmer();
     private final TermFrequencyDict dict;
+    private final NounVariants nounVariants;
     private final NgramLexicon lexicon;
 
     private final List<ExpansionStrategy> expansionStrategies = List.of(
             this::joinDashes,
             this::splitWordNum,
             this::joinTerms,
+            this::nounPluralForms,
             this::categoryKeywords,
             this::ngramAll
     );
 
+
     @Inject
     public QueryExpansion(TermFrequencyDict dict,
+                          NounVariants nounVariants,
                           NgramLexicon lexicon
                           ) {
         this.dict = dict;
+        this.nounVariants = nounVariants;
         this.lexicon = lexicon;
     }
 
@@ -141,6 +147,19 @@ public class QueryExpansion {
             }
 
             prev = qw;
+        }
+    }
+
+    /** Attempt to rewrite the last word in a different pluralization */
+    private void nounPluralForms(QWordGraph graph) {
+        List<QWord> parts = new ArrayList<>();
+
+        for (var part : new ArrayList<>(graph.getPrev(QWord.end()))) {
+            String word = part.word();
+
+            for (String variant : nounVariants.pluralVariant(word)) {
+                graph.addVariant(part, variant);
+            }
         }
     }
 

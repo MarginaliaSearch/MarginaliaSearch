@@ -1,6 +1,5 @@
 package nu.marginalia.index.perftest;
 
-import gnu.trove.list.array.TLongArrayList;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.api.searchquery.RpcIndexQuery;
 import nu.marginalia.api.searchquery.RpcQsQuery;
@@ -9,12 +8,12 @@ import nu.marginalia.api.searchquery.model.CompiledSearchFilterSpec;
 import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.functions.searchquery.QueryFactory;
+import nu.marginalia.language.NounVariants;
 import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
 import nu.marginalia.index.CombinedIndexReader;
 import nu.marginalia.index.IndexQueryExecution;
 import nu.marginalia.index.StatefulIndex;
 import nu.marginalia.index.forward.ForwardIndexReader;
-import nu.marginalia.index.model.CombinedDocIdList;
 import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.results.DomainRankingOverrides;
 import nu.marginalia.index.results.IndexResultRankingService;
@@ -116,6 +115,7 @@ public class PerfTestMain {
         return new QueryFactory(
                 new QueryExpansion(
                         new TermFrequencyDict(homeDir.resolve("model/tfreq-new-algo3.bin")),
+                        new NounVariants(),
                         new NgramLexicon()
                 ),
                 null,

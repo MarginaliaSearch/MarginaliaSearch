@@ -6,6 +6,7 @@ import nu.marginalia.api.searchquery.model.CompiledSearchFilterSpec;
 import nu.marginalia.api.searchquery.model.query.*;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.functions.searchquery.QueryFactory;
+import nu.marginalia.language.NounVariants;
 import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
 import nu.marginalia.language.config.LanguageConfigLocation;
 import nu.marginalia.language.config.LanguageConfiguration;
@@ -40,7 +41,9 @@ public class QueryFactoryTest {
         DbDomainQueries domainQueriesMock = Mockito.mock(DbDomainQueries.class);
         when(domainQueriesMock.tryGetDomainId(any())).thenReturn(OptionalInt.of(451));
 
-        queryFactory = new QueryFactory(new QueryExpansion(new TermFrequencyDict(lm), new NgramLexicon(lm)),
+        queryFactory = new QueryFactory(new QueryExpansion(new TermFrequencyDict(lm),
+                new NounVariants(),
+                new NgramLexicon(lm)),
                 domainQueriesMock,
                 new LanguageConfiguration(lm, new LanguageConfigLocation.Experimental()));
     }
@@ -218,7 +221,11 @@ public class QueryFactoryTest {
         System.out.println(subquery);
 
     }
-
+    @Test
+    public void testExpansionMK() {
+        var subquery = parseAndGetQuery("mechanical keyboard").getTerms();
+        System.out.println(subquery);
+    }
     @Test
     public void testExpansion3() {
         var subquery = parseAndGetQuery("buy rimonabant buy acomplia");
