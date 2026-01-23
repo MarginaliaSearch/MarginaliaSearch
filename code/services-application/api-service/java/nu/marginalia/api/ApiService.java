@@ -33,7 +33,6 @@ public class ApiService extends JoobyService {
     {
 
         super(params,
-                ServicePartition.partition(params.configuration.node()),
                 List.of(),
                 List.of()
         );

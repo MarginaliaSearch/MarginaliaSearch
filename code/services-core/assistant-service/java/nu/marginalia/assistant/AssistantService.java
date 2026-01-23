@@ -30,7 +30,7 @@ public class AssistantService extends JoobyService {
                             Suggestions suggestions)
             throws Exception
     {
-        super(params, ServicePartition.partition(params.configuration.node()),
+        super(params,
                 List.of(domainInfoGrpcService,
                         mathGrpcService),
                 List.of());

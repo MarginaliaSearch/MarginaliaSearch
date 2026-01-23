@@ -52,7 +52,6 @@ public class JoobyService {
     private final ServiceEndpoint restEndpoint;
 
     public JoobyService(BaseServiceParams params,
-                        ServicePartition partition,
                         List<DiscoverableService> grpcServices,
                         List<MvcExtension> joobyServices
     ) throws Exception {
@@ -94,7 +93,7 @@ public class JoobyService {
 
         if (!initialization.isReady() && ! initialized ) {
             initialized = true;
-            grpcServer = new GrpcServer(config, serviceRegistry, partition, grpcServices);
+            grpcServer = new GrpcServer(config, serviceRegistry, grpcServices);
             grpcServer.start();
         }
     }

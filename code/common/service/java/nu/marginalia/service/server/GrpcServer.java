@@ -25,10 +25,10 @@ public class GrpcServer {
 
     public GrpcServer(ServiceConfiguration config,
                       ServiceRegistryIf serviceRegistry,
-                      ServicePartition partition,
                       List<DiscoverableService> grpcServices) throws Exception {
 
-        int port = serviceRegistry.requestPort(config.externalAddress(), new ServiceKey.Grpc<>("-", partition));
+        int port = serviceRegistry.requestPort(config.externalAddress(),
+                new ServiceKey.Grpc<>("-", ServicePartition.multi()));
 
         int nThreads = Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 16);
 
@@ -56,19 +56,10 @@ public class GrpcServer {
 
             var svc = grpcService.bindService();
 
-            serviceRegistry.registerService(
-                    ServiceKey.forServiceDescriptor(svc.getServiceDescriptor(), partition),
-                    config.instanceUuid(),
-                    config.externalAddress()
-            );
-
-            if (partition.identifier().equals("*")) {
-                logger.warn("Service is only registered as a wildcard, direct node communication will not be possible");
-            }
-            else {
-                // also register on the "any" partition to allow discovery when we don't care about which node we talk to
+            // Register both on the node-id and wildcard partitions to allow both means of communication
+            for (var partition : List.of(ServicePartition.any(), ServicePartition.partition(config.node()))) {
                 serviceRegistry.registerService(
-                        ServiceKey.forServiceDescriptor(svc.getServiceDescriptor(), ServicePartition.any()),
+                        ServiceKey.forServiceDescriptor(svc.getServiceDescriptor(), partition),
                         config.instanceUuid(),
                         config.externalAddress()
                 );

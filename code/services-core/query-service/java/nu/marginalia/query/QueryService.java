@@ -26,7 +26,6 @@ public class QueryService extends SparkService {
     {
         super(params,
                 () -> Spark.staticFileLocation("/static/"),
-                ServicePartition.partition(params.configuration.node()),
                 List.of(queryGRPCService, domainLinksService));
 
 

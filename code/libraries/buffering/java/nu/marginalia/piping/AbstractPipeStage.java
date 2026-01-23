@@ -226,8 +226,7 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
                             return;
                         }
                     }
-                }
-                finally {
+                } finally {
                     idleRunnerCount.decrementAndGet();
                 }
             }

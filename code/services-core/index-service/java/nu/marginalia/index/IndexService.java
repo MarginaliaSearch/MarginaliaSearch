@@ -70,7 +70,6 @@ public class IndexService extends JoobyService {
             throws Exception
     {
         super(params,
-                ServicePartition.partition(params.configuration.node()),
                 List.of(indexQueryService,
                         partitionLinkGraphService,
                         liveCaptureGrpcService,

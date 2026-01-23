@@ -45,7 +45,6 @@ public class SparkService {
 
     public SparkService(BaseServiceParams params,
                         Runnable configureStaticFiles,
-                        ServicePartition partition,
                         List<DiscoverableService> grpcServices) throws Exception {
 
         this.initialization = params.initialization;
@@ -121,24 +120,21 @@ public class SparkService {
                         """;
             });
 
-            grpcServer = new GrpcServer(config, serviceRegistry, partition, grpcServices);
+            grpcServer = new GrpcServer(config, serviceRegistry, grpcServices);
             grpcServer.start();
         }
     }
 
     public SparkService(BaseServiceParams params,
-                        ServicePartition partition,
                         List<DiscoverableService> grpcServices) throws Exception {
         this(params,
                 SparkService::defaultSparkConfig,
-                partition,
                 grpcServices);
     }
 
     public SparkService(BaseServiceParams params) throws Exception {
         this(params,
                 SparkService::defaultSparkConfig,
-                ServicePartition.partition(params.configuration.node()),
                 List.of());
     }
 

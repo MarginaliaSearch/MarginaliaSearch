@@ -123,7 +123,7 @@ public class GrpcServerTest {
         var config = new ServiceConfiguration(ServiceId.Api, 1,
                 "127.0.0.1", "127.0.0.1", -1, uuid);
 
-        var server = new GrpcServer(config, mockRegistry, ServicePartition.any(), List.of(services));
+        var server = new GrpcServer(config, mockRegistry, List.of(services));
         servers.add(server);
         return server;
     }
