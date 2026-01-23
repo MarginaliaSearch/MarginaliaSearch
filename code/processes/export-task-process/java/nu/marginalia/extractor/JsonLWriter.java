@@ -46,7 +46,7 @@ public class JsonLWriter<T> implements AutoCloseable {
             currentWriter.close();
         }
 
-        currentFile = basePath.resolve("%s-%000d.jsonl.gz".formatted(prefix, fileIndex++));
+        currentFile = basePath.resolve("%s-%03d.jsonl.gz".formatted(prefix, fileIndex++));
         currentWriter = new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(currentFile, StandardOpenOption.CREATE, StandardOpenOption.WRITE)));
         recordIndex = 0;
     }
