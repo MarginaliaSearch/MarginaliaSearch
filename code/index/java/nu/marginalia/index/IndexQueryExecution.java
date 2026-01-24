@@ -44,7 +44,7 @@ public class IndexQueryExecution {
     private static final int maxSimultaneousQueries = Integer.getInteger("index.maxSimultaneousQueries", 4);
     private static final Semaphore simultaneousRequests = new Semaphore(maxSimultaneousQueries);
 
-    private static final int lookupBatchSize = SkipListConstants.MAX_RECORDS_PER_BLOCK;
+    private static final int lookupBatchSize = 512;
 
     private static final ExecutorService threadPool = Executors.newCachedThreadPool();
 
