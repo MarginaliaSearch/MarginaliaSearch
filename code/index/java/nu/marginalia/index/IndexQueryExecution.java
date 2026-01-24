@@ -9,6 +9,7 @@ import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
 import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.model.CombinedDocIdList;
+import nu.marginalia.index.model.DocIdList;
 import nu.marginalia.index.model.RankableDocument;
 import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.results.IndexResultRankingService;
@@ -108,17 +109,15 @@ public class IndexQueryExecution {
                     .inc();
             throw new TooManySimultaneousQueriesException();
         }
-        BufferPipe<IndexQuery> processingPipe = null;
-        try {
-            processingPipe = BufferPipe.<IndexQuery>builder(threadPool)
-                    .addStage("Lookup", 32, 4, LookupStage::new)
-                    .addStage("Deduplicate", 16, 1, DeduplicateStage::new)
-                    .addStage("Processing", 16, 4, PreparationStage::new)
-                    .finalStage("Ranking", 16, 8, RankingStage::new);
+
+        try (BufferPipe<IndexQuery> processingPipe = BufferPipe.<IndexQuery>builder(threadPool)
+                .addStage("Lookup", 32, queries.size(), LookupStage::new)
+                .addStage("Deduplicate", 16, 1, DeduplicateStage::new)
+                .addStage("Processing", 16, 4, PreparationStage::new)
+                .finalStage("Ranking", 16, 8, RankingStage::new))
+        {
 
             for (IndexQuery query : queries) {
-                if (!budget.hasTimeLeft())
-                    break;
                 processingPipe.offer(query, Duration.ofMillis(budget.timeLeft()));
             }
 
@@ -127,12 +126,6 @@ public class IndexQueryExecution {
             if (!processingPipe.join(budget.timeLeft())) {
                 processingPipe.stop();
             }
-        }
-        catch (Throwable t) {
-            if (processingPipe != null) {
-                processingPipe.stop();
-            }
-            throw t;
         }
         finally {
             simultaneousRequests.release();

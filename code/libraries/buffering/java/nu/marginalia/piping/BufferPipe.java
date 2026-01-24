@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-public class BufferPipe<T> {
+public class BufferPipe<T> implements AutoCloseable {
     private final List<PipeStage<?>> stages;
     private final PipeStage<T> firstStage;
 
@@ -93,4 +93,11 @@ public class BufferPipe<T> {
         }
         return true;
     }
+
+
+    @Override
+    public void close() {
+        stop();
+    }
+
 }
