@@ -41,7 +41,7 @@ public class IndexQueryExecution {
     private static final boolean printDebugSummary = Boolean.getBoolean("index.printDebugSummary");
     private static final boolean disableViabilityPrecheck = Boolean.getBoolean("index.disableViabilityPrecheck");
 
-    private static final int maxSimultaneousQueries = Integer.getInteger("index.maxSimultaneousQueries", 4);
+    private static final int maxSimultaneousQueries = Integer.getInteger("index.maxSimultaneousQueries", 8);
     private static final Semaphore simultaneousRequests = new Semaphore(maxSimultaneousQueries);
 
     private static final int lookupBatchSize = 512;
