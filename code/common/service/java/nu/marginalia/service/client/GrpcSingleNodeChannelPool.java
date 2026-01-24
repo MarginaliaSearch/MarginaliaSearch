@@ -199,6 +199,46 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
         return hasChannel();
     }
 
+    public <T, I> T call(Function<ManagedChannel, STUB> stubConstructor,
+                          BiFunction<STUB, I, T> call,
+                          I arg) throws RuntimeException {
+        final List<Exception> exceptions = new ArrayList<>();
+        final List<ConnectionHolder> connectionHolders = new ArrayList<>(channels.values());
+
+        // Sorting the channel list will give us a round-robin distribution of calls,
+        // while preferring channels that have not errored recently
+        Collections.sort(connectionHolders);
+
+        final String serviceKeyStr = serviceKey.toString();
+
+        for (var channel : connectionHolders) {
+            try {
+                var ret = call.apply(stubConstructor.apply(channel.get()), arg);
+
+                requestCounter.labelValues(serviceKeyStr).inc();
+
+                return ret;
+            }
+            catch (Exception e) {
+                channel.flagError();
+                errorCounter.labelValues(serviceKeyStr).inc();
+
+                exceptions.add(e);
+            }
+        }
+
+        for (var e : exceptions) {
+            if (e instanceof StatusRuntimeException se) {
+                throw se; // Re-throw SRE as-is
+            }
+
+            // If there are other exceptions, log them
+            logger.error(grpcMarker, "Failed to call service {}", serviceKey, e);
+        }
+
+        throw new ServiceNotAvailableException(serviceKey);
+    }
+
     private <T, I> T call(BiFunction<STUB, I, T> call, I arg) throws RuntimeException {
         final List<Exception> exceptions = new ArrayList<>();
         final List<ConnectionHolder> connectionHolders = new ArrayList<>(channels.values());
