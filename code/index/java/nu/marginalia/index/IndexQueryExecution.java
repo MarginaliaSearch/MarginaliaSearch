@@ -59,8 +59,6 @@ public class IndexQueryExecution {
     private final IndexSearchBudget budget;
     private final ResultPriorityQueue resultHeap;
 
-    private final BufferPipe<IndexQuery> processingPipe;
-
     private final int limitTotal;
     private final int limitByDomain;
 
@@ -100,12 +98,6 @@ public class IndexQueryExecution {
 
         queries = currentIndex.createQueries(rankingContext);
 
-        processingPipe = BufferPipe.<IndexQuery>builder(threadPool)
-                .addStage("Lookup", 32, 4, LookupStage::new)
-                .addStage("Deduplicate", 16, 1, DeduplicateStage::new)
-                .addStage("Processing", 16, 4, PreparationStage::new)
-                .finalStage("Ranking", 16, 8, RankingStage::new);
-
     }
 
     public List<RpcDecoratedResultItem> run() throws InterruptedException, SQLException, TooManySimultaneousQueriesException {
@@ -116,7 +108,14 @@ public class IndexQueryExecution {
                     .inc();
             throw new TooManySimultaneousQueriesException();
         }
+        BufferPipe<IndexQuery> processingPipe = null;
         try {
+            processingPipe = BufferPipe.<IndexQuery>builder(threadPool)
+                    .addStage("Lookup", 32, 4, LookupStage::new)
+                    .addStage("Deduplicate", 16, 1, DeduplicateStage::new)
+                    .addStage("Processing", 16, 4, PreparationStage::new)
+                    .finalStage("Ranking", 16, 8, RankingStage::new);
+
             for (IndexQuery query : queries) {
                 if (!budget.hasTimeLeft())
                     break;
@@ -128,6 +127,12 @@ public class IndexQueryExecution {
             if (!processingPipe.join(budget.timeLeft())) {
                 processingPipe.stop();
             }
+        }
+        catch (Throwable t) {
+            if (processingPipe != null) {
+                processingPipe.stop();
+            }
+            throw t;
         }
         finally {
             simultaneousRequests.release();
