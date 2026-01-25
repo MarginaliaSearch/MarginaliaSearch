@@ -15,12 +15,10 @@ import java.util.Set;
 @Singleton
 public class HtmlProcessorSpecializations {
     private final ConverterDomainTypes domainTypes;
-    private final LemmySpecialization lemmySpecialization;
     private final XenForoSpecialization xenforoSpecialization;
     private final PhpBBSpecialization phpBBSpecialization;
     private final JavadocSpecialization javadocSpecialization;
     private final MariadbKbSpecialization mariadbKbSpecialization;
-    private final SteamStoreSpecialization steamStoreSpecialization;
     private final WikiSpecialization wikiSpecialization;
     private final BlogSpecialization blogSpecialization;
     private final GogStoreSpecialization gogStoreSpecialization;
@@ -29,24 +27,20 @@ public class HtmlProcessorSpecializations {
 
     @Inject
     public HtmlProcessorSpecializations(ConverterDomainTypes domainTypes,
-                                        LemmySpecialization lemmySpecialization,
                                         XenForoSpecialization xenforoSpecialization,
                                         PhpBBSpecialization phpBBSpecialization,
                                         JavadocSpecialization javadocSpecialization,
                                         MariadbKbSpecialization mariadbKbSpecialization,
-                                        SteamStoreSpecialization steamStoreSpecialization,
                                         WikiSpecialization wikiSpecialization,
                                         BlogSpecialization blogSpecialization,
                                         GogStoreSpecialization gogStoreSpecialization,
                                         CppreferenceSpecialization cppreferenceSpecialization,
                                         DefaultSpecialization defaultSpecialization) {
         this.domainTypes = domainTypes;
-        this.lemmySpecialization = lemmySpecialization;
         this.xenforoSpecialization = xenforoSpecialization;
         this.phpBBSpecialization = phpBBSpecialization;
         this.javadocSpecialization = javadocSpecialization;
         this.mariadbKbSpecialization = mariadbKbSpecialization;
-        this.steamStoreSpecialization = steamStoreSpecialization;
         this.wikiSpecialization = wikiSpecialization;
         this.blogSpecialization = blogSpecialization;
         this.gogStoreSpecialization = gogStoreSpecialization;
@@ -73,17 +67,10 @@ public class HtmlProcessorSpecializations {
             return cppreferenceSpecialization;
         }
 
-        if (url.domain.toString().equals("store.steampowered.com")) {
-            return steamStoreSpecialization;
-        }
-
         if (url.domain.toString().equals("www.gog.com") && url.path.contains("/game/")) {
             return gogStoreSpecialization;
         }
 
-        if (generator.keywords().contains("lemmy")) {
-            return lemmySpecialization;
-        }
         if (generator.keywords().contains("xenforo")) {
             return xenforoSpecialization;
         }

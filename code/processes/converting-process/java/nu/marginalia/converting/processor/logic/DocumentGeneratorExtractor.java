@@ -123,9 +123,6 @@ public class DocumentGeneratorExtractor {
                 return DocumentGenerator.of("website-editor.net");
             }
             String scriptHtml = tag.html();
-            if (scriptHtml.contains("window.lemmyConfig")) {
-                return DocumentGenerator.of("lemmy");
-            }
             if (scriptHtml.contains("URL_DOMAIN = 'wikidot.com'")) {
                 return DocumentGenerator.of("wikidot");
             }
@@ -152,6 +149,10 @@ public class DocumentGeneratorExtractor {
 
         if (!doc.getElementsByClass("ipsApp").isEmpty()) {
             return DocumentGenerator.of("invision");
+        }
+
+        if (!doc.getElementsByClass("lemmy-site").isEmpty()) {
+            return DocumentGenerator.of("lemmy");
         }
 
         if (doc.getElementById("___gatsby") != null) {
