@@ -23,16 +23,6 @@ public class QueryExpansion {
     private final NounVariants nounVariants;
     private final NgramLexicon lexicon;
 
-    private final List<ExpansionStrategy> expansionStrategies = List.of(
-            this::joinDashes,
-            this::splitWordNum,
-            this::joinTerms,
-            this::nounPluralForms,
-            this::categoryKeywords,
-            this::ngramAll
-    );
-
-
     @Inject
     public QueryExpansion(TermFrequencyDict dict,
                           NounVariants nounVariants,
@@ -43,11 +33,11 @@ public class QueryExpansion {
         this.lexicon = lexicon;
     }
 
-    public Expansion expandQuery(List<String> words) {
+    public Expansion expandQuery(String langIsoCode, List<String> words) {
 
         QWordGraph graph = new QWordGraph(words);
 
-        for (var strategy : expansionStrategies) {
+        for (var strategy : getStrategies(langIsoCode)) {
             strategy.expand(graph);
         }
 
@@ -63,6 +53,30 @@ public class QueryExpansion {
 
         return new Expansion(compiled, optionalPhraseConstraints, fullPhraseConstraint);
     }
+
+    public List<ExpansionStrategy> getStrategies(String langIsoCode) {
+        if ("en".equalsIgnoreCase(langIsoCode)) {
+            return List.of(
+                    this::joinDashes,
+                    this::splitWordNum,
+                    this::joinTerms,
+                    this::nounPluralFormsEN,
+                    this::categoryKeywords,
+                    this::ngramAll
+            );
+        }
+        else {
+            return List.of(
+                    this::joinDashes,
+                    this::splitWordNum,
+                    this::joinTerms,
+                    this::categoryKeywords,
+                    this::ngramAll
+            );
+        }
+
+    }
+
 
     private static final Pattern dashPattern = Pattern.compile("-");
     private static final Pattern numWordBoundary = Pattern.compile("[0-9][a-zA-Z]|[a-zA-Z][0-9]");
@@ -151,7 +165,7 @@ public class QueryExpansion {
     }
 
     /** Attempt to rewrite the last word in a different pluralization */
-    private void nounPluralForms(QWordGraph graph) {
+    private void nounPluralFormsEN(QWordGraph graph) {
         List<QWord> parts = new ArrayList<>();
 
         for (var part : new ArrayList<>(graph.getPrev(QWord.end()))) {

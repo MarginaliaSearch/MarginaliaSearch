@@ -173,7 +173,9 @@ public class QueryFactory {
                     .build();
         }
 
-        var expansion = queryExpansion.expandQuery(queryBuilder.searchTermsQuery);
+        var expansion = queryExpansion.expandQuery(
+                languageDefinition.isoCode(),
+                queryBuilder.searchTermsQuery);
 
         // Query expansion may produce suggestions for phrase constraints,
         // add these to the query
