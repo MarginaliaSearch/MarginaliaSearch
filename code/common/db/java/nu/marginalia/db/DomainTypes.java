@@ -3,6 +3,8 @@ package nu.marginalia.db;
 import com.zaxxer.hikari.HikariDataSource;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
+import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.model.EdgeUrl;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -22,6 +24,7 @@ public class DomainTypes {
 
     public enum Type {
         BLOG,
+        SMALLWEB,
         CRAWL,
         TEST
     }
@@ -184,9 +187,15 @@ public class DomainTypes {
             while ((line = br.readLine()) != null) {
                 line = cleanDomainListLine(line);
 
-
-                if (isValidDomainListEntry(line))
+                if (line.startsWith("http://") || line.startsWith("https://")) {
+                    EdgeUrl.parse(line)
+                            .map(EdgeUrl::getDomain)
+                            .map(EdgeDomain::toString)
+                            .ifPresent(ret::add);
+                }
+                else if (isValidDomainListEntry(line)) {
                     ret.add(line);
+                }
             }
         }
 
@@ -197,19 +206,18 @@ public class DomainTypes {
     }
 
     private String cleanDomainListLine(String line) {
-        line = line.trim();
-
         int hashIdx = line.indexOf('#');
-        if (hashIdx >= 0)
-            line = line.substring(0, hashIdx).trim();
 
-        return line;
+        if (hashIdx >= 0)
+            return line.substring(0, hashIdx).trim();
+        else
+            return line.trim();
     }
 
     private boolean isValidDomainListEntry(String line) {
         if (line.isBlank())
             return false;
-        if (!line.matches("[a-z0-9\\-.]+"))
+        if (!line.matches("^[a-z0-9\\-.]+$"))
             return false;
 
         return true;

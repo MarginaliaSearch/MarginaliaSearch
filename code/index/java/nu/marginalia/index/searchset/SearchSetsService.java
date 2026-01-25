@@ -118,7 +118,8 @@ public class SearchSetsService {
             try {
                 if (rankingSet.isSpecial()) {
                     switch (rankingSet.name()) {
-                        case "BLOGS" -> recalculateBlogsSet(rankingSet);
+                        case "BLOGS" -> recalculateSpecialSetSet(rankingSet, DomainTypes.Type.BLOG);
+                        case "SMALL" -> recalculateSpecialSetSet(rankingSet, DomainTypes.Type.SMALLWEB);
                         case "NONE" -> {} // No-op
                     }
                 } else {
@@ -158,13 +159,13 @@ public class SearchSetsService {
 
 
 
-    private void recalculateBlogsSet(DomainRankingSetsService.DomainRankingSet rankingSet) throws SQLException, IOException {
-        TIntList knownDomains = domainTypes.getKnownDomainsByType(DomainTypes.Type.BLOG);
+    private void recalculateSpecialSetSet(DomainRankingSetsService.DomainRankingSet rankingSet, DomainTypes.Type type) throws SQLException, IOException {
+        TIntList knownDomains = domainTypes.getKnownDomainsByType(type);
 
         if (knownDomains.isEmpty()) {
             // FIXME: We don't want to reload the entire list every time, but we do want to do it sometimes. Actor maybe?
-            domainTypes.reloadDomainsList(DomainTypes.Type.BLOG);
-            knownDomains = domainTypes.getKnownDomainsByType(DomainTypes.Type.BLOG);
+            domainTypes.reloadDomainsList(type);
+            knownDomains = domainTypes.getKnownDomainsByType(type);
         }
 
         synchronized (this) {

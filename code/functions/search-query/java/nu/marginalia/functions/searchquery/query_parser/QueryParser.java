@@ -224,6 +224,8 @@ public class QueryParser {
             entity.replace(new QueryToken.NearTerm(str.substring(5)));
         } else if (str.startsWith("lang:")) {
             entity.replace(new QueryToken.LangTerm(str.substring(5), str));
+        } else if (str.startsWith("set:")) {
+            entity.replace(new QueryToken.SetTerm(str.substring(4), str));
         } else if (str.startsWith("year") && str.matches("year[=><]\\d{4}")) {
             var limit = parseSpecificationLimit(str.substring(4));
             entity.replace(new QueryToken.YearTerm(limit, str));

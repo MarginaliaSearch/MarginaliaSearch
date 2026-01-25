@@ -14,7 +14,13 @@
           <input type="text" class="form-control" name="blogs" id="blogs-input" value="{{blogs}}" />
           <div class="form-text">Inclusion in this set will modify how a website is processed,
                                  making stronger assumptions that it is a blog.
+                                 It can also be used in search filters.
           </div>
+      </div>
+      <div class="mb-3">
+          <label for="small-web-input" class="form-label">Small Web</label>
+          <input type="text" class="form-control" name="smallweb" id="small-web-input" value="{{smallweb}}" />
+          <div class="form-text">This defines the small web ranking set, used in search filters.</div>
       </div>
       <div class="mb-3">
           <label for="new-domains-input" class="form-label">New Domains</label>
