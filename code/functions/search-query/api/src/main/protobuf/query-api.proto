@@ -9,15 +9,21 @@ service QueryApi {
   rpc invalidateFilterCache(RpcQsInvalidateFilter) returns (Empty) {}
 }
 service IndexApi {
-  rpc query(RpcIndexQuery) returns (stream RpcDecoratedResultItem) {}
+  rpc query(RpcIndexQuery) returns (RpcIndexQueryResponse) {}
 }
 
-message RpcQsInvalidateFilter{
+message Empty {}
+
+message RpcIndexQueryResponse {
+  repeated RpcDecoratedResultItem results = 2;
+}
+
+
+message RpcQsInvalidateFilter {
   string userId = 1;
   string filterId = 2;
 }
 
-message Empty {}
 
 message RpcQsQuery {
   string humanQuery = 1;

@@ -46,7 +46,7 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
 
     private final ServiceRegistryIf serviceRegistryIf;
     private final Function<InstanceAddress, ManagedChannel> channelConstructor;
-    private final Function<ManagedChannel, STUB> stubConstructor;
+    private final Function<ManagedChannel, STUB> defaultStubConstructor;
 
     public GrpcSingleNodeChannelPool(ServiceRegistryIf serviceRegistryIf,
                                      ServiceKey<? extends PartitionTraits.Unicast> serviceKey,
@@ -58,7 +58,7 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
 
         this.serviceRegistryIf = serviceRegistryIf;
         this.channelConstructor = channelConstructor;
-        this.stubConstructor = stubConstructor;
+        this.defaultStubConstructor = stubConstructor;
 
         serviceRegistryIf.registerMonitor(this);
 
@@ -200,6 +200,12 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
     }
 
     private <T, I> T call(BiFunction<STUB, I, T> call, I arg) throws RuntimeException {
+        return call(defaultStubConstructor, call, arg);
+    }
+
+    public <T, I> T call(Function<ManagedChannel, STUB> stubConstructor,
+                          BiFunction<STUB, I, T> call,
+                          I arg) throws RuntimeException {
         final List<Exception> exceptions = new ArrayList<>();
         final List<ConnectionHolder> connectionHolders = new ArrayList<>(channels.values());
 
@@ -234,7 +240,6 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
             logger.error(grpcMarker, "Failed to call service {}", serviceKey, e);
         }
 
-
         throw new ServiceNotAvailableException(serviceKey);
     }
 
@@ -245,7 +250,7 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
         String serviceKeyStr = serviceKey.toString();
         for (var channel : channels.values()) {
             try {
-                ret.add(CompletableFuture.completedFuture(call.apply(stubConstructor.apply(channel.get()), arg)));
+                ret.add(CompletableFuture.completedFuture(call.apply(defaultStubConstructor.apply(channel.get()), arg)));
                 requestCounter.labelValues(serviceKeyStr).inc();
             }
             catch (Exception e) {

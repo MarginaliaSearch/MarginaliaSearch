@@ -9,6 +9,7 @@ import io.prometheus.metrics.core.metrics.Histogram;
 import nu.marginalia.api.searchquery.IndexApiGrpc;
 import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
 import nu.marginalia.api.searchquery.RpcIndexQuery;
+import nu.marginalia.api.searchquery.RpcIndexQueryResponse;
 import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.results.IndexResultRankingService;
 import nu.marginalia.index.searchset.SearchSet;
@@ -82,7 +83,7 @@ public class IndexGrpcService
     // GRPC endpoint
 
     public void query(RpcIndexQuery request,
-                      StreamObserver<RpcDecoratedResultItem> responseObserver) {
+                      StreamObserver<RpcIndexQueryResponse> responseObserver) {
 
         try {
             long endTime = System.currentTimeMillis() + request.getQueryLimits().getTimeoutMs();
@@ -121,10 +122,9 @@ public class IndexGrpcService
                         .inc();
             }
 
-            // Send the results back to the client
-            for (var result : results) {
-                responseObserver.onNext(result);
-            }
+            responseObserver.onNext(RpcIndexQueryResponse.newBuilder()
+                            .addAllResults(results)
+                            .build());
 
             responseObserver.onCompleted();
         }

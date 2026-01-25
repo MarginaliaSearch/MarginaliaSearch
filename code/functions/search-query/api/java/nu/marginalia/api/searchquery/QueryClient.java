@@ -2,6 +2,7 @@ package nu.marginalia.api.searchquery;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.grpc.ManagedChannel;
 import io.prometheus.metrics.core.metrics.Summary;
 import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.QueryResponse;
@@ -65,14 +66,13 @@ public class QueryClient  {
                 .build();
 
         try (var _ = wmsa_qs_api_search_time.startTimer()) {
-            return queryApiPool.call(QueryApiGrpc.QueryApiBlockingStub::query)
-                    .async(virtualThreadService)
-                    .run(query)
-                    .thenApply(QueryProtobufCodec::convertQueryResponse)
-                    .get(limits.getTimeoutMs() * 2L, TimeUnit.MILLISECONDS);
-        }
-        catch (InterruptedException|ExecutionException ex) {
-            throw new RuntimeException(ex);
+            RpcQsResponse rsp = queryApiPool.call(
+                    channel -> QueryApiGrpc.newBlockingStub(channel)
+                                        .withDeadlineAfter(Duration.ofMillis(limits.getTimeoutMs() * 2)),
+                                    QueryApiGrpc.QueryApiBlockingStub::query,
+                                    query);
+
+            return QueryProtobufCodec.convertQueryResponse(rsp);
         }
     }
 

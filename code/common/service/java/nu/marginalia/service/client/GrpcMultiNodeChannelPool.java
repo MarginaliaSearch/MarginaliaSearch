@@ -1,6 +1,7 @@
 package nu.marginalia.service.client;
 
 import io.grpc.ManagedChannel;
+import io.grpc.StatusRuntimeException;
 import nu.marginalia.service.NodeConfigurationWatcher;
 import nu.marginalia.service.NodeConfigurationWatcherIf;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
@@ -9,6 +10,8 @@ import nu.marginalia.service.discovery.property.ServiceEndpoint;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import nu.marginalia.service.discovery.property.ServicePartition;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -72,6 +75,21 @@ public class GrpcMultiNodeChannelPool<STUB> {
     /** Return the number of nodes that are eligible for broadcast-style requests */
     public int getNumNodes() {
         return nodeConfigurationWatcher.getQueryNodes().size();
+    }
+
+
+    public <T, I> List<T> callEach(Function<ManagedChannel, STUB> stubConstructor,
+                         BiFunction<STUB, I, T> call,
+                         I arg) throws RuntimeException
+    {
+        List<Integer> eligibleNodes = getEligibleNodes();
+        List<T> ret = new ArrayList<>(eligibleNodes.size());
+
+        for (Integer node: eligibleNodes) {
+            ret.add(getPoolForNode(node).call(stubConstructor, call, arg));
+        }
+
+        return ret;
     }
 
     /** Create a new call builder for the given method.  This is a fluent-style
