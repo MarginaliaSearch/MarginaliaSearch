@@ -206,8 +206,8 @@ public class SearchOperator {
 
         String[] parts = query.split("\s+");
         for (String part : parts) {
-            if (part.startsWith("lang:") && part.length() == 6) {
-                lang = part.substring(4);
+            if (part.startsWith("lang:") && part.length() == 7) {
+                lang = part.substring(5);
             }
             else {
                 queryParts.add(part);
