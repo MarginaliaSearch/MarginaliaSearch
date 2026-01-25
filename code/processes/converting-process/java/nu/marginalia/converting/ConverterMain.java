@@ -53,7 +53,7 @@ public class ConverterMain extends ProcessMainClass {
     private final ProcessHeartbeat heartbeat;
     private final FileStorageService fileStorageService;
     private final SideloadSourceFactory sideloadSourceFactory;
-    private static final int SIDELOAD_THRESHOLD = Integer.getInteger("converter.sideloadThreshold", 10_000);
+    private static final int SIDELOAD_THRESHOLD = Integer.getInteger("converter.sideloadThreshold", 2_500);
 
     public static void main(String... args) throws Exception {
 
