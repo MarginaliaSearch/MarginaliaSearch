@@ -1,5 +1,6 @@
 package nu.marginalia.piping;
 
+import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
@@ -11,10 +12,11 @@ public class FinalPipeStage<T> extends AbstractPipeStage<T> {
     public FinalPipeStage(String name,
                           int size,
                           int concurrency,
+                          Duration maxRunDuration,
                           Supplier<BufferPipe.FinalFunction<T>> constructor,
                           ExecutorService executorService)
     {
-        super(name, size, executorService);
+        super(name, size, maxRunDuration, executorService);
         this.constructor = constructor;
         setDesiredInstanceCount(concurrency);
     }

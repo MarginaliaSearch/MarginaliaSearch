@@ -27,7 +27,17 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
     private final AtomicReference<Thread> idleSubmitter = new AtomicReference<>(null);
     private final AtomicInteger idleRunnerCount = new AtomicInteger();
 
-    protected AbstractPipeStage(String stageName, int size, ExecutorService executorService) {
+    private final long startTimeNanos;
+    private final long maxRunDurationNanos;
+
+    protected AbstractPipeStage(String stageName,
+                                int size,
+                                Duration maxRunDuration,
+                                ExecutorService executorService)
+    {
+        startTimeNanos = System.nanoTime();
+        maxRunDurationNanos = maxRunDuration.toNanos();
+
         this.stageName = stageName;
         this.inputBuffer = new RingBuffer<>(size);
         this.executorService = executorService;
@@ -40,7 +50,7 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
     public void stop() {
         inputBuffer.close();
         desiredInstanceCount.set(0);
-        stopped.setRelease(true);
+        stopped.set(true);
     }
 
     public void stopFeeding() {
@@ -107,7 +117,12 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
                 rouseExecutor();
                 return true;
             }
-            if (inputBuffer.isClosed())
+
+            if (System.nanoTime() - startTimeNanos > maxRunDurationNanos) {
+                stopped.set(true);
+            }
+
+            if (inputBuffer.isClosed() || stopped.getAcquire())
                 return false;
 
             idleSubmitter.compareAndSet(null, Thread.currentThread());
@@ -118,6 +133,8 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
 
     @Override
     public boolean offer(T val, Duration timeout) {
+        long start = System.nanoTime();
+
         for (int iter = 0; iter < 128; iter++) {
             if (inputBuffer.putNP(val)) {
                 rouseExecutor();
@@ -125,28 +142,32 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
             }
         }
 
-        long end = System.nanoTime() + timeout.toNanos();
-
         for (int iter = 0; iter < 1024; iter++) {
             if (inputBuffer.putNP(val)) {
                 rouseExecutor();
                 return true;
             }
-            if (inputBuffer.isClosed())
+            if (inputBuffer.isClosed() || stopped.get())
                 return false;
 
             Thread.yield();
         }
+
+        long timeoutNs = timeout.toNanos();
 
         for (;;) {
             if (inputBuffer.putNP(val)) {
                 rouseExecutor();
                 return true;
             }
-            if (inputBuffer.isClosed())
+            if (inputBuffer.isClosed() || stopped.get())
                 return false;
-            if (System.nanoTime() > end)
+
+            if (System.nanoTime() - start > timeoutNs)
                 return false;
+
+            if (System.nanoTime() - startTimeNanos > maxRunDurationNanos)
+                stopped.set(true);
 
             idleSubmitter.compareAndSet(null, Thread.currentThread());
             LockSupport.parkNanos(10_000);
@@ -156,17 +177,17 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
     abstract StageExecution<T> createStage();
 
     void run() {
-        Thread.currentThread().setName("PipeStage:"+stageName);
-
-        StageExecution<T> stage = createStage();
+        String originalThreadName = Thread.currentThread().getName();
+        StageExecution<T> stage = null;
 
         try {
+            Thread.currentThread().setName("PipeStage:"+stageName);
+
+            stage = createStage();
+
             outer:
             for (; ; ) {
-                if (stopped.getAcquire()) {
-                    instanceCount.decrementAndGet();
-                    return;
-                }
+                if (stopped.getAcquire()) return;
 
                 for (int iter = 0; iter < 128; iter++) {
                     T val = inputBuffer.tryTakeNC();
@@ -178,10 +199,7 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
                     Thread.onSpinWait();
                 }
 
-                if (stopped.getAcquire()) {
-                    instanceCount.decrementAndGet();
-                    return;
-                }
+                if (stopped.getAcquire()) return;
 
                 for (int iter = 0; iter < 1024; iter++) {
                     T val = inputBuffer.tryTakeNC();
@@ -205,45 +223,45 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
                             continue outer;
                         }
 
-                        if (stopped.getAcquire()) {
-                            instanceCount.decrementAndGet();
-                            return;
+                        if (System.nanoTime() - startTimeNanos > maxRunDurationNanos) {
+                            stopped.set(true);
                         }
 
-                        // Test if we should terminate the instance
-                        int inc = instanceCount.get();
-                        int dic = desiredInstanceCount.get();
-                        if (inc > dic && instanceCount.compareAndSet(inc, inc - 1)) {
-                            break outer;
-                        }
+                        if (stopped.getAcquire()) return;
 
                         idleRunner.compareAndSet(null, Thread.currentThread());
                         LockSupport.parkNanos(10_000);
 
                         // Check if the input is closed and we should pack up shop
-                        if (inputBuffer.isClosed() && inputBuffer.peek() == null) {
-                            instanceCount.decrementAndGet();
+                        if (inputBuffer.isClosed() && inputBuffer.peek() == null)
                             return;
-                        }
+
                     }
                 } finally {
                     idleRunnerCount.decrementAndGet();
                 }
             }
         } catch (Throwable t) {
-            instanceCount.decrementAndGet();
             logger.info("Exception", t);
             throw t;
         } finally {
-            stage.cleanUp();
+            try {
+                if (stage != null) {
+                    stage.cleanUp();
+                }
+            }
+            catch (Throwable t) {
+                logger.error("Error in clean up for stage {}", stageName, t);
+            }
 
-            if (instanceCount.get() == 0)
+            if (instanceCount.decrementAndGet() == 0)
                 next().ifPresent(PipeStage::stopFeeding);
 
             synchronized (this) {
                 notifyAll();
             }
-            Thread.currentThread().setName("IdlePipeStage");
+
+            Thread.currentThread().setName(originalThreadName);
         }
     }
 
@@ -274,12 +292,16 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
 
     @Override
     public void setDesiredInstanceCount(int newDic) {
+        int oldDic = desiredInstanceCount.get();
+        if (newDic < oldDic)
+            throw new IllegalArgumentException("Instance count can not be shrunk");
+
         desiredInstanceCount.set(newDic);
 
-        int ic;
-        while ((ic = instanceCount.get()) < newDic) {
+        int toSubmit = newDic - oldDic;
+        for (int i = 0; i < toSubmit; i++) {
+            executorService.execute(this::run);
             instanceCount.incrementAndGet();
-            executorService.submit(this::run);
         }
     }
 

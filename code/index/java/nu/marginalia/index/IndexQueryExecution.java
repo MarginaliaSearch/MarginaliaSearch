@@ -110,7 +110,7 @@ public class IndexQueryExecution {
             throw new TooManySimultaneousQueriesException();
         }
 
-        try (BufferPipe<IndexQuery> processingPipe = BufferPipe.<IndexQuery>builder(threadPool)
+        try (BufferPipe<IndexQuery> processingPipe = BufferPipe.<IndexQuery>builder(threadPool, Duration.ofSeconds(1))
                 .addStage("Lookup", 32, queries.size(), LookupStage::new)
                 .addStage("Deduplicate", 16, 1, DeduplicateStage::new)
                 .addStage("Processing", 16, 4, PreparationStage::new)

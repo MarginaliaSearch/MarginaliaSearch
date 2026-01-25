@@ -1,5 +1,6 @@
 package nu.marginalia.piping;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -10,9 +11,11 @@ import java.util.function.Supplier;
 public class BufferPipeBuilder<START, T> {
     private final List<IntermediateStage> stageList = new ArrayList<>();
     private final ExecutorService executorService;
+    private final Duration maxRunDuration;
 
-    BufferPipeBuilder(ExecutorService executorService) {
+    BufferPipeBuilder(ExecutorService executorService, Duration maxRunDuration) {
         this.executorService = executorService;
+        this.maxRunDuration = maxRunDuration;
     }
 
     private record IntermediateStage(String name, int size, int concurrency, Supplier cons) {}
@@ -34,13 +37,14 @@ public class BufferPipeBuilder<START, T> {
 
     @SuppressWarnings("unchecked")
     public BufferPipe<START> finalStage(String name, int size, int concurrency, Supplier<BufferPipe.FinalFunction<T>> cons) {
-        PipeStage tail = new FinalPipeStage(name, size, concurrency, cons, executorService);
+        PipeStage tail = new FinalPipeStage(name, size, concurrency, maxRunDuration, cons, executorService);
         while (!stageList.isEmpty()) {
             var stage = stageList.removeLast();
             tail = new IntermediatePipeStage(
                     stage.name,
                     stage.size,
                     stage.concurrency,
+                    maxRunDuration,
                     stage.cons,
                     executorService,
                     tail

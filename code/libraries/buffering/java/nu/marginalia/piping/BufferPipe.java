@@ -18,8 +18,19 @@ public class BufferPipe<T> implements AutoCloseable {
         default void cleanUp() {}
     }
 
-    public static <S> BufferPipeBuilder<S, S> builder(ExecutorService executorService) {
-        return new BufferPipeBuilder<>(executorService);
+    /**
+     *
+     * @param executorService - The executor to run on
+     * @param maxRunDuration - The pipe self-terminates after the duration has elapsed.
+     *                         This is used to ensure that all threads terminate disaster scenarios,
+     *                         where otherwise e.g. OutOfMemoryExceptions may lead threads never being told to stop,
+     *                         causing more threads to spawn and leak.
+     *                         Use stopFeeding() + join(timeout) for graceful termination.
+     * @return
+     * @param <S>
+     */
+    public static <S> BufferPipeBuilder<S, S> builder(ExecutorService executorService, Duration maxRunDuration) {
+        return new BufferPipeBuilder<>(executorService, maxRunDuration);
     }
 
     BufferPipe(PipeStage<T> firstStage) {
