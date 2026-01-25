@@ -13,6 +13,7 @@ public sealed interface QueryToken {
     record AdviceTerm(String str, String displayStr) implements QueryToken {}
     record PriorityTerm(String str, String displayStr) implements QueryToken {}
     record LangTerm(String str, String displayStr) implements QueryToken {}
+    record SetTerm(String str, String displayStr) implements QueryToken {}
 
     record QualityTerm(SpecificationLimit limit, String displayStr) implements QueryToken {
         public String str() { return displayStr; }
@@ -35,7 +36,7 @@ public sealed interface QueryToken {
 
     record QsTerm(String str) implements QueryToken {
         public String displayStr() {
-            return "qs" + str;
+            return "qs:" + str;
         }
     }
 

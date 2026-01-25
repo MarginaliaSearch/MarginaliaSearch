@@ -74,6 +74,7 @@ public class QueryFactory {
         QueryStrategy queryStrategy = searchFilter.queryStrategy();
 
         String domain = null;
+        String userSearchSet = null;
 
         IntList domainIds = new IntArrayList(searchFilter.domainsInclude());
 
@@ -150,7 +151,7 @@ public class QueryFactory {
                 case QueryToken.RankTerm(SpecificationLimit limit, _) -> rank = limit;
                 case QueryToken.QualityTerm(SpecificationLimit limit, _) -> qualityLimit = limit;
                 case QueryToken.QsTerm(String str) -> queryStrategy = parseQueryStrategy(str);
-
+                case QueryToken.SetTerm(String str, _) -> userSearchSet = str.toUpperCase();
                 // No-op for lang term
                 case QueryToken.LangTerm(String str, _) -> {}
                 default -> {}
@@ -209,7 +210,13 @@ public class QueryFactory {
         if (!size.isNone()) indexQueryBuilder.setSize(IndexProtobufCodec.convertSpecLimit(size));
         if (!rank.isNone()) indexQueryBuilder.setRank(IndexProtobufCodec.convertSpecLimit(rank));
         if (!QueryStrategy.AUTO.equals(queryStrategy)) indexQueryBuilder.setQueryStrategy(queryStrategy.name());
-        if (null != searchFilter.searchSetIdentifier() && !"NONE".equals(searchFilter.searchSetIdentifier())) indexQueryBuilder.setSearchSetIdentifier(searchFilter.searchSetIdentifier());
+
+        if (null != userSearchSet) {
+            indexQueryBuilder.setSearchSetIdentifier(userSearchSet);
+        }
+        else if (null != searchFilter.searchSetIdentifier() && !"NONE".equals(searchFilter.searchSetIdentifier())) {
+            indexQueryBuilder.setSearchSetIdentifier(searchFilter.searchSetIdentifier());
+        }
 
         indexQueryBuilder
                 .setQueryLimits(limits)
