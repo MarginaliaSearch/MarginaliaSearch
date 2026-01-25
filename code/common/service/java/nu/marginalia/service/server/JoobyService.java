@@ -121,10 +121,11 @@ public class JoobyService {
         // single digit percentage difference since HTML already compresses very well with level = 1.
         options.setCompressionLevel(1);
 
-        // Set a cap on the number of worker threads, as Jooby's default value does not seem to consider
+        // Set a cap on the number of worker and I/O threads, as Jooby's default value does not seem to consider
         // multi-tenant servers with high thread counts, and spins up an exorbitant number of threads in that
         // scenario
         options.setWorkerThreads(Math.min(16, options.getWorkerThreads()));
+        options.setIoThreads(Math.min(16, options.getIoThreads()));
 
         jooby.setServerOptions(options);
 
