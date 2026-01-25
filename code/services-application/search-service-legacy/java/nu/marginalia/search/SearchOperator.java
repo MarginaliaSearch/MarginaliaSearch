@@ -32,10 +32,7 @@ import org.slf4j.MarkerFactory;
 
 import javax.annotation.Nullable;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -141,12 +138,16 @@ public class SearchOperator {
 
         Future<String> eval = searchUnitConversionService.tryEval(userParams.query());
 
-        // Perform the regular search
+        // HACK: Allows language selection via query on legacy
+        final Map.Entry<String, String> queryAndLang = extractLangFromQuery(userParams.query());
+        final String query = queryAndLang.getKey();
+        final String lang = queryAndLang.getValue();
 
+        // Perform the regular search
         QueryResponse queryResponse = queryClient.search(
                 userParams.asFilterSpec(),
-                userParams.query(),
-                "en",
+                query,
+                lang,
                 userParams.filterTier(),
                 defaultLimits,
                 userParams.page()
@@ -193,6 +194,27 @@ public class SearchOperator {
                 .focusDomainId(focusDomainId)
                 .resultPages(resultPages)
                 .build();
+    }
+
+    private Map.Entry<String, String> extractLangFromQuery(String query) {
+        if (!query.contains("lang:")) {
+            return Map.entry(query, "en");
+        }
+
+        String lang = "en";
+        StringJoiner queryParts = new StringJoiner(" ");
+
+        String[] parts = query.split("\s+");
+        for (String part : parts) {
+            if (part.startsWith("lang:") && part.length() == 6) {
+                lang = part.substring(4);
+            }
+            else {
+                queryParts.add(part);
+            }
+        }
+
+        return Map.entry(queryParts.toString(), lang);
     }
 
 
