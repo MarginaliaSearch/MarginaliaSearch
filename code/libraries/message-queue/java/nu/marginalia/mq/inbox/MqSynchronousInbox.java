@@ -60,9 +60,16 @@ public class MqSynchronousInbox implements MqInboxIf {
         // Add a final handler that fails any message that is not handled
         eventSubscribers.add(new MqInboxShredder());
 
-        pollDbThread = new Thread(this::pollDb, "mq-inbox-update-thread:"+inboxName);
-        pollDbThread.setDaemon(true);
-        pollDbThread.start();
+        if (Boolean.getBoolean("system.experimentalUseLoom")) {
+            pollDbThread = Thread.ofVirtual()
+                    .name("mq-inbox-update-thread:" + inboxName)
+                    .start(this::pollDb);
+        } else {
+            pollDbThread = Thread.ofPlatform()
+                    .daemon()
+                    .name("mq-inbox-update-thread:" + inboxName)
+                    .start(this::pollDb);
+        }
     }
 
     /** Stop receiving messages and shut down all threads */
