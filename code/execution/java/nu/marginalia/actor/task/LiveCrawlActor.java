@@ -53,21 +53,30 @@ public class LiveCrawlActor extends RecordActorPrototype {
         public LiveCrawl(String feedsHash) { this(feedsHash, -1); }
     }
 
+    private static final String NON_HASH = "-";
+
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
         return switch (self) {
             case Initial() -> {
-                yield new Monitor("-");
+                yield new Monitor(NON_HASH);
             }
-            case Monitor(String feedsHash) -> {
+            case Monitor(String oldHash) -> {
                 // Sleep initially in case this is during start-up
                 for (;;) {
                     try {
                         Thread.sleep(Duration.ofMinutes(1));
-                        String currentHash = feedFetcherService.getFeedDataHash();
-                        if (!Objects.equals(currentHash, feedsHash)) {
-                            yield new LiveCrawl(currentHash);
+                        String newHash = feedFetcherService.getFeedDataHash();
+
+                        if (!Objects.equals(newHash, oldHash)) {
+                            if (NON_HASH.equals(oldHash)) {
+                                yield new Monitor(newHash);
+                            }
+                            else {
+                                yield new LiveCrawl(newHash);
+                            }
                         }
+
                         Thread.sleep(Duration.ofMinutes(14));
                     }
                     catch (RuntimeException ex) {
