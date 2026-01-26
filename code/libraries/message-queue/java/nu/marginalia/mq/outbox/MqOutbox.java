@@ -42,9 +42,16 @@ public class MqOutbox {
         this.replyInboxName = String.format("%s:%d//%s:%d", outboxName, outboxNode, inboxName, inboxNode);
         this.instanceUUID = instanceUUID.toString();
 
-        pollThread = new Thread(this::poll, "mq-outbox-poll-thread:" + inboxName);
-        pollThread.setDaemon(true);
-        pollThread.start();
+        if (Boolean.getBoolean("system.experimentalUseLoom")) {
+            pollThread = Thread.ofVirtual()
+                            .name("mq-outbox-poll-thread:" + inboxName)
+                            .start(this::poll);
+        } else {
+            pollThread = Thread.ofPlatform()
+                    .daemon()
+                    .name("mq-outbox-poll-thread:" + inboxName)
+                    .start(this::poll);
+        }
     }
 
     public void stop() throws InterruptedException {
