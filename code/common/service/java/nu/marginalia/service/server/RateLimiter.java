@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+// FIXME: This is very overengineered and needs a review
 public class RateLimiter {
 
     private final Map<String, Bucket> bucketMap = new ConcurrentHashMap<>();
@@ -20,7 +21,7 @@ public class RateLimiter {
         this.capacity = capacity;
         this.refillRate = refillRate;
 
-        Thread.ofPlatform()
+        Thread.ofVirtual()
                 .name("rate-limiter-cleaner")
                 .start(() -> {
                     while (true) {
