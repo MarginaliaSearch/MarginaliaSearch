@@ -199,33 +199,13 @@ public class BufferPool implements AutoCloseable {
         LinuxSystemCalls.readAt(fd, buffer.getMemorySegment(), buffer.pageAddress());
         assert buffer.getMemorySegment().get(ValueLayout.JAVA_INT, 0) != 9999;
         buffer.dirty(false);
-
-        synchronized (buffer) {
-            buffer.notifyAll();
-        }
     }
 
     private void waitForPageWrite(MemoryPage page) {
-        if (!page.dirty()) {
-            return;
-        }
-
-        for (int iter = 0; iter < 1000; iter++) {
-            if (!page.dirty())
-                return;
+        while (page.dirty()) {
             Thread.yield();
         }
 
-        synchronized (page) {
-            while (page.dirty()) {
-                try {
-                    page.wait(0, 1000);
-                }
-                catch (InterruptedException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-        }
     }
 
 }
