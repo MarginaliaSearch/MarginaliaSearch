@@ -390,6 +390,9 @@ public class IndexQueryExecution {
                 if (codedPositions[i] != null) {
                     ret[i] = codedPositions[i].values(pool::get);
                 }
+                else {
+                    ret[i] = IntList.of();
+                }
             }
             return ret;
         }
