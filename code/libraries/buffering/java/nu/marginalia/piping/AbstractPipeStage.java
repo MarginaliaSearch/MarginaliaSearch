@@ -57,7 +57,7 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
         inputBuffer.close();
         rouseExecutor();
 
-        if (inputBuffer.peek() == null) {
+        if (instanceCount.get() == 0) {
             next().ifPresent(PipeStage::stopFeeding);
         }
     }
