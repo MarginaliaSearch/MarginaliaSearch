@@ -21,9 +21,6 @@ public interface PipeStage<T> {
      * */
     boolean join(long millis) throws InterruptedException;
 
-    /** Returns true if all threads are idle and the input queue is also empty */
-    boolean isQuiet();
-
     Optional<PipeStage<?>> next();
 
     boolean offer(T val);

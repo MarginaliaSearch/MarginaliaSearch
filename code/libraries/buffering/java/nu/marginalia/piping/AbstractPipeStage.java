@@ -86,14 +86,17 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
     }
 
     public boolean join(long millis) throws InterruptedException {
-        long end = System.currentTimeMillis() + millis;
-        long remaining;
+        long waitTotalNanos = TimeUnit.MILLISECONDS.toNanos(millis);
 
-        while ((remaining = (end - System.currentTimeMillis())) > 0) {
-            if (countdown.await(remaining, TimeUnit.MILLISECONDS))
+        long start = System.nanoTime();
+        long waitedNanos;
+
+        while ((waitedNanos = (System.nanoTime() - start)) < waitTotalNanos) {
+            if (countdown.await(waitTotalNanos - waitedNanos, TimeUnit.NANOSECONDS))
                 return true;
         }
-        return false;
+
+        return countdown.getCount() == 0;
     }
 
     @Override
@@ -104,9 +107,9 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
 
         for (int iter = 0; iter < 128; iter++) {
             if (inputBuffer.putNP(val)) {
-                rouseExecutors();
                 return true;
             }
+            Thread.onSpinWait();
         }
 
         for (int iter = 0; iter < 1024; iter++) {
@@ -147,6 +150,7 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
             if (inputBuffer.putNP(val)) {
                 return true;
             }
+            Thread.onSpinWait();
         }
 
         for (int iter = 0; iter < 1024; iter++) {
@@ -263,13 +267,14 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
             }
             finally {
                 countdown.countDown();
+
+                if (countdown.getCount() == 0) {
+                    next().ifPresent(PipeStage::stopFeeding);
+                }
+
                 Thread.currentThread().setName(originalThreadName);
             }
         }
-    }
-
-    public boolean isQuiet() {
-        return inputBuffer.peek() == null && idleRunnerCount.get() == countdown.getCount();
     }
 
     protected void rouseSubmitter() {
