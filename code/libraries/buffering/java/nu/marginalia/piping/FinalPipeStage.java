@@ -16,9 +16,8 @@ public class FinalPipeStage<T> extends AbstractPipeStage<T> {
                           Supplier<BufferPipe.FinalFunction<T>> constructor,
                           ExecutorService executorService)
     {
-        super(name, size, maxRunDuration, executorService);
+        super(name, size, concurrency, maxRunDuration, executorService);
         this.constructor = constructor;
-        setDesiredInstanceCount(concurrency);
     }
 
 

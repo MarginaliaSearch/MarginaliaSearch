@@ -17,10 +17,9 @@ public class IntermediatePipeStage<T, T2> extends AbstractPipeStage<T> {
                                  Supplier<BufferPipe.IntermediateFunction<T, T2>> constructor,
                                  ExecutorService executorService,
                                  PipeStage<T2> next) {
-        super(stageName, size, maxRunDuration, executorService);
+        super(stageName, size, concurrency, maxRunDuration, executorService);
         this.constructor = constructor;
         this.next = next;
-        setDesiredInstanceCount(concurrency);
     }
 
     public Optional<PipeStage<?>> next() {

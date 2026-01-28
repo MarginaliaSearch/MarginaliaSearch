@@ -28,12 +28,4 @@ public interface PipeStage<T> {
 
     boolean offer(T val);
     boolean offer(T val, Duration timeout);
-
-    int getInstanceCount();
-
-    /** Set the desired instance count.  If this is higher than the actual instance count,
-     * a new thread will be started.  If this is lower than the actual instance count,
-     * threads will shut down to match the request the next time they drain the input queue.
-     */
-    void setDesiredInstanceCount(int newDic);
 }

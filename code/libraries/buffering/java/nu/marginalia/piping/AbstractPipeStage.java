@@ -5,8 +5,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -18,20 +22,22 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
     public final String stageName;
 
     private final RingBuffer<T> inputBuffer;
-    private final AtomicInteger instanceCount = new AtomicInteger(0);
-    private final AtomicInteger desiredInstanceCount = new AtomicInteger(0);
     private final ExecutorService executorService;
     private final AtomicBoolean stopped = new AtomicBoolean();
 
-    private final AtomicReference<Thread> idleRunner = new AtomicReference<>(null);
     private final AtomicReference<Thread> idleSubmitter = new AtomicReference<>(null);
     private final AtomicInteger idleRunnerCount = new AtomicInteger();
+
+    private final List<Thread> runnerThreads = new CopyOnWriteArrayList<>();
 
     private final long startTimeNanos;
     private final long maxRunDurationNanos;
 
+    private final CountDownLatch countdown;
+
     protected AbstractPipeStage(String stageName,
                                 int size,
+                                int threads,
                                 Duration maxRunDuration,
                                 ExecutorService executorService)
     {
@@ -41,6 +47,18 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
         this.stageName = stageName;
         this.inputBuffer = new RingBuffer<>(size);
         this.executorService = executorService;
+
+        countdown = new CountDownLatch(threads);
+
+        for (int i = 0; i < threads; i++) {
+            try {
+                executorService.execute(this::run);
+            }
+            catch (Throwable t) {
+                logger.error("Error starting thread", t);
+                countdown.countDown();
+            }
+        }
     }
 
     @Override
@@ -49,15 +67,14 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
     @Override
     public void stop() {
         inputBuffer.close();
-        desiredInstanceCount.set(0);
         stopped.set(true);
     }
 
     public void stopFeeding() {
         inputBuffer.close();
-        rouseExecutor();
+        rouseExecutors();
 
-        if (instanceCount.get() == 0) {
+        if (countdown.getCount() == 0) {
             next().ifPresent(PipeStage::stopFeeding);
         }
     }
@@ -66,11 +83,7 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
     public void join() throws InterruptedException {
         synchronized (this) {
             for (;;) {
-                if (instanceCount.get() == 0)
-                    return;
-                else {
-                    wait(1);
-                }
+                countdown.await();
             }
         }
     }
@@ -80,13 +93,7 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
         long remaining;
 
         while ((remaining = (end - System.currentTimeMillis())) > 0) {
-            if (instanceCount.get() == 0)
-                return true;
-            else {
-                synchronized (this) {
-                    wait(remaining);
-                }
-            }
+            countdown.await(remaining, TimeUnit.MILLISECONDS);
         }
 
         return false;
@@ -100,14 +107,14 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
 
         for (int iter = 0; iter < 128; iter++) {
             if (inputBuffer.putNP(val)) {
-                rouseExecutor();
+                rouseExecutors();
                 return true;
             }
         }
 
         for (int iter = 0; iter < 1024; iter++) {
             if (inputBuffer.putNP(val)) {
-                rouseExecutor();
+                rouseExecutors();
                 return true;
             }
             if (inputBuffer.isClosed())
@@ -118,7 +125,7 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
 
         for (;;) {
             if (inputBuffer.putNP(val)) {
-                rouseExecutor();
+                rouseExecutors();
                 return true;
             }
 
@@ -141,14 +148,13 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
 
         for (int iter = 0; iter < 128; iter++) {
             if (inputBuffer.putNP(val)) {
-                rouseExecutor();
                 return true;
             }
         }
 
         for (int iter = 0; iter < 1024; iter++) {
             if (inputBuffer.putNP(val)) {
-                rouseExecutor();
+                rouseExecutors();
                 return true;
             }
             if (inputBuffer.isClosed() || stopped.get())
@@ -161,7 +167,7 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
 
         for (;;) {
             if (inputBuffer.putNP(val)) {
-                rouseExecutor();
+                rouseExecutors();
                 return true;
             }
             if (inputBuffer.isClosed() || stopped.get())
@@ -183,6 +189,8 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
     void run() {
         String originalThreadName = Thread.currentThread().getName();
         StageExecution<T> stage = null;
+
+        runnerThreads.add(Thread.currentThread());
 
         try {
             Thread.currentThread().setName("PipeStage:"+stageName);
@@ -233,7 +241,6 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
 
                         if (stopped.getAcquire()) return;
 
-                        idleRunner.compareAndSet(null, Thread.currentThread());
                         LockSupport.parkNanos(10_000);
 
                         // Check if the input is closed and we should pack up shop
@@ -257,20 +264,15 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
             catch (Throwable t) {
                 logger.error("Error in clean up for stage {}", stageName, t);
             }
-
-            if (instanceCount.decrementAndGet() == 0)
-                next().ifPresent(PipeStage::stopFeeding);
-
-            synchronized (this) {
-                notifyAll();
+            finally {
+                countdown.countDown();
+                Thread.currentThread().setName(originalThreadName);
             }
-
-            Thread.currentThread().setName(originalThreadName);
         }
     }
 
     public boolean isQuiet() {
-        return inputBuffer.peek() == null && idleRunnerCount.get() == instanceCount.get();
+        return inputBuffer.peek() == null && idleRunnerCount.get() == countdown.getCount();
     }
 
     protected void rouseSubmitter() {
@@ -281,32 +283,9 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
         }
     }
 
-    protected void rouseExecutor() {
-        Thread thread = idleRunner.getAcquire();
-        if (thread != null) {
-            LockSupport.unpark(thread);
-            idleRunner.weakCompareAndSetRelease(thread, null);
-        }
+    protected void rouseExecutors() {
+        runnerThreads.forEach(LockSupport::unpark);
     }
 
-    @Override
-    public int getInstanceCount() {
-        return instanceCount.get();
-    }
-
-    @Override
-    public void setDesiredInstanceCount(int newDic) {
-        int oldDic = desiredInstanceCount.get();
-        if (newDic < oldDic)
-            throw new IllegalArgumentException("Instance count can not be shrunk");
-
-        desiredInstanceCount.set(newDic);
-
-        int toSubmit = newDic - oldDic;
-        for (int i = 0; i < toSubmit; i++) {
-            executorService.execute(this::run);
-            instanceCount.incrementAndGet();
-        }
-    }
 
 }
