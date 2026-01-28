@@ -160,8 +160,9 @@ public class PoolLru {
 
                 if (currentPage.decreaseClock()) {
                     if (!currentPage.isHeld()) {
-                        freeQueue[(int) (clockWriteIdx.getAndIncrement() % freeQueue.length)] = pageIdx;
                         deregister(pages[pageIdx]);
+                        freeQueue[(int) (clockWriteIdx.get() % freeQueue.length)] = pageIdx;
+                        clockWriteIdx.incrementAndGet();
                         toClaim--;
                     }
                     else {
