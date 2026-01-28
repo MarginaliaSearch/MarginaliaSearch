@@ -68,6 +68,7 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
     public void stop() {
         inputBuffer.close();
         stopped.set(true);
+        rouseExecutors();
     }
 
     public void stopFeeding() {
@@ -81,11 +82,7 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
 
     @Override
     public void join() throws InterruptedException {
-        synchronized (this) {
-            for (;;) {
-                countdown.await();
-            }
-        }
+        countdown.await();
     }
 
     public boolean join(long millis) throws InterruptedException {
@@ -93,9 +90,9 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
         long remaining;
 
         while ((remaining = (end - System.currentTimeMillis())) > 0) {
-            countdown.await(remaining, TimeUnit.MILLISECONDS);
+            if (countdown.await(remaining, TimeUnit.MILLISECONDS))
+                return true;
         }
-
         return false;
     }
 
