@@ -147,7 +147,7 @@ public class PoolLru {
             }
 
             int toClaim = targetQueueSize - queueSize;
-            if (toClaim == 0)
+            if (toClaim < 0)
                 continue;
 
             reclaimCycles.incrementAndGet();
