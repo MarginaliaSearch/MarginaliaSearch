@@ -140,7 +140,7 @@ public class DomainRankingSetsService {
         }
 
         public boolean isSpecial() {
-            return name().equals("BLOGS") || name().equals("NONE") || name().equals("RANK") || name().equals("SMALLWEB2");
+            return name().equals("BLOGS") || name().equals("NONE") || name().equals("RANK") || name().equals("SMALL");
         }
 
         public DomainRankingSet withName(String name) {

@@ -41,7 +41,7 @@ public class DataSetsService {
         return Map.of(
                 "blogs", domainTypes.getUrlForSelection(DomainTypes.Type.BLOG),
                 "crawl", domainTypes.getUrlForSelection(DomainTypes.Type.CRAWL),
-                "smallweb", domainTypes.getUrlForSelection(DomainTypes.Type.SMALLWEB)
+                "smallweb", domainTypes.getUrlForSelection(DomainTypes.Type.SMALL)
                 );
     }
 
@@ -49,7 +49,7 @@ public class DataSetsService {
 
         updateUrl(DomainTypes.Type.BLOG, request.queryParamOrDefault("blogs", ""));
         updateUrl(DomainTypes.Type.CRAWL, request.queryParamOrDefault("crawl", ""));
-        updateUrl(DomainTypes.Type.SMALLWEB, request.queryParamOrDefault("smallweb", ""));
+        updateUrl(DomainTypes.Type.SMALL, request.queryParamOrDefault("smallweb", ""));
 
         return dataSetsModel(request, response);
     }

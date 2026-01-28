@@ -24,7 +24,7 @@ public class DomainTypes {
 
     public enum Type {
         BLOG,
-        SMALLWEB,
+        SMALL,
         CRAWL,
         TEST
     }

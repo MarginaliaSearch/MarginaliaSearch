@@ -119,7 +119,7 @@ public class SearchSetsService {
                 if (rankingSet.isSpecial()) {
                     switch (rankingSet.name()) {
                         case "BLOGS" -> recalculateSpecialSetSet(rankingSet, DomainTypes.Type.BLOG);
-                        case "SMALL" -> recalculateSpecialSetSet(rankingSet, DomainTypes.Type.SMALLWEB);
+                        case "SMALL" -> recalculateSpecialSetSet(rankingSet, DomainTypes.Type.SMALL);
                         case "NONE" -> {} // No-op
                     }
                 } else {
@@ -169,7 +169,10 @@ public class SearchSetsService {
         }
 
         synchronized (this) {
-            var blogSet = new RankingSearchSet(rankingSet.name(), rankingSet.fileName(indexFactory.getSearchSetsBase()), new IntOpenHashSet(knownDomains.toArray()));
+            var blogSet = new RankingSearchSet(
+                    rankingSet.name(),
+                    rankingSet.fileName(indexFactory.getSearchSetsBase()),
+                    new IntOpenHashSet(knownDomains.toArray()));
             rankingSets.put(rankingSet.name(), blogSet);
             blogSet.write();
         }
