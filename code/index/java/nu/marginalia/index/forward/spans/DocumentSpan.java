@@ -78,7 +78,7 @@ public class DocumentSpan {
     }
 
     /** Returns true if for any position in the list, there exists a range
-     * (position[i], position[i]+len] that is overlapped by a span */
+     * [position[i], position[i]+len) that is fully contained by a span */
     public boolean containsRange(IntList positions, int len) {
         if (null == startsEnds || startsEnds.size() < 2 || positions.isEmpty()) {
             return false;
@@ -111,7 +111,7 @@ public class DocumentSpan {
     }
 
     /** Returns the number of instances there exists a range
-     * (position[i], position[i]+len] that is overlapped by a span */
+     * [position[i], position[i]+len) that is an exact match for a span */
     public int countRangeMatchesExact(IntList positions, int len) {
         if (null == startsEnds || startsEnds.size() < 2 || positions.isEmpty()) {
             return 0;
@@ -129,7 +129,6 @@ public class DocumentSpan {
             if (position == start && position + len == end) {
                 cnt++;
                 if (sei + 2 <= startsEnds.size()) {
-                    pi = 0;
                     start = startsEnds.getInt(sei++);
                     end = startsEnds.getInt(sei++);
                 }
@@ -176,7 +175,7 @@ public class DocumentSpan {
                 end = startsEnds.getInt(sei++);
             }
             else {
-                return ret;
+                break;
             }
 
         }

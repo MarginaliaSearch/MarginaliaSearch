@@ -211,7 +211,7 @@ public class SequenceOperations {
         int[] values = new int[positions.length];
         int[] indexes = new int[positions.length];
 
-        int largestValue = 0;
+        int largestValue = Integer.MAX_VALUE;
 
         for (int i = 0; i < positions.length; i++) {
             // if any of the lists are empty, return MAX_VALUE
@@ -239,7 +239,7 @@ public class SequenceOperations {
 
         do {
             // For all the other indexes except maxI, update values[] with the largest value smaller than maxVal
-            for (int idx = 0; idx < positions.length - 1; idx++) {
+            for (int idx = 1; idx < positions.length; idx++) {
                 int i = (maxI + idx) % positions.length;
 
                 // Update values[i] to the largest value smaller than maxVal
@@ -253,12 +253,12 @@ public class SequenceOperations {
                     prevValue = value;
                     value = positions[i].getInt(indexes[i]++) + offset;
                     if (value >= maxVal) {
-                        indexes[i]--; // correct for overshooting the largest value smaller than maxVal
+                        indexes[i]--; // correct for overshooting
                         break;
                     }
                 }
 
-                values[i] = prevValue;
+                values[i] = (value >= maxVal) ? prevValue : value;
             }
 
             // Calculate minVal and update minDist
@@ -287,6 +287,7 @@ public class SequenceOperations {
             }
 
             if (maxVal != Integer.MAX_VALUE) {
+                values[maxI] = maxVal;
                 indexes[maxI]++;
             }
             else {
