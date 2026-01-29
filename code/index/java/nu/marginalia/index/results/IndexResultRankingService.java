@@ -282,7 +282,7 @@ public class IndexResultRankingService {
         double score_bM25 = params.getBm25Weight()
                 * CompiledQueryAggregates.intMaxSumAggregateOfIndexes(positionsQuery, new Bm25GraphVisitor(params.getBm25K(), params.getBm25B(), unorderedMatches.getWeightedCounts(), docSize, rankingContext))
                 / (Math.sqrt(unorderedMatches.searchableKeywordCount + 1));
-        double score_bFlags = params.getBm25Weight()
+        double score_bFlags = params.getBm25Weight() * 0.5
                 * CompiledQueryAggregates.intMaxSumAggregateOfIndexes(wordFlagsQuery, new TermFlagsGraphVisitor(params.getBm25K(), wordFlagsQuery.data, unorderedMatches.getWeightedCounts(), rankingContext))
                 / (Math.sqrt(unorderedMatches.searchableKeywordCount + 1));
 
@@ -601,7 +601,7 @@ public class IndexResultRankingService {
                     int cnts = spans.getSpan(tag).countRangeMatches(fullGroupIntersections, fullGroup.size);
                     if (cnts > 0) {
                         matches.set(tag.ordinal());
-                        score += (float) (weights_full[tag.ordinal()] * fullGroup.size * (1 + Math.log(2 + cnts)));
+                        score += (float) (weights_full[tag.ordinal()] * Math.sqrt(fullGroup.size) * Math.log(2 + cnts));
                         totalFullCnts += cnts;
                     }
                 }
@@ -609,7 +609,7 @@ public class IndexResultRankingService {
                 // Handle matches that span multiple tags; treat them as BODY matches
                 if (totalFullCnts != fullGroupIntersections.size()) {
                     int mixedCnts = fullGroupIntersections.size() - totalFullCnts;
-                    score += (float) (weights_full[HtmlTag.BODY.ordinal()] * fullGroup.size * (1 + Math.log(2 + mixedCnts)));
+                    score += (float) (weights_full[HtmlTag.BODY.ordinal()] * Math.sqrt(fullGroup.size) * Math.log(2 + mixedCnts));
                 }
             }
 
@@ -631,14 +631,14 @@ public class IndexResultRankingService {
                     int cnts =  spans.getSpan(tag).countRangeMatches(intersections, optionalGroup.size);
                     if (cnts == 0) continue;
 
-                    score += (float) (weights_partial[tag.ordinal()] * optionalGroup.size * sizeScalingFactor * (1 + Math.log(2 + cnts)));
+                    score += (float) (weights_partial[tag.ordinal()] * Math.sqrt(optionalGroup.size) * sizeScalingFactor * (1 + Math.log(2 + cnts)));
                     totalCnts += cnts;
                 }
 
                 // Handle matches that span multiple tags; treat them as BODY matches
                 if (totalCnts != intersections.size()) {
                     int mixedCnts = intersections.size() - totalCnts;
-                    score += (float) (weights_partial[HtmlTag.BODY.ordinal()] * optionalGroup.size * sizeScalingFactor * (1 + Math.log(2 + mixedCnts)));
+                    score += (float) (weights_partial[HtmlTag.BODY.ordinal()] * Math.sqrt(optionalGroup.size) * sizeScalingFactor * (1 + Math.log(2 + mixedCnts)));
                 }
             }
         }
@@ -680,7 +680,8 @@ public class IndexResultRankingService {
 
         public UnorderedMatches(IntList[] positions, CompiledQuery<String> compiledQuery,
                                 BitSet regularMask,
-                                DocumentSpans spans) {
+                                DocumentSpans spans)
+        {
             observationsByTag = new int[HtmlTag.includedTags.length];
             valuesByWordIdx = new float[compiledQuery.size()];
 
