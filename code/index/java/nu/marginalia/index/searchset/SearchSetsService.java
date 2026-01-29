@@ -169,12 +169,12 @@ public class SearchSetsService {
         }
 
         synchronized (this) {
-            var blogSet = new RankingSearchSet(
+            var specialSet = new RankingSearchSet(
                     rankingSet.name(),
                     rankingSet.fileName(indexFactory.getSearchSetsBase()),
                     new IntOpenHashSet(knownDomains.toArray()));
-            rankingSets.put(rankingSet.name(), blogSet);
-            blogSet.write();
+            rankingSets.put(rankingSet.name(), specialSet);
+            specialSet.write();
         }
     }
 
