@@ -312,6 +312,7 @@ public class IndexResultRankingService {
 
         // Capture ranking factors for debugging
         if (debugRankingFactors != null) {
+            debugRankingFactors.addDocumentFactor("docSize", Double.toString(docSize));
             debugRankingFactors.addDocumentFactor("score.bm25-main", Double.toString(score_bM25));
             debugRankingFactors.addDocumentFactor("score.bm25-flags", Double.toString(score_bFlags));
             debugRankingFactors.addDocumentFactor("score.verbatim", Double.toString(score_verbatim));
