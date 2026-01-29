@@ -34,15 +34,21 @@ public class DocumentSpan {
         int pos = -1;
 
         int cnt = 0;
-        while (pi < positions.size() && sei < startsEnds.size()) {
+        for (;;) {
             if (pos < start) {
+                if (pi >= positions.size())
+                    break;
                 pos = positions.getInt(pi++);
             }
             else if (pos < end) {
                 cnt++;
+                if (pi >= positions.size())
+                    break;
                 pos = positions.getInt(pi++);
             }
             else {
+                if (sei >= startsEnds.size()) break;
+
                 start = startsEnds.getInt(sei++);
                 end = startsEnds.getInt(sei++);
             }
