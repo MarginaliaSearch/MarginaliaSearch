@@ -246,7 +246,6 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
 
     public Optional<ConnectionHolder> getConnectionHolder() {
         return channels.values().stream()
-                .filter(ConnectionHolder::hasConnection)
                 .min(Comparator.naturalOrder());
     }
 
