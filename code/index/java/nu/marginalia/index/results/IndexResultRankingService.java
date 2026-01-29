@@ -280,9 +280,9 @@ public class IndexResultRankingService {
         double score_verbatim = params.getTcfVerbatimWeight() * verbatimMatches.getScore();
         double score_proximity = params.getTcfProximityWeight() * proximitiyFac;
         double score_bM25 = params.getBm25Weight()
-                * CompiledQueryAggregates.intMaxSumAggregateOfIndexes(wordFlagsQuery, new Bm25GraphVisitor(params.getBm25K(), params.getBm25B(), unorderedMatches.getWeightedCounts(), docSize, rankingContext))
+                * CompiledQueryAggregates.intMaxSumAggregateOfIndexes(positionsQuery, new Bm25GraphVisitor(params.getBm25K(), params.getBm25B(), unorderedMatches.getWeightedCounts(), docSize, rankingContext))
                 / (Math.sqrt(unorderedMatches.searchableKeywordCount + 1));
-        double score_bFlags = params.getBm25Weight()
+        double score_bFlags = params.getBm25Weight() * 0.5
                 * CompiledQueryAggregates.intMaxSumAggregateOfIndexes(wordFlagsQuery, new TermFlagsGraphVisitor(params.getBm25K(), wordFlagsQuery.data, unorderedMatches.getWeightedCounts(), rankingContext))
                 / (Math.sqrt(unorderedMatches.searchableKeywordCount + 1));
 
@@ -312,6 +312,10 @@ public class IndexResultRankingService {
 
         // Capture ranking factors for debugging
         if (debugRankingFactors != null) {
+            debugRankingFactors.addDocumentFactor("meta.docSize", Double.toString(docSize));
+            debugRankingFactors.addDocumentFactor("meta.counts", Arrays.toString(unorderedMatches.getWeightedCounts()));
+            debugRankingFactors.addDocumentFactor("meta.regularMask", rankingContext.regularMask.toString());
+            debugRankingFactors.addDocumentFactor("meta.ngramMask", rankingContext.ngramsMask.toString());
             debugRankingFactors.addDocumentFactor("score.bm25-main", Double.toString(score_bM25));
             debugRankingFactors.addDocumentFactor("score.bm25-flags", Double.toString(score_bFlags));
             debugRankingFactors.addDocumentFactor("score.verbatim", Double.toString(score_verbatim));
@@ -323,6 +327,7 @@ public class IndexResultRankingService {
 
                 var flags = wordFlagsQuery.at(i);
 
+                debugRankingFactors.addTermFactor(termId, "meta.idx", Integer.toString(i));
                 debugRankingFactors.addTermFactor(termId, "flags.rawEncoded", Long.toString(flags));
 
                 for (var flag : WordFlags.values()) {
@@ -442,7 +447,7 @@ public class IndexResultRankingService {
 
         final double qualityPenalty = calculateQualityPenalty(size, quality, rankingParams);
         final double rankingBonus = (255. - rank) * rankingParams.getDomainRankBonus();
-        final double topologyBonus = Math.log(1 + topology);
+        final double topologyBonus = 0.2 * Math.log(1 + topology);
         final double documentLengthPenalty
                 = length > rankingParams.getShortDocumentThreshold() ? 0 : -rankingParams.getShortDocumentPenalty();
         final double temporalBias;
@@ -533,12 +538,12 @@ public class IndexResultRankingService {
 
             for (int i = 0; i < weights_full.length; i++) {
                 weights_full[i] = switch(HtmlTag.includedTags[i]) {
-                    case TITLE -> 4.0f;
+                    case TITLE -> 3.0f;
                     case HEADING -> 1.5f;
                     case ANCHOR -> 0.2f;
                     case NAV -> 0.1f;
                     case CODE -> 0.25f;
-                    case EXTERNAL_LINKTEXT -> 3.0f;
+                    case EXTERNAL_LINKTEXT -> 2.0f;
                     case BODY -> 1.0f;
                     default -> 0.0f;
                 };
@@ -546,12 +551,12 @@ public class IndexResultRankingService {
 
             for (int i = 0; i < weights_partial.length; i++) {
                 weights_partial[i] = switch(HtmlTag.includedTags[i]) {
-                    case TITLE -> 2.5f;
+                    case TITLE -> 2.25f;
                     case HEADING -> 1.f;
                     case ANCHOR -> 0.2f;
                     case NAV -> 0.1f;
                     case CODE -> 0.25f;
-                    case EXTERNAL_LINKTEXT -> 2.0f;
+                    case EXTERNAL_LINKTEXT -> 1.5f;
                     case BODY -> 0.5f;
                     default -> 0.0f;
                 };
@@ -572,9 +577,17 @@ public class IndexResultRankingService {
                     score += 4; // If the title is a single word and the same as the query, we give it a verbatim bonus
                 }
 
-                score += 2 * spans
+                int exactMatches = spans
+                        .getSpan(HtmlTag.EXTERNAL_LINKTEXT)
+                        .countRangeMatchesExact(fullGroupIntersections, fullGroup.size);
+
+                int partialMatches = spans
                             .getSpan(HtmlTag.EXTERNAL_LINKTEXT)
-                            .containsRangeExact(fullGroupIntersections, fullGroup.size);
+                            .countRangeMatches(fullGroupIntersections, fullGroup.size);
+
+                partialMatches -= exactMatches;
+
+                score += 1.5 * exactMatches + 0.5 * partialMatches;
 
                 return;
             }
@@ -593,7 +606,7 @@ public class IndexResultRankingService {
                     int cnts = spans.getSpan(tag).countRangeMatches(fullGroupIntersections, fullGroup.size);
                     if (cnts > 0) {
                         matches.set(tag.ordinal());
-                        score += (float) (weights_full[tag.ordinal()] * fullGroup.size * (1 + Math.log(2 + cnts)));
+                        score += (float) (weights_full[tag.ordinal()] * Math.sqrt(fullGroup.size) * Math.log(2 + cnts));
                         totalFullCnts += cnts;
                     }
                 }
@@ -601,7 +614,7 @@ public class IndexResultRankingService {
                 // Handle matches that span multiple tags; treat them as BODY matches
                 if (totalFullCnts != fullGroupIntersections.size()) {
                     int mixedCnts = fullGroupIntersections.size() - totalFullCnts;
-                    score += (float) (weights_full[HtmlTag.BODY.ordinal()] * fullGroup.size * (1 + Math.log(2 + mixedCnts)));
+                    score += (float) (weights_full[HtmlTag.BODY.ordinal()] * Math.sqrt(fullGroup.size) * Math.log(2 + mixedCnts));
                 }
             }
 
@@ -623,14 +636,14 @@ public class IndexResultRankingService {
                     int cnts =  spans.getSpan(tag).countRangeMatches(intersections, optionalGroup.size);
                     if (cnts == 0) continue;
 
-                    score += (float) (weights_partial[tag.ordinal()] * optionalGroup.size * sizeScalingFactor * (1 + Math.log(2 + cnts)));
+                    score += (float) (weights_partial[tag.ordinal()] * Math.sqrt(optionalGroup.size) * sizeScalingFactor * (1 + Math.log(2 + cnts)));
                     totalCnts += cnts;
                 }
 
                 // Handle matches that span multiple tags; treat them as BODY matches
                 if (totalCnts != intersections.size()) {
                     int mixedCnts = intersections.size() - totalCnts;
-                    score += (float) (weights_partial[HtmlTag.BODY.ordinal()] * optionalGroup.size * sizeScalingFactor * (1 + Math.log(2 + mixedCnts)));
+                    score += (float) (weights_partial[HtmlTag.BODY.ordinal()] * Math.sqrt(optionalGroup.size) * sizeScalingFactor * (1 + Math.log(2 + mixedCnts)));
                 }
             }
         }
@@ -672,7 +685,8 @@ public class IndexResultRankingService {
 
         public UnorderedMatches(IntList[] positions, CompiledQuery<String> compiledQuery,
                                 BitSet regularMask,
-                                DocumentSpans spans) {
+                                DocumentSpans spans)
+        {
             observationsByTag = new int[HtmlTag.includedTags.length];
             valuesByWordIdx = new float[compiledQuery.size()];
 
@@ -681,13 +695,10 @@ public class IndexResultRankingService {
                 if (!regularMask.get(i))
                     continue;
 
-                if (positions[i] == null || positions[i].isEmpty()) {
-                    firstPosition = Integer.MAX_VALUE;
-                    continue;
+                if (!positions[i].isEmpty()) {
+                    firstPosition = Math.max(firstPosition, positions[i].getInt(0));
+                    searchableKeywordCount ++;
                 }
-
-                firstPosition = Math.max(firstPosition, positions[i].getInt(0));
-                searchableKeywordCount ++;
 
                 for (var tag : HtmlTag.includedTags) {
                     int cnt = spans.getSpan(tag).countIntersections(positions[i]);
