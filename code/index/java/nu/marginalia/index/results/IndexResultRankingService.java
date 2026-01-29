@@ -442,7 +442,7 @@ public class IndexResultRankingService {
 
         final double qualityPenalty = calculateQualityPenalty(size, quality, rankingParams);
         final double rankingBonus = (255. - rank) * rankingParams.getDomainRankBonus();
-        final double topologyBonus = Math.log(1 + topology);
+        final double topologyBonus = 0.2 * Math.log(1 + topology);
         final double documentLengthPenalty
                 = length > rankingParams.getShortDocumentThreshold() ? 0 : -rankingParams.getShortDocumentPenalty();
         final double temporalBias;
@@ -533,12 +533,12 @@ public class IndexResultRankingService {
 
             for (int i = 0; i < weights_full.length; i++) {
                 weights_full[i] = switch(HtmlTag.includedTags[i]) {
-                    case TITLE -> 4.0f;
+                    case TITLE -> 3.0f;
                     case HEADING -> 1.5f;
                     case ANCHOR -> 0.2f;
                     case NAV -> 0.1f;
                     case CODE -> 0.25f;
-                    case EXTERNAL_LINKTEXT -> 3.0f;
+                    case EXTERNAL_LINKTEXT -> 2.0f;
                     case BODY -> 1.0f;
                     default -> 0.0f;
                 };
@@ -546,12 +546,12 @@ public class IndexResultRankingService {
 
             for (int i = 0; i < weights_partial.length; i++) {
                 weights_partial[i] = switch(HtmlTag.includedTags[i]) {
-                    case TITLE -> 2.5f;
+                    case TITLE -> 2.25f;
                     case HEADING -> 1.f;
                     case ANCHOR -> 0.2f;
                     case NAV -> 0.1f;
                     case CODE -> 0.25f;
-                    case EXTERNAL_LINKTEXT -> 2.0f;
+                    case EXTERNAL_LINKTEXT -> 1.5f;
                     case BODY -> 0.5f;
                     default -> 0.0f;
                 };
