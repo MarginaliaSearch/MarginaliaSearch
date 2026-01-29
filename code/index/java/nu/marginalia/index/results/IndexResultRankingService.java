@@ -327,7 +327,7 @@ public class IndexResultRankingService {
 
                 var flags = wordFlagsQuery.at(i);
 
-                debugRankingFactors.addTermFactor(termId, "idx", Integer.toString(i));
+                debugRankingFactors.addTermFactor(termId, "meta.idx", Integer.toString(i));
                 debugRankingFactors.addTermFactor(termId, "flags.rawEncoded", Long.toString(flags));
 
                 for (var flag : WordFlags.values()) {
