@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 public class UrlKeywords {
     private static final PorterStemmer ps = new PorterStemmer();
 
-    private static final Pattern splitPattern = Pattern.compile("^[a-z0-9A-Z]+");
+    private static final Pattern splitPattern = Pattern.compile("[^a-z0-9A-Z]+");
 
     private final Set<String> urlKeywords = new HashSet<>();
     private final Set<String> domainKeywords = new HashSet<>();
@@ -51,6 +51,11 @@ public class UrlKeywords {
         String[] urlParts = splitPattern.split(url.path);
         for (int i = 0; i < urlParts.length; i++) {
             String part = urlParts[i];
+
+            // an url like /foo/ will generate parts "", "foo", "", let's omit the blanks
+            if (part.isBlank())
+                continue;
+
             String stemmed = ps.stemWord(part);
 
             urlKeywords.add(stemmed);
@@ -75,6 +80,7 @@ public class UrlKeywords {
     public boolean containsUrl(String stemmed) {
         return urlKeywords.contains(stemmed);
     }
+
     public boolean containsDomain(String stemmed) {
         return domainKeywords.contains(stemmed);
     }
