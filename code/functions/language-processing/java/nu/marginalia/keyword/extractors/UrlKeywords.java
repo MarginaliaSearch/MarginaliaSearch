@@ -64,17 +64,11 @@ public class UrlKeywords {
             searchableKeywordsStemmed.add(stemmed);
         }
 
-        searchableKeywordsSentence = new DocumentSentence(
-                new BitSet(searchableKeywordsLC.size()),
-                searchableKeywordsLC.toArray(String[]::new),
-                new long[0],
-                searchableKeywordsStemmed.toArray(String[]::new),
-                EnumSet.of(HtmlTag.DOC_URL),
-                new BitSet(searchableKeywordsLC.size()),
-                new BitSet(searchableKeywordsLC.size()),
-                new BitSet(searchableKeywordsLC.size())
+        searchableKeywordsSentence = DocumentSentence.ofSynthetic(
+                searchableKeywordsLC,
+                searchableKeywordsStemmed,
+                EnumSet.of(HtmlTag.DOC_URL)
         );
-
     }
 
     public boolean containsUrl(String stemmed) {
