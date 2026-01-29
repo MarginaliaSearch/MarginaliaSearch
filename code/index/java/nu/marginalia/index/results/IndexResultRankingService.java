@@ -606,7 +606,7 @@ public class IndexResultRankingService {
                     int cnts = spans.getSpan(tag).countRangeMatches(fullGroupIntersections, fullGroup.size);
                     if (cnts > 0) {
                         matches.set(tag.ordinal());
-                        score += (float) (weights_full[tag.ordinal()] * Math.sqrt(fullGroup.size) * Math.log(2 + cnts));
+                        score += (float) (weights_full[tag.ordinal()] * fullGroup.size * (1 + Math.log(1 + cnts)));
                         totalFullCnts += cnts;
                     }
                 }
@@ -614,7 +614,7 @@ public class IndexResultRankingService {
                 // Handle matches that span multiple tags; treat them as BODY matches
                 if (totalFullCnts != fullGroupIntersections.size()) {
                     int mixedCnts = fullGroupIntersections.size() - totalFullCnts;
-                    score += (float) (weights_full[HtmlTag.BODY.ordinal()] * Math.sqrt(fullGroup.size) * Math.log(2 + mixedCnts));
+                    score += (float) (weights_full[HtmlTag.BODY.ordinal()] * fullGroup.size * (1 + Math.log(1 + mixedCnts)));
                 }
             }
 
@@ -636,14 +636,14 @@ public class IndexResultRankingService {
                     int cnts =  spans.getSpan(tag).countRangeMatches(intersections, optionalGroup.size);
                     if (cnts == 0) continue;
 
-                    score += (float) (weights_partial[tag.ordinal()] * Math.sqrt(optionalGroup.size) * sizeScalingFactor * (1 + Math.log(2 + cnts)));
+                    score += (float) (weights_partial[tag.ordinal()] * optionalGroup.size * sizeScalingFactor * (1 + Math.log(1 + cnts)));
                     totalCnts += cnts;
                 }
 
                 // Handle matches that span multiple tags; treat them as BODY matches
                 if (totalCnts != intersections.size()) {
                     int mixedCnts = intersections.size() - totalCnts;
-                    score += (float) (weights_partial[HtmlTag.BODY.ordinal()] * Math.sqrt(optionalGroup.size) * sizeScalingFactor * (1 + Math.log(2 + mixedCnts)));
+                    score += (float) (weights_partial[HtmlTag.BODY.ordinal()] * optionalGroup.size * sizeScalingFactor * (1 + Math.log(1 + mixedCnts)));
                 }
             }
         }
