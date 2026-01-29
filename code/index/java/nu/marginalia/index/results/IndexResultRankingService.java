@@ -572,9 +572,17 @@ public class IndexResultRankingService {
                     score += 4; // If the title is a single word and the same as the query, we give it a verbatim bonus
                 }
 
-                score += 2 * spans
+                int exactMatches = spans
+                        .getSpan(HtmlTag.EXTERNAL_LINKTEXT)
+                        .countRangeMatchesExact(fullGroupIntersections, fullGroup.size);
+
+                int partialMatches = spans
                             .getSpan(HtmlTag.EXTERNAL_LINKTEXT)
-                            .countRangeMatchesExact(fullGroupIntersections, fullGroup.size);
+                            .countRangeMatches(fullGroupIntersections, fullGroup.size);
+
+                partialMatches -= exactMatches;
+
+                score += 1.5 * exactMatches + 0.5 * partialMatches;
 
                 return;
             }
