@@ -55,7 +55,11 @@ public class DocumentKeywordExtractor {
                     .build();
 
 
-            positionMapper.mapPositionsAndExtractSimpleKeywords(wordsBuilder, keywordMetadata, dld, linkTexts);
+            positionMapper.mapPositionsAndExtractSimpleKeywords(wordsBuilder,
+                    keywordMetadata,
+                    dld,
+                    linkTexts,
+                    urlKeywords);
 
             createNGramTermsFromSet(wordsBuilder, keywordMetadata, titleKeywords);
             createNGramTermsFromSet(wordsBuilder, keywordMetadata, subjectLikeKeywords);
@@ -79,7 +83,7 @@ public class DocumentKeywordExtractor {
                     .urlKeywords(urlKeywords)
                     .build();
 
-            positionMapper.mapPositionsAndExtractSimpleKeywords(wordsBuilder, keywordMetadata, dld, linkTexts);
+            positionMapper.mapPositionsAndExtractSimpleKeywords(wordsBuilder, keywordMetadata, dld, linkTexts, urlKeywords);
             wordsBuilder.addAllSyntheticTerms(artifactKeywords.getWords());
             return wordsBuilder;
         }

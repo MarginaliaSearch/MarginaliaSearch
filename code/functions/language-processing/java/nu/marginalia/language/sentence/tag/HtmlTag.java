@@ -12,6 +12,7 @@ public enum HtmlTag {
     // pseudo-tags for internal use,
     BODY((byte) 'b', false, false),
     EXTERNAL_LINKTEXT((byte) 'x', false, false),
+    DOC_URL((byte) 'u', false, false),
 
     // excluded tags must be put last!
     FORM((byte) 0, true, false),

@@ -14,6 +14,7 @@ public class DocumentSpans {
     public DocumentSpan title = EMPTY_SPAN;
     public DocumentSpan heading = EMPTY_SPAN;
     public DocumentSpan body = EMPTY_SPAN;
+    public DocumentSpan documentUrl = EMPTY_SPAN;
 
     public DocumentSpan nav = EMPTY_SPAN;
     public DocumentSpan code = EMPTY_SPAN;
@@ -36,6 +37,8 @@ public class DocumentSpans {
             return externalLinkText;
         else if (tag == HtmlTag.BODY)
             return body;
+        else if (tag == HtmlTag.DOC_URL)
+            return documentUrl;
 
         return EMPTY_SPAN;
     }
@@ -55,6 +58,8 @@ public class DocumentSpans {
             this.externalLinkText = new DocumentSpan(positions);
         else if (code == HtmlTag.BODY.code)
             this.body = new DocumentSpan(positions);
+        else if (code == HtmlTag.DOC_URL.code)
+            this.documentUrl = new DocumentSpan(positions);
     }
 
     void accept(byte code, CodedSequence positions) {
@@ -72,6 +77,8 @@ public class DocumentSpans {
             this.externalLinkText = new DocumentSpan(positions);
         else if (code == HtmlTag.BODY.code)
             this.body = new DocumentSpan(positions);
+        else if (code == HtmlTag.DOC_URL.code)
+            this.documentUrl = new DocumentSpan(positions);
     }
 
 }
