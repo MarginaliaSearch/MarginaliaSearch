@@ -104,9 +104,9 @@ public class DocumentSpan {
         return false;
     }
 
-    /** Returns true if for any position in the list, there exists a range
+    /** Returns the number of instances there exists a range
      * (position[i], position[i]+len] that is overlapped by a span */
-    public int containsRangeExact(IntList positions, int len) {
+    public int countRangeMatchesExact(IntList positions, int len) {
         if (null == startsEnds || startsEnds.size() < 2 || positions.isEmpty()) {
             return 0;
         }

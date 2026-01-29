@@ -574,7 +574,7 @@ public class IndexResultRankingService {
 
                 score += 2 * spans
                             .getSpan(HtmlTag.EXTERNAL_LINKTEXT)
-                            .containsRangeExact(fullGroupIntersections, fullGroup.size);
+                            .countRangeMatchesExact(fullGroupIntersections, fullGroup.size);
 
                 return;
             }
