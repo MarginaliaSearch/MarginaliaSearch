@@ -26,7 +26,8 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static nu.marginalia.keyword.DocumentPositionMapper.matchesWordPattern;
+import static org.junit.jupiter.api.Assertions.*;
 
 class DocumentPositionMapperTest {
     private static LanguageDefinition english;
@@ -47,19 +48,19 @@ class DocumentPositionMapperTest {
 
     @Test
     public void testWordPattern() {
-        Assertions.assertTrue(positionMapper.matchesWordPattern("test"));
-        Assertions.assertTrue(positionMapper.matchesWordPattern("1234567890abcde"));
-        Assertions.assertFalse(positionMapper.matchesWordPattern("1234567890abcdef"));
+        assertTrue(matchesWordPattern("test"));
+        assertTrue(matchesWordPattern("1234567890abcde"));
+        assertFalse(matchesWordPattern("1234567890abcdef"));
 
-        Assertions.assertTrue(positionMapper.matchesWordPattern("test-test-test-test-test"));
-        Assertions.assertFalse(positionMapper.matchesWordPattern("test-test-test-test-test-test-test-test-test"));
-        Assertions.assertTrue(positionMapper.matchesWordPattern("192.168.1.100/24"));
-        Assertions.assertTrue(positionMapper.matchesWordPattern("std::vector"));
-        Assertions.assertTrue(positionMapper.matchesWordPattern("std::vector::push_back"));
+        assertTrue(matchesWordPattern("test-test-test-test-test"));
+        assertFalse(matchesWordPattern("test-test-test-test-test-test-test-test-test-test"));
+        assertTrue(matchesWordPattern("192.168.1.100/24"));
+        assertTrue(matchesWordPattern("std::vector"));
+        assertTrue(matchesWordPattern("std::vector::push_back"));
 
-        Assertions.assertTrue(positionMapper.matchesWordPattern("c++"));
-        Assertions.assertTrue(positionMapper.matchesWordPattern("m*a*s*h"));
-        Assertions.assertFalse(positionMapper.matchesWordPattern("Stulpnagelstrasse"));
+        assertTrue(matchesWordPattern("c++"));
+        assertTrue(matchesWordPattern("m*a*s*h"));
+        assertFalse(matchesWordPattern("Stulpnagelstrasse"));
     }
 
     @Test
@@ -204,5 +205,164 @@ class DocumentPositionMapperTest {
         assertEquals(10, span.end());
     }
 
+    @Test
+    void testSimpleWord() {
+        assertTrue(matchesWordPattern("hello"));
+        assertTrue(matchesWordPattern("a"));
+        assertTrue(matchesWordPattern("123"));
+        assertTrue(matchesWordPattern("abc123"));
+    }
+
+    @Test
+    void testWithSingleSeparator() {
+        assertTrue(matchesWordPattern("hello-world"));
+        assertTrue(matchesWordPattern("test.case"));
+        assertTrue(matchesWordPattern("foo_bar"));
+        assertTrue(matchesWordPattern("path/to"));
+        assertTrue(matchesWordPattern("a:b"));
+        assertTrue(matchesWordPattern("x+y"));
+        assertTrue(matchesWordPattern("a*b"));
+    }
+
+    @Test
+    void testMaxInitialLength() {
+        assertTrue(matchesWordPattern("123456789012345"));
+        assertTrue(matchesWordPattern("123456789012345-abc"));
+    }
+
+    @Test
+    void testMaxSeparatorGroups() {
+        assertTrue(matchesWordPattern("a-b-c-d-e-f-g-h-i"));
+        assertTrue(matchesWordPattern("1.2.3.4.5.6.7.8.9"));
+    }
+
+    @Test
+    void testMaxLengthAfterSeparator() {
+        assertTrue(matchesWordPattern("a-1234567890"));
+    }
+
+    @Test
+    void testAllSeparatorTypes() {
+        assertTrue(matchesWordPattern("a.b"));
+        assertTrue(matchesWordPattern("a-b"));
+        assertTrue(matchesWordPattern("a_b"));
+        assertTrue(matchesWordPattern("a/b"));
+        assertTrue(matchesWordPattern("a:b"));
+        assertTrue(matchesWordPattern("a+b"));
+        assertTrue(matchesWordPattern("a*b"));
+    }
+
+    @Test
+    void testTrailingSeparator() {
+        assertTrue(matchesWordPattern("hello-"));
+        assertTrue(matchesWordPattern("test."));
+        assertTrue(matchesWordPattern("abc_"));
+        assertTrue(matchesWordPattern("a-b-"));
+    }
+
+    @Test
+    void testEmptyString() {
+        assertFalse(matchesWordPattern(""));
+    }
+
+    @Test
+    void testStartsWithSeparator() {
+        assertFalse(matchesWordPattern("-hello"));
+        assertFalse(matchesWordPattern(".test"));
+        assertFalse(matchesWordPattern("_abc"));
+    }
+
+    @Test
+    void testConsecutiveSeparators() {
+        assertTrue(matchesWordPattern("hello--world"));
+        assertFalse(matchesWordPattern("a....b"));
+        assertTrue(matchesWordPattern("test-_case"));
+    }
+
+    @Test
+    void testTooLong() {
+        // More than 48 characters total
+        assertFalse(matchesWordPattern("a".repeat(49)));
+        assertFalse(matchesWordPattern("a".repeat(25) + "-" + "b".repeat(25)));
+    }
+
+    @Test
+    void testInitialSegmentTooLong() {
+        // More than 15 chars before first separator
+        assertFalse(matchesWordPattern("1234567890123456"));
+        assertFalse(matchesWordPattern("1234567890123456-abc"));
+    }
+
+    @Test
+    void testSegmentAfterSeparatorTooLong() {
+        // More than 10 chars after separator
+        assertFalse(matchesWordPattern("a-12345678901"));
+    }
+
+    @Test
+    void testTooManySeparatorGroups() {
+        // More than 8 separator groups
+        assertFalse(matchesWordPattern("a-b-c-d-e-f-g-h-i-j"));
+        assertFalse(matchesWordPattern("1.2.3.4.5.6.7.8.9.10"));
+    }
+
+    @Test
+    void testInvalidCharacters() {
+        assertFalse(matchesWordPattern("hello world"));
+        assertFalse(matchesWordPattern("a$b"));
+        assertFalse(matchesWordPattern("x&y"));
+    }
+
+    @Test
+    void testSpecialCharactersNotInAllowedSet() {
+        assertFalse(matchesWordPattern("a,b"));
+        assertFalse(matchesWordPattern("a;b"));
+        assertFalse(matchesWordPattern("a!b"));
+        assertFalse(matchesWordPattern("a?b"));
+    }
+
+    // Edge cases with lengths
+    @Test
+    void testExactly48Chars() {
+        assertTrue(matchesWordPattern("a".repeat(15) + "-" + "b".repeat(10) + "-" + "c".repeat(10) + "-" + "d".repeat(10)));
+    }
+
+    @Test
+    void testBoundaryLengths() {
+        assertTrue(matchesWordPattern("a".repeat(15)));
+        assertTrue(matchesWordPattern("a-" + "b".repeat(10)));
+        String eightGroups = "a";
+        for (int i = 0; i < 8; i++) {
+            eightGroups += "-b";
+        }
+        assertTrue(matchesWordPattern(eightGroups));
+    }
+
+    // Unicode handling
+    @Test
+    void testUnicodeCharacters() {
+        assertTrue(matchesWordPattern("café"));
+        assertTrue(matchesWordPattern("naïve"));
+        assertTrue(matchesWordPattern("é".repeat(15)));
+    }
+
+    @Test
+    void testMixedCase() {
+        assertTrue(matchesWordPattern("HelloWorld"));
+        assertTrue(matchesWordPattern("Test-Case"));
+        assertTrue(matchesWordPattern("FOO_bar_123"));
+    }
+
+    @Test
+    void testRealisticPatterns() {
+        assertTrue(matchesWordPattern("example.com"));
+        assertTrue(matchesWordPattern("sub.domain.co"));
+        assertTrue(matchesWordPattern("file.txt"));
+        assertTrue(matchesWordPattern("my-file_v2.dat"));
+        assertTrue(matchesWordPattern("v1.2.3"));
+        assertTrue(matchesWordPattern("2024-01-01"));
+        assertTrue(matchesWordPattern("my_function"));
+        assertTrue(matchesWordPattern("className"));
+    }
 
 }

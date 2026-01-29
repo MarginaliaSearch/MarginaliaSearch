@@ -119,11 +119,13 @@ public class DocumentPositionMapper {
 
         DocumentSentence sentence = urlKeywords.searchableKeywords();
 
-
-
         for (DocumentSentence.SentencePos word: sentence) {
             pos++;
             extLinkRecorder.update(sentence, pos);
+
+            if (word.isStopWord()) {
+                continue;
+            }
 
             String w = word.wordLowerCase();
             if (matchesWordPattern(w)) {
@@ -192,13 +194,11 @@ public class DocumentPositionMapper {
         wordsBuilder.addSpans(extLinkRecorder.finish(pos));
     }
 
-    boolean matchesWordPattern(String s) {
+    static boolean matchesWordPattern(String s) {
         if (s.length() > 48)
             return false;
 
-        // this function is an unrolled version of the regexp [\da-zA-Z]{1,15}([.\-_/:+*][\da-zA-Z]{1,10}){0,8}
-
-        String wordPartSeparator = ".-_/:+*";
+        String wordPartSeparator = ".-_/:+*@#";
 
         int i = 0;
 
@@ -220,11 +220,23 @@ public class DocumentPositionMapper {
         for (int j = 0; j < 8; j++) {
             if (i == s.length()) return true;
 
-            if (wordPartSeparator.indexOf(s.codePointAt(i)) < 0) {
+            int seps;
+            for (seps = 0; seps < 3 && i < s.length(); seps++) {
+                int cp = s.codePointAt(i);
+
+                if (Character.isAlphabetic(cp) || Character.isDigit(cp)) {
+                    break;
+                }
+                else if (wordPartSeparator.indexOf(s.codePointAt(i)) < 0) {
+                    return false;
+                }
+                else {
+                    i += Character.charCount(cp);
+                }
+            }
+            if (seps > 2 || seps == 0) {
                 return false;
             }
-
-            i++;
 
             for (int run = 0; run < 10 && i < s.length(); run++) {
                 int cp = s.codePointAt(i);
@@ -237,6 +249,8 @@ public class DocumentPositionMapper {
                 break;
             }
         }
+
+        if (i == s.length()) return true;
 
         return false;
     }
