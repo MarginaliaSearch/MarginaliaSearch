@@ -93,16 +93,16 @@ public class IndexClient {
                 = new ArrayList<>(channelPools.size());
 
         for (var pool: channelPools) {
-            var holderMaybe = pool.getConnectionHolder();
-            if (holderMaybe.isEmpty())
-                continue;
-            var holder = holderMaybe.get();
+            GrpcSingleNodeChannelPool.ConnectionHolder holder = null;
+            ManagedChannel channel = null;
 
-            if (holder.hasErrorSince(Duration.ofSeconds(5))) {
-                continue;
+            for (var h : pool.getConnectionHolders()) {
+                if (h.hasErrorSince(Duration.ofSeconds(5)))
+                    continue;
+                holder = h;
+                channel = h.get();
             }
 
-            ManagedChannel channel = holder.get();
             if (null == channel)
                 continue;
 

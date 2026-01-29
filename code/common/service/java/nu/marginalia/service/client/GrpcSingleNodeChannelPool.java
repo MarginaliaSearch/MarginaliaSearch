@@ -189,7 +189,7 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
             return Objects.hash(address);
         }
 
-        /** Keep track of the last time this channel errored, up til 5 minutes */
+        /** Keep track of the last time this channel errored, up til 1 minute */
         private boolean hasRecentError() {
             return hasErrorSince(Duration.ofMinutes(1));
         }
@@ -244,20 +244,15 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
     }
 
 
-    public Optional<ConnectionHolder> getConnectionHolder() {
-        return channels.values().stream()
-                .min(Comparator.naturalOrder());
+    public List<ConnectionHolder> getConnectionHolders() {
+        return channels.values().stream().sorted().toList();
     }
 
     public <T, I> T call(Function<ManagedChannel, STUB> stubConstructor,
                           BiFunction<STUB, I, T> call,
                           I arg) throws RuntimeException {
         final List<Exception> exceptions = new ArrayList<>();
-        final List<ConnectionHolder> connectionHolders = new ArrayList<>(channels.values());
-
-        // Sorting the channel list will give us a round-robin distribution of calls,
-        // while preferring channels that have not errored recently
-        Collections.sort(connectionHolders);
+        final List<ConnectionHolder> connectionHolders = getConnectionHolders();
 
         final String serviceKeyStr = serviceKey.toString();
 
