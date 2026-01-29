@@ -1,5 +1,6 @@
 package nu.marginalia.keyword;
 
+import nu.marginalia.keyword.extractors.UrlKeywords;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.DocumentSentence;
@@ -22,7 +23,8 @@ public class DocumentPositionMapper {
     public void mapPositionsAndExtractSimpleKeywords(DocumentKeywordsBuilder wordsBuilder,
                                                      KeywordMetadata metadata,
                                                      DocumentLanguageData dld,
-                                                     LinkTexts linkTexts)
+                                                     LinkTexts linkTexts,
+                                                     UrlKeywords urlKeywords)
     {
 
         // First map the words in the documnent to their positions
@@ -30,6 +32,12 @@ public class DocumentPositionMapper {
 
         // Next create some padding space to avoid cross-matching
         pos += 2;
+
+        mapUrlWordPositions(pos, wordsBuilder, metadata, urlKeywords);
+
+        // Next create some padding space to avoid cross-matching
+        pos += 2;
+
 
         // Finally allocate some virtual space after the end of the document
         // for the link texts, so that we can match against them as well, although
@@ -97,6 +105,37 @@ public class DocumentPositionMapper {
         }
 
         return pos;
+    }
+
+
+    void mapUrlWordPositions(int startPos,
+                              DocumentKeywordsBuilder wordsBuilder,
+                              KeywordMetadata metadata,
+                              UrlKeywords urlKeywords)
+    {
+        int pos = startPos;
+
+        SpanRecorder extLinkRecorder = new SpanRecorder(HtmlTag.DOC_URL);
+
+        DocumentSentence sentence = urlKeywords.searchableKeywords();
+
+
+
+        for (DocumentSentence.SentencePos word: sentence) {
+            pos++;
+            extLinkRecorder.update(sentence, pos);
+
+            String w = word.wordLowerCase();
+            if (matchesWordPattern(w)) {
+                /* Add information about term positions */
+                wordsBuilder.addPos(w, pos);
+
+                /* Add metadata for word */
+                wordsBuilder.addMeta(w, metadata.getMetadataForWord(word.stemmed()));
+            }
+        }
+
+        wordsBuilder.addSpans(extLinkRecorder.finish(pos));
     }
 
     void mapLinkTextPositions(int startPos,
