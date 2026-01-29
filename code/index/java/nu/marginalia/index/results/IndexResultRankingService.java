@@ -312,7 +312,10 @@ public class IndexResultRankingService {
 
         // Capture ranking factors for debugging
         if (debugRankingFactors != null) {
-            debugRankingFactors.addDocumentFactor("docSize", Double.toString(docSize));
+            debugRankingFactors.addDocumentFactor("meta.docSize", Double.toString(docSize));
+            debugRankingFactors.addDocumentFactor("meta.counts", Arrays.toString(unorderedMatches.getWeightedCounts()));
+            debugRankingFactors.addDocumentFactor("meta.regularMask", rankingContext.regularMask.toString());
+            debugRankingFactors.addDocumentFactor("meta.ngramMask", rankingContext.ngramsMask.toString());
             debugRankingFactors.addDocumentFactor("score.bm25-main", Double.toString(score_bM25));
             debugRankingFactors.addDocumentFactor("score.bm25-flags", Double.toString(score_bFlags));
             debugRankingFactors.addDocumentFactor("score.verbatim", Double.toString(score_verbatim));
@@ -324,6 +327,7 @@ public class IndexResultRankingService {
 
                 var flags = wordFlagsQuery.at(i);
 
+                debugRankingFactors.addTermFactor(termId, "idx", Integer.toString(i));
                 debugRankingFactors.addTermFactor(termId, "flags.rawEncoded", Long.toString(flags));
 
                 for (var flag : WordFlags.values()) {
@@ -691,13 +695,10 @@ public class IndexResultRankingService {
                 if (!regularMask.get(i))
                     continue;
 
-                if (positions[i] == null || positions[i].isEmpty()) {
-                    firstPosition = Integer.MAX_VALUE;
-                    continue;
+                if (!positions[i].isEmpty()) {
+                    firstPosition = Math.max(firstPosition, positions[i].getInt(0));
+                    searchableKeywordCount ++;
                 }
-
-                firstPosition = Math.max(firstPosition, positions[i].getInt(0));
-                searchableKeywordCount ++;
 
                 for (var tag : HtmlTag.includedTags) {
                     int cnt = spans.getSpan(tag).countIntersections(positions[i]);
