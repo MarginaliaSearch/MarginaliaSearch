@@ -3,6 +3,7 @@ package nu.marginalia.index.api;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.grpc.ManagedChannel;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.prometheus.metrics.core.metrics.Counter;
@@ -25,6 +26,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -87,17 +89,34 @@ public class IndexClient {
         Instant bailInstant  = Instant.now().plusMillis((int) (2 * indexRequest.getQueryLimits().getTimeoutMs()));
 
         List<RpcDecoratedResultItem> results = new ArrayList<>();
-        List<ListenableFuture<RpcIndexQueryResponse>> futures = new ArrayList<>(channelPools.size());
+        List<Map.Entry<GrpcSingleNodeChannelPool.ConnectionHolder, ListenableFuture<RpcIndexQueryResponse>>> futures
+                = new ArrayList<>(channelPools.size());
 
         for (var pool: channelPools) {
-            futures.add(pool.call(channel -> IndexApiGrpc.newFutureStub(channel)
+            var holderMaybe = pool.getConnectionHolder();
+            if (holderMaybe.isEmpty())
+                continue;
+            var holder = holderMaybe.get();
+
+            if (holder.hasErrorSince(Duration.ofSeconds(5))) {
+                continue;
+            }
+
+            ManagedChannel channel = holder.get();
+            if (null == channel)
+                continue;
+
+            var fut = IndexApiGrpc.newFutureStub(channel)
                             .withExecutor(executor)
-                            .withDeadlineAfter(Duration.ofMillis((int) (1.5 * indexRequest.getQueryLimits().getTimeoutMs()))),
-                    IndexApiGrpc.IndexApiFutureStub::query,
-                    indexRequest));
+                            .withDeadlineAfter(Duration.ofMillis((int) (1.5 * indexRequest.getQueryLimits().getTimeoutMs())))
+                        .query(indexRequest);
+
+            futures.add(Map.entry(holder, fut));
         }
 
-        for (ListenableFuture<RpcIndexQueryResponse> future: futures) {
+        for (var holderAndFuture: futures) {
+            var holder = holderAndFuture.getKey();
+            var future = holderAndFuture.getValue();
             try {
                 Instant now = Instant.now();
                 if (now.isAfter(bailInstant)) {
@@ -110,9 +129,14 @@ public class IndexClient {
                 }
             }
             catch (ExecutionException ex) {
+
                 if (ex.getCause() instanceof StatusRuntimeException sre) {
                     if (sre.getStatus() == Status.DEADLINE_EXCEEDED) {
                         logger.warn("Timeout: {}", sre.getMessage());
+                    }
+                    else if (sre.getStatus() == Status.UNAVAILABLE) {
+                        holder.flagError();
+                        logger.warn("Unavailable: {}", sre.getMessage());
                     }
                     else if (sre.getStatus() == Status.INTERNAL) {
                         logger.warn("Internal Error in index: {}", sre);
@@ -122,6 +146,7 @@ public class IndexClient {
                     }
                 }
                 else {
+                    holder.flagError();
                     logger.error("Error while fetching results", ex.getCause());
                 }
             }
