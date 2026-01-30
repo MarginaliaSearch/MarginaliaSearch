@@ -8,6 +8,7 @@ import nu.marginalia.api.searchquery.model.CompiledSearchFilterSpec;
 import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.functions.searchquery.QueryFactory;
+import nu.marginalia.index.searchset.connectivity.ConnectivityView;
 import nu.marginalia.language.NounVariants;
 import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
 import nu.marginalia.index.CombinedIndexReader;
@@ -236,7 +237,8 @@ public class PerfTestMain {
         List<Double> times = new ArrayList<>();
         int iter;
         for (iter = 0;; iter++) {
-            var execution = new IndexQueryExecution(indexReader, rankingService, SearchContext.create(indexReader, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny()), 1);
+            var execution = new IndexQueryExecution(indexReader, rankingService,
+                    SearchContext.create(indexReader, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny(), ConnectivityView.empty()), 1);
             long start = System.nanoTime();
             execution.run();
             long end = System.nanoTime();
@@ -286,7 +288,7 @@ public class PerfTestMain {
 
         System.out.println("Query compiled to: " + parsedQuery.getTerms().getCompiledQuery());
 
-        SearchContext searchContext = SearchContext.create(indexReader, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny());
+        SearchContext searchContext = SearchContext.create(indexReader, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny(), ConnectivityView.empty());
 
 
         Instant runEndTime = Instant.now().plus(runTime);

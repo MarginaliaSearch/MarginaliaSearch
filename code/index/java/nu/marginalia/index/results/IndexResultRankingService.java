@@ -20,6 +20,7 @@ import nu.marginalia.index.ScratchIntListPool;
 import nu.marginalia.index.StatefulIndex;
 import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.model.*;
+import nu.marginalia.index.searchset.connectivity.DomainSetConnectivity;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.linkdb.model.DocdbUrlDetail;
@@ -262,14 +263,23 @@ public class IndexResultRankingService {
         int docSize = index.getDocumentSize(combinedId);
         if (docSize <= 0) docSize = 5000;
 
+        var params = rankingContext.params;
+
+        DomainSetConnectivity connectivity = rankingContext.connectivityView.get(UrlIdCodec.getDomainId(docId));
+
+
         if (debugRankingFactors != null) {
             debugRankingFactors.addDocumentFactor("doc.docId", Long.toString(docId));
             debugRankingFactors.addDocumentFactor("doc.combinedId", Long.toString(combinedId));
+            debugRankingFactors.addDocumentFactor("doc.conectivity", connectivity.toString());
         }
 
-        var params = rankingContext.params;
-
-        double documentBonus = calculateDocumentBonus(docMetadata, htmlFeatures, docSize, params, debugRankingFactors);
+        double documentBonus = calculateDocumentBonus(docMetadata,
+                htmlFeatures,
+                docSize,
+                params,
+                connectivity,
+                debugRankingFactors);
 
         VerbatimMatches verbatimMatches = new VerbatimMatches(intListPool, positions, rankingContext.phraseConstraints, spans);
         UnorderedMatches unorderedMatches = new UnorderedMatches(positions, compiledQuery, rankingContext.regularMask, spans);
@@ -428,6 +438,7 @@ public class IndexResultRankingService {
                                           int features,
                                           int length,
                                           RpcResultRankingParameters rankingParams,
+                                          DomainSetConnectivity connectivity,
                                           @Nullable DebugRankingFactors debugRankingFactors) {
 
         if (rankingParams.getDisablePenalties()) {
@@ -438,6 +449,8 @@ public class IndexResultRankingService {
         int asl = DocumentMetadata.decodeAvgSentenceLength(documentMetadata);
         int quality = DocumentMetadata.decodeQuality(documentMetadata);
         int size = DocumentMetadata.decodeSize(documentMetadata);
+        if (size == 0) size = 10_000;
+
         int flagsPenalty = flagsPenalty(features, documentMetadata & 0xFF, size);
         int topology = DocumentMetadata.decodeTopology(documentMetadata);
         int year = DocumentMetadata.decodeYear(documentMetadata);
@@ -450,7 +463,20 @@ public class IndexResultRankingService {
         final double topologyBonus = 0.2 * Math.log(1 + topology);
         final double documentLengthPenalty
                 = length > rankingParams.getShortDocumentThreshold() ? 0 : -rankingParams.getShortDocumentPenalty();
+
+        double connectivityPenalty = switch (connectivity) {
+            case DIRECT, UNKNOWN -> 0.;
+            case BIDI_HOT -> size < 250 ? 0. : -0.5;
+            case REACHABLE_HOT -> size < 250 ? 0. : -1.;
+            case LINKING_HOT -> size < 250 ? -3. : -4.;
+            case BIDI -> size < 250 ? -5. : -7;
+            case REACHABLE -> size < 250 ? -5. : -8.;
+            case LINKING -> size < 250 ? -5. : -10.;
+            case UNREACHABLE -> size < 250 ? -15. : -25.;
+        };
+
         final double temporalBias;
+
 
         if (rankingParams.getTemporalBias().getBias() == RpcTemporalBias.Bias.RECENT) {
             temporalBias = - Math.abs(year - PubDate.MAX_YEAR) * rankingParams.getTemporalBiasWeight();
@@ -461,10 +487,17 @@ public class IndexResultRankingService {
         }
 
         if (debugRankingFactors != null) {
+            debugRankingFactors.addDocumentFactor("documentParam.rank", Integer.toString(rank));
+            debugRankingFactors.addDocumentFactor("documentParam.asl", Integer.toString(asl));
+            debugRankingFactors.addDocumentFactor("documentParam.quality", Integer.toString(quality));
+            debugRankingFactors.addDocumentFactor("documentParam.size", Integer.toString(size));
+            debugRankingFactors.addDocumentFactor("documentParam.topology", Integer.toString(topology));
+
             debugRankingFactors.addDocumentFactor("documentBonus.averageSentenceLengthPenalty", Double.toString(averageSentenceLengthPenalty));
             debugRankingFactors.addDocumentFactor("documentBonus.documentLengthPenalty", Double.toString(documentLengthPenalty));
             debugRankingFactors.addDocumentFactor("documentBonus.qualityPenalty", Double.toString(qualityPenalty));
             debugRankingFactors.addDocumentFactor("documentBonus.rankingBonus", Double.toString(rankingBonus));
+            debugRankingFactors.addDocumentFactor("documentBonus.connectivityPenalty", Double.toString(connectivityPenalty));
             debugRankingFactors.addDocumentFactor("documentBonus.topologyBonus", Double.toString(topologyBonus));
             debugRankingFactors.addDocumentFactor("documentBonus.temporalBias", Double.toString(temporalBias));
             debugRankingFactors.addDocumentFactor("documentBonus.flagsPenalty", Double.toString(flagsPenalty));
@@ -476,6 +509,7 @@ public class IndexResultRankingService {
                 + rankingBonus
                 + topologyBonus
                 + temporalBias
+                + connectivityPenalty
                 + flagsPenalty;
     }
 

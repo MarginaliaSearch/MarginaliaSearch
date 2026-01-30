@@ -114,6 +114,10 @@ public class DomainRankingSetsService {
         }
     }
 
+    public static Path setFileName(Path base, String setName) {
+        return base.resolve(setName.toLowerCase() + ".dat");
+    }
+
     /**
      * Defines a domain ranking set, parameters for the ranking algorithms.
      *
@@ -127,8 +131,11 @@ public class DomainRankingSetsService {
                                    int depth,
                                    String definition) {
 
+
+
+
         public Path fileName(Path base) {
-            return base.resolve(name().toLowerCase() + ".dat");
+            return DomainRankingSetsService.setFileName(base, name());
         }
 
         public String[] domains() {

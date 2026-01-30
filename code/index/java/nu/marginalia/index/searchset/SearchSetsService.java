@@ -13,6 +13,7 @@ import nu.marginalia.domainranking.data.GraphSource;
 import nu.marginalia.domainranking.data.LinkGraphSource;
 import nu.marginalia.domainranking.data.SimilarityGraphSource;
 import nu.marginalia.index.IndexFactory;
+import nu.marginalia.index.searchset.connectivity.ConnectivitySets;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.slf4j.Logger;
@@ -31,6 +32,7 @@ public class SearchSetsService {
     private final IndexFactory indexFactory;
     private final ServiceEventLog eventLog;
     private final DomainRankingSetsService domainRankingSetsService;
+    private final ConnectivitySets connectivitySets;
     private final DbUpdateRanks dbUpdateRanks;
     private final GraphSource similarityDomains;
     private final GraphSource linksDomains;
@@ -53,12 +55,14 @@ public class SearchSetsService {
                              IndexFactory indexFactory,
                              ServiceEventLog eventLog,
                              DomainRankingSetsService domainRankingSetsService,
+                             ConnectivitySets connectivitySets,
                              DbUpdateRanks dbUpdateRanks) throws IOException {
         this.nodeId = serviceConfiguration.node();
         this.domainTypes = domainTypes;
         this.indexFactory = indexFactory;
         this.eventLog = eventLog;
         this.domainRankingSetsService = domainRankingSetsService;
+        this.connectivitySets = connectivitySets;
 
         this.dbUpdateRanks = dbUpdateRanks;
 
@@ -73,7 +77,7 @@ public class SearchSetsService {
             this.linksDomains = rankingDomains;
         }
 
-        for (var rankingSet : domainRankingSetsService.getAll()) {
+        for (DomainRankingSetsService.DomainRankingSet rankingSet : domainRankingSetsService.getAll()) {
             rankingSets.put(rankingSet.name(),
                     new RankingSearchSet(rankingSet.name(),
                             rankingSet.fileName(indexFactory.getSearchSetsBase())
@@ -131,6 +135,8 @@ public class SearchSetsService {
             }
             eventLog.logEvent("RANKING-SET-RECALCULATED", rankingSet.name());
         }
+
+        connectivitySets.recalculate();
     }
 
     private void recalculateNormal(DomainRankingSetsService.DomainRankingSet rankingSet) {
