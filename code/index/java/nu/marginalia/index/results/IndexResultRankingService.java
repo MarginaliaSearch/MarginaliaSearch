@@ -587,8 +587,8 @@ public class IndexResultRankingService {
 
             for (int i = 0; i < attenuation.length; i++) {
                 attenuation[i] = switch(HtmlTag.includedTags[i]) {
-                    case BODY, CODE -> 0.5f;
-                    case ANCHOR -> 0.3f;
+                    case BODY, HEADING -> 0.5f;
+                    case ANCHOR, CODE, NAV -> 0.3f;
                     default -> 1.0f;
                 };
             }
