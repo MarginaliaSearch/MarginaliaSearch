@@ -9,5 +9,12 @@ public enum DomainSetConnectivity {
     REACHABLE,
     LINKING_HOT,
     LINKING,
-    UNREACHABLE
+    UNREACHABLE;
+
+    public boolean isPeripheral() {
+        return switch (this) {
+            case REACHABLE, LINKING, UNREACHABLE -> true;
+            default -> false;
+        };
+    }
 }

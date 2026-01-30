@@ -458,7 +458,7 @@ public class IndexResultRankingService {
         double averageSentenceLengthPenalty
                 = (asl >= rankingParams.getShortSentenceThreshold() ? 0 : -rankingParams.getShortSentencePenalty());
 
-        final double qualityPenalty = calculateQualityPenalty(size, quality, rankingParams);
+        final double qualityPenalty = calculateQualityPenalty(size, quality, connectivity, rankingParams);
         final double rankingBonus = (255. - rank) * rankingParams.getDomainRankBonus();
         final double topologyBonus = 0.2 * Math.log(1 + topology);
         final double documentLengthPenalty
@@ -764,14 +764,15 @@ public class IndexResultRankingService {
     }
 
 
-    private double calculateQualityPenalty(int size, int quality, RpcResultRankingParameters rankingParams) {
-        if (size < 400) {
-            if (quality < 5)
-                return 0;
-            return -quality * rankingParams.getQualityPenalty();
+    private double calculateQualityPenalty(int size, int quality, DomainSetConnectivity connectivity, RpcResultRankingParameters rankingParams) {
+        if (connectivity.isPeripheral()) {
+            return -quality * rankingParams.getQualityPenalty() * 20;
         }
         else {
-            return -quality * rankingParams.getQualityPenalty() * 20;
+            if (size < 400 && quality < 5) {
+                return 0;
+            }
+            return -quality * rankingParams.getQualityPenalty();
         }
     }
 
