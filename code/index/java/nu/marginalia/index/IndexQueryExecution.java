@@ -318,6 +318,10 @@ public class IndexQueryExecution {
 
                     if (WordFlags.Synthetic.isPresent((byte) value))
                         continue;
+                    if (WordFlags.UrlDomain.isPresent((byte) value))
+                        continue;
+                    if (WordFlags.UrlPath.isPresent((byte) value))
+                        continue;
 
                     if ((value & 0xFF) == 0)
                         thisMask &= value;
