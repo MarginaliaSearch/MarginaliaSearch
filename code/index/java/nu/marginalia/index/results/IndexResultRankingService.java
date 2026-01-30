@@ -309,10 +309,7 @@ public class IndexResultRankingService {
         priorityTermAdjustment += rankingContext.priorityDomainIds.getOrDefault(UrlIdCodec.getDomainId(combinedId), 0.f);
 
         double score = normalize(
-                rankingAdjustment * (score_firstPosition
-                        + score_proximity
-                        + Math.max(score_verbatim, score_bM25)
-                        + score_bFlags) * Math.exp(priorityTermAdjustment/5),
+                rankingAdjustment * (score_firstPosition + score_proximity + score_verbatim + score_bM25 + score_bFlags) * Math.exp(priorityTermAdjustment/5),
                 -Math.min(0, documentBonus) // The magnitude of documentBonus, if it is negative; otherwise 0
         );
 
