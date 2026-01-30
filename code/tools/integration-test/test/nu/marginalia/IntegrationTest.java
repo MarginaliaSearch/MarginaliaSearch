@@ -22,6 +22,7 @@ import nu.marginalia.index.reverse.construction.full.FullIndexConstructor;
 import nu.marginalia.index.reverse.construction.prio.PrioIndexConstructor;
 import nu.marginalia.index.searchset.DomainRankings;
 import nu.marginalia.index.searchset.SearchSetAny;
+import nu.marginalia.index.searchset.connectivity.ConnectivityView;
 import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.keywords.KeywordHasher;
@@ -244,7 +245,8 @@ public class IntegrationTest {
             var query = queryFactory.createQuery(request, CompiledSearchFilterSpec.builder("test", "test").build(), null);
             System.out.println(query);
 
-            var rs = new IndexQueryExecution(indexReference.get(), rankingService, SearchContext.create(indexReference.get(), new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny()), 1).run();
+            var rs = new IndexQueryExecution(indexReference.get(), rankingService,
+                    SearchContext.create(indexReference.get(), new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny(), ConnectivityView.empty()), 1).run();
 
             System.out.println(rs);
             Assertions.assertEquals(1, rs.size());
@@ -265,7 +267,8 @@ public class IntegrationTest {
 
             System.out.println(query);
 
-            var rs = new IndexQueryExecution(indexReference.get(), rankingService, SearchContext.create(indexReference.get(), new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny()), 1).run();
+            var rs = new IndexQueryExecution(indexReference.get(), rankingService,
+                    SearchContext.create(indexReference.get(), new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny(), ConnectivityView.empty()), 1).run();
 
             System.out.println(rs);
             Assertions.assertEquals(1, rs.size());
@@ -376,7 +379,7 @@ public class IntegrationTest {
 
 //            System.out.println(query);
 
-            var rs = new IndexQueryExecution(indexReference.get(), rankingService, SearchContext.create(indexReference.get(), new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny()), 1).run();
+            var rs = new IndexQueryExecution(indexReference.get(), rankingService, SearchContext.create(indexReference.get(), new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny(), ConnectivityView.empty()), 1).run();
 
             System.out.println(rs);
 

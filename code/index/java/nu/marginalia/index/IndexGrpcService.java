@@ -15,6 +15,8 @@ import nu.marginalia.index.results.IndexResultRankingService;
 import nu.marginalia.index.searchset.SearchSet;
 import nu.marginalia.index.searchset.SearchSetsService;
 import nu.marginalia.index.searchset.SmallSearchSet;
+import nu.marginalia.index.searchset.connectivity.ConnectivitySets;
+import nu.marginalia.index.searchset.connectivity.ConnectivityView;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.language.model.LanguageDefinition;
@@ -60,15 +62,18 @@ public class IndexGrpcService
     private final IndexResultRankingService rankingService;
     private final String nodeName;
     private final int nodeId;
+    private final ConnectivitySets connectivitySets;
 
     @Inject
     public IndexGrpcService(ServiceConfiguration serviceConfiguration,
                             LanguageConfiguration languageConfiguration,
                             StatefulIndex statefulIndex,
+                            ConnectivitySets connectivitySets,
                             SearchSetsService searchSetsService,
                             IndexResultRankingService rankingService)
     {
         this.nodeId = serviceConfiguration.node();
+        this.connectivitySets = connectivitySets;
         this.nodeName = Integer.toString(nodeId);
         this.statefulIndex = statefulIndex;
         this.searchSetsService = searchSetsService;
@@ -100,7 +105,17 @@ public class IndexGrpcService
 
                             CombinedIndexReader index = indexReference.get();
 
-                            SearchContext rankingContext = SearchContext.create(index, hasher, request, getSearchSet(request));
+                            final SearchSet set = getSearchSet(request);
+                            final ConnectivityView connectivityView;
+
+                            if (!set.imposesConstraint() && "en".equalsIgnoreCase(request.getLangIsoCode())) {
+                                connectivityView = connectivitySets.getView();
+                            }
+                            else {
+                                connectivityView = ConnectivityView.empty();
+                            }
+
+                            SearchContext rankingContext = SearchContext.create(index, hasher, request, set, connectivityView);
 
                             IndexQueryExecution queryExecution = new IndexQueryExecution(index, rankingService, rankingContext, nodeId);
 
@@ -159,7 +174,9 @@ public class IndexGrpcService
             CombinedIndexReader currentIndex = indexReference.get();
 
             SearchContext context = SearchContext.create(currentIndex,
-                    keywordHasherByLangIso.get("en"), request, getSearchSet(request));
+                    keywordHasherByLangIso.get("en"), request, getSearchSet(request),
+                    ConnectivityView.empty()
+                    );
 
             return new IndexQueryExecution(currentIndex, rankingService, context, 1).run();
         }

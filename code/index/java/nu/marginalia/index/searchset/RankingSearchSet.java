@@ -22,6 +22,8 @@ public class RankingSearchSet implements SearchSet {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final IntOpenHashSet set;
+    private final IntArrayList idsSorted;
+
     public final String name;
     public final Path source;
 
@@ -29,6 +31,10 @@ public class RankingSearchSet implements SearchSet {
         this.name = name;
         this.source = source;
         this.set = set;
+
+        idsSorted = new IntArrayList(set);
+        idsSorted.sort(Integer::compareTo);
+
     }
 
     public RankingSearchSet(String name, Path source) throws IOException {
@@ -41,6 +47,9 @@ public class RankingSearchSet implements SearchSet {
         else {
             set = load(source);
         }
+
+        idsSorted = new IntArrayList(set);
+        idsSorted.sort(Integer::compareTo);
 
         if (set.isEmpty()) {
             logger.warn("Search set {} is empty", name);
@@ -74,9 +83,7 @@ public class RankingSearchSet implements SearchSet {
 
     @Override
     public IntList domainIds() {
-        IntList ret = new IntArrayList(set);
-        ret.sort(Integer::compareTo);
-        return ret;
+        return idsSorted;
     }
 
     public void write() throws IOException {

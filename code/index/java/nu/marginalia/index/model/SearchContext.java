@@ -19,6 +19,7 @@ import nu.marginalia.index.CombinedIndexReader;
 import nu.marginalia.index.reverse.IndexLanguageContext;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.index.searchset.SearchSet;
+import nu.marginalia.index.searchset.connectivity.ConnectivityView;
 import nu.marginalia.language.keywords.KeywordHasher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,9 +81,15 @@ public class SearchContext {
     public final IntList excludedDomainIds;
     public final Int2FloatMap priorityDomainIds;
 
+    public final ConnectivityView connectivityView;
+
     public static SearchContext create(CombinedIndexReader currentIndex,
                                        KeywordHasher keywordHasher,
-                                       RpcIndexQuery request, SearchSet searchSet) {
+                                       RpcIndexQuery request,
+                                       SearchSet searchSet,
+                                       ConnectivityView connectivityView
+                                       ) {
+
         var limits = request.getQueryLimits();
         var queryTerms = request.getTerms();
 
@@ -98,6 +105,7 @@ public class SearchContext {
 
         return new SearchContext(
                 keywordHasher,
+                connectivityView,
                 request.getLangIsoCode(),
                 currentIndex,
                 queryTerms.getCompiledQuery(),
@@ -112,6 +120,7 @@ public class SearchContext {
 
     public SearchContext(
             KeywordHasher keywordHasher,
+            ConnectivityView connectivityView,
             String langIsoCode,
             CombinedIndexReader currentIndex,
             String queryExpression,
@@ -123,6 +132,7 @@ public class SearchContext {
             List<Float> priorityDomainIdsAmountsList,
             RpcQueryLimits limits)
     {
+        this.connectivityView = connectivityView;
         this.docCount = currentIndex.totalDocCount();
         this.languageContext = currentIndex.createLanguageContext(langIsoCode);
 
