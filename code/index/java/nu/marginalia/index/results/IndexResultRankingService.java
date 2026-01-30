@@ -565,10 +565,12 @@ public class IndexResultRankingService {
 
         private static final float[] weights_full;
         private static final float[] weights_partial;
+        private static final float[] attenuation;
 
         static {
             weights_full = new float[HtmlTag.includedTags.length];
             weights_partial = new float[HtmlTag.includedTags.length];
+            attenuation = new float[HtmlTag.includedTags.length];
 
             for (int i = 0; i < weights_full.length; i++) {
                 weights_full[i] = switch(HtmlTag.includedTags[i]) {
@@ -580,6 +582,14 @@ public class IndexResultRankingService {
                     case EXTERNAL_LINKTEXT -> 2.0f;
                     case BODY -> 1.0f;
                     default -> 0.0f;
+                };
+            }
+
+            for (int i = 0; i < attenuation.length; i++) {
+                attenuation[i] = switch(HtmlTag.includedTags[i]) {
+                    case BODY, CODE -> 0.5f;
+                    case ANCHOR -> 0.3f;
+                    default -> 1.0f;
                 };
             }
 
@@ -630,8 +640,6 @@ public class IndexResultRankingService {
             /**
              *  FULL GROUP MATCHING
              */
-
-
             if (!fullGroupIntersections.isEmpty()) {
                 int totalFullCnts = 0;
 
@@ -640,7 +648,7 @@ public class IndexResultRankingService {
                     int cnts = spans.getSpan(tag).countRangeMatches(fullGroupIntersections, fullGroup.size);
                     if (cnts > 0) {
                         matches.set(tag.ordinal());
-                        score += (float) (weights_full[tag.ordinal()] * fullGroup.size * (1 + Math.log(1 + cnts)));
+                        score += (float) (weights_full[tag.ordinal()] * fullGroup.size * (1 + Math.log(1 + Math.pow(cnts, attenuation[tag.ordinal()]))));
                         totalFullCnts += cnts;
                     }
                 }
@@ -648,7 +656,7 @@ public class IndexResultRankingService {
                 // Handle matches that span multiple tags; treat them as BODY matches
                 if (totalFullCnts != fullGroupIntersections.size()) {
                     int mixedCnts = fullGroupIntersections.size() - totalFullCnts;
-                    score += (float) (weights_full[HtmlTag.BODY.ordinal()] * fullGroup.size * (1 + Math.log(1 + mixedCnts)));
+                    score += (float) (weights_full[HtmlTag.BODY.ordinal()] * fullGroup.size * (1 + Math.log(1 + Math.pow(mixedCnts, attenuation[HtmlTag.BODY.ordinal()]))));
                 }
             }
 
@@ -670,14 +678,14 @@ public class IndexResultRankingService {
                     int cnts =  spans.getSpan(tag).countRangeMatches(intersections, optionalGroup.size);
                     if (cnts == 0) continue;
 
-                    score += (float) (weights_partial[tag.ordinal()] * optionalGroup.size * sizeScalingFactor * (1 + Math.log(1 + cnts)));
+                    score += (float) (weights_partial[tag.ordinal()] * optionalGroup.size * sizeScalingFactor * (1 + Math.log(1 + Math.pow(cnts, attenuation[tag.ordinal()]))));
                     totalCnts += cnts;
                 }
 
                 // Handle matches that span multiple tags; treat them as BODY matches
                 if (totalCnts != intersections.size()) {
                     int mixedCnts = intersections.size() - totalCnts;
-                    score += (float) (weights_partial[HtmlTag.BODY.ordinal()] * optionalGroup.size * sizeScalingFactor * (1 + Math.log(1 + mixedCnts)));
+                    score += (float) (weights_partial[HtmlTag.BODY.ordinal()] * optionalGroup.size * sizeScalingFactor * (1 + Math.log(1 + Math.pow(mixedCnts, attenuation[HtmlTag.BODY.ordinal()]))));
                 }
             }
         }
