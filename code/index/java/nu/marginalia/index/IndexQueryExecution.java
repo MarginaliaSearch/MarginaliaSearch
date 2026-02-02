@@ -337,7 +337,10 @@ public class IndexQueryExecution {
 
     private class RankingStage implements BufferPipe.FinalFunction<RankableDocument> {
 
+        // per-thread instances
         private final ScratchIntListPool pool = new ScratchIntListPool(64);
+        private final ResultPriorityQueue localResults = new ResultPriorityQueue(rankingContext.limitTotal);
+
         private final Lock indexLock = currentIndex.useLock();
 
         public RankingStage() {
@@ -345,8 +348,6 @@ public class IndexQueryExecution {
                 throw new IllegalStateException("Index lock could not be acquired");
             }
         }
-
-
 
         @Override
         public void process(RankableDocument rankableDocument) {
@@ -366,7 +367,7 @@ public class IndexQueryExecution {
 
             if (null != resultItem) {
                 rankableDocument.item = resultItem;
-                resultHeap.add(rankableDocument);
+                localResults.add(rankableDocument);
             }
         }
 
@@ -398,6 +399,11 @@ public class IndexQueryExecution {
 
         @Override
         public void cleanUp() {
+            // Add our results to the shared pool of results
+            synchronized (resultHeap) {
+                resultHeap.addAll(localResults);
+            }
+
             indexLock.unlock();
         }
     }
