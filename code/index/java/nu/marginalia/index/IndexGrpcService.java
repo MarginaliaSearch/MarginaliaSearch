@@ -112,7 +112,10 @@ public class IndexGrpcService
                             final SearchSet set = getSearchSet(request);
                             final ConnectivityView connectivityView;
 
-                            if (!set.imposesConstraint() && "en".equalsIgnoreCase(request.getLangIsoCode())) {
+                            if (!set.imposesConstraint()
+                                && "en".equalsIgnoreCase(request.getLangIsoCode())
+                                && !hasSiteTerm(request)
+                            ) {
                                 connectivityView = connectivitySets.getView();
                             }
                             else {
@@ -151,6 +154,14 @@ public class IndexGrpcService
             logger.error("Error in handling request", ex);
             responseObserver.onError(Status.INTERNAL.withCause(ex).asRuntimeException());
         }
+    }
+
+    private boolean hasSiteTerm(RpcIndexQuery request) {
+        for (var term : request.getTerms().getTermsRequireList()) {
+            if (term.startsWith("site:"))
+                return true;
+        }
+        return false;
     }
 
     /** Keywords are translated to a numeric format via a 64 bit hash algorithm,
