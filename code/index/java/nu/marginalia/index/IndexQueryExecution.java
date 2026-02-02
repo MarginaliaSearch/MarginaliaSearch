@@ -142,8 +142,7 @@ public class IndexQueryExecution {
                 .inc(1000. * resultHeap.getItemsProcessed() / budget.getLimitTime());
 
         // Final result selection
-        return rankingService.selectBestResults(limitByDomain, limitTotal, rankingContext, resultHeap.toList());
-
+        return rankingService.selectBestResults(limitByDomain, limitTotal, rankingContext, resultHeap);
     }
 
 

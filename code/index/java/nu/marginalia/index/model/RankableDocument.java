@@ -3,6 +3,7 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
 import nu.marginalia.index.forward.spans.DocumentSpans;
+import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.sequence.CodedSequence;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,6 +19,11 @@ public class RankableDocument implements Comparable<RankableDocument> {
     public IntList[] positions;
 
     public SearchResultItem item;
+    public int resultsFromDomain;
+
+    public int domainId() {
+        return UrlIdCodec.getDomainId(combinedDocumentId);
+    }
 
     public RankableDocument(long combinedDocumentId) {
         this.combinedDocumentId = combinedDocumentId;

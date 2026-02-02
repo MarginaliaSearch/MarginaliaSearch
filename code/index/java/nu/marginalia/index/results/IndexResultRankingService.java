@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
@@ -16,6 +17,7 @@ import nu.marginalia.api.searchquery.model.query.QueryStrategy;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.api.searchquery.model.results.debug.DebugRankingFactors;
 import nu.marginalia.index.CombinedIndexReader;
+import nu.marginalia.index.ResultPriorityQueue;
 import nu.marginalia.index.ScratchIntListPool;
 import nu.marginalia.index.StatefulIndex;
 import nu.marginalia.index.forward.spans.DocumentSpans;
@@ -63,27 +65,23 @@ public class IndexResultRankingService {
     public List<RpcDecoratedResultItem> selectBestResults(int limitByDomain,
                                                           int limitTotal,
                                                           SearchContext searchContext,
-                                                          List<RankableDocument> results) throws SQLException {
-
-
+                                                          ResultPriorityQueue results) throws SQLException {
         List<RankableDocument> resultsList = new ArrayList<>(results.size());
         TLongList idsList = new TLongArrayList(limitTotal);
 
-        IndexResultDomainDeduplicator domainCountFilter = new IndexResultDomainDeduplicator(limitByDomain);
-        for (var item : results) {
-            if (domainCountFilter.test(item.item)) {
+        Int2IntOpenHashMap domainCount = new Int2IntOpenHashMap(limitByDomain);
 
+        for (var item : results) {
+            int domainId = item.domainId();
+            if (domainCount.addTo(domainId, 1) < limitByDomain) {
                 if (resultsList.size() < limitTotal) {
                     resultsList.add(item);
+                    item.resultsFromDomain = results.numResultsFromDomain(domainId);
                     idsList.add(item.item.getDocumentId());
                 }
-                //
-                // else { break; } <-- don't add this even though it looks like it should be present!
-                //
-                // It's important that this filter runs across all results, not just the top N,
-                // so we shouldn't break the loop in a putative else-case here!
-                //
-
+                else {
+                    break;
+                }
             }
         }
 
@@ -165,7 +163,7 @@ public class IndexResultRankingService {
                     .setUrlQuality(docData.urlQuality())
                     .setWordsTotal(docData.wordsTotal())
                     .setBestPositions(result.getBestPositions())
-                    .setResultsFromDomain(domainCountFilter.getCount(result))
+                    .setResultsFromDomain(doc.resultsFromDomain)
                     .setRawItem(rawItem);
 
             if (docData.pubYear() != null) {

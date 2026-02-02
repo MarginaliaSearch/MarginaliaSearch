@@ -1,8 +1,10 @@
 package nu.marginalia.index;
 
 import com.google.common.collect.MinMaxPriorityQueue;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import nu.marginalia.index.model.RankableDocument;
+import nu.marginalia.model.id.UrlIdCodec;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -17,6 +19,8 @@ import java.util.*;
  */
 public class ResultPriorityQueue implements Iterable<RankableDocument> {
     private final MinMaxPriorityQueue<RankableDocument> queue;
+    private final Int2IntOpenHashMap resultsPerDomain = new Int2IntOpenHashMap(100_000);
+
     private int itemsProcessed = 0;
 
     public ResultPriorityQueue(int limit) {
@@ -31,17 +35,19 @@ public class ResultPriorityQueue implements Iterable<RankableDocument> {
         if (document.item == null)
             return false;
 
+        int domainId = UrlIdCodec.getDomainId(document.combinedDocumentId);
 
         synchronized (this) {
             itemsProcessed++;
             queue.add(document);
+            resultsPerDomain.addTo(domainId, 1);
         }
 
         return true;
     }
 
-    public synchronized List<RankableDocument> toList() {
-        return new ArrayList<>(queue);
+    public int numResultsFromDomain(int domainId) {
+        return resultsPerDomain.get(domainId);
     }
 
     public int size() {
