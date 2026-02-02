@@ -3,7 +3,7 @@ package nu.marginalia.linkdb.docs;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import gnu.trove.list.TLongList;
+import it.unimi.dsi.fastutil.longs.*;
 import nu.marginalia.linkdb.model.DocdbUrlDetail;
 import nu.marginalia.model.EdgeUrl;
 import org.slf4j.Logger;
@@ -17,8 +17,8 @@ import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /** Reads the document database, which is a SQLite database
  * containing the URLs and metadata of the documents in the
@@ -92,43 +92,61 @@ public class DocumentDbReader {
      * This is used to get the URL details for the search
      * results.
      * */
-    public List<DocdbUrlDetail> getUrlDetails(TLongList ids) throws SQLException {
-        List<DocdbUrlDetail> ret = new ArrayList<>(ids.size());
+    public Long2ObjectMap<DocdbUrlDetail> getUrlDetails(LongList ids) throws SQLException {
+        if (ids.isEmpty())
+            return Long2ObjectMaps.emptyMap();
 
-        if (connection == null ||
-            connection.isClosed())
-        {
+        if (connection == null || connection.isClosed()) {
+            logger.error("URL query temporarily unavailable due to database switch");
+            // This shouldn't be possible unless something has gone wrong with the mutex handling
+            // but we catch it anyway to get better tracking in case something does go wrong...
             throw new RuntimeException("URL query temporarily unavailable due to database switch");
         }
 
-        try (var stmt = connection.prepareStatement("""
+        Long2ObjectMap ret = new Long2ObjectOpenHashMap(ids.size());
+
+        try (var stmt = connection.createStatement()) {
+            String docIds = ids
+                    .longStream()
+                    .mapToObj(Long::toString)
+                    .collect(Collectors.joining(",", "(", ")"));;
+
+            // NOTE: This looks skethcy, but the injection risk of
+            // query concatenation is entirely mitigated through docIds
+            // being constructed from an input of longs.
+
+            var rs = stmt.executeQuery("""
                 SELECT ID, URL, TITLE, DESCRIPTION, LANGUAGE, WORDS_TOTAL, FORMAT, FEATURES, DATA_HASH, QUALITY, PUB_YEAR
-                FROM DOCUMENT WHERE ID = ?
-                """)) {
-            for (int i = 0; i < ids.size(); i++) {
-                long id = ids.get(i);
-                stmt.setLong(1, id);
-                var rs = stmt.executeQuery();
-                if (rs.next()) {
-                    var url = new EdgeUrl(rs.getString("URL"));
-                    ret.add(new DocdbUrlDetail(
-                            rs.getLong("ID"),
-                            url,
-                            rs.getString("TITLE"),
-                            rs.getString("DESCRIPTION"),
-                            rs.getString("LANGUAGE"),
-                            rs.getDouble("QUALITY"),
-                            rs.getString("FORMAT"),
-                            rs.getInt("FEATURES"),
-                            rs.getInt("PUB_YEAR"),
-                            rs.getLong("DATA_HASH"),
-                            rs.getInt("WORDS_TOTAL")
-                    ));
+                FROM DOCUMENT WHERE ID IN 
+                """ + docIds);
+
+            while (rs.next()) {
+                var urlMaybe = EdgeUrl.parse(rs.getString("URL"));
+                if (urlMaybe.isEmpty()) {
+                    logger.warn("Failed to parse URL {}", rs.getString("URL"));
+                    continue;
                 }
+
+                long id = rs.getLong("ID");
+
+                var details = new DocdbUrlDetail(
+                        id,
+                        urlMaybe.get(),
+                        rs.getString("TITLE"),
+                        rs.getString("DESCRIPTION"),
+                        rs.getString("LANGUAGE"),
+                        rs.getDouble("QUALITY"),
+                        rs.getString("FORMAT"),
+                        rs.getInt("FEATURES"),
+                        rs.getInt("PUB_YEAR"),
+                        rs.getLong("DATA_HASH"),
+                        rs.getInt("WORDS_TOTAL")
+                );
+
+                ret.put(id, details);
             }
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
         }
+
         return ret;
     }
 }

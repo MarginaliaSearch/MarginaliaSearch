@@ -245,7 +245,7 @@ public class IntegrationTest {
             var query = queryFactory.createQuery(request, CompiledSearchFilterSpec.builder("test", "test").build(), null);
             System.out.println(query);
 
-            var rs = new IndexQueryExecution(indexReference.get(), rankingService,
+            var rs = new IndexQueryExecution(indexReference.get(), documentDbReader, rankingService,
                     SearchContext.create(indexReference.get(), new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny(), ConnectivityView.empty()), 1).run();
 
             System.out.println(rs);
@@ -267,7 +267,7 @@ public class IntegrationTest {
 
             System.out.println(query);
 
-            var rs = new IndexQueryExecution(indexReference.get(), rankingService,
+            var rs = new IndexQueryExecution(indexReference.get(), documentDbReader, rankingService,
                     SearchContext.create(indexReference.get(), new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny(), ConnectivityView.empty()), 1).run();
 
             System.out.println(rs);
@@ -379,7 +379,7 @@ public class IntegrationTest {
 
 //            System.out.println(query);
 
-            var rs = new IndexQueryExecution(indexReference.get(), rankingService, SearchContext.create(indexReference.get(), new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny(), ConnectivityView.empty()), 1).run();
+            var rs = new IndexQueryExecution(indexReference.get(), documentDbReader, rankingService, SearchContext.create(indexReference.get(), new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny(), ConnectivityView.empty()), 1).run();
 
             System.out.println(rs);
 

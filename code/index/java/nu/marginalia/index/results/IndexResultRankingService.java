@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
@@ -16,6 +17,7 @@ import nu.marginalia.api.searchquery.model.query.QueryStrategy;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.api.searchquery.model.results.debug.DebugRankingFactors;
 import nu.marginalia.index.CombinedIndexReader;
+import nu.marginalia.index.ResultPriorityQueue;
 import nu.marginalia.index.ScratchIntListPool;
 import nu.marginalia.index.StatefulIndex;
 import nu.marginalia.index.forward.spans.DocumentSpans;
@@ -58,164 +60,6 @@ public class IndexResultRankingService {
         this.statefulIndex = statefulIndex;
         this.domainRankingOverrides = domainRankingOverrides;
     }
-
-
-    public List<RpcDecoratedResultItem> selectBestResults(int limitByDomain,
-                                                          int limitTotal,
-                                                          SearchContext searchContext,
-                                                          List<RankableDocument> results) throws SQLException {
-
-
-        List<RankableDocument> resultsList = new ArrayList<>(results.size());
-        TLongList idsList = new TLongArrayList(limitTotal);
-
-        IndexResultDomainDeduplicator domainCountFilter = new IndexResultDomainDeduplicator(limitByDomain);
-        for (var item : results) {
-            if (domainCountFilter.test(item.item)) {
-
-                if (resultsList.size() < limitTotal) {
-                    resultsList.add(item);
-                    idsList.add(item.item.getDocumentId());
-                }
-                //
-                // else { break; } <-- don't add this even though it looks like it should be present!
-                //
-                // It's important that this filter runs across all results, not just the top N,
-                // so we shouldn't break the loop in a putative else-case here!
-                //
-
-            }
-        }
-
-        // If we're exporting debug data from the ranking, we need to re-run the ranking calculation
-        // for the selected results, as this would be comically expensive to do for all the results we
-        // discard along the way
-
-        if (searchContext.params.getExportDebugData()) {
-            // Re-rank the results while gathering debugging data
-
-            try (var indexRef = statefulIndex.get()) {
-                CombinedIndexReader index = indexRef.get();
-
-                // Iterate over documents by their index in the combinedDocIds, as we need the index for the
-                // term data arrays as well
-
-                ScratchIntListPool pool = new ScratchIntListPool(128);
-                for (var doc : results) {
-                    pool.reset();
-                    SearchResultItem score = calculateScore(new DebugRankingFactors(), pool, index, searchContext, doc);
-                    if (score != null) {
-                        doc.item = score;
-                    }
-                }
-
-            }
-        }
-
-        // Fetch the document details for the selected results in one go, from the local document database
-        // for this index partition
-        Map<Long, DocdbUrlDetail> detailsById = new HashMap<>(idsList.size());
-        for (var item : documentDbReader.getUrlDetails(idsList)) {
-            detailsById.put(item.urlId(), item);
-        }
-
-        List<RpcDecoratedResultItem> resultItems = new ArrayList<>(resultsList.size());
-        LongOpenHashSet seenDocumentHashes = new LongOpenHashSet(resultsList.size());
-
-        // Decorate the results with the document details
-        for (RankableDocument doc : resultsList) {
-            var result = doc.item;
-            final long id = result.getDocumentId();
-            final DocdbUrlDetail docData = detailsById.get(id);
-
-            if (docData == null) {
-                logger.warn("No document data for id {}", id);
-                continue;
-            }
-
-            // Filter out duplicates by content
-            if (!seenDocumentHashes.add(docData.dataHash())) {
-                continue;
-            }
-
-            var rawItem = RpcRawResultItem.newBuilder();
-
-            rawItem.setCombinedId(result.combinedId);
-            rawItem.setHtmlFeatures(result.htmlFeatures);
-            rawItem.setEncodedDocMetadata(result.encodedDocMetadata);
-            rawItem.setHasPriorityTerms(result.hasPrioTerm);
-
-            for (var score : result.keywordScores) {
-                rawItem.addKeywordScores(
-                        RpcResultKeywordScore.newBuilder()
-                                .setFlags(score.flags)
-                                .setPositions(score.positionCount)
-                                .setKeyword(score.keyword)
-                );
-            }
-
-            var decoratedBuilder = RpcDecoratedResultItem.newBuilder()
-                    .setDataHash(docData.dataHash())
-                    .setDescription(docData.description())
-                    .setFeatures(docData.features())
-                    .setFormat(docData.format())
-                    .setRankingScore(result.getScore())
-                    .setTitle(docData.title())
-                    .setUrl(docData.url().toString())
-                    .setUrlQuality(docData.urlQuality())
-                    .setWordsTotal(docData.wordsTotal())
-                    .setBestPositions(result.getBestPositions())
-                    .setResultsFromDomain(domainCountFilter.getCount(result))
-                    .setRawItem(rawItem);
-
-            if (docData.pubYear() != null) {
-                decoratedBuilder.setPubYear(docData.pubYear());
-            }
-
-            if (result.debugRankingFactors != null) {
-                var debugFactors = result.debugRankingFactors;
-                var detailsBuilder = RpcResultRankingDetails.newBuilder();
-                var documentOutputs = RpcResultDocumentRankingOutputs.newBuilder();
-
-                for (var factor : debugFactors.getDocumentFactors()) {
-                    documentOutputs.addFactor(factor.factor());
-                    documentOutputs.addValue(factor.value());
-                }
-
-                detailsBuilder.setDocumentOutputs(documentOutputs);
-
-                var termOutputs = RpcResultTermRankingOutputs.newBuilder();
-
-                CqDataLong termIds = searchContext.compiledQueryIds.data;
-
-                for (var entry : debugFactors.getTermFactors()) {
-                    String term = "[ERROR IN LOOKUP]";
-
-                    // CURSED: This is a linear search, but the number of terms is small, and it's in a debug path
-                    for (int i = 0; i < termIds.size(); i++) {
-                        if (termIds.get(i) == entry.termId()) {
-                            term = searchContext.compiledQuery.at(i);
-                            break;
-                        }
-                    }
-
-                    termOutputs
-                            .addTermId(entry.termId())
-                            .addTerm(term)
-                            .addFactor(entry.factor())
-                            .addValue(entry.value());
-                }
-
-                detailsBuilder.setTermOutputs(termOutputs);
-                decoratedBuilder.setRankingDetails(detailsBuilder);
-            }
-
-            resultItems.add(decoratedBuilder.build());
-        }
-
-        return resultItems;
-    }
-
 
 
     @Nullable

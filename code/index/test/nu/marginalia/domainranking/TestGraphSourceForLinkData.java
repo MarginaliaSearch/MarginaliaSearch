@@ -37,9 +37,13 @@ public class TestGraphSourceForLinkData implements GraphSource {
         return Files.exists(domainDataPath) && Files.exists(linksDataPaths[0]);
     }
 
+    private boolean loaded = false;
+
     private Map<Integer, String> idToName = new HashMap<>();
 
     public String getName(int id) {
+        if (!loaded) throw new IllegalStateException("Graph not loaded, run getGraph() first!");
+
         return idToName.get(id);
     }
 
@@ -59,7 +63,7 @@ public class TestGraphSourceForLinkData implements GraphSource {
                         int node_affinity = Integer.parseInt(parts[3]);
                         if (node_affinity > 0) {
                             c.accept(id);
-                            idToName.put(id, parts[1]);
+//                            idToName.put(id, parts[1]);
                         }
                     })
                     .forEach(graph::addVertex);
@@ -85,6 +89,8 @@ public class TestGraphSourceForLinkData implements GraphSource {
             catch (Exception e) {
                 throw new RuntimeException(e);
             }
+
+            loaded = true;
         }
 
 
