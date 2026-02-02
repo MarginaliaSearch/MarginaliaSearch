@@ -1,10 +1,18 @@
 package nu.marginalia.index;
 
+import gnu.trove.list.TLongList;
+import gnu.trove.list.array.TLongArrayList;
 import io.prometheus.metrics.core.metrics.Gauge;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongList;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
+import nu.marginalia.api.searchquery.*;
+import nu.marginalia.api.searchquery.model.compiled.CqDataLong;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
+import nu.marginalia.api.searchquery.model.results.debug.DebugRankingFactors;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
 import nu.marginalia.index.forward.spans.DocumentSpans;
@@ -15,6 +23,8 @@ import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.results.IndexResultRankingService;
 import nu.marginalia.index.reverse.query.IndexQuery;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
+import nu.marginalia.linkdb.docs.DocumentDbReader;
+import nu.marginalia.linkdb.model.DocdbUrlDetail;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.piping.*;
@@ -30,13 +40,14 @@ import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.sql.SQLException;
 import java.time.Duration;
-import java.util.BitSet;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 
 /** Performs an index query */
 public class IndexQueryExecution {
+
+    private static final Logger logger = LoggerFactory.getLogger(IndexQueryExecution.class);
 
     private static final boolean printDebugSummary = Boolean.getBoolean("index.printDebugSummary");
     private static final boolean disableViabilityPrecheck = Boolean.getBoolean("index.disableViabilityPrecheck");
@@ -50,6 +61,7 @@ public class IndexQueryExecution {
 
     private static final Logger log = LoggerFactory.getLogger(IndexQueryExecution.class);
 
+    private final DocumentDbReader documentDbReader;
     private final String nodeName;
 
     private final CombinedIndexReader currentIndex;
@@ -83,10 +95,12 @@ public class IndexQueryExecution {
     }
 
     public IndexQueryExecution(CombinedIndexReader currentIndex,
+                               DocumentDbReader documentDbReader,
                                IndexResultRankingService rankingService,
                                SearchContext rankingContext,
                                int serviceNode) {
         this.currentIndex = currentIndex;
+        this.documentDbReader = documentDbReader;
         this.nodeName = Integer.toString(serviceNode);
         this.rankingService = rankingService;
         this.rankingContext = rankingContext;
@@ -142,8 +156,59 @@ public class IndexQueryExecution {
                 .inc(1000. * resultHeap.getItemsProcessed() / budget.getLimitTime());
 
         // Final result selection
-        return rankingService.selectBestResults(limitByDomain, limitTotal, rankingContext, resultHeap);
+        List<RankableDocument> resultsList = new ArrayList<>(resultHeap.size());
+        LongList idsList = new LongArrayList(limitTotal);
+
+        Int2IntOpenHashMap domainCount = new Int2IntOpenHashMap(limitByDomain);
+
+        for (RankableDocument item : resultHeap) {
+            if (resultsList.size() >= limitTotal) {
+                break;
+            }
+
+            int domainId = item.domainId();
+
+            if (domainCount.addTo(domainId, 1) >= limitByDomain) {
+                continue;
+            }
+
+            resultsList.add(item);
+            item.resultsFromDomain = resultHeap.numResultsFromDomain(domainId);
+            idsList.add(item.item.getDocumentId());
+        }
+
+        // If we're exporting debug data from the ranking, we need to re-run the ranking calculation
+        // for the selected results, as this would be comically expensive to do for all the results we
+        // discard along the way
+
+        if (rankingContext.params.getExportDebugData()) {
+            // Re-rank the results while gathering debugging data
+            performDebugRanking(rankingContext, resultsList);
+        }
+
+        // Fetch the document details for the selected results in one go, from the local document database
+        // for this index partition
+        Map<Long, DocdbUrlDetail> detailsById = documentDbReader.getUrlDetails(idsList);
+
+        List<RpcDecoratedResultItem> ret = new ArrayList<>(resultsList.size());
+
+        // Decorate the results with the document details
+        ResultConverter converter = new ResultConverter();
+        for (RankableDocument doc : resultsList) {
+
+            final long id = doc.item.getDocumentId();
+            final DocdbUrlDetail docData = detailsById.get(id);
+
+            if (docData == null)
+                continue;
+
+            converter.convert(rankingContext, doc, docData)
+                    .ifPresent(ret::add);
+        }
+
+        return ret;
     }
+
 
 
     private class LookupStage implements BufferPipe.IntermediateFunction<IndexQuery, CombinedDocIdList> {
@@ -411,6 +476,124 @@ public class IndexQueryExecution {
 
     public int itemsProcessed() {
         return resultHeap.getItemsProcessed();
+    }
+
+
+
+    /** Rank the results again, gathering detailed ranking information */
+    private void performDebugRanking(SearchContext searchContext, List<RankableDocument> results) {
+
+        // Iterate over documents by their index in the combinedDocIds, as we need the index for the
+        // term data arrays as well
+
+        ScratchIntListPool pool = new ScratchIntListPool(128);
+        for (var doc : results) {
+            pool.reset();
+            SearchResultItem score = rankingService.calculateScore(new DebugRankingFactors(), pool, currentIndex, searchContext, doc);
+
+            if (score != null) {
+                doc.item = score;
+            }
+        }
+    }
+
+
+    private static class ResultConverter {
+        private final LongOpenHashSet seenDocumentHashes = new LongOpenHashSet();
+
+        @Nullable
+        public Optional<RpcDecoratedResultItem> convert(SearchContext rankingContext,
+                                                 RankableDocument doc,
+                                                 DocdbUrlDetail docData) {
+            SearchResultItem resultItem = doc.item;
+
+            // Filter out duplicates by content
+            if (!seenDocumentHashes.add(docData.dataHash())) {
+                return Optional.empty();
+            }
+
+            var rawItem = RpcRawResultItem.newBuilder();
+
+            rawItem.setCombinedId(resultItem.combinedId);
+            rawItem.setHtmlFeatures(resultItem.htmlFeatures);
+            rawItem.setEncodedDocMetadata(resultItem.encodedDocMetadata);
+            rawItem.setHasPriorityTerms(resultItem.hasPrioTerm);
+
+            for (var score : resultItem.keywordScores) {
+                rawItem.addKeywordScores(
+                        RpcResultKeywordScore.newBuilder()
+                                .setFlags(score.flags)
+                                .setPositions(score.positionCount)
+                                .setKeyword(score.keyword)
+                );
+            }
+
+            var decoratedBuilder = RpcDecoratedResultItem.newBuilder()
+                    .setDataHash(docData.dataHash())
+                    .setDescription(docData.description())
+                    .setFeatures(docData.features())
+                    .setFormat(docData.format())
+                    .setRankingScore(resultItem.getScore())
+                    .setTitle(docData.title())
+                    .setUrl(docData.url().toString())
+                    .setUrlQuality(docData.urlQuality())
+                    .setWordsTotal(docData.wordsTotal())
+                    .setBestPositions(resultItem.getBestPositions())
+                    .setResultsFromDomain(doc.resultsFromDomain)
+                    .setRawItem(rawItem);
+
+            if (docData.pubYear() != null) {
+                decoratedBuilder.setPubYear(docData.pubYear());
+            }
+
+            if (resultItem.debugRankingFactors != null) {
+                decoratedBuilder.setRankingDetails(createDebugInformation(rankingContext, resultItem));
+            }
+
+            return Optional.of(decoratedBuilder.build());
+        }
+
+    }
+
+
+
+    private static RpcResultRankingDetails.Builder createDebugInformation(SearchContext searchContext, SearchResultItem resultItem) {
+        var debugFactors = resultItem.debugRankingFactors;
+        var detailsBuilder = RpcResultRankingDetails.newBuilder();
+        var documentOutputs = RpcResultDocumentRankingOutputs.newBuilder();
+
+        for (var factor : debugFactors.getDocumentFactors()) {
+            documentOutputs.addFactor(factor.factor());
+            documentOutputs.addValue(factor.value());
+        }
+
+        detailsBuilder.setDocumentOutputs(documentOutputs);
+
+        var termOutputs = RpcResultTermRankingOutputs.newBuilder();
+
+        CqDataLong termIds = searchContext.compiledQueryIds.data;
+
+        for (var entry : debugFactors.getTermFactors()) {
+            String term = "[ERROR IN LOOKUP]";
+
+            // CURSED: This is a linear search, but the number of terms is small, and it's in a debug path
+            for (int i = 0; i < termIds.size(); i++) {
+                if (termIds.get(i) == entry.termId()) {
+                    term = searchContext.compiledQuery.at(i);
+                    break;
+                }
+            }
+
+            termOutputs
+                    .addTermId(entry.termId())
+                    .addTerm(term)
+                    .addFactor(entry.factor())
+                    .addValue(entry.value());
+        }
+
+        detailsBuilder.setTermOutputs(termOutputs);
+
+        return detailsBuilder;
     }
 
 }

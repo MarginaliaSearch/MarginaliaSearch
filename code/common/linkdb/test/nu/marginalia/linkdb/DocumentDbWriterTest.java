@@ -1,6 +1,6 @@
 package nu.marginalia.linkdb;
 
-import gnu.trove.list.array.TLongArrayList;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.linkdb.docs.DocumentDbWriter;
 import nu.marginalia.linkdb.model.DocdbUrlDetail;
@@ -34,7 +34,7 @@ public class DocumentDbWriterTest {
             writer.close();
 
             var reader = new DocumentDbReader(tempPath);
-            var deets = reader.getUrlDetails(new TLongArrayList(new long[]{1}));
+            var deets = reader.getUrlDetails(new LongArrayList(new long[]{1}));
             System.out.println(deets);
         } catch (SQLException e) {
             throw new RuntimeException(e);

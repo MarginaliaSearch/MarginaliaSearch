@@ -20,6 +20,7 @@ import nu.marginalia.index.searchset.connectivity.ConnectivityView;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.language.model.LanguageDefinition;
+import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.service.server.DiscoverableService;
 import org.slf4j.Logger;
@@ -62,17 +63,20 @@ public class IndexGrpcService
     private final IndexResultRankingService rankingService;
     private final String nodeName;
     private final int nodeId;
+    private final DocumentDbReader documentDbReader;
     private final ConnectivitySets connectivitySets;
 
     @Inject
     public IndexGrpcService(ServiceConfiguration serviceConfiguration,
                             LanguageConfiguration languageConfiguration,
                             StatefulIndex statefulIndex,
+                            DocumentDbReader documentDbReader,
                             ConnectivitySets connectivitySets,
                             SearchSetsService searchSetsService,
                             IndexResultRankingService rankingService)
     {
         this.nodeId = serviceConfiguration.node();
+        this.documentDbReader = documentDbReader;
         this.connectivitySets = connectivitySets;
         this.nodeName = Integer.toString(nodeId);
         this.statefulIndex = statefulIndex;
@@ -117,7 +121,7 @@ public class IndexGrpcService
 
                             SearchContext rankingContext = SearchContext.create(index, hasher, request, set, connectivityView);
 
-                            IndexQueryExecution queryExecution = new IndexQueryExecution(index, rankingService, rankingContext, nodeId);
+                            IndexQueryExecution queryExecution = new IndexQueryExecution(index, documentDbReader, rankingService, rankingContext, nodeId);
 
                             return queryExecution.run();
                         }
@@ -178,7 +182,7 @@ public class IndexGrpcService
                     ConnectivityView.empty()
                     );
 
-            return new IndexQueryExecution(currentIndex, rankingService, context, 1).run();
+            return new IndexQueryExecution(currentIndex, documentDbReader, rankingService, context, 1).run();
         }
         catch (Exception ex) {
             logger.error("Error in handling request", ex);

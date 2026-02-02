@@ -34,7 +34,7 @@ dependencies {
     implementation libs.sqlite
     implementation libs.commons.lang3
 
-    implementation libs.trove
+    implementation libs.fastutil
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
