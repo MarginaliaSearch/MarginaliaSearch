@@ -86,17 +86,7 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
     }
 
     public boolean join(long millis) throws InterruptedException {
-        long waitTotalNanos = TimeUnit.MILLISECONDS.toNanos(millis);
-
-        long start = System.nanoTime();
-        long waitedNanos;
-
-        while ((waitedNanos = (System.nanoTime() - start)) < waitTotalNanos) {
-            if (countdown.await(waitTotalNanos - waitedNanos, TimeUnit.NANOSECONDS))
-                return true;
-        }
-
-        return countdown.getCount() == 0;
+        return countdown.await(millis, TimeUnit.MILLISECONDS);
     }
 
     @Override
