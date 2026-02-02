@@ -27,7 +27,9 @@ public class ResultPriorityQueue implements Iterable<RankableDocument> {
 
     public void addAll(ResultPriorityQueue otherQueue) {
         queue.addAll(otherQueue.queue);
-        resultsPerDomain.putAll(otherQueue.resultsPerDomain);
+        otherQueue.resultsPerDomain.int2IntEntrySet().fastForEach(entry -> {
+            resultsPerDomain.addTo(entry.getIntKey(), entry.getIntValue());
+        });
         itemsProcessed += otherQueue.itemsProcessed;
     }
 
