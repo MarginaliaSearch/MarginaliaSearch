@@ -1,5 +1,6 @@
 package nu.marginalia.crawl.fetcher;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
@@ -30,10 +31,17 @@ public class DomainCookies {
         String cookie = parts[0].trim();
 
         if (cookie.contains("=")) {
-            String[] cookieParts = cookie.split("=");
-            String name = cookieParts[0].trim();
-            String val = cookieParts[1].trim();
-            cookies.put(name, val);
+            String[] cookieParts = StringUtils.split(cookie, "=", 2);
+            if (cookieParts.length == 2) {
+                String name = cookieParts[0].trim();
+                String val = cookieParts[1].trim();
+                cookies.put(name, val);
+            }
+            else {
+                String name = cookieParts[0].trim();
+                String val = "";
+                cookies.put(name, val);
+            }
         }
     }
 
