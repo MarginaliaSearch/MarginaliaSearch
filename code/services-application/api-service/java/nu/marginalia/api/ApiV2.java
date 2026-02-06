@@ -262,7 +262,7 @@ public class ApiV2 {
         Value apiKeyVal = ctx.header("API-Key");
         if (apiKeyVal.isMissing()) {
             ctx.setResponseCode(400);
-            return "";
+            return "Missing API-Key header";
         }
 
         ApiLicense license;
