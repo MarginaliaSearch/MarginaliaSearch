@@ -27,6 +27,7 @@ dependencies {
     implementation libs.notnull
 
     implementation libs.commons.lang3
+    implementation libs.crawlercommons
 
     implementation libs.trove
     implementation libs.fastutil

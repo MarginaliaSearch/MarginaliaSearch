@@ -3,6 +3,7 @@ package nu.marginalia.model;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.net.URI;
 import java.net.URISyntaxException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -12,6 +13,12 @@ class EdgeUrlTest {
     @Test
     public void testHashCode() throws URISyntaxException {
         System.out.println(new EdgeUrl("https://memex.marginalia.nu").hashCode());
+    }
+
+    @Test
+    public void testIDN() throws URISyntaxException {
+        assertEquals("xn--gckvb8fzb.com", new EdgeUrl("https://マリウス.com/").domain.toString());
+        assertEquals("xn--gckvb8fzb.com", new EdgeUrl("https://xn--gckvb8fzb.com/").domain.toString());
     }
 
     @Test

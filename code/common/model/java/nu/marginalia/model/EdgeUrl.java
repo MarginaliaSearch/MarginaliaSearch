@@ -1,5 +1,6 @@
 package nu.marginalia.model;
 
+import crawlercommons.filters.basic.BasicURLNormalizer;
 import nu.marginalia.util.QueryParams;
 import org.apache.commons.lang3.StringUtils;
 
@@ -214,6 +215,8 @@ public class EdgeUrl {
 }
 
 class EdgeUriFactory {
+
+    private static BasicURLNormalizer normalizer = new BasicURLNormalizer();
     public static URI parseURILenient(String url) throws URISyntaxException {
 
         if (shouldOmitUrlencodeRepair(url)) {
@@ -231,6 +234,7 @@ class EdgeUriFactory {
         if (pathIdx < 0) { // url looks like http://marginalia.nu
             return new URI(url + "/");
         }
+
         s.append(url, 0, pathIdx);
 
         // We don't want the fragment, and multiple fragments breaks the Java URIParser for some reason
@@ -244,7 +248,8 @@ class EdgeUriFactory {
         if (queryIdx < end) {
             urlencodeQuery(s, url.substring(queryIdx + 1, end));
         }
-        return new URI(s.toString());
+
+        return new URI(normalizer.filter(s.toString()));
     }
 
     /** Break apart the path element of an URI into its components, and then
