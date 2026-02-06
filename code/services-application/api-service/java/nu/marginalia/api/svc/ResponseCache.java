@@ -29,7 +29,7 @@ public class ResponseCache {
     }
 
     private String getCacheKey(ApiLicense license, String queryString, String queryParams) {
-        return license.getKey() + ":" +  queryString + ":" + queryParams;
+        return license.key() + ":" +  queryString + ":" + queryParams;
     }
 
     public void flush() {

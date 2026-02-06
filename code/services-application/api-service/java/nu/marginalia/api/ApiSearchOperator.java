@@ -32,6 +32,7 @@ public class ApiSearchOperator {
 
     public ApiSearchResults v2query(String query,
                                     int count,
+                                    int timeout,
                                     int domainCount,
                                     QueryFilterSpec filterSpec,
                                     NsfwFilterTier filterTier,
@@ -49,11 +50,11 @@ public class ApiSearchOperator {
                 RpcQueryLimits.newBuilder()
                         .setResultsByDomain(Math.clamp(domainCount, 1, 100))
                         .setResultsTotal(Math.min(100, count))
-                        .setTimeoutMs(150)
+                        .setTimeoutMs(Math.clamp(timeout, 50, 250))
                         .build(),
                 1);
 
-        return new ApiSearchResults(license.getLicense(), query,
+        return new ApiSearchResults(license.license(), query,
                 rsp.results()
                         .stream()
                         .map(this::convert)
@@ -86,7 +87,7 @@ public class ApiSearchOperator {
                         .build(),
                 1);
 
-        return new ApiSearchResults(license.getLicense(), query,
+        return new ApiSearchResults(license.license(), query,
                 rsp.results()
                 .stream()
                 .map(this::convert)

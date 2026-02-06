@@ -8,6 +8,9 @@ import io.jooby.Jooby;
 import io.jooby.StatusCode;
 import io.jooby.test.MockContext;
 import io.jooby.test.MockRouter;
+import nu.marginalia.api.polar.PolarBenefit;
+import nu.marginalia.api.polar.PolarBenefits;
+import nu.marginalia.api.polar.PolarClient;
 import nu.marginalia.api.searchquery.*;
 import nu.marginalia.service.client.GrpcChannelPoolFactoryIf;
 import nu.marginalia.service.client.TestGrpcChannelPoolFactory;
@@ -67,6 +70,8 @@ public class ApiV2Test {
             protected void configure() {
                 bind(HikariDataSource.class).toInstance(dataSource);
                 bind(GrpcChannelPoolFactoryIf.class).toInstance(testGrpcChannelPoolFactory);
+                bind(PolarClient.class).toInstance(PolarClient.asDisabled());
+                bind(PolarBenefits.class).toInstance(PolarBenefits.asDisabled());
             }
         }).getInstance(ApiV2.class);
 
@@ -125,6 +130,15 @@ public class ApiV2Test {
         router.get("/api/v2/search", context, rsp -> {
             System.out.println(rsp.getStatusCode());
             System.out.println(rsp.value());
+            System.out.println(rsp.getHeaders());
+            Assertions.assertEquals(StatusCode.OK, rsp.getStatusCode());
+            Assertions.assertEquals(1, queryApiMock.getSentQueries().size());
+        });
+
+        router.get("/api/v2/search", context, rsp -> {
+            System.out.println(rsp.getStatusCode());
+            System.out.println(rsp.value());
+            System.out.println(rsp.getHeaders());
             Assertions.assertEquals(StatusCode.OK, rsp.getStatusCode());
             Assertions.assertEquals(1, queryApiMock.getSentQueries().size());
         });

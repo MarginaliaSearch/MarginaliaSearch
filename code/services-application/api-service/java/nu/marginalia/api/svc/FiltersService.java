@@ -15,6 +15,7 @@ import java.util.Optional;
 
 public class FiltersService {
     private final SearchFilterStore filterStore;
+
     private final int maxFilterCount = 5;
     private final int maxDomainListSize = 100;
     private final int maxTermListSize = 8;
@@ -25,23 +26,23 @@ public class FiltersService {
     }
 
     public List<String> listFilters(ApiLicense license) {
-        return filterStore.getFilterIds(license.key);
+        return filterStore.getFilterIds(license.key());
     }
 
     public Optional<String> getFilter(ApiLicense license, String filterId) {
-        return filterStore.getFilterDefinition(license.key, filterId);
+        return filterStore.getFilterDefinition(license.key(), filterId);
     }
 
     public List<String> updateFilter(ApiLicense license,
-                             String filterId,
-                             String filterDefinition) throws SQLException {
+                                     String filterId,
+                                     String filterDefinition) throws SQLException {
 
         // Extra protection against an API client somehow getting at the system filters
-        if (license.key.equalsIgnoreCase(SearchFilterDefaults.SYSTEM_USER_ID)) {
+        if (license.key().equalsIgnoreCase(SearchFilterDefaults.SYSTEM_USER_ID)) {
             return List.of("User not allowed");
         }
 
-        if (filterStore.getFilterIds(license.key).size() >= maxFilterCount) {
+        if (filterStore.getFilterIds(license.key()).size() >= maxFilterCount) {
             return List.of("Too many filters registered");
         }
 
@@ -68,7 +69,7 @@ public class FiltersService {
         }
 
         filterStore.saveFilter(
-                license.key,
+                license.key(),
                 filterId,
                 filterDefinition
         );
@@ -78,12 +79,12 @@ public class FiltersService {
 
     public void deleteFilter(ApiLicense license, String filterId) throws SQLException {
         // Extra protection against an API client somehow getting at the system filters
-        if (license.key.equalsIgnoreCase(SearchFilterDefaults.SYSTEM_USER_ID)) {
+        if (license.key().equalsIgnoreCase(SearchFilterDefaults.SYSTEM_USER_ID)) {
             throw new RuntimeException("Not allowed");
         }
 
         filterStore.deleteFilter(
-                license.key,
+                license.key(),
                 filterId
         );
     }

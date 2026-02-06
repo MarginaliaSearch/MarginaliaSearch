@@ -28,6 +28,7 @@ public class ApiMain extends MainClass {
 
         Injector injector = Guice.createInjector(
                 new DatabaseModule(false),
+                new PolarModule(),
                 new ServiceDiscoveryModule(),
                 new ServiceConfigurationModule(ServiceId.Api));
 
