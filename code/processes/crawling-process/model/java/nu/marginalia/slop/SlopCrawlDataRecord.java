@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.IDN;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -148,7 +149,7 @@ public record SlopCrawlDataRecord(String domain,
                                    Path warcInputFile,
                                    Path slopOutputFile) throws IOException {
 
-        Path tempDir = Files.createTempDirectory(slopOutputFile.getParent(), "slop-"+domain);
+        Path tempDir = Files.createTempDirectory(slopOutputFile.getParent(), "slop-"+ IDN.toASCII(domain));
 
         try (var warcReader = new WarcReader(warcInputFile);
              var slopWriter = new SlopCrawlDataRecord.Writer(tempDir)

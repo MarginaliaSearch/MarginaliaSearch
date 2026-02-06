@@ -14,7 +14,7 @@ public class CrawlerOutputFile {
         name.chars()
                 .map(Character::toLowerCase)
                 .map(c -> (c & ~0x7F) == 0 ? c : 'X')
-                .map(c -> (Character.isDigit(c) || Character.isAlphabetic(c) || c == '.') ? c : 'X')
+                .map(c -> (Character.isDigit(c) || Character.isAlphabetic(c) || c == '.' || c == '-') ? c : 'X')
                 .limit(128)
                 .forEach(c -> nameSaneBuilder.append((char) c));
 
