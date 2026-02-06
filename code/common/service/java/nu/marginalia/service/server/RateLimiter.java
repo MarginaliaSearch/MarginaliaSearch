@@ -4,54 +4,53 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Refill;
 
-import java.time.Duration;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
+import java.time.*;
+import java.time.temporal.ChronoUnit;
 
-// FIXME: This is very overengineered and needs a review
 public class RateLimiter {
+    private final Bucket bucket;
 
-    private final Map<String, Bucket> bucketMap = new ConcurrentHashMap<>();
-
-    private final int capacity;
-    private final int refillRate;
-
-    public RateLimiter(int capacity, int refillRate) {
-        this.capacity = capacity;
-        this.refillRate = refillRate;
-
-        Thread.ofVirtual()
-                .name("rate-limiter-cleaner")
-                .start(() -> {
-                    while (true) {
-                        cleanIdleBuckets();
-                        try {
-                            TimeUnit.MINUTES.sleep(30);
-                        } catch (InterruptedException e) {
-                            break;
-                        }
-                    }
-                });
+    public RateLimiter(Bucket bucket) {
+        this.bucket = bucket;
     }
 
+    public static RateLimiter queryPerMinuteLimiter(int perMinute) {
+        int capacity = perMinute;
+        int refillRate = perMinute;
 
-    public static RateLimiter custom(int perMinute) {
-        return new RateLimiter(4 * perMinute, perMinute);
+        var refill = Refill.greedy(refillRate, Duration.ofMinutes(1));
+        var bw = Bandwidth.classic(capacity, refill);
+
+        return new RateLimiter(Bucket.builder().addLimit(bw).build());
     }
 
-    private void cleanIdleBuckets() {
-        bucketMap.clear();
+    public static RateLimiter queryPerDayLimiter(int perHour) {
+        Instant firstRefill = Instant.now()
+                .atOffset(ZoneOffset.UTC)
+                .truncatedTo(ChronoUnit.DAYS)
+                .plus(1, ChronoUnit.DAYS)
+                .plusHours(8)
+                .toInstant();
+
+        Refill refill = Refill.intervallyAligned(perHour,
+                Duration.ofDays(1),
+                firstRefill,
+                false);
+
+        Bandwidth bw = Bandwidth.classic(perHour, refill);
+
+        return new RateLimiter(Bucket.builder().addLimit(bw).build());
     }
 
     public boolean isAllowed() {
-        return bucketMap.computeIfAbsent("any",
-                (ip) -> createBucket()).tryConsume(1);
+        return bucket.tryConsume(1);
     }
 
-    private Bucket createBucket() {
-        var refill = Refill.greedy(refillRate, Duration.ofSeconds(60));
-        var bw = Bandwidth.classic(capacity, refill);
-        return Bucket.builder().addLimit(bw).build();
+    public boolean hasMoreTokens() {
+        return bucket.getAvailableTokens() <= 0;
+    }
+
+    public int availableCapacity() {
+        return (int) bucket.getAvailableTokens();
     }
 }

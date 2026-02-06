@@ -7,6 +7,7 @@ import io.jooby.Jooby;
 import io.jooby.StatusCode;
 import io.jooby.Value;
 import nu.marginalia.api.model.ApiLicense;
+import nu.marginalia.api.model.ApiLicenseOptions;
 import nu.marginalia.api.model.ApiSearchResults;
 import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.svc.LicenseService;
@@ -18,12 +19,12 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 public class ApiV1 {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Marker queryMarker = MarkerFactory.getMarker("QUERY");
 
     private final Gson gson = GsonFactory.get();
     private final ResponseCache responseCache;
@@ -35,7 +36,8 @@ public class ApiV1 {
     public ApiV1(ResponseCache responseCache,
                  LicenseService licenseService,
                  RateLimiterService rateLimiterService,
-                 ApiSearchOperator searchOperator) {
+                 ApiSearchOperator searchOperator)
+    {
         this.responseCache = responseCache;
         this.licenseService = licenseService;
         this.rateLimiterService = rateLimiterService;
@@ -69,6 +71,9 @@ public class ApiV1 {
         } catch (LicenseService.NoSuchKeyException ex) {
             ctx.setResponseCode(StatusCode.UNAUTHORIZED);
             return null;
+        } catch (IOException e) {
+            ctx.setResponseCode(StatusCode.SERVER_ERROR_CODE);
+            return null;
         }
 
         ctx.setResponseType("application/json");
@@ -96,6 +101,14 @@ public class ApiV1 {
         } catch (LicenseService.NoSuchKeyException ex) {
             ctx.setResponseCode(StatusCode.UNAUTHORIZED);
             return null;
+        } catch (IOException ex) {
+            ctx.setResponseCode(StatusCode.BAD_REQUEST);
+            return null;
+        }
+
+        if (!license.hasOption(ApiLicenseOptions.ALLOW_V1_API)) {
+            ctx.setResponseCode(StatusCode.BAD_REQUEST);
+            return "API key only valid for V2 API (this is the deprecated V1 API)";
         }
 
         ctx.setResponseType("application/json");
@@ -104,12 +117,12 @@ public class ApiV1 {
         var cachedResponse = responseCache.getResults(license, query, ctx.queryString());
 
         if (cachedResponse.isPresent()) {
-            ApiMetrics.wmsa_api_cache_hit_count.labelValues(license.key).inc();
+            ApiMetrics.wmsa_api_cache_hit_count.labelValues(license.key()).inc();
             return gson.toJson(cachedResponse.get());
         }
 
-        if (!rateLimiterService.isAllowed(license)) {
-            ApiMetrics.wmsa_api_timeout_count.labelValues(license.key).inc();
+        if (!rateLimiterService.isAllowedQPM(license)) {
+            ApiMetrics.wmsa_api_timeout_count.labelValues(license.key()).inc();
             ctx.setResponseCode(503);
             return ctx;
         }
@@ -136,9 +149,7 @@ public class ApiV1 {
             return null;
         }
 
-        logger.info(queryMarker, "{} Search {}", license.key, query);
-
-        try (var _ = ApiMetrics.wmsa_api_query_time.labelValues(license.key).startTimer())
+        try (var _ = ApiMetrics.wmsa_api_query_time.labelValues(license.key()).startTimer())
         {
             return searchOperator
                     .v1query(query, count, domainCount, index, nsfwFilterTier, langIsoCode, license);

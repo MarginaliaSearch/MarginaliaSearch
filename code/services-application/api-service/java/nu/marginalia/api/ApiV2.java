@@ -7,7 +7,9 @@ import io.jooby.Jooby;
 import io.jooby.StatusCode;
 import io.jooby.Value;
 import nu.marginalia.api.model.ApiLicense;
+import nu.marginalia.api.model.ApiLicenseOptions;
 import nu.marginalia.api.model.ApiSearchResults;
+import nu.marginalia.api.model.DailyLimitState;
 import nu.marginalia.api.searchquery.QueryClient;
 import nu.marginalia.api.searchquery.QueryFilterSpec;
 import nu.marginalia.api.searchquery.model.SearchFilterDefaults;
@@ -24,13 +26,14 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.concurrent.TimeoutException;
 
 public class ApiV2 {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Marker queryMarker = MarkerFactory.getMarker("QUERY");
+    private final Marker apiUsageMarker = MarkerFactory.getMarker("APIUSAGE");
 
     private final Gson gson = GsonFactory.get();
     private final ResponseCache responseCache;
@@ -86,7 +89,7 @@ public class ApiV2 {
         ApiLicense license;
         try {
             license = licenseService.getLicense(key.value());
-        } catch (LicenseService.NoSuchKeyException ex) {
+        } catch (LicenseService.NoSuchKeyException | IOException ex) {
             ctx.setResponseCode(StatusCode.UNAUTHORIZED);
             return "";
         }
@@ -107,7 +110,7 @@ public class ApiV2 {
         ApiLicense license;
         try {
             license = licenseService.getLicense(key.value());
-        } catch (LicenseService.NoSuchKeyException ex) {
+        } catch (LicenseService.NoSuchKeyException | IOException ex) {
             ctx.setResponseCode(StatusCode.UNAUTHORIZED);
             return "";
         }
@@ -140,12 +143,12 @@ public class ApiV2 {
         ApiLicense license;
         try {
             license = licenseService.getLicense(key.value());
-        } catch (LicenseService.NoSuchKeyException ex) {
+        } catch (LicenseService.NoSuchKeyException | IOException ex) {
             ctx.setResponseCode(StatusCode.UNAUTHORIZED);
             return "";
         }
 
-        if ("PUBLIC".equalsIgnoreCase(license.key)) {
+        if ("PUBLIC".equalsIgnoreCase(license.key())) {
             ctx.setResponseCode(StatusCode.UNAUTHORIZED);
             return "";
         }
@@ -163,8 +166,8 @@ public class ApiV2 {
         }
 
         // Apply rate limit to filter updates as this isn't zero cost
-        if (!rateLimiterService.isAllowed(license)) {
-            ApiMetrics.wmsa_api_timeout_count.labelValues(license.key).inc();
+        if (!rateLimiterService.isAllowedQPM(license)) {
+            ApiMetrics.wmsa_api_timeout_count.labelValues(license.key()).inc();
             ctx.setResponseCode(503);
             return ctx;
         }
@@ -179,7 +182,7 @@ public class ApiV2 {
 
         // There's a small chance we failed to invalidate the caches,
         // report as FAILED_DEPENDENCY in this scenario
-        if (!queryClient.invalidateFilterCache(license.key, filterId)) {
+        if (!queryClient.invalidateFilterCache(license.key(), filterId)) {
             ctx.setResponseCode(StatusCode.FAILED_DEPENDENCY);
             return """
             The database has been updated, but query-service cache invalidation failed,
@@ -207,12 +210,12 @@ public class ApiV2 {
         ApiLicense license;
         try {
             license = licenseService.getLicense(key.value());
-        } catch (LicenseService.NoSuchKeyException ex) {
+        } catch (LicenseService.NoSuchKeyException | IOException ex) {
             ctx.setResponseCode(StatusCode.UNAUTHORIZED);
             return "";
         }
 
-        if ("PUBLIC".equalsIgnoreCase(license.key)) {
+        if ("PUBLIC".equalsIgnoreCase(license.key())) {
             ctx.setResponseCode(StatusCode.UNAUTHORIZED);
             return "";
         }
@@ -226,7 +229,7 @@ public class ApiV2 {
         filtersService.deleteFilter(license, filterId.value());
 
         // We won't bother checking whether this went through as it'll clear in a while automatically
-        queryClient.invalidateFilterCache(license.key, filterId.value());
+        queryClient.invalidateFilterCache(license.key(), filterId.value());
 
         ctx.setResponseCode(StatusCode.ACCEPTED);
         return "";
@@ -245,7 +248,7 @@ public class ApiV2 {
         ApiLicense license;
         try {
             license = licenseService.getLicense(key.value());
-        } catch (LicenseService.NoSuchKeyException ex) {
+        } catch (LicenseService.NoSuchKeyException | IOException ex) {
             ctx.setResponseCode(StatusCode.UNAUTHORIZED);
             return "";
         }
@@ -259,13 +262,13 @@ public class ApiV2 {
         Value apiKeyVal = ctx.header("API-Key");
         if (apiKeyVal.isMissing()) {
             ctx.setResponseCode(400);
-            return "";
+            return "Missing API-Key header";
         }
 
         ApiLicense license;
         try {
             license = licenseService.getLicense(apiKeyVal.value());
-        } catch (LicenseService.NoSuchKeyException ex) {
+        } catch (LicenseService.NoSuchKeyException | IOException ex) {
             ctx.setResponseCode(StatusCode.UNAUTHORIZED);
             return "";
         }
@@ -278,31 +281,72 @@ public class ApiV2 {
         }
         String query = queryVal.value();
 
-        ctx.setResponseType("application/json");
+
+        ApiSearchResults results;
+        DailyLimitState limitState;
 
         // Check if we have a cached response
         var cachedResponse = responseCache.getResults(license, query, ctx.queryString());
 
         if (cachedResponse.isPresent()) {
-            ApiMetrics.wmsa_api_cache_hit_count.labelValues(license.key).inc();
-            return gson.toJson(cachedResponse.get());
+            ApiMetrics.wmsa_api_cache_hit_count.labelValues(license.key()).inc();
+
+            results = cachedResponse.get();
+
+            int remaining = rateLimiterService.remainingDailyLimit(license);
+            limitState = new DailyLimitState.Cached(remaining);
+        }
+        else {
+            if (!rateLimiterService.isAllowedQPM(license)) {
+                ApiMetrics.wmsa_api_timeout_count.labelValues(license.key()).inc();
+                ctx.setResponseCode(429);
+
+                return "QPM Limit Exceeded";
+            }
+
+            if (!rateLimiterService.isAllowedQPD(license)) {
+                ApiMetrics.wmsa_api_timeout_count.labelValues(license.key()).inc();
+                ctx.setResponseCode(429);
+
+                limitState = new DailyLimitState.OverLimitBlock();
+
+                ctx.setResponseHeader("API-Remaining-Daily-Capacity", limitState.remaining());
+                ctx.setResponseHeader("API-Event-Type", limitState.name());
+
+                return "Daily Limit Exceeded";
+            }
+
+            // When no cached response, do the search and cache the result
+            results = doSearch(license, query, ctx);
+
+            if (results == null)
+                return null;
+
+            if (results.getResults().size() > 0) {
+                limitState = rateLimiterService.registerSuccessfulQuery(license);
+            } else {
+                int remaining = rateLimiterService.remainingDailyLimit(license);
+                limitState = new DailyLimitState.NoResults(remaining);
+            }
+
+            responseCache.putResults(license, query, ctx.queryString(), results);
         }
 
-        if (!rateLimiterService.isAllowed(license)) {
-            ApiMetrics.wmsa_api_timeout_count.labelValues(license.key).inc();
-            ctx.setResponseCode(503);
-            return ctx;
+        if (license.hasOption(ApiLicenseOptions.ADUIT_USAGE)) {
+            logger.info(apiUsageMarker, "{} {} {}", license.key(), limitState, ctx.header("X-Forwarded-For"));
         }
 
-        // When no cached response, do the search and cache the result
-        var result = doSearch(license, query, ctx);
-        responseCache.putResults(license, query, ctx.queryString(), result);
-        return gson.toJson(result);
+        ctx.setResponseType("application/json");
+        ctx.setResponseHeader("API-Remaining-Daily-Capacity", limitState.remaining());
+        ctx.setResponseHeader("API-Event-Type", limitState.name());
+
+        return gson.toJson(results);
     }
 
     private ApiSearchResults doSearch(ApiLicense license, String query, Context context) {
         int count = context.query().get("count").intValue(20);
         int domainCount = context.query().get("dc").intValue(2);
+        int timeout = context.query().get("timeout").intValue(150);
         String filterName = context.query().get("filter").valueOrNull();
         int nsfw = context.query().get("nsfw").intValue(1);
         String langIsoCode = context.query("lang").value("en");
@@ -316,19 +360,17 @@ public class ApiV2 {
             return null;
         }
 
-        logger.info(queryMarker, "{} Search {}", license.key, query);
-
         final QueryFilterSpec filter;
 
         if (filterName == null)
             filter = SearchFilterDefaults.NO_FILTER.asFilterSpec();
         else
-            filter = new QueryFilterSpec.FilterByName(license.key, filterName);
+            filter = new QueryFilterSpec.FilterByName(license.key(), filterName);
 
-        try (var _ = ApiMetrics.wmsa_api_query_time.labelValues(license.key).startTimer())
+        try (var _ = ApiMetrics.wmsa_api_query_time.labelValues(license.key()).startTimer())
         {
             return searchOperator
-                    .v2query(query, count, domainCount, filter, nsfwFilterTier, langIsoCode, license);
+                    .v2query(query, count, timeout, domainCount, filter, nsfwFilterTier, langIsoCode, license);
         }
         catch (TimeoutException ex) {
             context.setResponseCode(504);

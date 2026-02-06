@@ -60,7 +60,7 @@ public class SearchSiteInfoService {
     private final DDGTrackerData ddgTrackerData;
     private final SearchSiteSubscriptionService searchSiteSubscriptions;
 
-    private final RateLimiter rateLimiter = RateLimiter.custom(60);
+    private final RateLimiter rateLimiter = RateLimiter.queryPerMinuteLimiter(60);
 
     private final DomSampleClassifier domSampleClassifier;
 
