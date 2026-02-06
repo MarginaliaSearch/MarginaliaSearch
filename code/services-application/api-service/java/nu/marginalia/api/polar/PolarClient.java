@@ -174,12 +174,12 @@ public class PolarClient {
                 "key", apiKey,
                 "events", List.of(
                         Map.of(
-                                "name", "api_use",
+                                "name", "api_query",
                                 "timestamp", ts,
                                 "customer_id", license.customerId(),
                                 "metadata",
-                                    Map.of("query_use", usage,
-                                            "daily_limit_overusage", overusage)
+                                    Map.of("api_query_use", usage,
+                                            "api_query_excess", overusage)
                         ))
         );
 
