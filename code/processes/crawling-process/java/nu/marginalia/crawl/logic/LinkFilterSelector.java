@@ -24,6 +24,15 @@ public class LinkFilterSelector {
             };
         }
 
+        if (docUrl.domain.topDomain.equalsIgnoreCase("substack.com")) {
+            return url -> {
+                if (url.path.endsWith("/comments")) {
+                    return false;
+                }
+
+                return true;
+            };
+        }
         var head = doc.getElementsByTag("head").first();
         if (null == head) {
             return LinkFilterSelector::defaultFilter;
@@ -33,6 +42,7 @@ public class LinkFilterSelector {
             return url -> url.path.startsWith("/post/")
                || (url.path.startsWith("/c/") && !url.path.contains("@"));
         }
+
         if (isDiscourse(head)) {
             return url -> url.path.startsWith("/t/") || url.path.contains("/latest");
         }
