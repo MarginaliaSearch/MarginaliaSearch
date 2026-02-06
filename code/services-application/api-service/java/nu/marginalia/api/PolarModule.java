@@ -22,7 +22,7 @@ public class PolarModule extends AbstractModule {
         final String orgId = System.getProperty("api.polar.orgId");
 
         PolarClient polarClientInstance = new PolarClient(baseUri, accessToken, orgId);
-        bind(PolarClient.class).toInstance(new PolarClient(baseUri, accessToken, orgId));
+        bind(PolarClient.class).toInstance(polarClientInstance);
 
         if (polarClientInstance.isAvilable()) {
             Map<String, PolarBenefit> benefitsMap = new HashMap<>();
