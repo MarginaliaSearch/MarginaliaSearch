@@ -94,7 +94,7 @@ public class LicenseService {
                         rsp.getString("LICENSE"),
                         rsp.getString("NAME"),
                         rsp.getInt("RATE"),
-                        0, // no daily limit for the DB licenses
+                        1_000, // default to 1K per day for now
                         EnumSet.of(
                                 ApiLicenseOptions.ALLOW_V1_API,
                                 ApiLicenseOptions.SOURCE_INTERNAL
