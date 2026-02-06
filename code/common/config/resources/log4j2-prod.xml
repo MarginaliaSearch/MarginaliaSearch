@@ -66,6 +66,7 @@
                 <MarkerFilter marker="HTTP" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="CRAWLER" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="CONVERTER" onMatch="DENY" onMismatch="NEUTRAL" />
+                <MarkerFilter marker="APIUSAGE" onMatch="DENY" onMismatch="NEUTRAL" />
             </Filters>
         </RollingFile>
         <RollingFile name="LogToFileCrawler" fileName="${env:WMSA_LOG_DIR:-/var/log/wmsa}/crawler-audit-${env:WMSA_SERVICE_NODE:-0}.log" filePattern="${env:WMSA_LOG_DIR:-/var/log/wmsa}/crawler-audit-${env:WMSA_SERVICE_NODE:-0}-log-%d{MM-dd-yy-HH-mm-ss}-%i.log.gz"
@@ -116,6 +117,7 @@
             <AppenderRef ref="LogToFileService"/>
             <AppenderRef ref="LogToFileConverer"/>
             <AppenderRef ref="LogToFileCrawler"/>
+            <AppenderRef ref="LogToFileApiUsage"/>
         </Root>
     </Loggers>
 </Configuration>
