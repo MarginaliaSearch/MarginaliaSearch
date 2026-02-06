@@ -2,10 +2,7 @@ package nu.marginalia.api;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
-import io.jooby.Context;
-import io.jooby.Jooby;
-import io.jooby.StatusCode;
-import io.jooby.Value;
+import io.jooby.*;
 import nu.marginalia.api.model.ApiLicense;
 import nu.marginalia.api.model.ApiLicenseOptions;
 import nu.marginalia.api.model.ApiSearchResults;
@@ -19,6 +16,7 @@ import nu.marginalia.api.svc.LicenseService;
 import nu.marginalia.api.svc.RateLimiterService;
 import nu.marginalia.api.svc.ResponseCache;
 import nu.marginalia.model.gson.GsonFactory;
+import nu.marginalia.service.client.ServiceNotAvailableException;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -282,7 +280,7 @@ public class ApiV2 {
         String query = queryVal.value();
 
 
-        ApiSearchResults results;
+        ApiSearchResults results = null;
         DailyLimitState limitState;
 
         // Check if we have a cached response
@@ -317,10 +315,18 @@ public class ApiV2 {
             }
 
             // When no cached response, do the search and cache the result
-            results = doSearch(license, query, ctx);
 
-            if (results == null)
-                return null;
+            try {
+                results = doSearch(license, query, ctx);
+                if (results == null)
+                    return null;
+            }
+            catch (RuntimeException ex) {
+                logger.error("Error execuing query {}", ex);
+
+                ctx.setResponseCode(500);
+                return "Query Execution Failed";
+            }
 
             if (results.getResults().size() > 0) {
                 limitState = rateLimiterService.registerSuccessfulQuery(license);

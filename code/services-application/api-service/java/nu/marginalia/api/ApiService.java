@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import io.jooby.*;
 import nu.marginalia.api.svc.LicenseService;
 import nu.marginalia.api.svc.ResponseCache;
+import nu.marginalia.service.client.ServiceNotAvailableException;
 import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.service.server.JoobyService;
@@ -47,6 +48,8 @@ public class ApiService extends JoobyService {
     @Override
     public void startJooby(Jooby jooby) {
         super.startJooby(jooby);
+
+        jooby.errorCode(ServiceNotAvailableException.class, StatusCode.BAD_GATEWAY);
 
         apiV1.registerApi(jooby);
         apiV2.registerApi(jooby);
