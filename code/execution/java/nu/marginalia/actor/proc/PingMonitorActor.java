@@ -19,10 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -141,8 +138,9 @@ public class PingMonitorActor extends RecordActorPrototype {
                 );
             }
             case Wait(String untilTs) -> {
-                var until = Instant.parse(untilTs);
-                var now = Instant.now();
+                var nextRun = Instant.parse(untilTs);
+
+                Thread.sleep(Duration.between(Instant.now(), nextRun));
 
                 yield new Initial();
             }
