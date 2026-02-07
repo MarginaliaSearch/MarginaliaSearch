@@ -151,7 +151,7 @@ public class PolarClient {
             }
 
         } catch (InterruptedException | IOException ex) {
-            logger.error("Error communicating with polar API");
+            logger.error("Error communicating with polar API", ex);
             return Optional.empty();
         }
     }
