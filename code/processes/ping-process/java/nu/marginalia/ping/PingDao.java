@@ -185,24 +185,24 @@ public class PingDao {
         return null;
     }
 
-    public List<UpdateSchedule.UpdateJob<DomainReference, HistoricalAvailabilityData>> getDomainUpdateSchedule(int nodeId) {
+    public List<UpdateSchedule.UpdateJob<DomainReference, HistoricalAvailabilityData>> getDomainUpdateSchedule() {
         List<UpdateSchedule.UpdateJob<DomainReference, HistoricalAvailabilityData>> updateJobs = new ArrayList<>();
 
         try (var conn = dataSource.getConnection();
              var ps = conn.prepareStatement("""
-                SELECT ID, DOMAIN_NAME, NEXT_SCHEDULED_UPDATE
+                SELECT ID, DOMAIN_NAME, NODE_AFFINITY, NEXT_SCHEDULED_UPDATE
                 FROM EC_DOMAIN
                 LEFT JOIN DOMAIN_AVAILABILITY_INFORMATION
                 ON EC_DOMAIN.ID = DOMAIN_AVAILABILITY_INFORMATION.DOMAIN_ID
-                WHERE NODE_AFFINITY = ?
+                WHERE NODE_AFFINITY > 0
                 """)) {
             ps.setFetchSize(10_000);
-            ps.setInt(1, nodeId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 int domainId = rs.getInt("ID");
                 String domainName = rs.getString("DOMAIN_NAME");
                 var ts = rs.getTimestamp("NEXT_SCHEDULED_UPDATE");
+                int nodeId = rs.getInt("NODE_AFFINITY");
                 Instant nextUpdate = ts == null ? Instant.now() : ts.toInstant();
 
                 var ref = new DomainReference(domainId, nodeId, domainName.toLowerCase());
@@ -212,22 +212,21 @@ public class PingDao {
             throw new RuntimeException("Failed to retrieve domain update schedule", e);
         }
 
-        logger.info("Found {} availability update jobs for node {}", updateJobs.size(), nodeId);
+        logger.info("Found {} availability update jobs", updateJobs.size());
 
         return updateJobs;
     }
 
-    public List<UpdateSchedule.UpdateJob<RootDomainReference, RootDomainReference>> getDnsUpdateSchedule(int nodeId) {
+    public List<UpdateSchedule.UpdateJob<RootDomainReference, RootDomainReference>> getDnsUpdateSchedule() {
         List<UpdateSchedule.UpdateJob<RootDomainReference, RootDomainReference>> updateJobs = new ArrayList<>();
 
         try (var conn = dataSource.getConnection();
              var ps = conn.prepareStatement("""
                 SELECT DISTINCT(DOMAIN_TOP),DOMAIN_DNS_INFORMATION.* FROM EC_DOMAIN
                 LEFT JOIN DOMAIN_DNS_INFORMATION ON ROOT_DOMAIN_NAME = DOMAIN_TOP
-                WHERE EC_DOMAIN.NODE_AFFINITY = ?
+                WHERE EC_DOMAIN.NODE_AFFINITY > 0
                 """)) {
             ps.setFetchSize(10_000);
-            ps.setInt(1, nodeId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 Long dnsRootDomainId = rs.getObject("DOMAIN_DNS_INFORMATION.DNS_ROOT_DOMAIN_ID", Long.class);
@@ -252,7 +251,7 @@ public class PingDao {
             throw new RuntimeException("Failed to retrieve DNS update schedule", e);
         }
 
-        logger.info("Found {} dns update jobs for node {}", updateJobs.size(), nodeId);
+        logger.info("Found {} dns update jobs", updateJobs.size());
 
         return updateJobs;
     }

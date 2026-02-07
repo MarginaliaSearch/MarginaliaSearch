@@ -1,5 +1,6 @@
 package nu.marginalia.ping;
 
+import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -22,13 +23,22 @@ public class UpdateSchedule<T, T2> {
         notifyAll();
     }
 
+    public synchronized boolean hasAvailableJobs() {
+        if (updateQueue.isEmpty()) {
+            return false;
+        }
+
+        return updateQueue.peek().updateTime.isBefore(Instant.now());
+    }
+
     /** Returns the next job in the queue that is due to be processed.
      * If no jobs are due, it will block until a job is added or a job becomes due.
      * */
+    @Nullable
     public synchronized T next() throws InterruptedException {
-        while (true) {
+        for (int attempts = 0; attempts < 3; attempts++) {
             if (updateQueue.isEmpty()) {
-                wait(); // Wait for a new job to be added
+                wait(1000); // Wait for a new job to be added
                 continue;
             }
 
@@ -37,26 +47,29 @@ public class UpdateSchedule<T, T2> {
 
             if (job.updateTime.isAfter(now)) {
                 Duration toWait = Duration.between(now, job.updateTime);
-                wait(Math.max(1, toWait.toMillis()));
+                wait(Math.min(1000, toWait.toMillis()));
             }
             else {
                 updateQueue.poll(); // Remove the job from the queue since it's due
                 return job.key();
             }
         }
+
+        return null;
     }
 
 
     /** Returns the first job in the queue matching the predicate that is not scheduled into the future,
      * blocking until a job is added or a job becomes due.
      */
+    @Nullable
     public synchronized T nextIf(Predicate<T> predicate) throws InterruptedException {
         List<UpdateJob<T, T2>> rejectedJobs = new ArrayList<>();
 
         try {
-            while (true) {
+            for (int attempts = 0; attempts < 3; attempts++) {
                 if (updateQueue.isEmpty()) {
-                    wait(); // Wait for a new job to be added
+                    wait(1000); // Wait for a new job to be added
                     continue;
                 }
 
@@ -68,11 +81,14 @@ public class UpdateSchedule<T, T2> {
 
                     // Return the rejected jobs to the queue for other threads to process
                     updateQueue.addAll(rejectedJobs);
-                    if (!rejectedJobs.isEmpty())
-                        notifyAll();
-                    rejectedJobs.clear();
 
-                    wait(Math.max(1, toWait.toMillis()));
+                    if (!rejectedJobs.isEmpty()) {
+                        notifyAll();
+                        rejectedJobs.clear();
+                    }
+
+                    wait(Math.min(1000, toWait.toMillis()));
+                    continue;
                 } else {
                     var candidate = updateQueue.poll(); // Remove the job from the queue since it's due
 
@@ -86,6 +102,7 @@ public class UpdateSchedule<T, T2> {
                     }
                 }
             }
+            return null;
         }
         finally {
             // Return the rejected jobs to the queue for other threads to process

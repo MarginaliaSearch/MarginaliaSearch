@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -38,7 +39,7 @@ public class PingJobScheduler {
     public volatile Instant dnsLastSync = Instant.now();
     public volatile Instant availabilityLastSync = Instant.now();
 
-    public volatile Integer nodeId = null;
+    public volatile boolean ready = false;
     public volatile boolean running = false;
 
     private final List<Thread> allThreads = new ArrayList<>();
@@ -55,16 +56,13 @@ public class PingJobScheduler {
         this.pingDao = pingDao;
     }
 
-    public synchronized void start() {
-        if (running)
-            return;
-
-        nodeId = null;
-
+    public void run(Duration maxRunTime) {
         running = true;
 
-        allThreads.add(Thread.ofPlatform().daemon().name("sync-dns").start(this::syncAvailabilityJobs));
-        allThreads.add(Thread.ofPlatform().daemon().name("sync-availability").start(this::syncDnsRecords));
+        availabilityUpdateSchedule.replaceQueue(pingDao.getDomainUpdateSchedule());
+        dnsUpdateSchedule.replaceQueue(pingDao.getDnsUpdateSchedule());
+        dnsLastSync = Instant.now();
+        availabilityLastSync = Instant.now();
 
         int availabilityThreads = Integer.getInteger("ping.availabilityThreads", 8);
         int pingThreads = Integer.getInteger("ping.dnsThreads", 2);
@@ -75,12 +73,35 @@ public class PingJobScheduler {
         for (int i = 0; i < pingThreads; i++) {
             allThreads.add(Thread.ofPlatform().daemon().name("dns-job-consumer-" + i).start(this::dnsJobConsumer));
         }
+
+        Instant stopTime = Instant.now().plus(maxRunTime);
+
+        while (Instant.now().isBefore(stopTime)) {
+
+            if (!availabilityUpdateSchedule.hasAvailableJobs()
+             && !dnsUpdateSchedule.hasAvailableJobs()) {
+                break;
+            }
+
+            try {
+                synchronized (this) {
+                    wait(1000);
+                }
+            }
+            catch (InterruptedException ex) {
+                break;
+            }
+        }
+
+        stop();
     }
 
     public void stop() {
         running = false;
+
         for (Thread thread : allThreads) {
             try {
+                thread.join(Duration.ofSeconds(30));
                 thread.interrupt();
                 thread.join();
             } catch (InterruptedException e) {
@@ -88,57 +109,14 @@ public class PingJobScheduler {
                 logger.error("Failed to join thread: " + thread.getName(), e);
             }
         }
-    }
-
-    public void pause(int nodeId) {
-        logger.info("Pausing PingJobScheduler for nodeId: {}", nodeId);
-
-        if (this.nodeId != null && this.nodeId != nodeId) {
-            logger.warn("Attempted to pause PingJobScheduler with mismatched nodeId: expected {}, got {}", this.nodeId, nodeId);
-            return;
-        }
-        this.nodeId = null;
-
-        availabilityUpdateSchedule.clear();
-        dnsUpdateSchedule.clear();
-
-        logger.info("PingJobScheduler paused");
-    }
-
-    public synchronized void enableForNode(int nodeId) {
-        logger.info("Resuming PingJobScheduler for nodeId: {}", nodeId);
-        if (this.nodeId != null) {
-            logger.warn("Attempted to resume PingJobScheduler with mismatched nodeId: expected {}, got {}", this.nodeId, nodeId);
-            return;
-        }
-
-        availabilityUpdateSchedule.replaceQueue(pingDao.getDomainUpdateSchedule(nodeId));
-        dnsUpdateSchedule.replaceQueue(pingDao.getDnsUpdateSchedule(nodeId));
-        dnsLastSync = Instant.now();
-        availabilityLastSync = Instant.now();
-
-        // Flag that we are running again
-        this.nodeId = nodeId;
-
-        notifyAll();
-        logger.info("PingJobScheduler resumed");
-    }
-
-    public synchronized void waitForResume() throws InterruptedException {
-        while (nodeId == null) {
-            wait();
+        synchronized (this) {
+            notifyAll();
         }
     }
 
     private void availabilityJobConsumer() {
         while (running) {
             try {
-                Integer nid = nodeId;
-                if (nid == null) {
-                    waitForResume();
-                    continue;
-                }
-
                 DomainReference ref = availabilityUpdateSchedule.nextIf(domain -> {
                     EdgeDomain domainObj = new EdgeDomain(domain.domainName());
                     if (!domainCoordinator.isLockableHint(domainObj)) {
@@ -146,6 +124,9 @@ public class PingJobScheduler {
                     }
                     return true; // Process this domain
                 });
+
+                if (ref == null)
+                    continue;
 
                 long nextId = ref.domainId();
                 var data = pingDao.getHistoricalAvailabilityData(nextId);
@@ -193,13 +174,10 @@ public class PingJobScheduler {
     private void dnsJobConsumer() {
         while (running) {
             try {
-                Integer nid = nodeId;
-                if (nid == null) {
-                    waitForResume();
+                RootDomainReference ref = dnsUpdateSchedule.next();
+                if (ref == null) {
                     continue;
                 }
-
-                RootDomainReference ref = dnsUpdateSchedule.next();
 
                 try {
                     List<WritableModel> objects = switch(ref) {
@@ -241,14 +219,6 @@ public class PingJobScheduler {
     private void syncAvailabilityJobs() {
         try {
             while (running) {
-
-                // If we are suspended, wait for resume
-                Integer nid = nodeId;
-                if (nid == null) {
-                    waitForResume();
-                    continue;
-                }
-
                 // Check if we need to refresh the availability data
                 Instant nextRefresh = availabilityLastSync.plus(Duration.ofHours(24));
                 if (Instant.now().isBefore(nextRefresh)) {
@@ -257,7 +227,7 @@ public class PingJobScheduler {
                     continue;
                 }
 
-                availabilityUpdateSchedule.replaceQueue(pingDao.getDomainUpdateSchedule(nid));
+                availabilityUpdateSchedule.replaceQueue(pingDao.getDomainUpdateSchedule());
                 availabilityLastSync = Instant.now();
             }
         }
@@ -270,12 +240,6 @@ public class PingJobScheduler {
         try {
             while (running) {
 
-                Integer nid = nodeId;
-                if (nid == null) {
-                    waitForResume();
-                    continue; // re-fetch the records after resuming
-                }
-
                 // Check if we need to refresh the availability data
                 Instant nextRefresh = dnsLastSync.plus(Duration.ofHours(24));
                 if (Instant.now().isBefore(nextRefresh)) {
@@ -284,7 +248,7 @@ public class PingJobScheduler {
                     continue;
                 }
 
-                dnsUpdateSchedule.replaceQueue(pingDao.getDnsUpdateSchedule(nid));
+                dnsUpdateSchedule.replaceQueue(pingDao.getDnsUpdateSchedule());
                 dnsLastSync = Instant.now();
             }
         } catch (InterruptedException e) {

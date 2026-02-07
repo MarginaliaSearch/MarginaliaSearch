@@ -1,8 +1,4 @@
 package nu.marginalia.mqapi.ping;
 
-public class PingRequest {
-
-    public PingRequest() {
-
-    }
+public record PingRequest(int runHours) {
 }

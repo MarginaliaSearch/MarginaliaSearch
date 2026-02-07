@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.Security;
+import java.time.Duration;
 
 public class PingMain extends ProcessMainClass {
     private static final Logger log = LoggerFactory.getLogger(PingMain.class);
@@ -41,14 +42,13 @@ public class PingMain extends ProcessMainClass {
         this.node = processConfiguration.node();
     }
 
-    public void runPrimary() {
+    public void run(int runHours) {
         log.info("Starting PingMain...");
 
         // Start the ping job scheduler
-        pingJobScheduler.start();
-        pingJobScheduler.enableForNode(node);
+        pingJobScheduler.run(Duration.ofHours(runHours));
 
-        log.info("PingMain started successfully.");
+        log.info("PingMain finished successfully.");
     }
 
     public static void main(String... args) throws Exception {
@@ -87,11 +87,8 @@ public class PingMain extends ProcessMainClass {
         var instructions = main.fetchInstructions(PingRequest.class);
 
         try {
-            main.runPrimary();
-            for(;;)
-                synchronized (main) { // Wait on the object lock to avoid busy-looping
-                    main.wait();
-                }
+            main.run(instructions.value().runHours());
+            instructions.ok();
         }
         catch (Throwable ex) {
             logger.error("Error running ping process", ex);
