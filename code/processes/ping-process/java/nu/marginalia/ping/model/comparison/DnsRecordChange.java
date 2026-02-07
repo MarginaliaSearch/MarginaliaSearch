@@ -1,5 +1,6 @@
 package nu.marginalia.ping.model.comparison;
 
+import nu.marginalia.ping.model.DnsRecordsReference;
 import nu.marginalia.ping.model.DomainDnsRecord;
 
 import java.util.List;
@@ -55,7 +56,7 @@ public sealed interface DnsRecordChange {
 
     }
 
-    static boolean compareRecords(List<String> beforeRecords, List<String> afterRecords) {
+    static boolean compareRecords(DnsRecordsReference beforeRecords, DnsRecordsReference afterRecords) {
         if (null == beforeRecords && null == afterRecords) {
             return true; // Both are null, no change
         }
@@ -66,6 +67,6 @@ public sealed interface DnsRecordChange {
         if (null == afterRecords)
             return beforeRecords.isEmpty();
 
-        return Set.copyOf(beforeRecords).equals(Set.copyOf(afterRecords)); // Compare the sets for equality
+        return DnsRecordsReference.isEquivalent(beforeRecords, afterRecords); // Compare the sets for equality
     }
 }
