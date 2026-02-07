@@ -10,6 +10,7 @@ import nu.marginalia.geoip.GeoIpDictionary;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mqapi.ProcessInboxNames;
 import nu.marginalia.mqapi.ping.PingRequest;
+import nu.marginalia.ping.fetcher.PingDnsFetcher;
 import nu.marginalia.process.ProcessConfiguration;
 import nu.marginalia.process.ProcessConfigurationModule;
 import nu.marginalia.process.ProcessMainClass;
@@ -49,6 +50,7 @@ public class PingMain extends ProcessMainClass {
         pingJobScheduler.run(Duration.ofHours(runHours));
 
         log.info("PingMain finished successfully.");
+
     }
 
     public static void main(String... args) throws Exception {

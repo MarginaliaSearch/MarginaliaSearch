@@ -31,19 +31,18 @@ public class RootCerts {
         Thread.ofPlatform()
                 .name("RootCertsUpdater")
                 .daemon()
-                .unstarted(RootCerts::updateTrustAnchors)
-                .start();
+                .start(RootCerts::updateTrustAnchors);
     }
 
     private static void updateTrustAnchors() {
-        while (true) {
+        for (int attempts = 0; attempts < 5; attempts++) {
             try {
                 trustAnchors = CertificateFetcher.getRootCerts(MOZILLA_CA_BUNDLE_URL);
                 synchronized (RootCerts.class) {
                     initialized = true;
                     RootCerts.class.notifyAll(); // Notify any waiting threads
                 }
-                Thread.sleep(Duration.ofHours(24));
+                break;
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break; // Exit if interrupted
@@ -52,6 +51,8 @@ public class RootCerts {
                 System.err.println("Failed to update trust anchors: " + e.getMessage());
             }
         }
+
+        throw new IllegalStateException("Failed to fetch trust anchors");
     }
 
 }

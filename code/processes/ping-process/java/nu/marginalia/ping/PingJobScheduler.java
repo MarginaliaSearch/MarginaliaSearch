@@ -3,6 +3,7 @@ package nu.marginalia.ping;
 import com.google.inject.Inject;
 import nu.marginalia.coordination.DomainCoordinator;
 import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.ping.fetcher.PingDnsFetcher;
 import nu.marginalia.ping.model.*;
 import nu.marginalia.ping.svc.DnsPingService;
 import nu.marginalia.ping.svc.HttpPingService;
@@ -27,6 +28,7 @@ public class PingJobScheduler {
     private final HttpPingService httpPingService;
     private final DnsPingService dnsPingService;
     private final DomainCoordinator domainCoordinator;
+    private final PingDnsFetcher dnsFetcher;
     private final PingDao pingDao;
 
     private static final Logger logger = LoggerFactory.getLogger(PingJobScheduler.class);
@@ -48,11 +50,13 @@ public class PingJobScheduler {
     public PingJobScheduler(HttpPingService httpPingService,
                             DnsPingService dnsPingService,
                             DomainCoordinator domainCoordinator,
+                            PingDnsFetcher dnsFetcher,
                             PingDao pingDao)
     {
         this.httpPingService = httpPingService;
         this.dnsPingService = dnsPingService;
         this.domainCoordinator = domainCoordinator;
+        this.dnsFetcher = dnsFetcher;
         this.pingDao = pingDao;
     }
 
@@ -109,6 +113,9 @@ public class PingJobScheduler {
                 logger.error("Failed to join thread: " + thread.getName(), e);
             }
         }
+
+        dnsFetcher.shutDown();
+
         synchronized (this) {
             notifyAll();
         }
