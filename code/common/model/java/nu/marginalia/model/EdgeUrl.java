@@ -249,7 +249,11 @@ class EdgeUriFactory {
             urlencodeQuery(s, url.substring(queryIdx + 1, end));
         }
 
-        return new URI(normalizer.filter(s.toString()));
+        String normalizedUrl = normalizer.filter(s.toString());
+        if (normalizedUrl == null) {
+            throw new URISyntaxException(s.toString(), "URI normalization failed");
+        }
+        return new URI(normalizedUrl);
     }
 
     /** Break apart the path element of an URI into its components, and then
