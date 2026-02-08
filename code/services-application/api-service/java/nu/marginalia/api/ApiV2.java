@@ -271,7 +271,6 @@ public class ApiV2 {
             return "";
         }
 
-
         Value queryVal = ctx.query("query");
         if (!queryVal.isPresent()) {
             ctx.setResponseCode(400);
@@ -279,6 +278,27 @@ public class ApiV2 {
         }
         String query = queryVal.value();
 
+        // Voluntary over-billing protection via request header
+        int limitBillableRequestsHeader = ctx.header("API-Limit-Billable-Requests").intValue(-1);
+        if (limitBillableRequestsHeader >= 0
+            && license.hasOption(ApiLicenseOptions.ALLOW_DAILY_OVERUSE)
+            && !rateLimiterService.hasRemainingDailyLimit(license))
+        {
+
+            long billableApiUsage = rateLimiterService.estimatedTotalApiUseForPeriod(license);
+
+            if (billableApiUsage + 1 >= limitBillableRequestsHeader) {
+                DailyLimitState limitState = new DailyLimitState.OverLimitBlock();
+
+                ctx.setResponseHeader("API-Remaining-Daily-Capacity", limitState.remaining());
+                ctx.setResponseHeader("API-Event-Type", limitState.name());
+                ctx.setResponseHeader("API-Billable-Requests", billableApiUsage);
+
+                ctx.setResponseCode(429);
+
+                return "API usage exceeds provided API-Limit-Billable-Requests header";
+            }
+        }
 
         ApiSearchResults results = null;
         DailyLimitState limitState;
@@ -340,6 +360,11 @@ public class ApiV2 {
 
         if (license.hasOption(ApiLicenseOptions.ADUIT_USAGE)) {
             logger.info(apiUsageMarker, "{} {} {}", license.key(), limitState, ctx.header("X-Forwarded-For"));
+        }
+
+        if (license.hasOption(ApiLicenseOptions.ALLOW_DAILY_OVERUSE)) {
+            long billableApiUsage = rateLimiterService.estimatedTotalApiUseForPeriod(license);
+            ctx.setResponseHeader("API-Billable-Requests", billableApiUsage);
         }
 
         ctx.setResponseType("application/json");
