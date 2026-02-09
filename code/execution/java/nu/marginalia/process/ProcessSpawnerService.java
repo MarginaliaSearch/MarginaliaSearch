@@ -39,34 +39,36 @@ public class ProcessSpawnerService {
 
 
     public static ProcessId translateExternalIdBase(String id) {
-        return switch (id) {
-            case "converter" -> ProcessId.CONVERTER;
-            case "crawler" -> ProcessId.CRAWLER;
-            case "ping" -> ProcessId.PING;
-            case "loader" -> ProcessId.LOADER;
-            case "export-tasks" -> ProcessId.EXPORT_TASKS;
-            case "index-constructor" -> ProcessId.INDEX_CONSTRUCTOR;
-            default -> null;
-        };
+        for (var processId : ProcessId.values()) {
+            if (processId.processName.equals(id))
+                return processId;
+        }
+        return null;
     }
 
     public enum ProcessId {
-        CRAWLER(CrawlerMain.class),
-        PING(PingMain.class),
-        LIVE_CRAWLER(LiveCrawlerMain.class),
-        CONVERTER(ConverterMain.class),
-        LOADER(LoaderMain.class),
-        INDEX_CONSTRUCTOR("nu.marginalia.index.IndexConstructorMain"),
-        NDP(NdpMain.class),
-        EXPORT_TASKS(ExportTasksMain.class),
+        CRAWLER(CrawlerMain.class, "crawler"),
+        PING(PingMain.class, "ping"),
+        LIVE_CRAWLER(LiveCrawlerMain.class, "live-crawler"),
+        CONVERTER(ConverterMain.class, "converter"),
+        LOADER(LoaderMain.class, "loader"),
+        INDEX_CONSTRUCTOR("nu.marginalia.index.IndexConstructorMain", "index-constructor"),
+        NDP(NdpMain.class, "ndp"),
+        EXPORT_TASKS(ExportTasksMain.class, "export-tasks"),
         ;
 
         public final String mainClass;
-        ProcessId(Class<? extends ProcessMainClass> mainClass) {
+        public final String processName;
+
+        ProcessId(Class<? extends ProcessMainClass> mainClass,
+                  String processName
+                  ) {
             this.mainClass = mainClass.getName();
+            this.processName = processName;
         }
-        ProcessId(String mainClassFullName) {
+        ProcessId(String mainClassFullName, String processName) {
             this.mainClass = mainClassFullName;
+            this.processName = processName;
         }
 
         List<String> envOpts() {
@@ -110,6 +112,8 @@ public class ProcessSpawnerService {
 
         args.add("--enable-preview");
         args.add("--enable-native-access=ALL-UNNAMED");
+
+        args.add("-Dservice-name=" + processId.processName);
 
         String loggingOpts = System.getProperty("log4j2.configurationFile");
         if (loggingOpts != null) {
