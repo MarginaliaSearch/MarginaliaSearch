@@ -49,6 +49,15 @@ public sealed interface DnsRecordsReference {
 
     record ListValue(Set<String> values) implements DnsRecordsReference {
 
+        public ListValue(Set<String> values) {
+            if (values == null) {
+                this.values = Set.of();
+            }
+            else {
+                this.values = values;
+            }
+        }
+
         public String asHash() {
             if (values.isEmpty())
                 return EMPTY_HASH;
