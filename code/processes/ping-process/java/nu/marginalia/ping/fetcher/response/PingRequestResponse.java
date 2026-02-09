@@ -10,12 +10,12 @@ import java.util.Map;
 
 public sealed interface PingRequestResponse
         permits HttpResponse, HttpsResponse, TimeoutResponse, ConnectionError, ProtocolError, UnknownHostError {
-    static PingRequestResponse of(ProtocolVersion version, int httpStatus, byte[] body, Map<String, List<String>> headers, Duration time, SSLSession sslSession) throws SSLPeerUnverifiedException {
+    static PingRequestResponse of(ProtocolVersion version, int httpStatus, Map<String, List<String>> headers, Duration time, SSLSession sslSession) throws SSLPeerUnverifiedException {
 
         if (sslSession == null) {
-            return new HttpResponse(version.toString(), httpStatus, body, new Headers(headers), time);
+            return new HttpResponse(version.toString(), httpStatus,new Headers(headers), time);
         } else {
-            return new HttpsResponse(version.toString(), httpStatus, body, new Headers(headers), sslSession.getPeerCertificates(), new SslMetadata(sslSession), time);
+            return new HttpsResponse(version.toString(), httpStatus, new Headers(headers), sslSession.getPeerCertificates(), new SslMetadata(sslSession), time);
         }
     }
 

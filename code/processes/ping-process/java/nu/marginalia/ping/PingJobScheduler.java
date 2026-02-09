@@ -127,7 +127,7 @@ public class PingJobScheduler {
     }
 
     private void availabilityJobConsumer() {
-        while (running) {
+        while (running && !Thread.interrupted()) {
             try {
                 DomainReference ref = availabilityUpdateSchedule.nextIf(domain -> {
                     EdgeDomain domainObj = new EdgeDomain(domain.domainName());
@@ -147,32 +147,28 @@ public class PingJobScheduler {
                     continue; // No data to process, skip this iteration
                 }
 
-                try {
-                    List<WritableModel> objects = switch (data) {
-                        case HistoricalAvailabilityData.JustDomainReference(DomainReference reference)
-                                -> httpPingService.pingDomain(reference, null, null);
-                        case HistoricalAvailabilityData.JustAvailability(String domain, DomainAvailabilityRecord record)
-                                -> httpPingService.pingDomain(
-                                    new DomainReference(record.domainId(), record.nodeId(), domain), record, null);
-                        case HistoricalAvailabilityData.AvailabilityAndSecurity(String domain, DomainAvailabilityRecord availability, DomainSecurityRecord security)
-                                -> httpPingService.pingDomain(
-                                        new DomainReference(availability.domainId(), availability.nodeId(), domain), availability, security);
-                    };
+                List<WritableModel> objects = switch (data) {
+                    case HistoricalAvailabilityData.JustDomainReference(DomainReference reference)
+                            -> httpPingService.pingDomain(reference, null, null);
+                    case HistoricalAvailabilityData.JustAvailability(String domain, DomainAvailabilityRecord record)
+                            -> httpPingService.pingDomain(
+                                new DomainReference(record.domainId(), record.nodeId(), domain), record, null);
+                    case HistoricalAvailabilityData.AvailabilityAndSecurity(String domain, DomainAvailabilityRecord availability, DomainSecurityRecord security)
+                            -> httpPingService.pingDomain(
+                                    new DomainReference(availability.domainId(), availability.nodeId(), domain), availability, security);
+                };
 
-                    pingDao.write(objects);
+                pingDao.write(objects);
 
-                    // Re-schedule the next update time for the domain
-                    for (var object : objects) {
-                        var ts = object.nextUpdateTime();
-                        if (ts != null) {
-                            availabilityUpdateSchedule.add(ref, ts);
-                            break;
-                        }
+                // Re-schedule the next update time for the domain
+                for (var object : objects) {
+                    var ts = object.nextUpdateTime();
+                    if (ts != null) {
+                        availabilityUpdateSchedule.add(ref, ts);
+                        break;
                     }
                 }
-                catch (Exception e) {
-                    logger.error("Error processing availability job for domain: " + data.domain(), e);
-                }
+
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 logger.error("Availability job consumer interrupted", e);
@@ -184,7 +180,7 @@ public class PingJobScheduler {
     }
 
     private void dnsJobConsumer() {
-        while (running) {
+        while (running && !Thread.interrupted()) {
             try {
                 RootDomainReference ref = dnsUpdateSchedule.next();
                 if (ref == null) {

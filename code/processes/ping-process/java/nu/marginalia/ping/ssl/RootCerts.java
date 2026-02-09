@@ -42,7 +42,7 @@ public class RootCerts {
                     initialized = true;
                     RootCerts.class.notifyAll(); // Notify any waiting threads
                 }
-                break;
+                return;
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break; // Exit if interrupted
