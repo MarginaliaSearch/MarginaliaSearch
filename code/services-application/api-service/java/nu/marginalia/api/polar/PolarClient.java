@@ -206,7 +206,6 @@ public class PolarClient {
                 String rspRaw = rsp.body();
                 PolarSubscriptionApiRspModel rspDecoded = gson.fromJson(rspRaw, PolarSubscriptionApiRspModel.class);
 
-                System.out.println(rspDecoded);
                 for (var item : rspDecoded.items()) {
                     Instant currentPeriodStart = Instant.parse(item.current_period_start());
                     Instant currentPeriodEnd = Instant.parse(item.current_period_end());
