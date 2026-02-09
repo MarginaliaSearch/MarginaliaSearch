@@ -10,6 +10,7 @@ import nu.marginalia.service.server.RateLimiter;
 
 import java.time.Instant;
 import java.util.HashSet;
+import java.util.OptionalLong;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -22,7 +23,12 @@ public class RateLimiterService {
     private final ConcurrentHashMap<ApiLicense, RateLimiter> perDayLimiters = new ConcurrentHashMap<>();
     private final PolarClient polarClient;
 
+
     private volatile ConcurrentHashMap<ApiLicense, Integer> overuse = new ConcurrentHashMap<>();
+
+    // Overuse that's currently in flight being reported, helps maintain a better estimate
+    private volatile ConcurrentHashMap<ApiLicense, Integer> reportingOveruse = new ConcurrentHashMap<>();
+
     private volatile ConcurrentHashMap<ApiLicense, Integer> use = new ConcurrentHashMap<>();
 
     @Inject
@@ -31,7 +37,7 @@ public class RateLimiterService {
 
         if (polarClient.isAvilable()) {
             Executors.newScheduledThreadPool(1)
-                    .scheduleWithFixedDelay(this::reportUsage, 5, 5, TimeUnit.MINUTES);
+                    .scheduleWithFixedDelay(this::reportUsage, 1, 5, TimeUnit.MINUTES);
         }
     }
 
@@ -42,6 +48,7 @@ public class RateLimiterService {
         use = new ConcurrentHashMap<>();
 
         var currentOveruse = overuse;
+        reportingOveruse.putAll(overuse);
         overuse = new ConcurrentHashMap<>();
 
         Set<ApiLicense> reportedKeys = new HashSet<>();
@@ -54,6 +61,7 @@ public class RateLimiterService {
             int overuse = currentOveruse.getOrDefault(key, 0);
 
             polarClient.reportKeyUse(key.key(), snapshotTime, use, overuse);
+            reportingOveruse.remove(key);
 
             try {
                 TimeUnit.SECONDS.sleep(1);
@@ -72,6 +80,7 @@ public class RateLimiterService {
             int overuse = currentOveruse.getOrDefault(key, 0);
 
             polarClient.reportKeyUse(key.key(), snapshotTime, use, overuse);
+            reportingOveruse.remove(key);
 
             try {
                 TimeUnit.SECONDS.sleep(1);
@@ -82,6 +91,20 @@ public class RateLimiterService {
             }
         }
 
+        reportingOveruse.clear();
+
+    }
+
+    /** Return an estimate of how much billable API overuse has been reported */
+    public long estimatedTotalApiUseForPeriod(ApiLicense license) {
+        if (!license.hasOption(ApiLicenseOptions.ALLOW_DAILY_OVERUSE))
+            return 0;
+
+        OptionalLong reportedOveruse = polarClient.getApiOveruseEstimate(license);
+
+        return reportedOveruse.orElse(0L)
+                + overuse.getOrDefault(license, 0)
+                + reportingOveruse.getOrDefault(license, 0);
     }
 
     public boolean isAllowedQPM(ApiLicense license) {
@@ -160,6 +183,9 @@ public class RateLimiterService {
         return getDailyLimiter(license).availableCapacity();
     }
 
+    public boolean hasRemainingDailyLimit(ApiLicense license) {
+        return remainingDailyLimit(license) > 0;
+    }
 
     public void clear() {
         perMinuteLimiters.clear();
