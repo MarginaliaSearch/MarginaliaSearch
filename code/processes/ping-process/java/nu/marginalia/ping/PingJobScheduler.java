@@ -63,8 +63,9 @@ public class PingJobScheduler {
     public void run(Duration maxRunTime) {
         running = true;
 
-        availabilityUpdateSchedule.replaceQueue(pingDao.getDomainUpdateSchedule());
-        dnsUpdateSchedule.replaceQueue(pingDao.getDnsUpdateSchedule());
+        availabilityUpdateSchedule.replaceQueue(pingDao.getDomainUpdateSchedule(Integer.MAX_VALUE));
+        dnsUpdateSchedule.replaceQueue(pingDao.getDnsUpdateSchedule(50_000));
+
         dnsLastSync = Instant.now();
         availabilityLastSync = Instant.now();
 
@@ -82,9 +83,13 @@ public class PingJobScheduler {
 
         while (Instant.now().isBefore(stopTime)) {
 
-            if (!availabilityUpdateSchedule.hasAvailableJobs()
-             && !dnsUpdateSchedule.hasAvailableJobs()) {
-                break;
+            if (!availabilityUpdateSchedule.hasAvailableJobs()) {
+                logger.info("Refilling domain jobs");
+                availabilityUpdateSchedule.replaceQueue(pingDao.getDomainUpdateSchedule(Integer.MAX_VALUE));
+            }
+            if (!dnsUpdateSchedule.hasAvailableJobs()) {
+                logger.info("Refilling DNS jobs");
+                dnsUpdateSchedule.replaceQueue(pingDao.getDnsUpdateSchedule(50_000));
             }
 
             try {
@@ -222,47 +227,5 @@ public class PingJobScheduler {
             }
         }
     }
-
-    private void syncAvailabilityJobs() {
-        try {
-            while (running) {
-                // Check if we need to refresh the availability data
-                Instant nextRefresh = availabilityLastSync.plus(Duration.ofHours(24));
-                if (Instant.now().isBefore(nextRefresh)) {
-                    Duration remaining = Duration.between(Instant.now(), nextRefresh);
-                    TimeUnit.MINUTES.sleep(Math.max(1, remaining.toMinutes()));
-                    continue;
-                }
-
-                availabilityUpdateSchedule.replaceQueue(pingDao.getDomainUpdateSchedule());
-                availabilityLastSync = Instant.now();
-            }
-        }
-        catch (Exception e) {
-            logger.error("Error fetching new ping jobs", e);
-        }
-    }
-
-    private void syncDnsRecords() {
-        try {
-            while (running) {
-
-                // Check if we need to refresh the availability data
-                Instant nextRefresh = dnsLastSync.plus(Duration.ofHours(24));
-                if (Instant.now().isBefore(nextRefresh)) {
-                    Duration remaining = Duration.between(Instant.now(), nextRefresh);
-                    TimeUnit.MINUTES.sleep(Math.max(1, remaining.toMinutes()));
-                    continue;
-                }
-
-                dnsUpdateSchedule.replaceQueue(pingDao.getDnsUpdateSchedule());
-                dnsLastSync = Instant.now();
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            logger.error("DNS job fetch interrupted", e);
-        }
-    }
-
 
 }

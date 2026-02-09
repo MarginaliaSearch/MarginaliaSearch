@@ -185,7 +185,7 @@ public class PingDao {
         return null;
     }
 
-    public List<UpdateSchedule.UpdateJob<DomainReference, HistoricalAvailabilityData>> getDomainUpdateSchedule() {
+    public List<UpdateSchedule.UpdateJob<DomainReference, HistoricalAvailabilityData>> getDomainUpdateSchedule(int cnt) {
         List<UpdateSchedule.UpdateJob<DomainReference, HistoricalAvailabilityData>> updateJobs = new ArrayList<>();
 
         try (var conn = dataSource.getConnection();
@@ -195,8 +195,11 @@ public class PingDao {
                 LEFT JOIN DOMAIN_AVAILABILITY_INFORMATION
                 ON EC_DOMAIN.ID = DOMAIN_AVAILABILITY_INFORMATION.DOMAIN_ID
                 WHERE NODE_AFFINITY > 0
+                ORDER BY NEXT_SCHEDULED_UPDATE IS NULL DESC, NEXT_SCHEDULED_UPDATE
+                LIMIT ?
                 """)) {
             ps.setFetchSize(10_000);
+            ps.setInt(1, cnt);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 int domainId = rs.getInt("ID");
@@ -217,7 +220,7 @@ public class PingDao {
         return updateJobs;
     }
 
-    public List<UpdateSchedule.UpdateJob<RootDomainReference, RootDomainReference>> getDnsUpdateSchedule() {
+    public List<UpdateSchedule.UpdateJob<RootDomainReference, RootDomainReference>> getDnsUpdateSchedule(int cnt) {
         List<UpdateSchedule.UpdateJob<RootDomainReference, RootDomainReference>> updateJobs = new ArrayList<>();
 
         try (var conn = dataSource.getConnection();
@@ -225,8 +228,11 @@ public class PingDao {
                 SELECT DISTINCT(DOMAIN_TOP),DOMAIN_DNS_INFORMATION.* FROM EC_DOMAIN
                 LEFT JOIN DOMAIN_DNS_INFORMATION ON ROOT_DOMAIN_NAME = DOMAIN_TOP
                 WHERE EC_DOMAIN.NODE_AFFINITY > 0
+                ORDER BY TS_NEXT_DNS_CHECK IS NULL DESC, TS_NEXT_DNS_CHECK
+                LIMIT ?
                 """)) {
             ps.setFetchSize(10_000);
+            ps.setInt(1, cnt);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 Long dnsRootDomainId = rs.getObject("DOMAIN_DNS_INFORMATION.DNS_ROOT_DOMAIN_ID", Long.class);
