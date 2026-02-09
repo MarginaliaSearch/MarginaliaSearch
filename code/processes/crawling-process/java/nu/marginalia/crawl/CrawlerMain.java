@@ -575,6 +575,11 @@ public class CrawlerMain extends ProcessMainClass {
 
                     DomainAvailability availability =  availabilityData.getOrDefault(new EdgeDomain(domain), DomainAvailability.DATA_MISSING);
 
+                    final boolean domainRecentlyAvailable =  availability == DomainAvailability.REACHABLE
+                                                || availability == DomainAvailability.FLAKEY;
+
+                    final boolean hasOldSlopFile = Files.exists(slopFile);
+
                     switch (result) {
                         case CrawlerRetreiver.CrawlerResult.NoData(), CrawlerRetreiver.CrawlerResult.Redirect() -> {
                             reference.delete();
@@ -594,7 +599,8 @@ public class CrawlerMain extends ProcessMainClass {
                             workLog.setJobToFinished(domain, slopFile.toString(), size);
                         }
                         case CrawlerRetreiver.CrawlerResult.Error(String why)
-                                when availability == DomainAvailability.REACHABLE || availability == DomainAvailability.FLAKEY -> {
+                                when hasOldSlopFile && domainRecentlyAvailable -> {
+
                             // Keep the old data
                             workLog.setJobToFinished(domain, slopFile.toString(), why);
                         }
