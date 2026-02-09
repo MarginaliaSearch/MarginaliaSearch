@@ -156,22 +156,24 @@ public class PolarClient {
                 String benefitId = (String) rspDecoded.get("benefit_id");
                 String status = (String) rspDecoded.get("status");
 
-                var ret = new PolarLicenseKey(apiKey, customerId, benefitId, status, Instant.now());
-                licenses.put(apiKey, ret);
+                var licenseKey = new PolarLicenseKey(apiKey, customerId, benefitId, status, Instant.now());
+                licenses.put(apiKey, licenseKey);
 
-                var sub = fetchSubscription(ret);
+                var sub = fetchSubscription(licenseKey);
+
                 if (sub.isPresent()) {
                     subcriptions.put(apiKey, sub.get());
-                    var apiOveruse = fetchMeterReading(overuseMeterId, sub.get());
 
+                    var apiOveruse = fetchMeterReading(overuseMeterId, sub.get());
                     if (apiOveruse.isPresent()) {
                         apiOveruseForPeriod.putIfAbsent(apiKey, apiOveruse.getAsLong());
                     }
+
                 } else {
                     logger.info("No subscription fund for {}", apiKey);
                 }
 
-                return Optional.of(ret);
+                return Optional.of(licenseKey);
             }
             else {
                 logger.error("Bad status code form polar API: {} {}", rsp.statusCode(), rsp.body());
