@@ -91,11 +91,11 @@ public class CrawlerRetreiver implements AutoCloseable {
         return crawlFrontier;
     }
 
-    public int crawlDomain() {
+    public CrawlerResult crawlDomain() {
         return crawlDomain(new DomainLinks(), new CrawlDataReference());
     }
 
-    public int crawlDomain(DomainLinks domainLinks, CrawlDataReference oldCrawlData) {
+    public CrawlerResult crawlDomain(DomainLinks domainLinks, CrawlDataReference oldCrawlData) {
         try (oldCrawlData) {
 
             // Wait for permission to open a connection to avoid network congestion
@@ -119,7 +119,7 @@ public class CrawlerRetreiver implements AutoCloseable {
 
                     if (!robotsRules.isAllowed(probedUrl.toString())) {
                         warcRecorder.flagAsRobotsTxtError(probedUrl);
-                        yield 1; // Nothing we can do here, we aren't allowed to fetch the root URL
+                        yield new CrawlerResult.NoData(); // Nothing we can do here, we aren't allowed to fetch the root URL
                     }
                     delayTimer.waitFetchDelay(0); // initial delay after robots.txt
 
@@ -143,26 +143,31 @@ public class CrawlerRetreiver implements AutoCloseable {
 
                     oldCrawlData.close(); // proactively close the crawl data reference here to not hold onto expensive resources
 
-                    yield crawlDomain(probedUrl, robotsRules, delayTimer, domainLinks, recrawlMetadata, recrawlTime);
+                    yield new CrawlerResult.Crawled(crawlDomain(probedUrl, robotsRules, delayTimer, domainLinks, recrawlMetadata, recrawlTime));
                 }
                 case HttpFetcher.DomainProbeResult.Redirect(EdgeDomain domain1) -> {
                     domainStateDb.save(DomainStateDb.SummaryRecord.forError(domain, "Redirect", domain1.toString()));
-                    yield 1;
+                    yield new CrawlerResult.Redirect();
                 }
                 case HttpFetcher.DomainProbeResult.Error(CrawlerDomainStatus status, String desc) -> {
                     domainStateDb.save(DomainStateDb.SummaryRecord.forError(domain, status.toString(), desc));
-                    yield 1;
+
+                    yield switch (status) {
+                        case CrawlerDomainStatus.ERROR -> new CrawlerResult.Error(desc);
+                        case CrawlerDomainStatus.BLOCKED -> new CrawlerResult.NoData();
+                        default -> new CrawlerResult.Error(desc);
+                    };
                 }
                 default -> {
                     logger.error("Unexpected domain probe result {}", probeResult);
-                    yield 1;
+                    yield new CrawlerResult.NoData();
                 }
             };
 
         }
         catch (Exception ex) {
             logger.error("Error crawling domain {}", domain, ex);
-            return 0;
+            return new CrawlerResult.Error("Exception");
         }
     }
 
@@ -513,6 +518,13 @@ public class CrawlerRetreiver implements AutoCloseable {
     @Override
     public void close() throws Exception {
         warcRecorder.close();
+    }
+
+    public sealed interface CrawlerResult {
+        record Error(String why) implements CrawlerResult {}
+        record Crawled(int fetchResult) implements CrawlerResult {}
+        record Redirect() implements CrawlerResult {}
+        record NoData() implements CrawlerResult {}
     }
 
 }
