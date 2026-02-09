@@ -28,21 +28,20 @@ public sealed interface DnsRecordsReference {
      * or a JSON-style list of strings.
      * */
     static DnsRecordsReference decode(String encodedValue) {
+        if (encodedValue == null || encodedValue.isEmpty()) {
+            return new ListValue(Set.of());
+        }
+
         if (encodedValue.startsWith("#"))
             return new HashValue(encodedValue);
 
-        List<String> items;
-        if (encodedValue == null || encodedValue.isEmpty()) {
-            items = List.of();
-        } else {
-            items = gson.fromJson(encodedValue, List.class);
+        List<String> items = gson.fromJson(encodedValue, List.class);
 
-            // blow up sooner rather than later if assertions are enabled
-            // this is supposed to be the output of encode() so not really a risk in prod
-            if (DnsRecordsReference.class.desiredAssertionStatus()
-                && !items.stream().allMatch(String.class::isInstance)) {
-                throw new IllegalStateException("Error in deserializing DNS fields, produced something not compatible with List<String>");
-            }
+        // blow up sooner rather than later if assertions are enabled
+        // this is supposed to be the output of encode() so not really a risk in prod
+        if (DnsRecordsReference.class.desiredAssertionStatus()
+            && !items.stream().allMatch(String.class::isInstance)) {
+            throw new IllegalStateException("Error in deserializing DNS fields, produced something not compatible with List<String>");
         }
 
         return new ListValue(new HashSet<>(items));
