@@ -272,6 +272,7 @@ class CrawlerRetreiverTest {
         var revisitCrawlFrontier = new DomainCrawlFrontier(
                 new EdgeDomain("www.marginalia.nu"),
                 List.of(), 100);
+
         var resync = new CrawlerWarcResynchronizer(revisitCrawlFrontier,
                 new WarcRecorder(tempFileWarc2)
         );
@@ -280,7 +281,7 @@ class CrawlerRetreiverTest {
         simulatePartialWrite(tempFileWarc1);
 
         resync.run(tempFileWarc1);
-        assertTrue(revisitCrawlFrontier.addKnown(new EdgeUrl("https://www.marginalia.nu/misc/debian-laptop-install-log/")));
+        assertTrue(revisitCrawlFrontier.isKnown(new EdgeUrl("https://www.marginalia.nu/misc/debian-laptop-install-log/")));
 
         try (var reader = new WarcReader(tempFileWarc2)) {
             reader.forEach(record -> {
@@ -504,9 +505,9 @@ class CrawlerRetreiverTest {
         }
     }
 
-    private void convertToSlop(Path tempFileWarc2, Path tempFileSlop2) throws IOException {
+    private void convertToSlop(Path warcFile, Path slopFile) throws IOException {
         SlopCrawlDataRecord.convertWarc("www.marginalia.nu",
-                new UserAgent("test", "test"), tempFileWarc2, tempFileSlop2);
+                new UserAgent("test", "test"), warcFile, slopFile);
     }
 
 
@@ -557,7 +558,7 @@ class CrawlerRetreiverTest {
 
         resync.run(tempFileWarc2);
 
-        assertTrue(revisitCrawlFrontier.addKnown(new EdgeUrl("https://www.marginalia.nu/")));
+        assertTrue(revisitCrawlFrontier.isKnown(new EdgeUrl("https://www.marginalia.nu/")));
         convertToSlop(tempFileWarc3, tempFileSlop2);
 
 

@@ -23,13 +23,11 @@ dependencies {
     implementation project(':code:index:api')
     implementation project(':code:processes:crawling-process:ft-content-type')
     implementation project(':code:functions:language-processing')
-    implementation project(':third-party:parquet-floor')
     implementation project(':third-party:commons-codec')
 
     implementation libs.bundles.slf4j
 
     implementation libs.notnull
-    implementation libs.bundles.parquet
 
     implementation libs.trove
     implementation libs.slop

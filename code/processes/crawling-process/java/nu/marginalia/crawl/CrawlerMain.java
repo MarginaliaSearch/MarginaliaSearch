@@ -646,13 +646,6 @@ public class CrawlerMain extends ProcessMainClass {
                 if (Files.exists(slopPath)) {
                     return new CrawlDataReference(slopPath);
                 }
-
-                Path parquetPath = CrawlerOutputFile.getParquetPath(outputDir, id, domain);
-                if (Files.exists(parquetPath)) {
-                    slopPath = migrateParquetData(parquetPath, domain, outputDir);
-                    return new CrawlDataReference(slopPath);
-                }
-
             } catch (Exception e) {
                 logger.debug("Failed to read previous crawl data for {}", specification.domain());
             }
@@ -718,20 +711,6 @@ public class CrawlerMain extends ProcessMainClass {
         }
     }
 
-    // Migrate from parquet to slop if necessary
-    //
-    // This must be synchronized as chewing through parquet files in parallel leads to enormous memory overhead
-    private synchronized Path migrateParquetData(Path inputPath, String domain, Path crawlDataRoot) throws IOException {
-        if (!inputPath.toString().endsWith(".parquet")) {
-            return inputPath;
-        }
-
-        Path outputFile = CrawlerOutputFile.createSlopPath(crawlDataRoot, Integer.toHexString(domain.hashCode()), domain);
-
-        SlopCrawlDataRecord.convertFromParquet(inputPath, outputFile);
-
-        return outputFile;
-    }
 
 }
 

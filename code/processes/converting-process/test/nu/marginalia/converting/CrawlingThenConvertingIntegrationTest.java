@@ -13,13 +13,13 @@ import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.DomainProber;
-import nu.marginalia.io.crawldata.format.ParquetSerializableCrawlDataStream;
+import nu.marginalia.io.crawldata.format.SlopSerializableCrawlDataStream;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.crawldata.CrawledDomain;
 import nu.marginalia.model.crawldata.SerializableCrawlData;
-import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecordFileWriter;
+import nu.marginalia.slop.SlopCrawlDataRecord;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -231,7 +231,7 @@ public class CrawlingThenConvertingIntegrationTest {
     }
 
     private ProcessedDomain process() {
-        try (var stream = new ParquetSerializableCrawlDataStream(fileName2)) {
+        try (var stream = new SlopSerializableCrawlDataStream(fileName2)) {
             return domainProcessor.fullProcessing(stream);
         }
         catch (Exception e) {
@@ -252,11 +252,11 @@ public class CrawlingThenConvertingIntegrationTest {
             new CrawlerRetreiver(httpFetcher, new DomainProber(domainBlacklist), specs, db, recorder).crawlDomain();
         }
 
-        CrawledDocumentParquetRecordFileWriter.convertWarc(specs.domain(),
+        SlopCrawlDataRecord.convertWarc(specs.domain(),
                 new UserAgent("test", "test"),
                 fileName, fileName2);
 
-        try (var reader = new ParquetSerializableCrawlDataStream(fileName2)) {
+        try (var reader = new SlopSerializableCrawlDataStream(fileName2)) {
             while (reader.hasNext()) {
                 var next = reader.next();
                 logger.info("{}", next);

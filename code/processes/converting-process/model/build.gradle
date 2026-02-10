@@ -17,14 +17,12 @@ jar.archiveBaseName = 'converting-process-model'
 dependencies {
     implementation libs.bundles.slf4j
 
-    implementation project(':third-party:parquet-floor')
     implementation project(':code:libraries:coded-sequence')
 
     implementation libs.slop
     implementation libs.notnull
     implementation libs.roaringbitmap
     implementation libs.trove
-    implementation libs.bundles.parquet
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit

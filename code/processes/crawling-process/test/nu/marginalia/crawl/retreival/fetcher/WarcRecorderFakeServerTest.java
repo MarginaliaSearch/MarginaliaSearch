@@ -78,7 +78,7 @@ class WarcRecorderFakeServerTest {
     }
 
     Path fileNameWarc;
-    Path fileNameParquet;
+    Path fileNameSlop;
     WarcRecorder client;
 
     HttpClient httpClient;
@@ -87,7 +87,7 @@ class WarcRecorderFakeServerTest {
         httpClient = HttpClients.createDefault();
 
         fileNameWarc = Files.createTempFile("test", ".warc");
-        fileNameParquet = Files.createTempFile("test", ".parquet");
+        fileNameSlop = Files.createTempFile("test", ".slop.zip");
 
         client = new WarcRecorder(fileNameWarc);
     }

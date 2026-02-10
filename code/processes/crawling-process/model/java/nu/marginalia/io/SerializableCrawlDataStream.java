@@ -1,6 +1,5 @@
 package nu.marginalia.io;
 
-import nu.marginalia.io.crawldata.format.ParquetSerializableCrawlDataStream;
 import nu.marginalia.io.crawldata.format.SlopSerializableCrawlDataStream;
 import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.crawldata.CrawledDomain;
@@ -52,16 +51,6 @@ public interface SerializableCrawlDataStream extends AutoCloseable {
             }
         }
 
-        else if (fileName.endsWith(".parquet")) {
-            logger.error("Opening deprecated parquet-style crawl data stream", new Exception());
-            try {
-                return new ParquetSerializableCrawlDataStream(fullPath);
-            } catch (Exception ex) {
-                logger.error("Error reading domain data from " + fullPath, ex);
-                return SerializableCrawlDataStream.empty();
-            }
-        }
-
         logger.error("Unknown file type: {}", fullPath);
         return SerializableCrawlDataStream.empty();
     }
@@ -71,10 +60,7 @@ public interface SerializableCrawlDataStream extends AutoCloseable {
      * or if the file is seemed too small to bother */
     static int getSizeHint(Path fullPath) {
         String fileName = fullPath.getFileName().toString();
-        if (fileName.endsWith(".parquet")) {
-            return ParquetSerializableCrawlDataStream.sizeHint(fullPath);
-        }
-        else if (fileName.endsWith(".slop.zip")) {
+        if (fileName.endsWith(".slop.zip")) {
             return SlopSerializableCrawlDataStream.sizeHint(fullPath);
         }
         else {

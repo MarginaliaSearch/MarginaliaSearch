@@ -18,7 +18,6 @@ dependencies {
     implementation project(':code:libraries:array')
     implementation project(':code:common:model')
     implementation project(':code:processes:converting-process:model')
-    implementation project(':third-party:parquet-floor')
     implementation project(':third-party:commons-codec')
 
     implementation libs.bundles.slf4j

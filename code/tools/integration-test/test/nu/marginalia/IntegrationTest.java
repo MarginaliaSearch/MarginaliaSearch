@@ -38,8 +38,8 @@ import nu.marginalia.loading.links.DomainLinksLoaderService;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.id.UrlIdCodec;
-import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecordFileWriter;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
+import nu.marginalia.slop.SlopCrawlDataRecord;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.test.IntegrationTestModule;
 import nu.marginalia.test.TestUtil;
@@ -89,7 +89,7 @@ public class IntegrationTest {
     LanguageConfiguration languageConfiguration;
 
     Path warcData = null;
-    Path crawlDataParquet = null;
+    Path crawlDataSlop = null;
     Path processedDataDir = null;
 
     @Inject
@@ -110,14 +110,14 @@ public class IntegrationTest {
         Guice.createInjector(testModule).injectMembers(this);
 
         warcData = Files.createTempFile("warc", ".warc.gz");
-        crawlDataParquet = Files.createTempFile("crawl", ".parquet");
+        crawlDataSlop = Files.createTempFile("crawl", ".slop.zip");
         processedDataDir = Files.createTempDirectory("processed");
     }
 
     @AfterEach
     public void tearDownTest() throws IOException {
         Files.deleteIfExists(warcData);
-        Files.deleteIfExists(crawlDataParquet);
+        Files.deleteIfExists(crawlDataSlop);
         TestUtil.clearTempDir(processedDataDir);
 
         testModule.cleanUp();
@@ -174,16 +174,16 @@ public class IntegrationTest {
         }
 
         /** CONVERT WARC */
-        CrawledDocumentParquetRecordFileWriter.convertWarc(
+        SlopCrawlDataRecord.convertWarc(
                 "www.example.com",
                 new UserAgent("search.marginalia.nu",
                         "search.marginalia.nu"),
                 warcData,
-                crawlDataParquet);
+                crawlDataSlop);
 
         /** PROCESS CRAWL DATA */
 
-        var processedDomain = domainProcessor.fullProcessing(SerializableCrawlDataStream.openDataStream(crawlDataParquet));
+        var processedDomain = domainProcessor.fullProcessing(SerializableCrawlDataStream.openDataStream(crawlDataSlop));
 
         System.out.println(processedDomain);
 
@@ -308,16 +308,16 @@ public class IntegrationTest {
         }
 
         /** CONVERT WARC */
-        CrawledDocumentParquetRecordFileWriter.convertWarc(
+        SlopCrawlDataRecord.convertWarc(
                 "www.example.com",
                 new UserAgent("search.marginalia.nu",
                         "search.marginalia.nu"),
                 warcData,
-                crawlDataParquet);
+                crawlDataSlop);
 
         /** PROCESS CRAWL DATA */
 
-        var processedDomain = domainProcessor.fullProcessing(SerializableCrawlDataStream.openDataStream(crawlDataParquet));
+        var processedDomain = domainProcessor.fullProcessing(SerializableCrawlDataStream.openDataStream(crawlDataSlop));
 
 //        System.out.println(processedDomain);
 

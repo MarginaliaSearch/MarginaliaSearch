@@ -69,7 +69,6 @@ public class ExecutorActorControlService {
                                        DownloadSampleActor downloadSampleActor,
                                        ScrapeFeedsActor scrapeFeedsActor,
                                        ExecutorActorStateMachines stateMachines,
-                                       MigrateCrawlDataActor migrateCrawlDataActor,
                                        ExportAllPrecessionActor exportAllPrecessionActor,
                                        UpdateNsfwFiltersActor updateNsfwFiltersActor,
                                        UpdateRssActor updateRssActor,
@@ -117,7 +116,6 @@ public class ExecutorActorControlService {
         register(ExecutorActor.UPDATE_RSS, updateRssActor);
         register(ExecutorActor.DOM_SAMPLE_ACTOR, domSampleActor);
 
-        register(ExecutorActor.MIGRATE_CRAWL_DATA, migrateCrawlDataActor);
         register(ExecutorActor.UPDATE_NSFW_LISTS, updateNsfwFiltersActor);
 
         if (serviceConfiguration.node() == 1) {

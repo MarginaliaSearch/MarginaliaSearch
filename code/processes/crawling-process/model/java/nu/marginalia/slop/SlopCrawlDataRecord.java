@@ -5,8 +5,6 @@ import nu.marginalia.UserAgent;
 import nu.marginalia.model.body.DocumentBodyExtractor;
 import nu.marginalia.model.body.DocumentBodyResult;
 import nu.marginalia.model.body.HttpFetchResult;
-import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecord;
-import nu.marginalia.parquet.crawldata.CrawledDocumentParquetRecordFileReader;
 import nu.marginalia.slop.column.array.ByteArrayColumn;
 import nu.marginalia.slop.column.primitive.ByteColumn;
 import nu.marginalia.slop.column.primitive.IntColumn;
@@ -55,21 +53,6 @@ public record SlopCrawlDataRecord(String domain,
     private static final ShortColumn requestTimeColumn = new ShortColumn("requestTimeMs");
     private static final StringColumn headerColumn = new StringColumn("header", StandardCharsets.UTF_8, StorageType.ZSTD);
 
-    public SlopCrawlDataRecord(CrawledDocumentParquetRecord parquetRecord) {
-        this(parquetRecord.domain,
-                parquetRecord.url,
-                parquetRecord.ip,
-                parquetRecord.cookies,
-                parquetRecord.httpStatus,
-                parquetRecord.timestamp.toEpochMilli(),
-                parquetRecord.contentType,
-                parquetRecord.body,
-                -1,
-                parquetRecord.headers
-                );
-    }
-
-
     private static SlopCrawlDataRecord forDomainRedirect(String domain, Instant date, String redirectDomain) {
         return new SlopCrawlDataRecord(domain,
                 "https://" + redirectDomain + "/",
@@ -112,35 +95,6 @@ public record SlopCrawlDataRecord(String domain,
         );
     }
 
-
-    public static void convertFromParquet(Path parquetInput, Path slopOutput) throws IOException {
-        Path tempDir = Files.createTempDirectory(slopOutput.getParent(), "conversion");
-
-        try (var writer = new Writer(tempDir);
-             var stream = CrawledDocumentParquetRecordFileReader.stream(parquetInput))
-        {
-            stream.forEach(
-                parquetRecord -> {
-                    try {
-                        writer.write(new SlopCrawlDataRecord(parquetRecord));
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-        }
-        catch (IOException ex) {
-            FileUtils.deleteDirectory(tempDir.toFile());
-            throw ex;
-        }
-
-        try {
-            SlopTablePacker.packToSlopZip(tempDir, slopOutput);
-            FileUtils.deleteDirectory(tempDir.toFile());
-        }
-        catch (Exception ex) {
-            logger.error("Failed to convert WARC file to Parquet", ex);
-        }
-    }
 
     private static final Logger logger = LoggerFactory.getLogger(SlopCrawlDataRecord.class);
 
