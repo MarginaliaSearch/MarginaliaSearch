@@ -267,7 +267,7 @@ public class CrawlerMain extends ProcessMainClass {
             logger.info("Loaded {} domains", crawlSpecRecords.size());
 
             try (var ps = conn.prepareStatement("""
-                SELECT DOMAIN_NAME, HTTP_SCHEMA, SERVER_AVAILABLE, TS_LAST_PING, TS_LAST_AVAILABILE, TS_LAST_ERROR
+                SELECT DOMAIN_NAME, HTTP_SCHEMA, SERVER_AVAILABLE, TS_LAST_PING, TS_LAST_AVAILABLE, TS_LAST_ERROR
                 FROM DOMAIN_AVAILABILITY_INFORMATION
                 INNER JOIN EC_DOMAIN ON EC_DOMAIN.ID=DOMAIN_ID
                 WHERE DOMAIN_ID = ? 
