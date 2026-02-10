@@ -1,6 +1,7 @@
 package nu.marginalia.ping.fetcher;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import nu.marginalia.ping.model.SingleDnsRecord;
 import org.slf4j.Logger;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 
+@Singleton
 public class PingDnsFetcher {
     private final ThreadLocal<ExtendedResolver> resolver;
     private static final ExecutorService digExecutor = Executors.newFixedThreadPool(100);
@@ -30,6 +32,10 @@ public class PingDnsFetcher {
     public PingDnsFetcher(@Named("ping.nameservers")
                       List<String> nameservers) {
         resolver = ThreadLocal.withInitial(() -> createResolver(nameservers));
+    }
+
+    public void shutDown() {
+        digExecutor.shutdown();
     }
 
     private ExtendedResolver createResolver(List<String> nameservers) {

@@ -85,15 +85,17 @@ class AvailabilityJobSchedulerTest {
 
         DomainDnsInformationFactory dnsDomainInformationFactory = new DomainDnsInformationFactory(processConfig, pic);
 
+        var dnsFetcher = new PingDnsFetcher(List.of("8.8.8.8", "8.8.4.4"));
+
         PingJobScheduler pingJobScheduler = new PingJobScheduler(
                 new HttpPingService(
                         new LocalDomainCoordinator(),
                         pingHttpFetcher,
                         new DomainAvailabilityInformationFactory(new GeoIpDictionary(), new BackoffStrategy(pic)),
                         new DomainSecurityInformationFactory()),
-                new DnsPingService(new PingDnsFetcher(List.of("8.8.8.8", "8.8.4.4")),
-                        dnsDomainInformationFactory),
+                new DnsPingService(dnsFetcher, dnsDomainInformationFactory),
                 new LocalDomainCoordinator(),
+                dnsFetcher,
                 pingDao
         );
 

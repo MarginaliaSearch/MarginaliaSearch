@@ -140,13 +140,13 @@ class PingDaoTest {
         var svc = new PingDao(dataSource);
 
         var dnsRecord = new DomainDnsRecord(null, "example.com", 2,
-                List.of("test"),
-                List.of("test2"),
+                DnsRecordsReference.ofValues("test"),
+                DnsRecordsReference.ofValues("test2"),
                 "test3",
-                List.of("test4"),
-                List.of("test5"),
-                List.of("test6"),
-                List.of("test7"),
+                DnsRecordsReference.ofValues("test4"),
+                DnsRecordsReference.ofValues("test5"),
+                DnsRecordsReference.ofValues("test6"),
+                DnsRecordsReference.ofValues("test7"),
                 "test8",
                 Instant.now(),
                 Instant.now().plus(3600, ChronoUnit.SECONDS),
@@ -174,13 +174,13 @@ class PingDaoTest {
 
         var dnsRecord2 = new DomainDnsRecord(readDnsRecord.dnsRootDomainId(),
                 "example.com", 2,
-                List.of("btest"),
-                List.of("ctest2"),
+                DnsRecordsReference.ofValues("btest"),
+                DnsRecordsReference.ofValues("ctest2"),
                 "tdcest3",
-                List.of("tedst4"),
-                List.of("dtest5"),
-                List.of("dtest6"),
-                List.of("tdest7"),
+                DnsRecordsReference.ofValues("tedst4"),
+                DnsRecordsReference.ofValues("dtest5"),
+                DnsRecordsReference.ofValues("dtest6"),
+                DnsRecordsReference.ofValues("tdest7"),
                 "tesat8",
                 Instant.now(),
                 Instant.now().plus(3600, ChronoUnit.SECONDS),
@@ -348,8 +348,8 @@ class PingDaoTest {
                 false,
                 false,
                 false,
-                new JsonObject<>(new DomainDnsRecord(null, "example.com", 2, List.of("test"), List.of("test2"), "test3", List.of("test4"), List.of("test5"), List.of("test6"), List.of("test7"), "test8", Instant.now(), Instant.now().plus(3600, ChronoUnit.SECONDS), 4)),
-                new JsonObject<>(new DomainDnsRecord(null, "example.com", 2, List.of("btest"), List.of("ctest2"), "tdcest3", List.of("tedst4"), List.of("dtest5"), List.of("dtest6"), List.of("tdest7"), "tesat8", Instant.now(), Instant.now().plus(3600, ChronoUnit.SECONDS), 4))
+                new JsonObject<>(new DomainDnsRecord(null, "example.com", 2, DnsRecordsReference.ofValues("test"), DnsRecordsReference.ofValues("test2"), "test3", DnsRecordsReference.ofValues("test4"), DnsRecordsReference.ofValues("test5"), DnsRecordsReference.ofValues("test6"), DnsRecordsReference.ofValues("test7"), "test8", Instant.now(), Instant.now().plus(3600, ChronoUnit.SECONDS), 4)),
+                new JsonObject<>(new DomainDnsRecord(null, "example.com", 2, DnsRecordsReference.ofValues("btest"), DnsRecordsReference.ofValues("ctest2"), "tdcest3", DnsRecordsReference.ofValues("tedst4"), DnsRecordsReference.ofValues("dtest5"), DnsRecordsReference.ofValues("dtest6"), DnsRecordsReference.ofValues("tdest7"), "tesat8", Instant.now(), Instant.now().plus(3600, ChronoUnit.SECONDS), 4))
         );
         var svc = new PingDao(dataSource);
         svc.write(dnsEvent);

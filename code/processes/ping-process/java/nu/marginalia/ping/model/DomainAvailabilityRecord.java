@@ -266,12 +266,12 @@ implements WritableModel
         }
 
         public Builder httpEtag(String httpEtag) {
-            this.httpEtag = httpEtag;
+            this.httpEtag = StringUtils.truncate(httpEtag, 255);
             return this;
         }
 
         public Builder httpLastModified(String httpLastModified) {
-            this.httpLastModified = httpLastModified;
+            this.httpLastModified = StringUtils.truncate(httpLastModified, 255);
             return this;
         }
 

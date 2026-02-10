@@ -19,6 +19,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
+import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -37,6 +39,13 @@ public class PingMonitorActor extends RecordActorPrototype {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    // We schedule the Ping job to run between 3-9 AM UTC,
+    // which is a time slot which about as close to a global
+    // off hour as there exists.
+
+    private final int SCHEDULE_START_TIME_UTC = 3;
+    private final int SCHEDULE_RUN_TIME_HOURS = 6;
+
     public static final int MAX_ATTEMPTS = 3;
     private final String inboxName;
     private final ProcessSpawnerService.ProcessId processId;
@@ -49,6 +58,8 @@ public class PingMonitorActor extends RecordActorPrototype {
     public record Monitor(int errorAttempts) implements ActorStep {}
     @Resume(behavior = ActorResumeBehavior.RESTART)
     public record Run(int attempts) implements ActorStep {}
+    @Resume(behavior = ActorResumeBehavior.RETRY)
+    public record Wait(String untilTs) implements ActorStep {}
     @Terminal
     public record Aborted() implements ActorStep {}
 
@@ -56,7 +67,7 @@ public class PingMonitorActor extends RecordActorPrototype {
     public ActorStep transition(ActorStep self) throws Exception {
         return switch (self) {
             case Initial i -> {
-                PingRequest request = new PingRequest();
+                PingRequest request = new PingRequest(SCHEDULE_RUN_TIME_HOURS);
                 persistence.sendNewMessage(inboxName, null, null,
                         "PingRequest",
                         gson.toJson(request),
@@ -95,7 +106,7 @@ public class PingMonitorActor extends RecordActorPrototype {
                         if (attempts < MAX_ATTEMPTS)
                             yield new Run(attempts + 1);
                         else
-                            yield new Error();
+                            yield new Error("Max failed attempts exceeded");
                     }
                     else if (endTime - startTime < TimeUnit.SECONDS.toMillis(1)) {
                         // To avoid boot loops, we transition to error if the process
@@ -116,7 +127,22 @@ public class PingMonitorActor extends RecordActorPrototype {
                     yield new Aborted();
                 }
 
-                yield new Monitor(attempts);
+                yield new Wait(
+                        Instant.now()
+                                .atOffset(ZoneOffset.UTC)
+                                .truncatedTo(ChronoUnit.DAYS)
+                                .plus(1, ChronoUnit.DAYS)
+                                .plusHours(SCHEDULE_START_TIME_UTC)
+                                .toInstant()
+                                .toString()
+                );
+            }
+            case Wait(String untilTs) -> {
+                var nextRun = Instant.parse(untilTs);
+
+                Thread.sleep(Duration.between(Instant.now(), nextRun));
+
+                yield new Initial();
             }
             default -> new Error();
         };

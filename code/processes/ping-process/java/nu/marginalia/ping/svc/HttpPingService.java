@@ -79,7 +79,7 @@ public class HttpPingService {
                 result = pingHttpFetcher.fetchUrl(url, Method.HEAD, null, null);
 
                 if (result instanceof HttpsResponse response && shouldTryGET(response.httpStatus())) {
-                    sleep(Duration.ofSeconds(2));
+                    Thread.sleep(Duration.ofSeconds(2));
                     result = pingHttpFetcher.fetchUrl(url, Method.GET, null, null);
                 } else if (result instanceof ConnectionError) {
                     var result2 = pingHttpFetcher.fetchUrl(alternateUrl, Method.HEAD, null, null);
@@ -87,14 +87,10 @@ public class HttpPingService {
                         result = result2;
                     }
                     if (result instanceof HttpResponse response && shouldTryGET(response.httpStatus())) {
-                        sleep(Duration.ofSeconds(2));
+                        Thread.sleep(Duration.ofSeconds(2));
                         result = pingHttpFetcher.fetchUrl(alternateUrl, Method.GET, null, null);
                     }
                 }
-
-                // Add a grace sleep before we yield the semaphore, so that another thread doesn't
-                // immediately hammer the same domain after it's released.
-                sleep(Duration.ofSeconds(1));
             }
         }
 
@@ -217,14 +213,6 @@ public class HttpPingService {
         return statusCode < 600;
     }
 
-    private void sleep(Duration duration) {
-        try {
-            Thread.sleep(duration.toMillis());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt(); // Restore the interrupted status
-            logger.warn("Sleep interrupted", e);
-        }
-    }
 
     private void comparePingStatuses(List<WritableModel> generatedRecords,
                                      DomainAvailabilityRecord oldPingStatus,

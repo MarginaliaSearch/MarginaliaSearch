@@ -46,6 +46,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.Security;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -471,7 +472,7 @@ public class CrawlerMain extends ProcessMainClass {
                 return;
             }
 
-            Optional<DomainLock> lock = domainCoordinator.tryLockDomain(new EdgeDomain(domain));
+            Optional<DomainLock> lock = domainCoordinator.tryLockDomain(new EdgeDomain(domain), Duration.ofSeconds(2));
             // We don't have a lock, so we can't run this task
             // we return to avoid blocking the pool for too long
             if (lock.isEmpty()) {

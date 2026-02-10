@@ -102,10 +102,6 @@ public class DomainEvaluator {
                     // May or may not be necessary, but let's ensure we clean up the response entity
                     // to avoid resource leaks
                     EntityUtils.consumeQuietly(rsp.getEntity());
-
-                    // Sleep for a while before yielding the lock, to avoid immediately hammering the domain
-                    // from another process
-                    sleepQuietly(Duration.ofSeconds(1));
                 }
             });
         }
