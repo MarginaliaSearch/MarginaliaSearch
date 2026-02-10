@@ -119,7 +119,7 @@ public class CrawlerRetreiver implements AutoCloseable {
 
                     if (!robotsRules.isAllowed(probedUrl.toString())) {
                         warcRecorder.flagAsRobotsTxtError(probedUrl);
-                        yield new CrawlerResult.NoData(); // Nothing we can do here, we aren't allowed to fetch the root URL
+                        yield new CrawlerResult.Blocked(); // Nothing we can do here, we aren't allowed to fetch the root URL
                     }
                     delayTimer.waitFetchDelay(0); // initial delay after robots.txt
 
@@ -154,13 +154,13 @@ public class CrawlerRetreiver implements AutoCloseable {
 
                     yield switch (status) {
                         case CrawlerDomainStatus.ERROR -> new CrawlerResult.Error(desc);
-                        case CrawlerDomainStatus.BLOCKED -> new CrawlerResult.NoData();
+                        case CrawlerDomainStatus.BLOCKED -> new CrawlerResult.Blocked();
                         default -> new CrawlerResult.Error(desc);
                     };
                 }
                 default -> {
                     logger.error("Unexpected domain probe result {}", probeResult);
-                    yield new CrawlerResult.NoData();
+                    yield new CrawlerResult.Error("Unexpected probe result");
                 }
             };
 
@@ -524,7 +524,7 @@ public class CrawlerRetreiver implements AutoCloseable {
         record Error(String why) implements CrawlerResult {}
         record Crawled(int fetchResult) implements CrawlerResult {}
         record Redirect() implements CrawlerResult {}
-        record NoData() implements CrawlerResult {}
+        record Blocked() implements CrawlerResult {}
     }
 
 }

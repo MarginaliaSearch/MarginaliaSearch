@@ -34,7 +34,6 @@ import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.service.module.ServiceDiscoveryModule;
-import nu.marginalia.slop.SlopCrawlDataRecord;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.util.SimpleBlockingThreadPool;
@@ -42,7 +41,6 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -583,38 +581,33 @@ public class CrawlerMain extends ProcessMainClass {
                         // Success case
                         case CrawlerRetreiver.CrawlerResult.Crawled(int size) -> {
                             reference.delete();
-
                             convertWarc(domain, userAgent, newWarcFile, slopFile);
-
                             workLog.setJobToFinished(domain, slopFile.toString(), size);
                         }
 
                         // Non-Error cases where we have no crawl data
-                        case CrawlerRetreiver.CrawlerResult.NoData(), CrawlerRetreiver.CrawlerResult.Redirect() -> {
+
+                        case CrawlerRetreiver.CrawlerResult.Blocked() -> {
                             reference.delete();
+                            workLog.setJobToFinished(domain, slopFile.toString(), 0, "Blocked");
+                        }
 
-                            convertWarc(domain, userAgent, newWarcFile, slopFile);
-
-                            workLog.setJobToFinished(domain, slopFile.toString(), 0);
-
+                        case CrawlerRetreiver.CrawlerResult.Redirect() -> {
+                            reference.delete();
+                            workLog.setJobToFinished(domain, slopFile.toString(), 0, "Redirect");
                         }
 
                         // Error, but the site was seen recently
                         case CrawlerRetreiver.CrawlerResult.Error(String why)
                                 when hasOldSlopFile && domainRecentlyAvailable -> {
-
-                            // Keep the old data in case it shows up later
-
-                            workLog.setJobToFinished(domain, slopFile.toString(), why);
+                            // Retain existing crawl data since the error is new, possibly transient
+                            workLog.setJobToFinished(domain, slopFile.toString(), 0, availability.name() + ": " + why);
                         }
 
                         // Error, but we haven't seen the site recently
                         case CrawlerRetreiver.CrawlerResult.Error(String why) -> {
-                            // This effectively wipes the old crawl data reference we had
-
                             reference.delete();
-
-                            workLog.setJobToFinished(domain, slopFile.toString(), why);
+                            workLog.setJobToFinished(domain, slopFile.toString(), 0, availability.name() + ": " + why);
                         }
                     }
 
