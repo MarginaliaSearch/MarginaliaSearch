@@ -56,6 +56,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static nu.marginalia.mqapi.ProcessInboxNames.CRAWLER_INBOX;
+import static nu.marginalia.slop.SlopCrawlDataRecord.convertWarc;
 
 public class CrawlerMain extends ProcessMainClass {
     private final static Logger logger = LoggerFactory.getLogger(CrawlerMain.class);
@@ -570,46 +571,48 @@ public class CrawlerMain extends ProcessMainClass {
 
                     DomainLinks domainLinks = anchorTagsSource.getAnchorTags(domain);
 
-                    var result = retriever.crawlDomain(domainLinks, reference);
-
-
-                    DomainAvailability availability =  availabilityData.getOrDefault(new EdgeDomain(domain), DomainAvailability.DATA_MISSING);
+                    DomainAvailability availability = availabilityData.getOrDefault(new EdgeDomain(domain), DomainAvailability.DATA_MISSING);
 
                     final boolean domainRecentlyAvailable =  availability == DomainAvailability.REACHABLE
-                                                || availability == DomainAvailability.FLAKEY;
+                                                          || availability == DomainAvailability.FLAKEY;
 
                     final boolean hasOldSlopFile = Files.exists(slopFile);
 
-                    switch (result) {
+                    switch (retriever.crawlDomain(domainLinks, reference)) {
+
+                        // Success case
+                        case CrawlerRetreiver.CrawlerResult.Crawled(int size) -> {
+                            reference.delete();
+
+                            convertWarc(domain, userAgent, newWarcFile, slopFile);
+
+                            workLog.setJobToFinished(domain, slopFile.toString(), size);
+                        }
+
+                        // Non-Error cases where we have no crawl data
                         case CrawlerRetreiver.CrawlerResult.NoData(), CrawlerRetreiver.CrawlerResult.Redirect() -> {
                             reference.delete();
 
-                            SlopCrawlDataRecord
-                                    .convertWarc(domain, userAgent, newWarcFile, slopFile);
+                            convertWarc(domain, userAgent, newWarcFile, slopFile);
 
                             workLog.setJobToFinished(domain, slopFile.toString(), 0);
 
                         }
-                        case CrawlerRetreiver.CrawlerResult.Crawled(int size) -> {
-                            reference.delete();
 
-                            SlopCrawlDataRecord
-                                    .convertWarc(domain, userAgent, newWarcFile, slopFile);
-
-                            workLog.setJobToFinished(domain, slopFile.toString(), size);
-                        }
+                        // Error, but the site was seen recently
                         case CrawlerRetreiver.CrawlerResult.Error(String why)
                                 when hasOldSlopFile && domainRecentlyAvailable -> {
 
-                            // Keep the old data
+                            // Keep the old data in case it shows up later
+
                             workLog.setJobToFinished(domain, slopFile.toString(), why);
                         }
-                        case CrawlerRetreiver.CrawlerResult.Error(String why) -> {
-                            // Wipe the old data
-                            reference.delete();
 
-                            SlopCrawlDataRecord
-                                    .convertWarc(domain, userAgent, newWarcFile, slopFile);
+                        // Error, but we haven't seen the site recently
+                        case CrawlerRetreiver.CrawlerResult.Error(String why) -> {
+                            // This effectively wipes the old crawl data reference we had
+
+                            reference.delete();
 
                             workLog.setJobToFinished(domain, slopFile.toString(), why);
                         }
