@@ -45,6 +45,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.Security;
+import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -285,9 +286,15 @@ public class CrawlerMain extends ProcessMainClass {
 
                         boolean serverAvailable = rs.getBoolean("SERVER_AVAILABLE");
 
-                        Instant tsLastPing = rs.getTimestamp("TS_LAST_PING").toInstant();
-                        Instant tsLastAvailable = rs.getTimestamp("TS_LAST_AVAILABLE").toInstant();
-                        Instant tsLastError = rs.getTimestamp("TS_LAST_ERROR").toInstant();
+                        Instant tsLastPing = Optional.ofNullable(rs.getTimestamp("TS_LAST_PING"))
+                                .map(Timestamp::toInstant)
+                                .orElse(Instant.EPOCH);
+                        Instant tsLastAvailable = Optional.ofNullable(rs.getTimestamp("TS_LAST_AVAILABLE"))
+                                .map(Timestamp::toInstant)
+                                .orElse(Instant.EPOCH);
+                        Instant tsLastError = Optional.ofNullable(rs.getTimestamp("TS_LAST_ERROR"))
+                                .map(Timestamp::toInstant)
+                                .orElse(Instant.EPOCH);
 
                         if (tsLastPing.isBefore(now.minus(Duration.ofDays(3)))) {
                             continue; // data is stale, nothing can be said
