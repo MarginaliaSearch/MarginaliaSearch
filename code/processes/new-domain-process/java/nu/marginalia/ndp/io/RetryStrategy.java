@@ -65,8 +65,8 @@ public class RetryStrategy implements HttpRequestRetryStrategy {
             }
 
             try {
-                int retryAfterTime = Integer.parseInt(retryAfter);
-                retryAfterTime = Math.clamp(retryAfterTime, 1, 5);
+                int retryAfterTime = (int) Math.round(Double.parseDouble(retryAfter));
+                retryAfterTime = Math.clamp(retryAfterTime, 1, 10);
 
                 return TimeValue.ofSeconds(retryAfterTime);
             } catch (NumberFormatException e) {
