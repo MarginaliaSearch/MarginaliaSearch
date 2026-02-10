@@ -91,10 +91,6 @@ public class HttpPingService {
                         result = pingHttpFetcher.fetchUrl(alternateUrl, Method.GET, null, null);
                     }
                 }
-
-                // Add a grace sleep before we yield the semaphore, so that another thread doesn't
-                // immediately hammer the same domain after it's released.
-                Thread.sleep(Duration.ofSeconds(1));
             }
         }
 

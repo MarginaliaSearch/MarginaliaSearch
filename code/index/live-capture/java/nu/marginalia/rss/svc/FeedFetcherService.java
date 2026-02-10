@@ -250,7 +250,6 @@ public class FeedFetcherService {
                         FetchResult feedData;
                         try (DomainLock domainLock = domainCoordinator.lockDomain(new EdgeDomain(feed.domain()))) {
                             feedData = fetchFeedData(feed, fetchExecutor, ifModifiedSinceDate, ifNoneMatchTag);
-                            TimeUnit.SECONDS.sleep(1); // Sleep before we yield the lock to avoid hammering the server from multiple processes
                         } catch (Exception ex) {
                             feedData = new FetchResult.TransientError();
                         }
