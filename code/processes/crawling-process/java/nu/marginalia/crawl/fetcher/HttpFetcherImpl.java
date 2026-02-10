@@ -302,7 +302,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                 return new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, "Timeout during domain probe");
             }
             catch (Exception ex) {
-                return new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, "Error during domain probe");
+                return new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, ex.getClass().getSimpleName() + " during domain probe ");
             }
 
         }
