@@ -93,9 +93,7 @@ public class PingJobScheduler {
             }
 
             try {
-                synchronized (this) {
-                    wait(1000);
-                }
+                Thread.sleep(Duration.ofSeconds(1));
             }
             catch (InterruptedException ex) {
                 break;

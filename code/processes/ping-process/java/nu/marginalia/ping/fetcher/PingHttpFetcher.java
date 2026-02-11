@@ -75,9 +75,9 @@ public class PingHttpFetcher {
                     }
 
 
-                    consumeData(entity.getContent(), request, Duration.of(15, ChronoUnit.SECONDS));
-
-                    byte[] body = entity != null ? EntityUtils.toByteArray(entity) : null;
+                    if (entity != null) {
+                        consumeData(entity.getContent(), request, Duration.of(15, ChronoUnit.SECONDS));
+                    }
 
                     Duration responseTime = Duration.between(start, Instant.now());
 
@@ -97,6 +97,8 @@ public class PingHttpFetcher {
         } catch (HttpHostConnectException | SSLHandshakeException e) {
             return new ConnectionError(e.getClass().getSimpleName());
         } catch (IOException e) {
+            return new ProtocolError(e.getClass().getSimpleName());
+        } catch (Exception e) {
             return new ProtocolError(e.getClass().getSimpleName());
         }
 
