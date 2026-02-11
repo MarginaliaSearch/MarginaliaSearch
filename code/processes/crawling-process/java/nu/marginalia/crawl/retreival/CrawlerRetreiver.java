@@ -55,7 +55,8 @@ public class CrawlerRetreiver implements AutoCloseable {
     private final DomainCookies cookies = new DomainCookies();
 
     private static final CrawlerConnectionThrottle connectionThrottle = new CrawlerConnectionThrottle(
-            Duration.ofSeconds(1) // pace the connections to avoid network congestion at startup
+            Duration.ofSeconds(1), // pace the connections to avoid network congestion at startup
+            Duration.ofMinutes(5)  // stop doing this after 5 minutes
     );
 
     int errorCount = 0;

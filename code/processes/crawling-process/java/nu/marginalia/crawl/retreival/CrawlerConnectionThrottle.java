@@ -3,7 +3,6 @@ package nu.marginalia.crawl.retreival;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 
 /**
  * This class is used to stagger the rate at which connections are created.
@@ -18,20 +17,37 @@ public class CrawlerConnectionThrottle {
     private final Semaphore launchSemaphore = new Semaphore(1);
 
     private final Duration launchInterval;
+    private final Duration throttleDuration;
 
-    public CrawlerConnectionThrottle(Duration launchInterval) {
+    private Instant disableTime = null;
+
+    private volatile boolean doThrottle = true;
+
+    public CrawlerConnectionThrottle(Duration launchInterval,
+                                     Duration throttleDuration)
+    {
         this.launchInterval = launchInterval;
+        this.throttleDuration = throttleDuration;
     }
 
     public void waitForConnectionPermission() throws InterruptedException {
+        if (!doThrottle)
+            return;
+
         try {
             launchSemaphore.acquire();
+
+            Instant now = Instant.now();
+
+            if (disableTime == null) disableTime = now.plus(throttleDuration);
+            else if (now.isAfter(disableTime)) {
+                doThrottle = false;
+                return;
+            }
+
             Instant nextPermittedLaunch = lastCrawlStart.plus(launchInterval);
 
-            if (nextPermittedLaunch.isAfter(Instant.now())) {
-                long waitTime = Duration.between(Instant.now(), nextPermittedLaunch).toMillis();
-                TimeUnit.MILLISECONDS.sleep(waitTime);
-            }
+            Thread.sleep(Duration.between(now, nextPermittedLaunch));
 
             lastCrawlStart = Instant.now();
         }
