@@ -16,7 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
 public class UpdateRssActor extends RecordActorPrototype {
@@ -26,6 +28,8 @@ public class UpdateRssActor extends RecordActorPrototype {
     private final Duration updateInterval = Duration.ofHours(24);
     private final int cleanInterval = 60;
     private final int nodeId;
+
+    private final int SCHEDULE_START_TIME_UTC = 12;
 
     private final NodeConfigurationService nodeConfigurationService;
     private static final Logger logger = LoggerFactory.getLogger(UpdateRssActor.class);
@@ -47,7 +51,10 @@ public class UpdateRssActor extends RecordActorPrototype {
 
     @Resume(behavior=ActorResumeBehavior.RETRY)
     public record Wait(String untilTs, int count) implements ActorStep {}
-    
+
+    @Resume(behavior=ActorResumeBehavior.RETRY)
+    public record ScheduleNext(int count) implements ActorStep {}
+
     @Resume(behavior=ActorResumeBehavior.RETRY)
     public record Update(FeedFetcherService.UpdateMode mode, int refreshCount) implements ActorStep {}
 
@@ -59,12 +66,23 @@ public class UpdateRssActor extends RecordActorPrototype {
                     yield new Error("Invalid node profile for RSS update");
                 }
                 else {
-                    yield new Update(FeedFetcherService.UpdateMode.REFRESH,0);
+                    yield new ScheduleNext(0);
                 }
             }
+
+            case ScheduleNext(int refreshCount) ->
+                    new Wait(Instant.now()
+                            .atOffset(ZoneOffset.UTC)
+                            .truncatedTo(ChronoUnit.DAYS)
+                            .plus(1, ChronoUnit.DAYS)
+                            .plusHours(SCHEDULE_START_TIME_UTC)
+                            .toInstant()
+                            .toString(),
+                            refreshCount);
+
             case Wait(String untilTs, int count) -> {
-                var until = LocalDateTime.parse(untilTs);
-                var now = LocalDateTime.now();
+                var until = Instant.parse(untilTs);
+                var now = Instant.now();
 
                 long remaining = Duration.between(now, until).toMillis();
 
@@ -93,7 +111,8 @@ public class UpdateRssActor extends RecordActorPrototype {
                 while (feedFetcherService.isRunning()) {
                     TimeUnit.SECONDS.sleep(15);
                 }
-                yield new Wait(LocalDateTime.now().plus(updateInterval).toString(), refreshCount + 1);
+
+                yield new ScheduleNext(refreshCount + 1);
             }
             case End() -> {
                 if (feedFetcherService.isRunning()) {
