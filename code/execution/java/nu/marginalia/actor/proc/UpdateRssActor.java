@@ -2,12 +2,11 @@ package nu.marginalia.actor.proc;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import nu.marginalia.actor.ActorTimeslot;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
-import nu.marginalia.api.feeds.FeedsClient;
-import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.nodecfg.model.NodeProfile;
 import nu.marginalia.rss.svc.FeedFetcherService;
@@ -17,8 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
 public class UpdateRssActor extends RecordActorPrototype {
@@ -29,7 +26,7 @@ public class UpdateRssActor extends RecordActorPrototype {
     private final int cleanInterval = 60;
     private final int nodeId;
 
-    private final int SCHEDULE_START_TIME_UTC = 12;
+    private final int SCHEDULE_START_TIME_UTC = 10;
 
     private final NodeConfigurationService nodeConfigurationService;
     private static final Logger logger = LoggerFactory.getLogger(UpdateRssActor.class);
@@ -50,7 +47,12 @@ public class UpdateRssActor extends RecordActorPrototype {
     public record Run(int refreshCount) implements ActorStep {}
 
     @Resume(behavior=ActorResumeBehavior.RETRY)
-    public record Wait(String untilTs, int count) implements ActorStep {}
+    public record Wait(String untilTs, int count) implements ActorStep {
+        public Wait(Instant untilTs, int count) {
+            this(untilTs.toString(), count);
+        }
+
+    }
 
     @Resume(behavior=ActorResumeBehavior.RETRY)
     public record ScheduleNext(int count) implements ActorStep {}
@@ -71,14 +73,7 @@ public class UpdateRssActor extends RecordActorPrototype {
             }
 
             case ScheduleNext(int refreshCount) ->
-                    new Wait(Instant.now()
-                            .atOffset(ZoneOffset.UTC)
-                            .truncatedTo(ChronoUnit.DAYS)
-                            .plus(1, ChronoUnit.DAYS)
-                            .plusHours(SCHEDULE_START_TIME_UTC)
-                            .toInstant()
-                            .toString(),
-                            refreshCount);
+                    new Wait(ActorTimeslot.dailyAtHourUTC(SCHEDULE_START_TIME_UTC), refreshCount);
 
             case Wait(String untilTs, int count) -> {
                 var until = Instant.parse(untilTs);

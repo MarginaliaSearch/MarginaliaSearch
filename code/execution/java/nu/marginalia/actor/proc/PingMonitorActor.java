@@ -3,6 +3,7 @@ package nu.marginalia.actor.proc;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.actor.ActorTimeslot;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
@@ -20,7 +21,6 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.time.*;
-import java.time.temporal.ChronoUnit;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -59,7 +59,11 @@ public class PingMonitorActor extends RecordActorPrototype {
     @Resume(behavior = ActorResumeBehavior.RESTART)
     public record Run(int attempts) implements ActorStep {}
     @Resume(behavior = ActorResumeBehavior.RETRY)
-    public record Wait(String untilTs) implements ActorStep {}
+    public record Wait(String untilTs) implements ActorStep {
+        public Wait(Instant untilTs) {
+            this(untilTs.toString());
+        }
+    }
     @Terminal
     public record Aborted() implements ActorStep {}
 
@@ -127,15 +131,7 @@ public class PingMonitorActor extends RecordActorPrototype {
                     yield new Aborted();
                 }
 
-                yield new Wait(
-                        Instant.now()
-                                .atOffset(ZoneOffset.UTC)
-                                .truncatedTo(ChronoUnit.DAYS)
-                                .plus(1, ChronoUnit.DAYS)
-                                .plusHours(SCHEDULE_START_TIME_UTC)
-                                .toInstant()
-                                .toString()
-                );
+                yield new Wait(ActorTimeslot.dailyAtHourUTC(SCHEDULE_START_TIME_UTC));
             }
             case Wait(String untilTs) -> {
                 var nextRun = Instant.parse(untilTs);
