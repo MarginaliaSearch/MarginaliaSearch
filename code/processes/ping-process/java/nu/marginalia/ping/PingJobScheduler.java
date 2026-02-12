@@ -61,7 +61,7 @@ public class PingJobScheduler {
         this.pingDao = pingDao;
     }
 
-    public void run(Duration maxRunTime) {
+    public void run(Instant endTs) {
         running = true;
 
         availabilityUpdateSchedule.replaceQueue(pingDao.getDomainUpdateSchedule(Integer.MAX_VALUE));
@@ -80,9 +80,8 @@ public class PingJobScheduler {
             allThreads.add(Thread.ofPlatform().daemon().name("dns-job-consumer-" + i).start(this::dnsJobConsumer));
         }
 
-        Instant stopTime = Instant.now().plus(maxRunTime);
 
-        while (Instant.now().isBefore(stopTime)) {
+        while (Instant.now().isBefore(endTs)) {
 
             if (!availabilityUpdateSchedule.hasAvailableJobs()) {
                 logger.info("Refilling domain jobs");

@@ -9,15 +9,16 @@ import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
 import nu.marginalia.domsample.DomSampleService;
+import nu.marginalia.livecapture.LiveCaptureGrpcService;
 
 import java.time.Duration;
 import java.time.Instant;
 
 @Singleton
-public class DomSampleActor extends RecordActorPrototype {
-    private static final ActorTimeslot.ActorSchedule schedule = ActorTimeslot.DOM_SAMPLE_SLOT;
+public class ScreenshotActor extends RecordActorPrototype {
+    private static final ActorTimeslot.ActorSchedule schedule = ActorTimeslot.SCREENGRAB_SLOT_SAMPLE_SLOT;
 
-    private final DomSampleService domSampleService;
+    private final LiveCaptureGrpcService liveCaptureService;
 
     public record Initial() implements ActorStep {}
 
@@ -54,26 +55,25 @@ public class DomSampleActor extends RecordActorPrototype {
                 if (endTime.isBefore(Instant.now()))
                     yield new Wait();
 
-                if (!domSampleService.isRunning())
-                    domSampleService.start();
+                liveCaptureService.setAllowed(true);
 
                 try {
                     while (Instant.now().isBefore(endTime)) {
-                        if (!domSampleService.isRunning()) {
+                        if (!liveCaptureService.isAllowed()) {
                             yield new Wait();
                         }
                         Thread.sleep(Duration.ofSeconds(15));
                     }
                 }
                 finally {
-                    domSampleService.stop();
+                    liveCaptureService.setAllowed(false);
                 }
 
                 yield new Wait();
             }
             case End() -> {
-                if (domSampleService.isRunning())
-                    domSampleService.stop();
+                liveCaptureService.setAllowed(false);
+
                 yield new End(); // will not run, terminal state
             }
             default -> new Error();
@@ -86,10 +86,10 @@ public class DomSampleActor extends RecordActorPrototype {
     }
 
     @Inject
-    public DomSampleActor(Gson gson, DomSampleService domSampleService, ActorProcessWatcher processWatcher)
+    public ScreenshotActor(Gson gson, LiveCaptureGrpcService liveCaptureService, ActorProcessWatcher processWatcher)
     {
         super(gson);
-        this.domSampleService = domSampleService;
+        this.liveCaptureService = liveCaptureService;
     }
 
 }

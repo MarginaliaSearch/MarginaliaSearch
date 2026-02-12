@@ -20,6 +20,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -37,6 +38,8 @@ public class LiveCaptureGrpcService
     private final LinkedBlockingQueue<ScheduledScreenshot> requestedScreenshots = new LinkedBlockingQueue<>(128);
     private final HikariDataSource dataSource;
     private final DomainCoordinator domainCoordinator;
+
+    private volatile boolean screengrabAllowed = false;
 
     record ScheduledScreenshot(int domainId) {}
 
@@ -60,10 +63,12 @@ public class LiveCaptureGrpcService
             logger.warn("Live capture service will not run");
             serviceEnabled = false;
             browserlessURI = null; // satisfy final
+            screengrabAllowed = false;
         }
         else {
             browserlessURI = new URI(browserlessAddress);
             serviceEnabled = true;
+            screengrabAllowed = false;
 
             for (int i = 0; i < threads; i++) {
                 Thread.ofPlatform().daemon().name("Capture Agent " + i).start(new ScreenshotCaptureAgent());
@@ -71,10 +76,17 @@ public class LiveCaptureGrpcService
         }
     }
 
+    public void setAllowed(boolean value) {
+        this.screengrabAllowed = value;
+    }
+    public boolean isAllowed() {
+        return this.screengrabAllowed;
+    }
+
     public void requestScreengrab(nu.marginalia.api.livecapture.RpcDomainId request,
                                   StreamObserver<Empty> responseObserver)
     {
-        if (serviceEnabled) {
+        if (serviceEnabled && screengrabAllowed) {
             try (var conn = dataSource.getConnection()) {
                 if (ScreenshotDbOperations.isEligibleForScreengrab(conn, request.getDomainId())) {
                     // may fail, we don't care about it
@@ -104,7 +116,12 @@ public class LiveCaptureGrpcService
         public void run() {
             try (BrowserlessClient client = new BrowserlessClient(browserlessURI)) {
                 while (true) {
-                    capture(client, requestedScreenshots.take());
+                    if (screengrabAllowed) {
+                        capture(client, requestedScreenshots.take());
+                    }
+                    else {
+                        Thread.sleep(Duration.ofSeconds(5));
+                    }
                 }
             } catch (InterruptedException e) {
                 logger.error("Capture agent interrupted", e);

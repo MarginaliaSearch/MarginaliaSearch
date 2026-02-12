@@ -40,6 +40,7 @@ public enum ExecutorActor {
     SCRAPE_FEEDS(NodeProfile.REALTIME),
     UPDATE_RSS(NodeProfile.REALTIME),
     DOM_SAMPLE_ACTOR(NodeProfile.REALTIME),
+    SCREENSHOT_ACTOR(NodeProfile.REALTIME),
     ;
 
     public String id() {

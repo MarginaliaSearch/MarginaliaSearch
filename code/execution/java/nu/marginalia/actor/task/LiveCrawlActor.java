@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.IndexLocations;
+import nu.marginalia.actor.ActorTimeslot;
 import nu.marginalia.actor.ExecutorActor;
 import nu.marginalia.actor.ExecutorActorStateMachines;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
@@ -29,12 +30,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 @Singleton
 public class LiveCrawlActor extends RecordActorPrototype {
+    private static final ActorTimeslot.ActorSchedule schedule = ActorTimeslot.LIVE_CRAWLER_SLOT;
 
     // STATES
     private final ActorProcessWatcher processWatcher;
@@ -47,7 +50,13 @@ public class LiveCrawlActor extends RecordActorPrototype {
 
     public record Initial() implements ActorStep {}
     @Resume(behavior = ActorResumeBehavior.RETRY)
-    public record Monitor(String feedsHash) implements ActorStep {}
+    public record Monitor(String checkTimeTs, String feedsHash) implements ActorStep {
+        public Monitor(String feedsHash) {
+            ActorTimeslot slot = schedule.nextTimeslot();
+
+            this(slot.start().toString(), feedsHash);
+        }
+    }
     @Resume(behavior = ActorResumeBehavior.RESTART)
     public record LiveCrawl(String feedsHash, long msgId) implements ActorStep {
         public LiveCrawl(String feedsHash) { this(feedsHash, -1); }
@@ -59,22 +68,18 @@ public class LiveCrawlActor extends RecordActorPrototype {
             case Initial() -> {
                 yield new Monitor(feedFetcherService.getFeedDataHash());
             }
-            case Monitor(String oldHash) -> {
+            case Monitor(String checkTimeTs, String oldHash) -> {
+                Instant checkTime = Instant.parse(checkTimeTs);
+                Thread.sleep(Duration.between(Instant.now(), checkTime));
+
                 // Sleep initially in case this is during start-up
-                for (;;) {
-                    try {
-                        Thread.sleep(Duration.ofMinutes(1));
-                        String newHash = feedFetcherService.getFeedDataHash();
+                String newHash = feedFetcherService.getFeedDataHash();
 
-                        if (!Objects.equals(newHash, oldHash)) {
-                            yield new LiveCrawl(newHash);
-                        }
-
-                        Thread.sleep(Duration.ofMinutes(14));
-                    }
-                    catch (RuntimeException ex) {
-                        logger.error("Failed to fetch feed data hash");
-                    }
+                if (!Objects.equals(newHash, oldHash)) {
+                    yield new LiveCrawl(newHash);
+                }
+                else {
+                    yield new Monitor(oldHash);
                 }
             }
             case LiveCrawl(String feedsHash, long msgId) when msgId < 0 -> {

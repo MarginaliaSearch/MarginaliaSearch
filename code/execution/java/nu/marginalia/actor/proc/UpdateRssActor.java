@@ -19,14 +19,13 @@ import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
 public class UpdateRssActor extends RecordActorPrototype {
+    private final ActorTimeslot.ActorSchedule schedule = ActorTimeslot.RSS_FEEDS_SLOT;
 
     private final FeedFetcherService feedFetcherService;
 
     private final Duration updateInterval = Duration.ofHours(24);
     private final int cleanInterval = 60;
     private final int nodeId;
-
-    private final int SCHEDULE_START_TIME_UTC = 10;
 
     private final NodeConfigurationService nodeConfigurationService;
     private static final Logger logger = LoggerFactory.getLogger(UpdateRssActor.class);
@@ -47,9 +46,10 @@ public class UpdateRssActor extends RecordActorPrototype {
     public record Run(int refreshCount) implements ActorStep {}
 
     @Resume(behavior=ActorResumeBehavior.RETRY)
-    public record Wait(String untilTs, int count) implements ActorStep {
-        public Wait(Instant untilTs, int count) {
-            this(untilTs.toString(), count);
+    public record Wait(String startTs, String endTs, int count) implements ActorStep {
+
+        public Wait(ActorTimeslot timeslot, int count) {
+            this(timeslot.start().toString(), timeslot.end().toString(), count);
         }
 
     }
@@ -73,29 +73,22 @@ public class UpdateRssActor extends RecordActorPrototype {
             }
 
             case ScheduleNext(int refreshCount) ->
-                    new Wait(ActorTimeslot.dailyAtHourUTC(SCHEDULE_START_TIME_UTC), refreshCount);
+                    new Wait(schedule.nextTimeslot(), refreshCount);
 
-            case Wait(String untilTs, int count) -> {
-                var until = Instant.parse(untilTs);
+            case Wait(String startTs, String endTs, int count) -> {
+                var start = Instant.parse(startTs);
+                var end = Instant.parse(endTs);
                 var now = Instant.now();
 
-                long remaining = Duration.between(now, until).toMillis();
+                Thread.sleep(Duration.between(now, start));
 
-                if (remaining > 0) {
-                    Thread.sleep(remaining);
-                    yield new Wait(untilTs, count);
+                // Once every `cleanInterval` updates, do a clean update;
+                // otherwise do a refresh update
+                if (count > cleanInterval) {
+                    yield new Update(FeedFetcherService.UpdateMode.CLEAN, 0);
                 }
                 else {
-
-                    // Once every `cleanInterval` updates, do a clean update;
-                    // otherwise do a refresh update
-                    if (count > cleanInterval) {
-                        yield new Update(FeedFetcherService.UpdateMode.CLEAN, 0);
-                    }
-                    else {
-                        yield new Update(FeedFetcherService.UpdateMode.REFRESH, count);
-                    }
-
+                    yield new Update(FeedFetcherService.UpdateMode.REFRESH, count);
                 }
             }
             case Update(FeedFetcherService.UpdateMode mode, int count) -> {

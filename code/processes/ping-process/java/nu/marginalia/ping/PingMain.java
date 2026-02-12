@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import java.security.Security;
 import java.time.Duration;
+import java.time.Instant;
 
 public class PingMain extends ProcessMainClass {
     private static final Logger log = LoggerFactory.getLogger(PingMain.class);
@@ -43,13 +44,16 @@ public class PingMain extends ProcessMainClass {
         this.node = processConfiguration.node();
     }
 
-    public void run(int runHours) {
-        log.info("Starting PingMain...");
+    public void run(Instant endTs) {
 
-        // Start the ping job scheduler
-        pingJobScheduler.run(Duration.ofHours(runHours));
-
-        log.info("PingMain finished successfully.");
+        if (Instant.now().isBefore(endTs)) {
+            log.info("Starting PingMain...");
+            pingJobScheduler.run(endTs);
+            log.info("PingMain finished successfully.");
+        }
+        else {
+            logger.info("Time slot aleady exceeded, termingating");
+        }
 
     }
 
@@ -89,7 +93,7 @@ public class PingMain extends ProcessMainClass {
         var instructions = main.fetchInstructions(PingRequest.class);
 
         try {
-            main.run(instructions.value().runHours());
+            main.run(Instant.parse(instructions.value().endTs()));
             instructions.ok();
         }
         catch (Throwable ex) {
