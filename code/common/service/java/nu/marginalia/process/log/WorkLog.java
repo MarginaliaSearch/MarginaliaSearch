@@ -87,6 +87,20 @@ public class WorkLog implements AutoCloseable, Closeable {
         writeLogEntry(String.format("%s\t%s\t%s\t%d\n",id, LocalDateTime.now(), where, size));
     }
 
+    /** Mark the job as finished in the work log
+     *
+     * @param id  job identifier
+     * @param where  free form field, e.g. location on disk
+     * @param size  free form field, e.g. how many items were processed
+     */
+    public synchronized void setJobToFinished(String id, String where, int size, String annotation) throws IOException {
+        if (!finishedJobs.add(id)) {
+            logger.warn("Setting job {} to finished, but it was already finished", id);
+        }
+
+        writeLogEntry(String.format("%s\t%s\t%s\t%d # %s\n",id, LocalDateTime.now(), where, size, annotation.replace('\n', ' ')));
+    }
+
     public synchronized boolean isJobFinished(String id) {
         return finishedJobs.contains(id);
     }

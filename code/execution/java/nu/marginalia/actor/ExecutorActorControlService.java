@@ -69,12 +69,13 @@ public class ExecutorActorControlService {
                                        DownloadSampleActor downloadSampleActor,
                                        ScrapeFeedsActor scrapeFeedsActor,
                                        ExecutorActorStateMachines stateMachines,
-                                       MigrateCrawlDataActor migrateCrawlDataActor,
                                        ExportAllPrecessionActor exportAllPrecessionActor,
                                        UpdateNsfwFiltersActor updateNsfwFiltersActor,
                                        UpdateRssActor updateRssActor,
-                                       DomSampleActor domSampleActor
-                                       ) throws SQLException {
+                                       DomSampleActor domSampleActor,
+                                       ScreenshotActor screenshotActor
+                                       ) throws SQLException
+    {
         this.messageQueueFactory = messageQueueFactory;
         this.eventLog = baseServiceParams.eventLog;
         this.stateMachines = stateMachines;
@@ -116,8 +117,8 @@ public class ExecutorActorControlService {
         register(ExecutorActor.SCRAPE_FEEDS, scrapeFeedsActor);
         register(ExecutorActor.UPDATE_RSS, updateRssActor);
         register(ExecutorActor.DOM_SAMPLE_ACTOR, domSampleActor);
+        register(ExecutorActor.SCREENSHOT_ACTOR, screenshotActor);
 
-        register(ExecutorActor.MIGRATE_CRAWL_DATA, migrateCrawlDataActor);
         register(ExecutorActor.UPDATE_NSFW_LISTS, updateNsfwFiltersActor);
 
         if (serviceConfiguration.node() == 1) {

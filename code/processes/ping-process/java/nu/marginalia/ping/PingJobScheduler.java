@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /** PingJobScheduler is responsible for scheduling and processing ping jobs
@@ -60,7 +61,7 @@ public class PingJobScheduler {
         this.pingDao = pingDao;
     }
 
-    public void run(Duration maxRunTime) {
+    public void run(Instant endTs) {
         running = true;
 
         availabilityUpdateSchedule.replaceQueue(pingDao.getDomainUpdateSchedule(Integer.MAX_VALUE));
@@ -79,9 +80,8 @@ public class PingJobScheduler {
             allThreads.add(Thread.ofPlatform().daemon().name("dns-job-consumer-" + i).start(this::dnsJobConsumer));
         }
 
-        Instant stopTime = Instant.now().plus(maxRunTime);
 
-        while (Instant.now().isBefore(stopTime)) {
+        while (Instant.now().isBefore(endTs)) {
 
             if (!availabilityUpdateSchedule.hasAvailableJobs()) {
                 logger.info("Refilling domain jobs");
@@ -93,9 +93,7 @@ public class PingJobScheduler {
             }
 
             try {
-                synchronized (this) {
-                    wait(1000);
-                }
+                Thread.sleep(Duration.ofSeconds(1));
             }
             catch (InterruptedException ex) {
                 break;
@@ -126,6 +124,8 @@ public class PingJobScheduler {
         }
     }
 
+    private ConcurrentHashMap<String, Instant> lastDomainReschedule = new ConcurrentHashMap<>();
+
     private void availabilityJobConsumer() {
         while (running && !Thread.interrupted()) {
             try {
@@ -147,16 +147,42 @@ public class PingJobScheduler {
                     continue; // No data to process, skip this iteration
                 }
 
-                List<WritableModel> objects = switch (data) {
-                    case HistoricalAvailabilityData.JustDomainReference(DomainReference reference)
-                            -> httpPingService.pingDomain(reference, null, null);
-                    case HistoricalAvailabilityData.JustAvailability(String domain, DomainAvailabilityRecord record)
-                            -> httpPingService.pingDomain(
+                var edgeDomain = ref.asEdgeDomain();
+
+                var maybeLock = domainCoordinator
+                        .tryLockDomain(ref.asEdgeDomain(), Duration.ofSeconds(1));
+
+                // If we can't acquire a domain lock in a timely manner, we'll reschedule this job in the future
+
+                if (maybeLock.isEmpty()) {
+                    Instant newScheduledTime = lastDomainReschedule.compute(edgeDomain.topDomain,
+                            (k,v) -> {
+                                if (v == null) {
+                                    return Instant.now().plus(Duration.ofSeconds(10));
+                                } else {
+                                    return v.plus(Duration.ofSeconds(5));
+                                }
+                            });
+                    availabilityUpdateSchedule.add(ref, newScheduledTime);
+                    continue;
+                }
+
+                var lock = maybeLock.get();
+                List<WritableModel> objects;
+                try (lock) {
+                    objects = switch (data) {
+                        case HistoricalAvailabilityData.JustDomainReference(DomainReference reference) ->
+                                httpPingService.pingDomain(reference, null, null);
+                        case HistoricalAvailabilityData.JustAvailability(
+                                String domain, DomainAvailabilityRecord record
+                        ) -> httpPingService.pingDomain(
                                 new DomainReference(record.domainId(), record.nodeId(), domain), record, null);
-                    case HistoricalAvailabilityData.AvailabilityAndSecurity(String domain, DomainAvailabilityRecord availability, DomainSecurityRecord security)
-                            -> httpPingService.pingDomain(
-                                    new DomainReference(availability.domainId(), availability.nodeId(), domain), availability, security);
-                };
+                        case HistoricalAvailabilityData.AvailabilityAndSecurity(
+                                String domain, DomainAvailabilityRecord availability, DomainSecurityRecord security
+                        ) -> httpPingService.pingDomain(
+                                new DomainReference(availability.domainId(), availability.nodeId(), domain), availability, security);
+                    };
+                }
 
                 pingDao.write(objects);
 

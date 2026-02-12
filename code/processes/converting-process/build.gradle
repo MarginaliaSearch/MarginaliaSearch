@@ -25,7 +25,6 @@ dependencies {
 
     implementation project(':third-party:porterstemmer')
     implementation project(':third-party:count-min-sketch')
-    implementation project(':third-party:parquet-floor')
 
     implementation project(':code:index:api')
     implementation project(':code:processes:process-mq-api')

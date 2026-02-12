@@ -33,7 +33,6 @@ dependencies {
     implementation project(':code:functions:language-processing')
     implementation project(':code:libraries:coded-sequence')
     implementation project(':third-party:commons-codec')
-    implementation project(':third-party:parquet-floor')
     testImplementation project(':code:services-application:search-service')
 
     implementation project(':code:processes:crawling-process:model')

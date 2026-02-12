@@ -24,7 +24,6 @@ public enum ExecutorActor {
     EXPORT_SAMPLE_DATA(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
     EXPORT_DOM_SAMPLE_DATA(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
     DOWNLOAD_SAMPLE(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
-    MIGRATE_CRAWL_DATA(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
 
     PROC_CONVERTER_SPAWNER(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.SIDELOAD),
     PROC_LOADER_SPAWNER(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.SIDELOAD),
@@ -41,6 +40,7 @@ public enum ExecutorActor {
     SCRAPE_FEEDS(NodeProfile.REALTIME),
     UPDATE_RSS(NodeProfile.REALTIME),
     DOM_SAMPLE_ACTOR(NodeProfile.REALTIME),
+    SCREENSHOT_ACTOR(NodeProfile.REALTIME),
     ;
 
     public String id() {

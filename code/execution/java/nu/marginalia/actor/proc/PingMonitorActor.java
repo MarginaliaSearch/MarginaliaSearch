@@ -3,6 +3,7 @@ package nu.marginalia.actor.proc;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.actor.ActorTimeslot;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
@@ -20,7 +21,6 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.time.*;
-import java.time.temporal.ChronoUnit;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -34,6 +34,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Singleton
 public class PingMonitorActor extends RecordActorPrototype {
 
+    private static final ActorTimeslot.ActorSchedule schedule = ActorTimeslot.DOMAIN_PING_SLOT;
+
     private final MqPersistence persistence;
     private final ProcessSpawnerService processSpawnerService;
 
@@ -42,9 +44,6 @@ public class PingMonitorActor extends RecordActorPrototype {
     // We schedule the Ping job to run between 3-9 AM UTC,
     // which is a time slot which about as close to a global
     // off hour as there exists.
-
-    private final int SCHEDULE_START_TIME_UTC = 3;
-    private final int SCHEDULE_RUN_TIME_HOURS = 6;
 
     public static final int MAX_ATTEMPTS = 3;
     private final String inboxName;
@@ -59,7 +58,13 @@ public class PingMonitorActor extends RecordActorPrototype {
     @Resume(behavior = ActorResumeBehavior.RESTART)
     public record Run(int attempts) implements ActorStep {}
     @Resume(behavior = ActorResumeBehavior.RETRY)
-    public record Wait(String untilTs) implements ActorStep {}
+    public record Wait(String startTs, String endTs) implements ActorStep {
+        public Wait() {
+            ActorTimeslot timeslot = schedule.nextTimeslot();
+
+            this(timeslot.start().toString(), timeslot.end().toString());
+        }
+    }
     @Terminal
     public record Aborted() implements ActorStep {}
 
@@ -67,13 +72,7 @@ public class PingMonitorActor extends RecordActorPrototype {
     public ActorStep transition(ActorStep self) throws Exception {
         return switch (self) {
             case Initial i -> {
-                PingRequest request = new PingRequest(SCHEDULE_RUN_TIME_HOURS);
-                persistence.sendNewMessage(inboxName, null, null,
-                        "PingRequest",
-                        gson.toJson(request),
-                        null);
-
-                yield new Monitor(0);
+                yield new Wait();
             }
             case Monitor(int errorAttempts) -> {
                 for (;;) {
@@ -127,22 +126,21 @@ public class PingMonitorActor extends RecordActorPrototype {
                     yield new Aborted();
                 }
 
-                yield new Wait(
-                        Instant.now()
-                                .atOffset(ZoneOffset.UTC)
-                                .truncatedTo(ChronoUnit.DAYS)
-                                .plus(1, ChronoUnit.DAYS)
-                                .plusHours(SCHEDULE_START_TIME_UTC)
-                                .toInstant()
-                                .toString()
-                );
+                yield new Wait();
             }
-            case Wait(String untilTs) -> {
-                var nextRun = Instant.parse(untilTs);
+            case Wait(String startTs, String endTs) -> {
+                var start = Instant.parse(startTs);
+                var end = Instant.parse(endTs);
 
-                Thread.sleep(Duration.between(Instant.now(), nextRun));
+                Thread.sleep(Duration.between(Instant.now(), start));
 
-                yield new Initial();
+                PingRequest request = new PingRequest(end);
+                persistence.sendNewMessage(inboxName, null, null,
+                        "PingRequest",
+                        gson.toJson(request),
+                        null);
+
+                yield new Monitor(0);
             }
             default -> new Error();
         };

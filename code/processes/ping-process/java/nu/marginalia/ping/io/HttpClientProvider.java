@@ -92,7 +92,7 @@ public class HttpClientProvider implements Provider<HttpClient> {
 
         PoolingHttpClientConnectionManagerBuilder connectionManagerBuilder = PoolingHttpClientConnectionManagerBuilder.create()
                 .setMaxConnPerRoute(2)
-                .setMaxConnTotal(50)
+                .setMaxConnTotal(500)
                 .setDefaultConnectionConfig(connectionConfig)
                 .setTlsSocketStrategy(
                         new DefaultClientTlsStrategy(sslContext, NoopHostnameVerifier.INSTANCE));

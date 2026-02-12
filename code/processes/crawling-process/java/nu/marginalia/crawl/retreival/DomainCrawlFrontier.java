@@ -26,6 +26,9 @@ public class DomainCrawlFrontier {
     private static final MurmurHash3_128 hasher = new MurmurHash3_128();
     private final ArrayDeque<String> queue;
 
+    private static final boolean IS_KNOWN = false;
+    private static final boolean IS_VISITED = true;
+
     // A value of false signifies the url is known but not visited
     // A value of true signifies the url is visited
     private final Long2BooleanOpenHashMap visited;
@@ -112,7 +115,7 @@ public class DomainCrawlFrontier {
     }
 
     public boolean addVisited(EdgeUrl url) {
-        if (!visited.put(hashUrl(url), true)) {
+        if (!visited.put(hashUrl(url), IS_VISITED)) {
             visitedCnt++;
             return true;
         }
@@ -122,7 +125,7 @@ public class DomainCrawlFrontier {
     public boolean addKnown(EdgeUrl url) {
         long hash = hashUrl(url);
         if (!visited.containsKey(hash)) {
-            visited.put(hash, false);
+            visited.put(hash, IS_KNOWN);
             return true;
         }
         return false;
@@ -135,7 +138,7 @@ public class DomainCrawlFrontier {
 
     public boolean isVisited(EdgeUrl url) {
         long hash = hashUrl(url);
-        return visited.get(hash);
+        return visited.get(hash) == IS_VISITED;
     }
 
     long hashUrl(EdgeUrl url) {

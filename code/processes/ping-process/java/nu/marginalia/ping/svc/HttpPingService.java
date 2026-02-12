@@ -72,24 +72,22 @@ public class HttpPingService {
             result = new UnknownHostError();
         } else {
             // lock the domain to prevent concurrent pings
-            try (var _ = domainCoordinator.lockDomain(domainReference.asEdgeDomain())) {
-                String url = "https://" + domainReference.domainName() + "/";
-                String alternateUrl = "http://" + domainReference.domainName() + "/";
+            String url = "https://" + domainReference.domainName() + "/";
+            String alternateUrl = "http://" + domainReference.domainName() + "/";
 
-                result = pingHttpFetcher.fetchUrl(url, Method.HEAD, null, null);
+            result = pingHttpFetcher.fetchUrl(url, Method.HEAD, null, null);
 
-                if (result instanceof HttpsResponse response && shouldTryGET(response.httpStatus())) {
+            if (result instanceof HttpsResponse response && shouldTryGET(response.httpStatus())) {
+                Thread.sleep(Duration.ofSeconds(2));
+                result = pingHttpFetcher.fetchUrl(url, Method.GET, null, null);
+            } else if (result instanceof ConnectionError) {
+                var result2 = pingHttpFetcher.fetchUrl(alternateUrl, Method.HEAD, null, null);
+                if (!(result2 instanceof ConnectionError)) {
+                    result = result2;
+                }
+                if (result instanceof HttpResponse response && shouldTryGET(response.httpStatus())) {
                     Thread.sleep(Duration.ofSeconds(2));
-                    result = pingHttpFetcher.fetchUrl(url, Method.GET, null, null);
-                } else if (result instanceof ConnectionError) {
-                    var result2 = pingHttpFetcher.fetchUrl(alternateUrl, Method.HEAD, null, null);
-                    if (!(result2 instanceof ConnectionError)) {
-                        result = result2;
-                    }
-                    if (result instanceof HttpResponse response && shouldTryGET(response.httpStatus())) {
-                        Thread.sleep(Duration.ofSeconds(2));
-                        result = pingHttpFetcher.fetchUrl(alternateUrl, Method.GET, null, null);
-                    }
+                    result = pingHttpFetcher.fetchUrl(alternateUrl, Method.GET, null, null);
                 }
             }
         }
