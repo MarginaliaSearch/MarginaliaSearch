@@ -91,13 +91,13 @@ public class DomSampleService {
         if (!running)
             return;
 
+        running = false;
+
         for (var thread: threads) {
             thread.interrupt();
             thread.join();
         }
         threads.clear();
-
-        running = false;
     }
 
 
@@ -187,6 +187,8 @@ public class DomSampleService {
 
                     try (var lock = domainCoordinator.lockDomain(domain)) {
                         updateDomain(client, domain.toString());
+                    } catch (InterruptedException ex) {
+                        throw ex;
                     } catch (Exception e) {
                         logger.error("Error in DomSampleService run loop", e);
                     }
@@ -200,7 +202,7 @@ public class DomSampleService {
         }
     }
 
-    private void updateDomain(BrowserlessClient client, String domain) {
+    private void updateDomain(BrowserlessClient client, String domain) throws InterruptedException {
 
         String rootUrl;
 
@@ -217,6 +219,9 @@ public class DomSampleService {
             if (content.isPresent()) {
                 db.saveSample(domain, rootUrl, content.get());
             }
+        }
+        catch (InterruptedException ex) {
+            throw ex;
         } catch (Exception e) {
             logger.error("Failed to process domain: " + domain, e);
         }
