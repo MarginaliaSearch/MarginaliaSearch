@@ -133,7 +133,10 @@ public class CrawlerRetreiver implements AutoCloseable {
                     }
 
                     Instant recrawlStart = Instant.now();
-                    CrawlerRevisitor.RecrawlMetadata recrawlMetadata = crawlerRevisitor.recrawl(oldCrawlData, cookies, robotsRules, delayTimer);
+
+                    CrawlerRevisitor.Strategy strategy = getRecrawlStrategy(probedUrl.domain);
+
+                    CrawlerRevisitor.RecrawlMetadata recrawlMetadata = crawlerRevisitor.recrawl(strategy, oldCrawlData, cookies, robotsRules, delayTimer);
                     Duration recrawlTime = Duration.between(recrawlStart, Instant.now());
 
                     // Play back the old crawl data (if present) and fetch the documents comparing etags and last-modified
@@ -170,6 +173,14 @@ public class CrawlerRetreiver implements AutoCloseable {
             logger.error("Error crawling domain {}", domain, ex);
             return new CrawlerResult.Error("Exception");
         }
+    }
+
+    private CrawlerRevisitor.Strategy getRecrawlStrategy(EdgeDomain domain) {
+        if (domain.topDomain.equalsIgnoreCase("substack.com")
+                || domain.topDomain.equalsIgnoreCase("blogspot.com")
+                || domain.topDomain.equalsIgnoreCase("wordpress.com")
+        ) return CrawlerRevisitor.Strategy.SUMMARY;
+        else return CrawlerRevisitor.Strategy.FULL;
     }
 
     private int crawlDomain(EdgeUrl rootUrl,

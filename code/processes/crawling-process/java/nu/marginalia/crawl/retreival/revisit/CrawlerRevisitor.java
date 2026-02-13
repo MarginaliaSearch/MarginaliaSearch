@@ -36,8 +36,14 @@ public class CrawlerRevisitor {
         this.warcRecorder = warcRecorder;
     }
 
+    public enum Strategy {
+        FULL,
+        SUMMARY
+    };
+
     /** Performs a re-crawl of old documents, comparing etags and last-modified */
-    public RecrawlMetadata recrawl(CrawlDataReference oldCrawlData,
+    public RecrawlMetadata recrawl(Strategy strategy,
+                       CrawlDataReference oldCrawlData,
                        DomainCookies cookies,
                        SimpleRobotRules robotsRules,
                        CrawlDelayTimer delayTimer)
@@ -47,6 +53,10 @@ public class CrawlerRevisitor {
         int errors = 0;
         int skipped = 0;
         int size = 0;
+
+        if (strategy == Strategy.SUMMARY && Math.random() > 0.9) {
+            strategy = Strategy.FULL;
+        }
 
         for (CrawledDocument doc : oldCrawlData) {
             if (errors > 20) {
@@ -100,18 +110,23 @@ public class CrawlerRevisitor {
             // calculate the probability of skipping this document based on the
             // fraction of documents that haven't changed
             if (recrawled > 0) {
-                skipProb = (double) retained / recrawled;
+                if (strategy == Strategy.SUMMARY && recrawled >= 5 && retained > 0.8 * recrawled) {
+                    skipProb = 1.0;
+                }
+                else {
+                    skipProb = (double) retained / recrawled;
 
-                // If we've crawled a lot of documents, we'll be more conservative
-                // in trying to recrawl documents, to avoid hammering the server too much;
-                // in the case of a large change, we'll eventually catch it anyway
+                    // If we've crawled a lot of documents, we'll be more conservative
+                    // in trying to recrawl documents, to avoid hammering the server too much;
+                    // in the case of a large change, we'll eventually catch it anyway
 
-                if (skipped + recrawled > 10_000) {
-                    skipProb = Math.clamp(skipProb, 0.75, 0.99);
-                } else if (skipped + recrawled > 1000) {
-                    skipProb = Math.clamp(skipProb, 0.5, 0.99);
-                } else {
-                    skipProb = Math.clamp(skipProb, 0, 0.95);
+                    if (skipped + recrawled > 10_000) {
+                        skipProb = Math.clamp(skipProb, 0.75, 0.99);
+                    } else if (skipped + recrawled > 1000) {
+                        skipProb = Math.clamp(skipProb, 0.5, 0.99);
+                    } else {
+                        skipProb = Math.clamp(skipProb, 0, 0.95);
+                    }
                 }
 
             } else {
