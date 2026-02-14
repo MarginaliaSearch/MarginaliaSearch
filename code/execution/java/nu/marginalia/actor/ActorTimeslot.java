@@ -11,11 +11,15 @@ public record ActorTimeslot(Instant start, Duration duration) {
             throw new IllegalArgumentException("Invalid duration " + duration);
     }
 
+    // Runs on the REALTIME node
     public static ActorSchedule LIVE_CRAWLER_SLOT = new ActorSchedule(0, 0 /* 3 */);
     public static ActorSchedule DOMAIN_PING_SLOT = new ActorSchedule(3, 9);
     public static ActorSchedule RSS_FEEDS_SLOT = new ActorSchedule(12, 12 /* 15 */);
     public static ActorSchedule DOM_SAMPLE_SLOT = new ActorSchedule(16, 20);
     public static ActorSchedule SCREENGRAB_SLOT_SAMPLE_SLOT = new ActorSchedule(20, 0);
+
+    // Runs on BATCH, MIXED nodes
+    public static ActorSchedule MAINTENANCE_SLOT = new ActorSchedule(2, 2 /* usually pretty quick */);
 
     public Instant end() {
         return start.plus(duration);

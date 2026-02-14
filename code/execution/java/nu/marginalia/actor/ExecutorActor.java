@@ -24,6 +24,7 @@ public enum ExecutorActor {
     EXPORT_SAMPLE_DATA(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
     EXPORT_DOM_SAMPLE_DATA(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
     DOWNLOAD_SAMPLE(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
+    SCHEDULED_MAINTENANCE(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
 
     PROC_CONVERTER_SPAWNER(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.SIDELOAD),
     PROC_LOADER_SPAWNER(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.SIDELOAD),

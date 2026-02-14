@@ -73,7 +73,8 @@ public class ExecutorActorControlService {
                                        UpdateNsfwFiltersActor updateNsfwFiltersActor,
                                        UpdateRssActor updateRssActor,
                                        DomSampleActor domSampleActor,
-                                       ScreenshotActor screenshotActor
+                                       ScreenshotActor screenshotActor,
+                                       ScheduledMaintenanceActor scheduledMaintenanceActor
                                        ) throws SQLException
     {
         this.messageQueueFactory = messageQueueFactory;
@@ -82,6 +83,8 @@ public class ExecutorActorControlService {
         this.node = baseServiceParams.configuration.node();
 
         this.nodeConfiguration = configurationService.get(node);
+
+        register(ExecutorActor.SCHEDULED_MAINTENANCE, scheduledMaintenanceActor);
 
         register(ExecutorActor.CRAWL, crawlActor);
         register(ExecutorActor.LIVE_CRAWL, liveCrawlActor);
