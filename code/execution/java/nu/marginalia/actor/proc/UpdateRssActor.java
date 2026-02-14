@@ -10,25 +10,25 @@ import nu.marginalia.actor.state.Resume;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.nodecfg.model.NodeProfile;
 import nu.marginalia.rss.svc.FeedFetcherService;
+import nu.marginalia.rss.svc.FeedFetcherService.UpdateMode;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.concurrent.TimeUnit;
 
 public class UpdateRssActor extends RecordActorPrototype {
-    private final ActorTimeslot.ActorSchedule schedule = ActorTimeslot.RSS_FEEDS_SLOT;
-
-    private final FeedFetcherService feedFetcherService;
-
-    private final Duration updateInterval = Duration.ofHours(24);
-    private final int cleanInterval = 60;
-    private final int nodeId;
+    private static final Logger logger = LoggerFactory.getLogger(UpdateRssActor.class);
 
     private final NodeConfigurationService nodeConfigurationService;
-    private static final Logger logger = LoggerFactory.getLogger(UpdateRssActor.class);
+    private final FeedFetcherService feedFetcherService;
+
+    private final ActorTimeslot.ActorSchedule schedule = ActorTimeslot.RSS_FEEDS_SLOT;
+
+    private final int nodeId;
 
     @Inject
     public UpdateRssActor(Gson gson,
@@ -43,22 +43,20 @@ public class UpdateRssActor extends RecordActorPrototype {
     public record Initial() implements ActorStep {}
 
     @Resume(behavior=ActorResumeBehavior.RESTART)
-    public record Run(int refreshCount) implements ActorStep {}
+    public record Run() implements ActorStep {}
 
     @Resume(behavior=ActorResumeBehavior.RETRY)
-    public record Wait(String startTs, String endTs, int count) implements ActorStep {
-
-        public Wait(ActorTimeslot timeslot, int count) {
-            this(timeslot.start().toString(), timeslot.end().toString(), count);
+    public record Wait(String startTs, String endTs) implements ActorStep {
+        public Wait(ActorTimeslot timeslot) {
+            this(timeslot.start().toString(), timeslot.end().toString());
         }
-
     }
 
     @Resume(behavior=ActorResumeBehavior.RETRY)
-    public record ScheduleNext(int count) implements ActorStep {}
+    public record ScheduleNext() implements ActorStep {}
 
     @Resume(behavior=ActorResumeBehavior.RETRY)
-    public record Update(FeedFetcherService.UpdateMode mode, int refreshCount) implements ActorStep {}
+    public record Update(UpdateMode mode) implements ActorStep {}
 
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
@@ -68,39 +66,35 @@ public class UpdateRssActor extends RecordActorPrototype {
                     yield new Error("Invalid node profile for RSS update");
                 }
                 else {
-                    yield new ScheduleNext(0);
+                    yield new Wait(schedule.nextTimeslot());
                 }
             }
 
-            case ScheduleNext(int refreshCount) ->
-                    new Wait(schedule.nextTimeslot(), refreshCount);
-
-            case Wait(String startTs, String endTs, int count) -> {
+            case Wait(String startTs, String endTs) -> {
                 var start = Instant.parse(startTs);
                 var end = Instant.parse(endTs);
                 var now = Instant.now();
 
                 Thread.sleep(Duration.between(now, start));
 
-                // Once every `cleanInterval` updates, do a clean update;
-                // otherwise do a refresh update
-                if (count > cleanInterval) {
-                    yield new Update(FeedFetcherService.UpdateMode.CLEAN, 0);
-                }
-                else {
-                    yield new Update(FeedFetcherService.UpdateMode.REFRESH, count);
-                }
+                final UpdateMode updateMode =
+                    switch (LocalDate.now().getDayOfMonth()) {
+                        case 1, 14 -> UpdateMode.CLEAN;
+                        default -> UpdateMode.REFRESH;
+                    };
+
+                yield new Update(updateMode);
             }
-            case Update(FeedFetcherService.UpdateMode mode, int count) -> {
+            case Update(UpdateMode mode) -> {
                 feedFetcherService.start(mode);
-                yield new Run(count);
+                yield new Run();
             }
-            case Run(int refreshCount) -> {
+            case Run() -> {
                 while (feedFetcherService.isRunning()) {
                     TimeUnit.SECONDS.sleep(15);
                 }
 
-                yield new ScheduleNext(refreshCount + 1);
+                yield new Wait(schedule.nextTimeslot());
             }
             case End() -> {
                 if (feedFetcherService.isRunning()) {
