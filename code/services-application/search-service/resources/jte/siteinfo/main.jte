@@ -27,13 +27,13 @@
                             title="The search engine indexes this domain">
                         Indexed
                     </span>
-                @elseif (siteInfo.domainInformation().isBlacklisted())
+                @elseif (siteInfo.domainInformation().getBlacklisted())
                     <span
                             class="bg-red-50 text-red-900 border-red-200 dark:bg-black dark:text-red-100 border  p-1 font-sm rounded"
                             title="This domain is blacklisted and will not be crawled or indexed">
                         Blacklisted
                     </span>
-                @elseif (siteInfo.domainInformation().isUnknownDomain())
+                @elseif (siteInfo.domainInformation().getUnknownDomain())
                     <span
                             class="bg-purple-50 text-purple-900 border-purple-200 dark:bg-black dark:text-purple-100 border  p-1 font-sm rounded"
                             title="The search engine is not aware of this domain name">
@@ -45,7 +45,7 @@
                             title="This domain will be crawled by the search engine">
                         In Crawler Queue
                     </span>
-                @elseif (!siteInfo.domainInformation().isUnknownDomain())
+                @elseif (!siteInfo.domainInformation().getUnknownDomain())
                     <span
                             class="bg-yellow-50 text-yellow-900 border-yellow-200 dark:bg-black dark:text-yellow-100 border p-1 font-sm rounded"
                             title="The search engine is aware of this domain, but it's not slated for crawling">

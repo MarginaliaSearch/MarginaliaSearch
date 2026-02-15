@@ -3,16 +3,19 @@ package nu.marginalia.functions.domains;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.api.domains.RpcDomainInfoPingData;
 import nu.marginalia.api.domains.RpcDomainInfoResponse;
 import nu.marginalia.api.linkgraph.AggregateLinkGraphClient;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.geoip.GeoIpDictionary;
 import nu.marginalia.model.EdgeDomain;
+import org.apache.logging.log4j.core.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -88,6 +91,45 @@ public class DomainInformationService {
                 builder.setPagesKnown(rs.getInt("KNOWN_URLS"));
                 builder.setPagesIndexed(rs.getInt("GOOD_URLS"));
                 builder.setPagesFetched(rs.getInt("VISITED_URLS"));
+            }
+
+            rs = stmt.executeQuery("""
+                SELECT SERVER_AVAILABLE,
+                       HTTP_SCHEMA,
+                       COALESCE(HTTP_RESPONSE_TIME_MS, -1) 
+                            AS HTTP_RESPONSE_TIME_MS,
+                       ERROR_CLASSIFICATION,
+                       ERROR_MESSAGE,
+                       TS_LAST_PING,
+                       TS_LAST_AVAILABLE,
+                       TS_LAST_ERROR,
+                       BACKOFF_CONSECUTIVE_FAILURES
+                FROM DOMAIN_AVAILABILITY_INFORMATION
+                WHERE DOMAIN_ID=
+                """ + domainId);
+
+            if (rs.next()) {
+                var pingBuilder = RpcDomainInfoPingData.newBuilder()
+                        .setResponseTimeMs(rs.getInt("HTTP_RESPONSE_TIME_MS"))
+                        .setServerAvailable(rs.getBoolean("SERVER_AVAILABLE"))
+                        .setConsecutiveFailures(rs.getInt("BACKOFF_CONSECUTIVE_FAILURES"));
+
+
+                Optional.ofNullable(rs.getString("HTTP_SCHEMA")).ifPresent(pingBuilder::setHttpSchema);
+                Optional.ofNullable(rs.getString("ERROR_CLASSIFICATION")).ifPresent(pingBuilder::setErrorClassification);
+                Optional.ofNullable(rs.getString("ERROR_MESSAGE")).ifPresent(pingBuilder::setErrorDesc);
+
+                Optional.ofNullable(rs.getTimestamp("TS_LAST_PING"))
+                        .map(Timestamp::toInstant)
+                        .ifPresent(instant -> pingBuilder.setTsLast(instant.toEpochMilli()));
+                Optional.ofNullable(rs.getTimestamp("TS_LAST_AVAILABLE"))
+                        .map(Timestamp::toInstant)
+                        .ifPresent(instant -> pingBuilder.setTsLastAvailable(instant.toEpochMilli()));
+                Optional.ofNullable(rs.getTimestamp("TS_LAST_ERROR"))
+                        .map(Timestamp::toInstant)
+                        .ifPresent(instant -> pingBuilder.setTsLastError(instant.toEpochMilli()));
+
+                builder.setPingData(pingBuilder);
             }
 
             builder.setSuggestForCrawling((pagesVisited == 0 && outboundLinks == 0 && !inCrawlQueue));

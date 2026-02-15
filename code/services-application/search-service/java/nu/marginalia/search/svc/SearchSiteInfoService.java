@@ -8,6 +8,7 @@ import io.jooby.MapModelAndView;
 import io.jooby.ModelAndView;
 import io.jooby.annotation.*;
 import nu.marginalia.api.domains.DomainInfoClient;
+import nu.marginalia.api.domains.RpcDomainInfoResponse;
 import nu.marginalia.api.domains.model.DomainInformation;
 import nu.marginalia.api.domains.model.SimilarDomain;
 import nu.marginalia.api.domsample.DomSampleClient;
@@ -37,6 +38,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.sql.SQLException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
@@ -253,7 +256,7 @@ public class SearchSiteInfoService {
         var domain = new EdgeDomain(domainName);
         final int domainId = domainQueries.tryGetDomainId(domain).orElse(-1);
 
-        final Future<DomainInformation> domainInfoFuture;
+        final Future<RpcDomainInfoResponse> domainInfoFuture;
         final Future<List<SimilarDomain>> similarSetFuture;
         final Future<List<SimilarDomain>> linkingDomainsFuture;
         final CompletableFuture<RpcFeed> feedItemsFuture;
@@ -371,12 +374,12 @@ public class SearchSiteInfoService {
         }
     }
 
-    private DomainInformation createDummySiteInfo(String domainName) {
-        return DomainInformation.builder()
-                    .domain(new EdgeDomain(domainName))
-                    .suggestForCrawling(true)
-                    .unknownDomain(true)
-                    .build();
+    private RpcDomainInfoResponse createDummySiteInfo(String domainName) {
+        return RpcDomainInfoResponse.newBuilder()
+                    .setDomain(domainName)
+                    .setSuggestForCrawling(true)
+                    .setUnknownDomain(true)
+                .build();
     }
 
     private Docs listDocs(String domainName, int page) throws TimeoutException {
@@ -508,7 +511,7 @@ public class SearchSiteInfoService {
                                       int domainId,
                                       String siteUrl,
                                       boolean hasScreenshot,
-                                      DomainInformation domainInformation,
+                                      RpcDomainInfoResponse domainInformation,
                                       List<SimilarDomain> similar,
                                       List<SimilarDomain> linking,
                                       FeedItems feed,
@@ -697,6 +700,47 @@ public class SearchSiteInfoService {
                 return ddgtTrackerInfo.owner().privacyPolicy();
             }
         }
+    }
+
+    public static String getFlag(String countryCode) {
+        if (countryCode == null || countryCode.codePointCount(0, countryCode.length()) != 2) {
+            return "";
+        }
+
+        String country = countryCode;
+
+        if ("UK".equals(country)) {
+            country = "GB";
+        }
+
+        int offset = 0x1F1E6;
+        int asciiOffset = 0x41;
+        int firstChar = Character.codePointAt(country, 0) - asciiOffset + offset;
+        int secondChar = Character.codePointAt(country, 1) - asciiOffset + offset;
+        return new String(Character.toChars(firstChar)) + new String(Character.toChars(secondChar));
+    }
+
+    public static String renderRelativeTime(Instant timestamp) {
+        Duration diff = Duration.between(timestamp, Instant.now());
+
+        int days = (int) diff.toDays();
+        if (days > 31) {
+            return "-";
+        }
+        if (days > 1) {
+            return String.format("%d days ago", days);
+        }
+        int hours = (int) diff.toHours();
+        if (hours > 1) {
+            return String.format("%d hours ago", hours);
+        }
+
+        int minutes = (int) diff.toMinutes();
+        if (minutes > 1) {
+            return String.format("%d minutes ago", hours);
+        }
+
+        return "Just now";
     }
 
 }

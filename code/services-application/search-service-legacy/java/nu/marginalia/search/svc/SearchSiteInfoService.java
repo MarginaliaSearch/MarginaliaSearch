@@ -156,7 +156,7 @@ public class SearchSiteInfoService {
             feedItemsFuture = CompletableFuture.failedFuture(new Exception("Assistant Service Unavailable"));
         }
         else {
-            domainInfoFuture = domainInfoClient.domainInformation(domainId);
+            domainInfoFuture = domainInfoClient.domainInformationOld(domainId);
             similarSetFuture = domainInfoClient.similarDomains(domainId, 25);
             linkingDomainsFuture = domainInfoClient.linkedDomains(domainId, 25);
             feedItemsFuture = feedsClient.getFeed(domainId);
