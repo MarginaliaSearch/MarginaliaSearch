@@ -88,6 +88,7 @@ message RpcDomainInfoResponse {
   string state = 19;
 
   RpcDomainInfoPingData pingData = 20;
+  RpcDomainInfoSecurityData securityData = 21;
 }
 
 message RpcDomainInfoPingData {
@@ -102,6 +103,28 @@ message RpcDomainInfoPingData {
   int64 tsLastAvailable = 7;
   int64 tsLastError = 8;
   int32 consecutiveFailures = 9;
+}
+
+message RpcDomainInfoSecurityData {
+  string httpVersion = 1;
+  bool httpCompression = 2;
+
+  string headerServer = 10;
+  string headerPoweredBy = 11;
+
+  string sslProtocol = 20;
+  string sslCipherSuite = 21;
+  string sslKeyExchange = 22;
+  int64 sslCertNotBefore = 23;
+  int64 sslCertNotAfter = 24;
+  string sslCertSubject = 25;
+  string sslCertSAN = 26;
+  bool sslCertWildcard = 27;
+
+
+  bool sslChainValid = 30;
+  bool sslChainDateValid = 31;
+  bool sslChainHostValid = 32;
 }
 
 message RpcSimilarDomains {

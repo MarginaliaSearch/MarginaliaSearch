@@ -3,7 +3,10 @@
 @import nu.marginalia.search.svc.SearchSiteInfoService.*
 @import nu.marginalia.search.model.UrlDetails
 @import java.time.Instant
+@import java.time.ZoneId
+@import java.time.format.DateTimeFormatter
 @import java.time.temporal.ChronoUnit
+@import java.util.Objects
 
 @param SiteInfoWithContext siteInfo
 
@@ -292,6 +295,75 @@
                 @endif
             </div>
 
+            @endif
+            @if (siteInfo.domainInformation().hasSecurityData())
+            !{
+                var secData = siteInfo.domainInformation().getSecurityData();
+                
+                var secNotBefore = Instant.ofEpochMilli(secData.getSslCertNotBefore());
+                var secNotAfter = Instant.ofEpochMilli(secData.getSslCertNotAfter());
+            }
+            <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
+                <i class="fas fa-server"></i>
+                <span>Server Information</span>
+            </div>
+            <div class="grid grid-cols-2 grid-cols-2 gap-2 mx-6 sm:mx-8">
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">HTTP Version</h3>
+                    <p class="text-lg font-mono">${secData.getHttpVersion()}</p>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">HTTP Server</h3>
+                    <p class="text-lg font-mono">${Objects.requireNonNullElse(secData.getHeaderServer(), "-")}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">${secData.getHeaderPoweredBy()}</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 grid-cols-2 gap-2 mx-6 sm:mx-8">
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">TLS</h3>
+                    <p class="text-lg font-mono">${Objects.requireNonNullElse(secData.getSslProtocol(), "-")}</p>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">Compression</h3>
+                    <p class="text-lg font-mono">${secData.getHttpCompression() ? "YES" : "NO"}</p>
+                </div>
+            </div>
+            <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
+                <i class="fas fa-lock"></i>
+                <span>Certificate</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 mx-6 sm:mx-8">
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">Key Exhange</h3>
+                    <p class="text-lg font-mono">${Objects.requireNonNullElse(secData.getSslKeyExchange(), "-")}</p>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">Cipher Suite</h3>
+                    <p class="text-lg font-mono">${Objects.requireNonNullElse(secData.getSslCipherSuite(), "-")}</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 gap-2 mx-6 sm:mx-8">
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">Subject</h3>
+                    <p class="text-lg font-mono">${Objects.requireNonNullElse(secData.getSslCertSubject(), "-")}</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 gap-2 mx-6 sm:mx-8">
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">Subject Alternative Name</h3>
+                    <p class="text-lg font-mono">${Objects.requireNonNullElse(secData.getSslCertSAN(), "-")}</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 mx-6 sm:mx-8">
+                <div>
+                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">Not Before</h3>
+                <p class="text-lg font-mono">${DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(secNotBefore.atZone(ZoneId.systemDefault()))}</p>
+                </div>
+                <div>
+                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">Not After</h3>
+                <p class="text-lg font-mono">${DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(secNotAfter.atZone(ZoneId.systemDefault()))}</p>
+                </div>
+            </div>
             @endif
         @endif
     </div>

@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.api.domains.RpcDomainInfoPingData;
 import nu.marginalia.api.domains.RpcDomainInfoResponse;
+import nu.marginalia.api.domains.RpcDomainInfoSecurityData;
 import nu.marginalia.api.linkgraph.AggregateLinkGraphClient;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.geoip.GeoIpDictionary;
@@ -130,6 +131,53 @@ public class DomainInformationService {
                         .ifPresent(instant -> pingBuilder.setTsLastError(instant.toEpochMilli()));
 
                 builder.setPingData(pingBuilder);
+            }
+
+            rs = stmt.executeQuery("""
+                SELECT 
+                    HTTP_VERSION, 
+                    HTTP_COMPRESSION,
+                    HEADER_SERVER, 
+                    HEADER_X_POWERED_BY,
+                    SSL_CERT_SUBJECT, 
+                    SSL_CERT_SAN, 
+                    SSL_PROTOCOL, 
+                    SSL_CIPHER_SUITE, 
+                    SSL_KEY_EXCHANGE, 
+                    SSL_CERT_WILDCARD,
+                    SSL_CERT_NOT_BEFORE,
+                    SSL_CERT_NOT_AFTER, 
+                    SSL_CHAIN_VALID, 
+                    SSL_DATE_VALID, 
+                    SSL_HOST_VALID
+                FROM DOMAIN_SECURITY_INFORMATION
+                WHERE DOMAIN_ID=
+                """ + domainId);
+            if (rs.next()) {
+                var secBuilder = RpcDomainInfoSecurityData.newBuilder();
+                secBuilder.setHttpCompression(rs.getBoolean("HTTP_COMPRESSION"));
+                secBuilder.setSslCertWildcard(rs.getBoolean("SSL_CERT_WILDCARD"));
+                secBuilder.setSslChainValid(rs.getBoolean("SSL_CHAIN_VALID"));
+                secBuilder.setSslChainDateValid(rs.getBoolean("SSL_DATE_VALID"));
+                secBuilder.setSslChainHostValid(rs.getBoolean("SSL_HOST_VALID"));
+
+                Optional.ofNullable(rs.getString("HTTP_VERSION")).ifPresent(secBuilder::setHttpVersion);
+                Optional.ofNullable(rs.getString("HEADER_SERVER")).ifPresent(secBuilder::setHeaderServer);
+                Optional.ofNullable(rs.getString("HEADER_X_POWERED_BY")).ifPresent(secBuilder::setHeaderPoweredBy);
+                Optional.ofNullable(rs.getString("SSL_CERT_SUBJECT")).ifPresent(secBuilder::setSslCertSubject);
+                Optional.ofNullable(rs.getString("SSL_CERT_SAN")).ifPresent(secBuilder::setSslCertSAN);
+                Optional.ofNullable(rs.getString("SSL_PROTOCOL")).ifPresent(secBuilder::setSslProtocol);
+                Optional.ofNullable(rs.getString("SSL_KEY_EXCHANGE")).ifPresent(secBuilder::setSslKeyExchange);
+                Optional.ofNullable(rs.getString("SSL_CIPHER_SUITE")).ifPresent(secBuilder::setSslCipherSuite);
+
+                Optional.ofNullable(rs.getTimestamp("SSL_CERT_NOT_BEFORE"))
+                        .map(Timestamp::toInstant)
+                        .ifPresent(instant -> secBuilder.setSslCertNotBefore(instant.toEpochMilli()));
+                Optional.ofNullable(rs.getTimestamp("SSL_CERT_NOT_AFTER"))
+                        .map(Timestamp::toInstant)
+                        .ifPresent(instant -> secBuilder.setSslCertNotAfter(instant.toEpochMilli()));
+
+                builder.setSecurityData(secBuilder);
             }
 
             builder.setSuggestForCrawling((pagesVisited == 0 && outboundLinks == 0 && !inCrawlQueue));
