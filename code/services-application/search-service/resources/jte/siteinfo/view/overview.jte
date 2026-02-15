@@ -263,6 +263,7 @@
                     @if (pingData.getServerAvailable())
                     <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">Server Status </h3>
                     <p class="text-lg font-mono">OK</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 ">${pingData.getResponseTimeMs()}ms response time</p>
                     @else
                     <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">Server Status </h3>
                     <p class="text-lg font-mono" title="${pingData.getErrorDesc()}">${pingData.getErrorClassification()}</p>
@@ -288,7 +289,6 @@
                     <div>
                         <a href="?view=availability" class="underline">Historical Data <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
                     </div>
-
                 @endif
             </div>
 
