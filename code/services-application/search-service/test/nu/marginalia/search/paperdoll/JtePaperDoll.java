@@ -115,6 +115,9 @@ public class JtePaperDoll {
                     else if ("traffic".equals(rq.queryParams("view"))) {
                         return MockedSearchResults.mockTrafficReport();
                     }
+                    else if ("availability".equals(rq.queryParams("view"))) {
+                        return MockedSearchResults.mockAvailabilityData();
+                    }
                     else return MockedSearchResults.mockSiteInfoData();
 
                 },

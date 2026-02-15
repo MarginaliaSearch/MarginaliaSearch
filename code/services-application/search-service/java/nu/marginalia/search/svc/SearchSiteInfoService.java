@@ -33,6 +33,7 @@ import nu.marginalia.search.model.ResultsPage;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.svc.SearchFlagSiteService.FlagSiteFormData;
 import nu.marginalia.service.server.RateLimiter;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -178,6 +179,7 @@ public class SearchSiteInfoService {
             case "docs" -> listDocs(domainName, page);
             case "info" -> listInfo(context, domainName);
             case "traffic" -> listSiteRequests(context, domainName);
+            case "availability" -> listAvailabilityEvents(context, domainName);
             case "report" -> reportSite(domainName);
             default -> listInfo(context, domainName);
         };
@@ -473,6 +475,60 @@ public class SearchSiteInfoService {
         return new TrafficSample(domainName, requestSummary, requests);
     }
 
+    private DomainAvailabilityEvents listAvailabilityEvents(Context context, String domainName) {
+
+        int domainId = domainQueries.getDomainId(new EdgeDomain(domainName));
+
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("""
+                     SELECT AVAILABLE,
+                            OUTAGE_TYPE,
+                            HTTP_STATUS_CODE,
+                            ERROR_MESSAGE,
+                            TS_CHANGE
+                     FROM DOMAIN_AVAILABILITY_EVENTS
+                     WHERE DOMAIN_ID=?
+                     ORDER BY TS_CHANGE DESC
+                     LIMIT 100
+                     """)
+        ) {
+            stmt.setInt(1, domainId);
+            var rs = stmt.executeQuery();
+
+            List<DomainAvailabilityEvent> events = new ArrayList<>();
+            while (rs.next()) {
+                events.add(
+                        new DomainAvailabilityEvent(
+                                rs.getBoolean("AVAILABLE"),
+                                rs.getString("OUTAGE_TYPE"),
+                                rs.getInt("HTTP_STATUS_CODE"),
+                                rs.getString("ERROR_MESSAGE"),
+                                rs.getTimestamp("TS_CHANGE").toInstant()
+                        )
+                );
+            }
+
+            if (events.isEmpty()) {
+                events.add(
+                        new DomainAvailabilityEvent(
+                                false,
+                                "Missing",
+                                0,
+                                "No Historical Data Available",
+                                Instant.EPOCH
+                        )
+                );
+            }
+
+            return new DomainAvailabilityEvents(domainName, events);
+        }
+        catch (SQLException ex) {
+            logger.error("Exception when fetching domain availability events for {}", domainId, ex);
+
+            return new DomainAvailabilityEvents(domainName, List.of());
+        }
+    }
+
 
     public interface SiteInfoModel {
         String domain();
@@ -583,6 +639,21 @@ public class SearchSiteInfoService {
         }
 
     }
+
+    public record DomainAvailabilityEvents(
+            String domain,
+            List<DomainAvailabilityEvent> events
+    ) implements SiteInfoModel {}
+
+    public record DomainAvailabilityEvent(
+            boolean available,
+            String outageType,
+            @Nullable
+            Integer httpStatusCode,
+            String errorMessage,
+            @NotNull
+            Instant tsChange
+    ) {}
 
     public record ReportDomain(
             String domain,

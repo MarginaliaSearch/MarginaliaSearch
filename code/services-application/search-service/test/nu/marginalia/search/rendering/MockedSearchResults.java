@@ -294,6 +294,42 @@ public class MockedSearchResults {
                 List.of(mockUrlDetails("https://other.example.com/", "Other document")));
     }
 
+    public static Object mockAvailabilityData() {
+        return new SearchSiteInfoService.DomainAvailabilityEvents(
+                "www.example.com",
+                List.of(
+                        new SearchSiteInfoService.DomainAvailabilityEvent(
+                                true,
+                                null,
+                                200,
+                                null,
+                                Instant.now().minus(1, ChronoUnit.HOURS)
+                        ),
+                        new SearchSiteInfoService.DomainAvailabilityEvent(
+                                false,
+                                "SSL_ERROR",
+                                null,
+                                "Bad PKIX nonsense",
+                                Instant.now().minus(1, ChronoUnit.DAYS)
+                        ),
+                        new SearchSiteInfoService.DomainAvailabilityEvent(
+                                true,
+                                null,
+                                200,
+                                null,
+                                Instant.now().minus(2, ChronoUnit.DAYS)
+                        ),
+                        new SearchSiteInfoService.DomainAvailabilityEvent(
+                                false,
+                                "BAD_STATUS",
+                                404,
+                                "File Not Found",
+                                Instant.now().minus(2, ChronoUnit.DAYS)
+                        )
+                )
+        );
+    }
+
     public static Object mockTrafficReport() {
         List<SearchSiteInfoService.TrafficSample.RequestsForTargetDomain> requests = new ArrayList<>();
         requests.add(new SearchSiteInfoService.TrafficSample.RequestsForTargetDomain(

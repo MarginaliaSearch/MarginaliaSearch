@@ -250,10 +250,10 @@
 
                 <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
                 @if (pingData.getServerAvailable())
-                    <i class="fas fa-circle text-green-500"></i>
+                    <i class="fas fa-circle dark:text-green-300 text-green-700"></i>
                     <span>Availability</span>
                 @else
-                    <i class="fas fa-circle text-red-500"></i>
+                    <i class="fas fa-circle dark:text-red-300 text-green-700"></i>
                     <span>Availability </span>
                 @endif
                 </div>
@@ -283,7 +283,13 @@
                     <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">Last Ping Attempt</h3>
                     <p class="text-lg font-mono" title="${pingLastTs.toString()}">${SearchSiteInfoService.renderRelativeTime(pingLastTs)}</p>
                 </div>
+                @if ((pingData.getServerAvailable() && pingErrorTs.isAfter(longTimeAgo))
+        || (!pingData.getServerAvailable() && pingLastAvailable.isAfter(longTimeAgo)))
+                    <div>
+                        <a href="?view=availability" class="underline">Historical Data <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                    </div>
 
+                @endif
             </div>
 
             @endif
