@@ -81,6 +81,7 @@ public class HttpPingService {
                 Thread.sleep(Duration.ofSeconds(2));
                 result = pingHttpFetcher.fetchUrl(url, Method.GET, null, null);
             } else if (result instanceof ConnectionError) {
+                Thread.sleep(Duration.ofSeconds(1));
                 var result2 = pingHttpFetcher.fetchUrl(alternateUrl, Method.HEAD, null, null);
                 if (!(result2 instanceof ConnectionError)) {
                     result = result2;

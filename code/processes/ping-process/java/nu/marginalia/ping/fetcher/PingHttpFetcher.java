@@ -76,7 +76,7 @@ public class PingHttpFetcher {
 
 
                     if (entity != null) {
-                        consumeData(entity.getContent(), request, Duration.of(15, ChronoUnit.SECONDS));
+                        consumeData(entity.getContent(), request, Duration.of(30, ChronoUnit.SECONDS));
                     }
 
                     Duration responseTime = Duration.between(start, Instant.now());

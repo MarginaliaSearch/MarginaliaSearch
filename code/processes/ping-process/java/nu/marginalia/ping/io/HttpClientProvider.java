@@ -8,6 +8,7 @@ import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.cookie.StandardCookieSpec;
+import org.apache.hc.client5.http.impl.IdleConnectionEvictor;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
@@ -91,8 +92,8 @@ public class HttpClientProvider implements Provider<HttpClient> {
         sslContext.init(null, new TrustManager[]{trustMeBro}, null);
 
         PoolingHttpClientConnectionManagerBuilder connectionManagerBuilder = PoolingHttpClientConnectionManagerBuilder.create()
-                .setMaxConnPerRoute(2)
-                .setMaxConnTotal(500)
+                .setMaxConnPerRoute(10)
+                .setMaxConnTotal(5000)
                 .setDefaultConnectionConfig(connectionConfig)
                 .setTlsSocketStrategy(
                         new DefaultClientTlsStrategy(sslContext, NoopHostnameVerifier.INSTANCE));
@@ -106,7 +107,7 @@ public class HttpClientProvider implements Provider<HttpClient> {
                 socketConfigBuilder.setSocksProxyAddress(socksProxyAddress);
             }
             socketConfigBuilder
-                    .setSoTimeout(Timeout.ofSeconds(10))
+                    .setSoTimeout(Timeout.ofSeconds(30))
                     .setSoLinger(TimeValue.ofSeconds(-1));
 
             return socketConfigBuilder.build();
@@ -116,9 +117,19 @@ public class HttpClientProvider implements Provider<HttpClient> {
 
         final RequestConfig defaultRequestConfig = RequestConfig.custom()
                 .setCookieSpec(StandardCookieSpec.IGNORE)
-                .setResponseTimeout(10, TimeUnit.SECONDS)
+                .setResponseTimeout(30, TimeUnit.SECONDS)
                 .setConnectionRequestTimeout(5, TimeUnit.MINUTES)
                 .build();
+
+        IdleConnectionEvictor evictor = new IdleConnectionEvictor(connectionManager,
+                TimeValue.ofSeconds(30),
+                TimeValue.ofSeconds(5));
+        evictor.start();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            evictor.shutdown();
+            connectionManager.close();
+        }));
 
         return HttpClients.custom()
                 .setConnectionManager(connectionManager)

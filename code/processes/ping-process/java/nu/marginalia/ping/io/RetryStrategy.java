@@ -21,7 +21,7 @@ public class RetryStrategy implements HttpRequestRetryStrategy {
     @Override
     public boolean retryRequest(HttpRequest request, IOException exception, int executionCount, HttpContext context) {
         return switch (exception) {
-            case SocketTimeoutException ste -> false;
+            case SocketTimeoutException ste -> executionCount < 2;
             case SSLException ssle -> false;
             case UnknownHostException uhe -> false;
             case HttpHostConnectException ex -> executionCount < 2;

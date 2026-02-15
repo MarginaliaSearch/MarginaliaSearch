@@ -15,7 +15,7 @@ public sealed interface DomainAvailabilityChange {
             DomainAvailabilityRecord oldStatus,
             DomainAvailabilityRecord newStatus
     ) {
-        if (oldStatus.serverAvailable() && newStatus.serverAvailable()) {
+        if (oldStatus.serverAvailable() == newStatus.serverAvailable()) {
             return new DomainAvailabilityChange.None();
         }
 
