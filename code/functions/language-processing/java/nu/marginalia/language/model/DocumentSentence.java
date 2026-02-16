@@ -6,10 +6,7 @@ import nu.marginalia.language.sentence.tag.HtmlTag;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.ref.SoftReference;
-import java.util.BitSet;
-import java.util.EnumSet;
-import java.util.Iterator;
-import java.util.StringJoiner;
+import java.util.*;
 
 /** Represents a sentence in a document, with POS tags, HTML tags, and other information
  *  about the words in the sentence.
@@ -38,8 +35,6 @@ public class DocumentSentence implements Iterable<DocumentSentence.SentencePos> 
     // where false = COMMA, true = SPACE
     private final BitSet separators;
 
-    public SoftReference<WordSpan[]> keywords;
-
     public DocumentSentence(BitSet separators,
                             String[] wordsLowerCase,
                             long[] posTags,
@@ -65,6 +60,26 @@ public class DocumentSentence implements Iterable<DocumentSentence.SentencePos> 
             if (WordPatterns.isStopWord(wordsLowerCase[i]))
                 isStopWord.set(i);
         }
+    }
+
+    public static DocumentSentence ofSynthetic(List<String> lowerCase, List<String> stemmed, EnumSet<HtmlTag> htmlTags) {
+        if (lowerCase.size() != stemmed.size()) {
+            throw new IllegalArgumentException("Mismatching input lengths");
+        }
+
+        // since these will all be the same, we can reuse one instance
+        final BitSet emptyBitSet = new BitSet(lowerCase.size());
+
+        return new DocumentSentence(
+                emptyBitSet,
+                lowerCase.toArray(String[]::new),
+                new long[lowerCase.size()],
+                stemmed.toArray(String[]::new),
+                htmlTags,
+                emptyBitSet,
+                emptyBitSet,
+                emptyBitSet
+        );
     }
 
     public boolean isStopWord(int idx) {

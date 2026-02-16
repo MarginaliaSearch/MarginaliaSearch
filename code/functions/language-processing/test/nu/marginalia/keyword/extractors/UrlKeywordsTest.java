@@ -1,10 +1,13 @@
 package nu.marginalia.keyword.extractors;
 
 import ca.rmen.porterstemmer.PorterStemmer;
+import nu.marginalia.language.model.DocumentSentence;
 import nu.marginalia.model.EdgeUrl;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.net.URISyntaxException;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -35,5 +38,13 @@ class UrlKeywordsTest {
         assertTrue(keywords.containsUrl(ps.stemWord("69")));
         assertTrue(keywords.containsUrl(ps.stemWord("log")));
         assertFalse(keywords.containsUrl(ps.stemWord("memex")));
+    }
+
+    @Test
+    void urlKeywords() throws URISyntaxException {
+        DocumentSentence keywords = new UrlKeywords(new EdgeUrl("https://simplifier.neocities.org/hitch")).searchableKeywords();
+
+        String[] expected = new String[] { "simplifier", "neocities", "", "hitch" };
+        Assertions.assertArrayEquals(expected, keywords.wordsLowerCase);
     }
 }
