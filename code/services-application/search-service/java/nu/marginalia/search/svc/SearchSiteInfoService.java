@@ -487,8 +487,15 @@ public class SearchSiteInfoService {
     }
 
     private DomainAvailabilityEvents listAvailabilityEvents(Context context, String domainName) {
-
+        final Future<RpcDomainInfoResponse> domainInfoFuture;
         int domainId = domainQueries.getDomainId(new EdgeDomain(domainName));
+
+        if (domainInfoClient.isAccepting()) {
+            domainInfoFuture = domainInfoClient.domainInformation(domainId);
+        }
+        else {
+            domainInfoFuture = CompletableFuture.failedFuture(new NoSuchElementException());
+        }
 
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
@@ -531,17 +538,30 @@ public class SearchSiteInfoService {
                 );
             }
 
-            return new DomainAvailabilityEvents(domainName, events);
+            return new DomainAvailabilityEvents(domainName,
+                    waitForFuture(domainInfoFuture, () -> createDummySiteInfo(domainName)),
+                    events);
         }
         catch (SQLException ex) {
             logger.error("Exception when fetching domain availability events for {}", domainId, ex);
 
-            return new DomainAvailabilityEvents(domainName, List.of());
+            return new DomainAvailabilityEvents(domainName,
+                    waitForFuture(domainInfoFuture, () -> createDummySiteInfo(domainName)),
+                    List.of());
         }
     }
 
 
     private SecurityChangeEvents listSecurityEvents(Context context, String domainName) {
+        final Future<RpcDomainInfoResponse> domainInfoFuture;
+        int domainId = domainQueries.getDomainId(new EdgeDomain(domainName));
+
+        if (domainInfoClient.isAccepting()) {
+            domainInfoFuture = domainInfoClient.domainInformation(domainId);
+        }
+        else {
+            domainInfoFuture = CompletableFuture.failedFuture(new NoSuchElementException());
+        }
 
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
@@ -592,12 +612,16 @@ public class SearchSiteInfoService {
                 );
             }
 
-            return new SecurityChangeEvents(domainName, events);
+            return new SecurityChangeEvents(domainName,
+                    waitForFuture(domainInfoFuture, () -> createDummySiteInfo(domainName)),
+                    events);
         }
         catch (SQLException ex) {
             logger.error("Exception when fetching security change events for {}", domainName, ex);
 
-            return new SecurityChangeEvents(domainName, List.of());
+            return new SecurityChangeEvents(domainName,
+                    waitForFuture(domainInfoFuture, () -> createDummySiteInfo(domainName)),
+                    List.of());
         }
     }
 
@@ -755,6 +779,7 @@ public class SearchSiteInfoService {
 
     public record DomainAvailabilityEvents(
             String domain,
+            RpcDomainInfoResponse domainInformation,
             List<DomainAvailabilityEvent> events
     ) implements SiteInfoModel {}
 
@@ -770,6 +795,7 @@ public class SearchSiteInfoService {
 
     public record SecurityChangeEvents(
             String domain,
+            RpcDomainInfoResponse domainInformation,
             List<SecurityChangeEvent> events
     ) implements SiteInfoModel {}
 
@@ -801,17 +827,18 @@ public class SearchSiteInfoService {
             if (value == null) {
                 return "-";
             }
-            if (value instanceof Double[] ba) {
-                // JSON gonna json
-                StringBuilder sb = new StringBuilder(ba.length*2);
-                for (int i = 0; i < ba.length; i++) {
-                    byte bv = ba[i].byteValue();
 
-                    String bvS = Integer.toHexString(bv);
-                    if (bvS.length() == 1) {
+            if (value instanceof List list && !list.isEmpty() && list.getFirst() instanceof Number) {
+                // JSON gonna json
+                StringBuilder sb = new StringBuilder(list.size());
+                for (Object item : list) {
+                    int val = ((Number) item).intValue() & 0xFF;
+
+                    String bvS = Integer.toHexString(val);
+                    if (val < 16) {
                         sb.append('0');
-                        sb.append(bvS);
                     }
+                    sb.append(bvS);
                 }
                 return sb.toString();
             }

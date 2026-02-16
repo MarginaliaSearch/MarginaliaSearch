@@ -1,8 +1,10 @@
 @import io.netty.handler.codec.http.HttpResponseStatus
 @import io.netty.handler.codec.http.HttpStatusClass
 @import nu.marginalia.domclassifier.DomSampleClassification
+@import nu.marginalia.search.svc.SearchSiteInfoService
 @import nu.marginalia.search.svc.SearchSiteInfoService.*
 @import nu.marginalia.search.svc.SearchSiteInfoService.TrafficSample.RequestsForTargetDomain
+@import java.time.Instant
 @import java.time.LocalDateTime
 @import java.time.ZoneId
 @import java.time.ZonedDateTime
@@ -11,23 +13,82 @@
 @import java.util.Objects
 
 @param DomainAvailabilityEvents events
-
+!{
+    var domainInformation = events.domainInformation();
+    }
 <div class="flex-1 p-4 space-y-4 mx-auto w-full md:w-auto">
-    <div class="border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white overflow-hidden mx-2 text-gray-800 text-sm">
-        <div class="flex place-items-center space-x-2 p-2 text-md border-b dark:border-gray-600 bg-margeblue text-white">
-            <span>Historical Availability Information</span>
+
+    @if (domainInformation.hasPingData())
+        !{ 
+                var pingData = domainInformation.getPingData();
+                var longTimeAgo = ZonedDateTime.now().minus(30, ChronoUnit.DAYS);
+
+                var utc = ZoneId.of("UTC");
+                var pingLastTs = ZonedDateTime.ofInstant(Instant.ofEpochMilli(pingData.getTsLast()), utc);
+                var pingLastAvailable = ZonedDateTime.ofInstant(Instant.ofEpochMilli(pingData.getTsLastAvailable()), utc);
+                var pingErrorTs = ZonedDateTime.ofInstant(Instant.ofEpochMilli(pingData.getTsLastError()), utc);
+            }
+
+        <div class="border flex flex-col gap-2 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white overflow-hidden mx-2 text-gray-800 text-sm">
+
+        <div class="flex place-items-center space-x-2 p-2 text-md border-b dark:border-gray-600 bg-margeblue text-white rounded">
+            @if (pingData.getServerAvailable())
+                <i class="fas fa-circle dark:text-green-300 text-green-700"></i>
+                <span>Availability</span>
+            @else
+                <i class="fas fa-circle dark:text-red-300 text-green-700"></i>
+                <span>Availability </span>
+            @endif
         </div>
-        <div class="p-4 dark:text-gray-200">
-            This is a summary of the avalilability events for <span class="font-mono dark:text-gray-400 text-gray-800">${events.domain()}</span>.  Keep in mind the
-            system can not know where an error occurs, an outage may easily be a network error on the Marginalia side of the connection.
+
+        <div class="py-2">
+        <div class="grid grid-cols-2 gap-2 mx-6 sm:mx-8">
+            <div>
+                @if (pingData.getServerAvailable())
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">Server Status </h3>
+                    <p class="text-lg font-mono">OK</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 ">${pingData.getResponseTimeMs()}ms response time</p>
+                @else
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">Server Status </h3>
+                    <p class="text-lg font-mono" title="${pingData.getErrorDesc()}">${pingData.getErrorClassification()}</p>
+                @endif
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">Last Available</h3>
+                <p class="text-lg font-mono" title="${DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(pingLastAvailable)}">
+                    ${SearchSiteInfoService.renderRelativeTime(pingLastAvailable)}
+                </p>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">Last Error</h3>
+                <p class="text-lg font-mono" title="${DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(pingErrorTs)}">
+                    ${SearchSiteInfoService.renderRelativeTime(pingErrorTs)}
+                </p>
+                @if (!pingData.getServerAvailable())
+                    <p class="text-sm text-gray-600 dark:text-gray-400 ">${pingData.getConsecutiveFailures()} consecutive errors</p>
+                @endif
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">Last Ping Attempt</h3>
+                <p class="text-lg font-mono" title="${DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(pingLastTs)}">
+                    ${SearchSiteInfoService.renderRelativeTime(pingLastTs)}
+                </p>
+            </div>
         </div>
-        <div class="px-4 pb-4 dark:text-gray-200">
-            Availability events are generated when the reachability state of a server changes.  If a server has always (or never) been reachable,
-            then no events will be recorded.
         </div>
     </div>
 
-
+    @endif
+    <div class="border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white overflow-hidden mx-2 text-gray-800 text-sm">
+        <div class="flex place-items-center space-x-2 p-2 text-md bg-margeblue text-white">
+            Historical Data
+        </div>
+        <p class="m-2">
+            Historical availability data for <span class="font-mono">${domainInformation.getDomain()}</span> available below.
+            Keep in mind that these events reflect both outages at the remote server, as well as network issues
+            client side.
+        </p>
+    </div>
 @for (var event : events.events())
 <div class="border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white overflow-hidden mx-2 dark:text-white text-gray-800 text-sm">
     <div class="grid grid-cols-2 gap-3 text-sm p-4">

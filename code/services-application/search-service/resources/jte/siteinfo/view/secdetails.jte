@@ -23,7 +23,7 @@
             <span>Security Fingerprint Change Details #${details.changeId()}</span>
         </div>
         <div class="p-4 dark:text-gray-200">
-            This is a breakdown of the security posture changes for <span class="font-mono dark:text-gray-400 text-gray-800">${details.domain()}</span>.
+            This is a breakdown of the security fingerprint changes for <span class="font-mono dark:text-gray-400 text-gray-800">${details.domain()}</span>.
         </div>
     </div>
 
@@ -53,35 +53,44 @@
     sortedKeys.remove("nodeId");
 }
 
-<div class="border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white overflow-hidden mx-2 dark:text-white text-gray-800 text-sm">
-    @for (String key : sortedKeys)
+<div role="table" class="border border-gray-300 grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-y-2 p-1 dark:border-gray-600 rounded bg-white dark:bg-gray-800 dark:text-white overflow-hidden mx-2 dark:text-white text-gray-800 text-sm">
+    <div role="rowgroup" class="contents font-bold font-serif">
+        <span role="columnheader" class="col-span-2 sm:col-auto mt-2 sm:mt-0 text-lg sm:text-sm  sm:border-r border-gray-400 dark:border-gray-600" aria-role="">Property</span>
+        <span role="columnheader" class="overflow-auto text-gray-800 dark:text-gray-200">
+            Old Value
+        </span>
+        <span role="columnheader" class="overflow-auto text-gray-800 dark:text-gray-200">
+            New Value
+        </span>
+        <span role="separator" class="col-span-2 sm:col-span-3 border-b border-gray-500"></span>
+    </div>
 
+    @for (String key : sortedKeys)
+    <div role="rowgroup" class="contents">
     @if (changedKeys.contains(key))
-    <div class="my-1 p-2 flex flex-row gap-2">
-        <span>${key}
+        <span role="rowheader" class="col-span-2 sm:col-auto mt-2 sm:mt-0 text-lg font-medium sm:text-sm sm:border-r border-gray-400 dark:border-gray-600">${key}
             @if (key.equals("headerContentSecurityPolicyHash"))
                 <sup class="text-red-500" title="Buggy prior to 2026-02-17">BUG</sup>
             @endif
         </span>
-        <span class="font-mono overflow-auto  bg-red-100 border-red-200 dark:bg-red-900 text-red-800 dark:text-red-200">
+        <span role="cell" class="font-mono overflow-auto  bg-red-100 border-red-200 dark:bg-red-900 text-red-800 dark:text-red-200">
             ${SecurityChangeDetails.renderValue(key, details.before().get(key))}
         </span>
-        <span class="font-mono overflow-auto  bg-red-100 border-red-200 dark:bg-red-900 text-red-800 dark:text-red-200">
+        <span role="cell" class="font-mono overflow-auto  bg-red-100 border-red-200 dark:bg-red-900 text-red-800 dark:text-red-200">
             ${SecurityChangeDetails.renderValue(key, details.after().get(key))}
         </span>
-    </div>
+        <span role="separator" class="col-span-2 border-b border-gray-400 dark:border-gray-600 sm:hidden"></span>
     @else
-    <div class="my-1 p-2 flex flex-row gap-2">
-        <span>${key}</span>
-        <span class="font-mono overflow-auto  bg-gray-100 border-gray-200 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+        <span role="rowheader" class="col-span-2 sm:col-auto mt-2 sm:mt-0 text-lg font-medium sm:text-sm sm:border-r border-gray-400 dark:border-gray-600" aria-role="">${key}</span>
+        <span role="cell" class="font-mono overflow-auto  bg-gray-100 border-gray-200 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
             ${SecurityChangeDetails.renderValue(key, details.before().get(key))}
         </span>
-        <span class="font-mono overflow-auto  bg-gray-100 border-gray-200 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+        <span role="cell" class="font-mono overflow-auto  bg-gray-100 border-gray-200 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
             ${SecurityChangeDetails.renderValue(key, details.after().get(key))}
         </span>
-    </div>
+        <span role="separator" class="col-span-2 border-b border-gray-400 dark:border-gray-600  sm:hidden"></span>
     @endif
-
+    </div>
     @endfor
 </div>
 </div>

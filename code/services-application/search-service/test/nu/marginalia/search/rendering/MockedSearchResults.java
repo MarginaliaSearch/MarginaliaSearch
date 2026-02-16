@@ -297,6 +297,39 @@ public class MockedSearchResults {
     public static Object mockAvailabilityData() {
         return new SearchSiteInfoService.DomainAvailabilityEvents(
                 "www.example.com",
+                RpcDomainInfoResponse.newBuilder()
+                        .setDomain("www.example.com")
+                        .setBlacklisted(false)
+                        .setPagesKnown(14)
+                        .setPagesFetched(23)
+                        .setPagesIndexed(55)
+                        .setIncomingLinks(10)
+                        .setOutboundLinks(20)
+                        .setNodeAffinity(1)
+                        .setRanking(0.5)
+                        .setSuggestForCrawling(false)
+                        .setInCrawlQueue(true)
+                        .setUnknownDomain(false)
+                        .setIp("127.0.0.1")
+                        .setAsn(4041)
+                        .setAsnOrg("ACME INC")
+                        .setAsnCountry("SE")
+                        .setIpCountry("DK")
+                        .setState("INDEXED")
+                        .setPingData(
+                                RpcDomainInfoPingData.newBuilder()
+                                        .setServerAvailable(false)
+                                        .setTsLastError(Instant.now().minus(1, ChronoUnit.DAYS).toEpochMilli())
+                                        .setTsLastAvailable(Instant.now().minus(2, ChronoUnit.DAYS).toEpochMilli())
+                                        .setTsLast(Instant.now().minus(1, ChronoUnit.DAYS).toEpochMilli())
+                                        .setConsecutiveFailures(3)
+                                        .setHttpSchema("HTTPS")
+                                        .setErrorClassification("SSL_ERROR")
+                                        .setErrorDesc("-")
+                                        .setResponseTimeMs(250)
+                                        .build()
+                        )
+                        .build(),
                 List.of(
                         new SearchSiteInfoService.DomainAvailabilityEvent(
                                 true,
@@ -332,6 +365,39 @@ public class MockedSearchResults {
     public static Object mockSecurityEvents() {
         return new SearchSiteInfoService.SecurityChangeEvents(
                 "www.example.com",
+                RpcDomainInfoResponse.newBuilder()
+                        .setDomain("www.example.com")
+                        .setBlacklisted(false)
+                        .setPagesKnown(14)
+                        .setPagesFetched(23)
+                        .setPagesIndexed(55)
+                        .setIncomingLinks(10)
+                        .setOutboundLinks(20)
+                        .setNodeAffinity(1)
+                        .setRanking(0.5)
+                        .setSuggestForCrawling(false)
+                        .setInCrawlQueue(true)
+                        .setUnknownDomain(false)
+                        .setIp("127.0.0.1")
+                        .setAsn(4041)
+                        .setAsnOrg("ACME INC")
+                        .setAsnCountry("SE")
+                        .setIpCountry("DK")
+                        .setState("INDEXED")
+                        .setPingData(
+                                RpcDomainInfoPingData.newBuilder()
+                                        .setServerAvailable(false)
+                                        .setTsLastError(Instant.now().minus(1, ChronoUnit.DAYS).toEpochMilli())
+                                        .setTsLastAvailable(Instant.now().minus(2, ChronoUnit.DAYS).toEpochMilli())
+                                        .setTsLast(Instant.now().minus(1, ChronoUnit.DAYS).toEpochMilli())
+                                        .setConsecutiveFailures(3)
+                                        .setHttpSchema("HTTPS")
+                                        .setErrorClassification("SSL_ERROR")
+                                        .setErrorDesc("-")
+                                        .setResponseTimeMs(250)
+                                        .build()
+                        )
+                        .build(),
                 List.of(
                         new SearchSiteInfoService.SecurityChangeEvent(
                                 Instant.now().minus(4, ChronoUnit.HOURS),
@@ -410,5 +476,18 @@ public class MockedSearchResults {
                 requests
         );
 
+    }
+
+    public static Object mockSecurityDetails() {
+        return new SearchSiteInfoService.SecurityChangeDetails(
+                "www.example.com",
+                45100L,
+                Map.of(
+                        "foo", "ABCDEFGHIHJ",
+                        "bar", 400.0),
+                Map.of(
+                        "foo", "ABCDEFGHIHJ",
+                        "bar", 500.0)
+                );
     }
 }

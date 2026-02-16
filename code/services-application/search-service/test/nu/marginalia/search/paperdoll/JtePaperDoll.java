@@ -121,6 +121,9 @@ public class JtePaperDoll {
                     else if ("secevents".equals(rq.queryParams("view"))) {
                         return MockedSearchResults.mockSecurityEvents();
                     }
+                    else if ("secdetails".equals(rq.queryParams("view"))) {
+                        return MockedSearchResults.mockSecurityDetails();
+                    }
                     else return MockedSearchResults.mockSiteInfoData();
 
                 },
