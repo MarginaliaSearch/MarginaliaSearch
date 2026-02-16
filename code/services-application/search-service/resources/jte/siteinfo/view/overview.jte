@@ -341,11 +341,13 @@
                 <i class="fas fa-lock"></i>
                 <span>Certificate</span>
             </div>
-            <div class="grid grid-cols-2 gap-2 mx-6 sm:mx-8">
+            <div class="grid grid-cols-1 gap-2 mx-6 sm:mx-8">
                 <div>
                     <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">Key Exhange</h3>
                     <p class="text-lg font-mono">${Objects.requireNonNullElse(secData.getSslKeyExchange(), "-")}</p>
                 </div>
+            </div>
+            <div class="grid grid-cols-1 gap-2 mx-6 sm:mx-8">
                 <div>
                     <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">Cipher Suite</h3>
                     <p class="text-lg font-mono">${Objects.requireNonNullElse(secData.getSslCipherSuite(), "-")}</p>
