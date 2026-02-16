@@ -4,6 +4,7 @@
 @import nu.marginalia.search.model.UrlDetails
 @import java.time.Instant
 @import java.time.ZoneId
+@import java.time.ZonedDateTime
 @import java.time.format.DateTimeFormatter
 @import java.time.temporal.ChronoUnit
 @import java.util.Objects
@@ -245,10 +246,12 @@
             @if (siteInfo.domainInformation().hasPingData())
             !{ 
                 var pingData = siteInfo.domainInformation().getPingData();
-                var longTimeAgo = Instant.now().minus(30, ChronoUnit.DAYS);
-                var pingLastTs = Instant.ofEpochMilli(pingData.getTsLast());
-                var pingLastAvailable = Instant.ofEpochMilli(pingData.getTsLastAvailable());
-                var pingErrorTs = Instant.ofEpochMilli(pingData.getTsLastError());
+                var longTimeAgo = ZonedDateTime.now().minus(30, ChronoUnit.DAYS);
+
+                var utc = ZoneId.of("UTC");
+                var pingLastTs = ZonedDateTime.ofInstant(Instant.ofEpochMilli(pingData.getTsLast()), utc);
+                var pingLastAvailable = ZonedDateTime.ofInstant(Instant.ofEpochMilli(pingData.getTsLastAvailable()), utc);
+                var pingErrorTs = ZonedDateTime.ofInstant(Instant.ofEpochMilli(pingData.getTsLastError()), utc);
             }
 
                 <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
@@ -274,18 +277,24 @@
                 </div>
                 <div>
                     <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">Last Available</h3>
-                    <p class="text-lg font-mono" title="${pingLastAvailable.toString()}">${SearchSiteInfoService.renderRelativeTime(pingLastAvailable)}</p>
+                    <p class="text-lg font-mono" title="${DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(pingLastAvailable)}">
+                        ${SearchSiteInfoService.renderRelativeTime(pingLastAvailable)}
+                    </p>
                 </div>
                 <div>
                     <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">Last Error</h3>
-                    <p class="text-lg font-mono" title="${pingErrorTs.toString()}">${SearchSiteInfoService.renderRelativeTime(pingErrorTs)}</p>
+                    <p class="text-lg font-mono" title="${DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(pingErrorTs)}">
+                        ${SearchSiteInfoService.renderRelativeTime(pingErrorTs)}
+                    </p>
                     @if (!pingData.getServerAvailable())
                         <p class="text-sm text-gray-600 dark:text-gray-400 ">${pingData.getConsecutiveFailures()} consecutive errors</p>
                     @endif
                 </div>
                 <div>
                     <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">Last Ping Attempt</h3>
-                    <p class="text-lg font-mono" title="${pingLastTs.toString()}">${SearchSiteInfoService.renderRelativeTime(pingLastTs)}</p>
+                    <p class="text-lg font-mono" title="${DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(pingLastTs)}">
+                        ${SearchSiteInfoService.renderRelativeTime(pingLastTs)}
+                    </p>
                 </div>
                 @if ((pingData.getServerAvailable() && pingErrorTs.isAfter(longTimeAgo))
         || (!pingData.getServerAvailable() && pingLastAvailable.isAfter(longTimeAgo)))

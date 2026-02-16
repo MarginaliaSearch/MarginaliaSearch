@@ -41,6 +41,9 @@ import javax.annotation.Nullable;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.Temporal;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
@@ -791,8 +794,8 @@ public class SearchSiteInfoService {
         return new String(Character.toChars(firstChar)) + new String(Character.toChars(secondChar));
     }
 
-    public static String renderRelativeTime(Instant timestamp) {
-        Duration diff = Duration.between(timestamp, Instant.now());
+    public static String renderRelativeTime(Temporal temporal) {
+        Duration diff = Duration.between(temporal, ZonedDateTime.now());
 
         int days = (int) diff.toDays();
         if (days > 31) {
