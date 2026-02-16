@@ -118,6 +118,9 @@ public class JtePaperDoll {
                     else if ("availability".equals(rq.queryParams("view"))) {
                         return MockedSearchResults.mockAvailabilityData();
                     }
+                    else if ("secevents".equals(rq.queryParams("view"))) {
+                        return MockedSearchResults.mockSecurityEvents();
+                    }
                     else return MockedSearchResults.mockSiteInfoData();
 
                 },

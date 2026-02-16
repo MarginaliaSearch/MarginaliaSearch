@@ -329,7 +329,44 @@ public class MockedSearchResults {
                 )
         );
     }
+    public static Object mockSecurityEvents() {
+        return new SearchSiteInfoService.SecurityChangeEvents(
+                "www.example.com",
+                List.of(
+                        new SearchSiteInfoService.SecurityChangeEvent(
+                                Instant.now().minus(4, ChronoUnit.HOURS),
+                                44,
+                                true,
+                                false,
+                                false,
+                                true,
+                                true,
+                                false,
+                                true,
+                                true,
+                                false,
+                                false,
+                                "HTTP->HTTPS"
+                        ),
+                        new SearchSiteInfoService.SecurityChangeEvent(
+                                Instant.now().minus(4, ChronoUnit.HOURS),
+                                44,
+                                true,
+                                true,
+                                false,
+                                true,
+                                true,
+                                true,
+                                true,
+                                true,
+                                true,
+                                true,
+                                "HTTP->HTTPS"
+                        )
+                    )
+        );
 
+    }
     public static Object mockTrafficReport() {
         List<SearchSiteInfoService.TrafficSample.RequestsForTargetDomain> requests = new ArrayList<>();
         requests.add(new SearchSiteInfoService.TrafficSample.RequestsForTargetDomain(

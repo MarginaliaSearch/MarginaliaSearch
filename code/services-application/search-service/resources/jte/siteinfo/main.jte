@@ -143,7 +143,11 @@
     @elseif (model instanceof SearchSiteInfoService.Docs docs)
         @template.siteinfo.view.docs(docs = docs)
     @elseif (model instanceof SearchSiteInfoService.DomainAvailabilityEvents events)
-        @template.siteinfo.view.events(events = events)
+        @template.siteinfo.view.availability(events = events)
+    @elseif (model instanceof SearchSiteInfoService.SecurityChangeEvents events)
+        @template.siteinfo.view.secevents(events = events)
+    @elseif (model instanceof SearchSiteInfoService.SecurityChangeDetails details)
+        @template.siteinfo.view.secdetails(details = details)
     @elseif (model instanceof SearchSiteInfoService.TrafficSample report)
         @template.siteinfo.view.traffic(report = report)
     @endif

@@ -350,19 +350,19 @@
             <div class="grid grid-cols-1 gap-2 mx-6 sm:mx-8">
                 <div>
                     <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">Cipher Suite</h3>
-                    <p class="text-lg font-mono">${Objects.requireNonNullElse(secData.getSslCipherSuite(), "-")}</p>
+                    <p class="text-lg font-mono overflow-auto">${Objects.requireNonNullElse(secData.getSslCipherSuite(), "-")}</p>
                 </div>
             </div>
             <div class="grid grid-cols-1 gap-2 mx-6 sm:mx-8">
                 <div>
                     <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">Subject</h3>
-                    <p class="text-lg font-mono">${Objects.requireNonNullElse(secData.getSslCertSubject(), "-")}</p>
+                    <p class="text-lg font-mono overflow-auto">${Objects.requireNonNullElse(secData.getSslCertSubject(), "-")}</p>
                 </div>
             </div>
             <div class="grid grid-cols-1 gap-2 mx-6 sm:mx-8">
                 <div>
                     <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">Subject Alternative Name</h3>
-                    <p class="text-lg font-mono">${Objects.requireNonNullElse(secData.getSslCertSAN(), "-")}</p>
+                    <p class="text-lg font-mono overflow-auto">${Objects.requireNonNullElse(secData.getSslCertSAN(), "-")}</p>
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-2 mx-6 sm:mx-8">
