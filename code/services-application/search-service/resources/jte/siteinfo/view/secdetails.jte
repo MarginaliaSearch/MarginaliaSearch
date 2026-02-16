@@ -58,7 +58,11 @@
 
     @if (changedKeys.contains(key))
     <div class="my-1 p-2 flex flex-row gap-2">
-        <span>${key}</span>
+        <span>${key}
+            @if (key.equals("headerContentSecurityPolicyHash"))
+                <sup class="text-red-500" title="Buggy prior to 2026-02-17">BUG</sup>
+            @endif
+        </span>
         <span class="font-mono overflow-auto  bg-red-100 border-red-200 dark:bg-red-900 text-red-800 dark:text-red-200">
             ${SecurityChangeDetails.renderValue(key, details.before().get(key))}
         </span>
@@ -68,11 +72,7 @@
     </div>
     @else
     <div class="my-1 p-2 flex flex-row gap-2">
-        <span>${key}
-        @if (key.equals("headerContentSecurityPolicyHash"))
-            <sup class="text-red-500" title="Buggy prior to 2026-02-17">BUG</sup>
-        @endif
-        </span>
+        <span>${key}</span>
         <span class="font-mono overflow-auto  bg-gray-100 border-gray-200 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
             ${SecurityChangeDetails.renderValue(key, details.before().get(key))}
         </span>
