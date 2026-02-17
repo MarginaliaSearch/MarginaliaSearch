@@ -15,31 +15,34 @@ public sealed interface DomainAvailabilityChange {
             DomainAvailabilityRecord oldStatus,
             DomainAvailabilityRecord newStatus
     ) {
-        if (oldStatus.serverAvailable() == newStatus.serverAvailable()) {
+        // Available -> Available is a no-up
+        if (oldStatus.serverAvailable() && newStatus.serverAvailable()) {
             return new DomainAvailabilityChange.None();
         }
 
+        // Down -> Up
         if (oldStatus.serverAvailable()) {
             return new DomainAvailabilityChange.AvailableToUnavailable(
                     AvailabilityOutageType.fromErrorClassification(newStatus.errorClassification())
             );
         }
 
+        // Up -> Down
         if (newStatus.serverAvailable()) {
             return new DomainAvailabilityChange.UnavailableToAvailable();
         }
-        else {
-            var classOld = oldStatus.errorClassification();
-            var classNew = newStatus.errorClassification();
 
-            if (!Objects.equals(classOld, classNew)) {
-                return new DomainAvailabilityChange.OutageTypeChange(
-                        AvailabilityOutageType.fromErrorClassification(newStatus.errorClassification())
-                );
-            }
-            else {
-                return new DomainAvailabilityChange.None();
-            }
+        // If unavailable -> unavailable, compare the reason
+        var classOld = oldStatus.errorClassification();
+        var classNew = newStatus.errorClassification();
+
+        if (Objects.equals(classOld, classNew)) {
+            return new DomainAvailabilityChange.None();
         }
+
+        return new DomainAvailabilityChange.OutageTypeChange(
+                AvailabilityOutageType.fromErrorClassification(newStatus.errorClassification())
+        );
+
     }
 }
