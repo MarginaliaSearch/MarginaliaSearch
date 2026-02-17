@@ -86,6 +86,45 @@ message RpcDomainInfoResponse {
   string asnCountry = 17;
   string ipCountry = 18;
   string state = 19;
+
+  RpcDomainInfoPingData pingData = 20;
+  RpcDomainInfoSecurityData securityData = 21;
+}
+
+message RpcDomainInfoPingData {
+  bool serverAvailable = 1;
+  string httpSchema = 2;
+  int32 responseTimeMs = 3;
+
+  string errorClassification = 4;
+  string errorDesc = 5;
+
+  int64 tsLast = 6;
+  int64 tsLastAvailable = 7;
+  int64 tsLastError = 8;
+  int32 consecutiveFailures = 9;
+}
+
+message RpcDomainInfoSecurityData {
+  string httpVersion = 1;
+  bool httpCompression = 2;
+
+  string headerServer = 10;
+  string headerPoweredBy = 11;
+
+  string sslProtocol = 20;
+  string sslCipherSuite = 21;
+  string sslKeyExchange = 22;
+  int64 sslCertNotBefore = 23;
+  int64 sslCertNotAfter = 24;
+  string sslCertSubject = 25;
+  string sslCertSAN = 26;
+  bool sslCertWildcard = 27;
+
+
+  bool sslChainValid = 30;
+  bool sslChainDateValid = 31;
+  bool sslChainHostValid = 32;
 }
 
 message RpcSimilarDomains {

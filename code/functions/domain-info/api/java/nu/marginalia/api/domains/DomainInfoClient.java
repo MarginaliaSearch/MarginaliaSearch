@@ -47,13 +47,21 @@ public class DomainInfoClient {
                 .thenApply(DomainsProtobufCodec.DomainQueries::convertResponse);
     }
 
-    public Future<DomainInformation> domainInformation(int domainId) {
+    public Future<RpcDomainInfoResponse> domainInformation(int domainId) {
         return channelPool.call(DomainInfoAPIGrpc.DomainInfoAPIBlockingStub::getDomainInfo)
                 .async(executor)
-                .run(DomainsProtobufCodec.DomainInfo.createRequest(domainId))
+                .run(RpcDomainId.newBuilder()
+                        .setDomainId(domainId)
+                        .build());
+    }
+    public Future<DomainInformation> domainInformationOld(int domainId) {
+        return channelPool.call(DomainInfoAPIGrpc.DomainInfoAPIBlockingStub::getDomainInfo)
+                .async(executor)
+                .run(RpcDomainId.newBuilder()
+                        .setDomainId(domainId)
+                        .build())
                 .thenApply(DomainsProtobufCodec.DomainInfo::convertResponse);
     }
-
     public boolean isAccepting() {
         return channelPool.hasChannel();
     }

@@ -1,6 +1,8 @@
 package nu.marginalia.search.rendering;
 
 import nu.marginalia.WebsiteUrl;
+import nu.marginalia.api.domains.RpcDomainInfoPingData;
+import nu.marginalia.api.domains.RpcDomainInfoResponse;
 import nu.marginalia.api.domains.model.DomainInformation;
 import nu.marginalia.api.domains.model.SimilarDomain;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
@@ -19,6 +21,8 @@ import nu.marginalia.search.svc.SearchFlagSiteService;
 import nu.marginalia.search.svc.SearchSiteInfoService;
 
 import java.net.URISyntaxException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -145,26 +149,39 @@ public class MockedSearchResults {
                 14,
                 "https://www.example.com",
                 true,
-                new DomainInformation(
-                        new EdgeDomain("www.example.com"),
-                        false,
-                        14,
-                        23,
-                        55,
-                        10,
-                        20,
-                        1,
-                        0.5,
-                        false,
-                        true,
-                        false,
-                        "127.0.0.1",
-                        4041,
-                        "ACME INC",
-                        "SE",
-                        "SE",
-                        "INDEXED"
-                ),
+                RpcDomainInfoResponse.newBuilder()
+                        .setDomain("www.example.com")
+                        .setBlacklisted(false)
+                        .setPagesKnown(14)
+                        .setPagesFetched(23)
+                        .setPagesIndexed(55)
+                        .setIncomingLinks(10)
+                        .setOutboundLinks(20)
+                        .setNodeAffinity(1)
+                        .setRanking(0.5)
+                        .setSuggestForCrawling(false)
+                        .setInCrawlQueue(true)
+                        .setUnknownDomain(false)
+                        .setIp("127.0.0.1")
+                        .setAsn(4041)
+                        .setAsnOrg("ACME INC")
+                        .setAsnCountry("SE")
+                        .setIpCountry("DK")
+                        .setState("INDEXED")
+                        .setPingData(
+                                RpcDomainInfoPingData.newBuilder()
+                                        .setServerAvailable(false)
+                                        .setTsLastError(Instant.now().minus(1, ChronoUnit.DAYS).toEpochMilli())
+                                        .setTsLastAvailable(Instant.now().minus(2, ChronoUnit.DAYS).toEpochMilli())
+                                        .setTsLast(Instant.now().minus(1, ChronoUnit.DAYS).toEpochMilli())
+                                        .setConsecutiveFailures(3)
+                                        .setHttpSchema("HTTPS")
+                                        .setErrorClassification("SSL_ERROR")
+                                        .setErrorDesc("-")
+                                        .setResponseTimeMs(250)
+                                        .build()
+                        )
+                        .build(),
                 List.of(
                         new SimilarDomain(new EdgeUrl("https://www.other.com"), 4,65, 20, true, true, true, true, SimilarDomain.LinkType.BIDIRECTIONAL)
                 ),
@@ -277,6 +294,145 @@ public class MockedSearchResults {
                 List.of(mockUrlDetails("https://other.example.com/", "Other document")));
     }
 
+    public static Object mockAvailabilityData() {
+        return new SearchSiteInfoService.DomainAvailabilityEvents(
+                "www.example.com",
+                RpcDomainInfoResponse.newBuilder()
+                        .setDomain("www.example.com")
+                        .setBlacklisted(false)
+                        .setPagesKnown(14)
+                        .setPagesFetched(23)
+                        .setPagesIndexed(55)
+                        .setIncomingLinks(10)
+                        .setOutboundLinks(20)
+                        .setNodeAffinity(1)
+                        .setRanking(0.5)
+                        .setSuggestForCrawling(false)
+                        .setInCrawlQueue(true)
+                        .setUnknownDomain(false)
+                        .setIp("127.0.0.1")
+                        .setAsn(4041)
+                        .setAsnOrg("ACME INC")
+                        .setAsnCountry("SE")
+                        .setIpCountry("DK")
+                        .setState("INDEXED")
+                        .setPingData(
+                                RpcDomainInfoPingData.newBuilder()
+                                        .setServerAvailable(false)
+                                        .setTsLastError(Instant.now().minus(1, ChronoUnit.DAYS).toEpochMilli())
+                                        .setTsLastAvailable(Instant.now().minus(2, ChronoUnit.DAYS).toEpochMilli())
+                                        .setTsLast(Instant.now().minus(1, ChronoUnit.DAYS).toEpochMilli())
+                                        .setConsecutiveFailures(3)
+                                        .setHttpSchema("HTTPS")
+                                        .setErrorClassification("SSL_ERROR")
+                                        .setErrorDesc("-")
+                                        .setResponseTimeMs(250)
+                                        .build()
+                        )
+                        .build(),
+                List.of(
+                        new SearchSiteInfoService.DomainAvailabilityEvent(
+                                true,
+                                null,
+                                200,
+                                null,
+                                Instant.now().minus(1, ChronoUnit.HOURS)
+                        ),
+                        new SearchSiteInfoService.DomainAvailabilityEvent(
+                                false,
+                                "SSL_ERROR",
+                                null,
+                                "Bad PKIX nonsense",
+                                Instant.now().minus(1, ChronoUnit.DAYS)
+                        ),
+                        new SearchSiteInfoService.DomainAvailabilityEvent(
+                                true,
+                                null,
+                                200,
+                                null,
+                                Instant.now().minus(2, ChronoUnit.DAYS)
+                        ),
+                        new SearchSiteInfoService.DomainAvailabilityEvent(
+                                false,
+                                "BAD_STATUS",
+                                404,
+                                "File Not Found",
+                                Instant.now().minus(2, ChronoUnit.DAYS)
+                        )
+                )
+        );
+    }
+    public static Object mockSecurityEvents() {
+        return new SearchSiteInfoService.SecurityChangeEvents(
+                "www.example.com",
+                RpcDomainInfoResponse.newBuilder()
+                        .setDomain("www.example.com")
+                        .setBlacklisted(false)
+                        .setPagesKnown(14)
+                        .setPagesFetched(23)
+                        .setPagesIndexed(55)
+                        .setIncomingLinks(10)
+                        .setOutboundLinks(20)
+                        .setNodeAffinity(1)
+                        .setRanking(0.5)
+                        .setSuggestForCrawling(false)
+                        .setInCrawlQueue(true)
+                        .setUnknownDomain(false)
+                        .setIp("127.0.0.1")
+                        .setAsn(4041)
+                        .setAsnOrg("ACME INC")
+                        .setAsnCountry("SE")
+                        .setIpCountry("DK")
+                        .setState("INDEXED")
+                        .setPingData(
+                                RpcDomainInfoPingData.newBuilder()
+                                        .setServerAvailable(false)
+                                        .setTsLastError(Instant.now().minus(1, ChronoUnit.DAYS).toEpochMilli())
+                                        .setTsLastAvailable(Instant.now().minus(2, ChronoUnit.DAYS).toEpochMilli())
+                                        .setTsLast(Instant.now().minus(1, ChronoUnit.DAYS).toEpochMilli())
+                                        .setConsecutiveFailures(3)
+                                        .setHttpSchema("HTTPS")
+                                        .setErrorClassification("SSL_ERROR")
+                                        .setErrorDesc("-")
+                                        .setResponseTimeMs(250)
+                                        .build()
+                        )
+                        .build(),
+                List.of(
+                        new SearchSiteInfoService.SecurityChangeEvent(
+                                Instant.now().minus(4, ChronoUnit.HOURS),
+                                44,
+                                true,
+                                false,
+                                false,
+                                true,
+                                true,
+                                false,
+                                true,
+                                true,
+                                false,
+                                false,
+                                "HTTP->HTTPS"
+                        ),
+                        new SearchSiteInfoService.SecurityChangeEvent(
+                                Instant.now().minus(4, ChronoUnit.HOURS),
+                                44,
+                                true,
+                                true,
+                                false,
+                                true,
+                                true,
+                                true,
+                                true,
+                                true,
+                                true,
+                                true,
+                                "HTTP->HTTPS"
+                        )
+                    )
+        );
+
+    }
     public static Object mockTrafficReport() {
         List<SearchSiteInfoService.TrafficSample.RequestsForTargetDomain> requests = new ArrayList<>();
         requests.add(new SearchSiteInfoService.TrafficSample.RequestsForTargetDomain(
@@ -320,5 +476,18 @@ public class MockedSearchResults {
                 requests
         );
 
+    }
+
+    public static Object mockSecurityDetails() {
+        return new SearchSiteInfoService.SecurityChangeDetails(
+                "www.example.com",
+                45100L,
+                Map.of(
+                        "foo", "ABCDEFGHIHJ",
+                        "bar", 400.0),
+                Map.of(
+                        "foo", "ABCDEFGHIHJ",
+                        "bar", 500.0)
+                );
     }
 }

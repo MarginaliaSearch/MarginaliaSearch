@@ -2,10 +2,17 @@
 @import nu.marginalia.search.svc.SearchSiteInfoService
 @import nu.marginalia.search.svc.SearchSiteInfoService.*
 @import nu.marginalia.search.model.UrlDetails
+@import java.time.Instant
+@import java.time.ZoneId
+@import java.time.ZonedDateTime
+@import java.time.format.DateTimeFormatter
+@import java.time.temporal.ChronoUnit
+@import java.util.Objects
 
 @param SiteInfoWithContext siteInfo
 
 <!-- Main content -->
+
 
 <div class="flex-1 p-4 space-y-4 mx-auto w-full md:w-auto">
     <div class="flex border border-gray-300  dark:border-gray-600 rounded bg-white dark:bg-gray-800 flex-col space-y-4 pb-4 overflow-hidden md:max-w-lg" >
@@ -80,7 +87,7 @@
 
         @endif
 
-        @if (siteInfo.domainInformation().isUnknownDomain())
+        @if (siteInfo.domainInformation().getUnknownDomain())
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
                 <i class="fa-regular fa-circle-question"></i>
                 <span>Unknown Domain</span>
@@ -97,7 +104,7 @@
 
         @endif
 
-        @if (siteInfo.domainInformation().isBlacklisted())
+        @if (siteInfo.domainInformation().getBlacklisted())
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
                 <i class="fas fa-ban"></i>
                 <span>Blacklisted</span>
@@ -118,7 +125,7 @@
             </div>
         @endif
 
-        @if (siteInfo.domainInformation().isSuggestForCrawling() && siteInfo.domainInformation().getNodeAffinity() < 0)
+        @if (siteInfo.domainInformation().getSuggestForCrawling() && siteInfo.domainInformation().getNodeAffinity() < 0)
             <form method="POST"
                   action="/site/suggest/">
                 <div class="max-w-md mx-auto p-6 bg-white shadow border dark:border-gray-600 border-gray-200  mx-1 flex space-y-4 flex-col">
@@ -217,24 +224,6 @@
             </div>
             @endif
 
-
-            <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
-                <i class="fas fa-network-wired"></i>
-                <span>Network Details</span>
-            </div>
-
-            <div class="grid grid-cols-2 grid-cols-2 gap-2 mx-6 sm:mx-8">
-                <div>
-                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">IP Address</h3>
-                    <p class="text-lg font-mono">${siteInfo.domainInformation().getIp()}</p>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">${siteInfo.domainInformation().getIpCountry()} ${siteInfo.domainInformation().getIpFlag()}</p>
-                </div>
-                <div title="Autonomous system">
-                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-300">ASN Details</h3>
-                    <p class="text-lg font-mono">AS${siteInfo.domainInformation().getAsn()} - ${siteInfo.domainInformation().getAsnOrg()}</p>
-                    <p class="text-sm text-gray-600 dark:text-gray-400 ">${siteInfo.domainInformation().getAsnCountry()} ${siteInfo.domainInformation().getAsnFlag()}</p>
-                </div>
-            </div>
         @endif
     </div>
 </div>
