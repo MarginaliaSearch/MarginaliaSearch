@@ -46,6 +46,7 @@ import java.sql.SQLException;
 import java.text.NumberFormat;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
 import java.util.*;
@@ -497,6 +498,8 @@ public class SearchSiteInfoService {
             domainInfoFuture = CompletableFuture.failedFuture(new NoSuchElementException());
         }
 
+        boolean errored = false;
+
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
                      SELECT AVAILABLE,
@@ -507,7 +510,7 @@ public class SearchSiteInfoService {
                      FROM DOMAIN_AVAILABILITY_EVENTS
                      WHERE DOMAIN_ID=?
                      ORDER BY TS_CHANGE DESC
-                     LIMIT 100
+                     LIMIT 20
                      """)
         ) {
             stmt.setInt(1, domainId);
@@ -526,29 +529,43 @@ public class SearchSiteInfoService {
                 );
             }
 
-            if (events.isEmpty()) {
-                events.add(
-                        new DomainAvailabilityEvent(
-                                false,
-                                "Missing",
-                                0,
-                                "No Historical Data Available",
-                                Instant.EPOCH
-                        )
-                );
+
+            if (!events.isEmpty()) {
+                return new DomainAvailabilityEvents(domainName, waitForFuture(domainInfoFuture, () -> createDummySiteInfo(domainName)), events);
             }
 
-            return new DomainAvailabilityEvents(domainName,
-                    waitForFuture(domainInfoFuture, () -> createDummySiteInfo(domainName)),
-                    events);
         }
         catch (SQLException ex) {
+            errored = true;
             logger.error("Exception when fetching domain availability events for {}", domainId, ex);
-
-            return new DomainAvailabilityEvents(domainName,
-                    waitForFuture(domainInfoFuture, () -> createDummySiteInfo(domainName)),
-                    List.of());
         }
+
+        RpcDomainInfoResponse domainInfo = waitForFuture(domainInfoFuture, () -> createDummySiteInfo(domainName));
+
+        if (domainInfo.hasPingData()) {
+            var pingData = domainInfo.getPingData();
+
+            return new DomainAvailabilityEvents(domainName, domainInfo,
+                    List.of(new DomainAvailabilityEvent(
+                            domainInfo.getPingData().getServerAvailable(),
+                            errored ? "Internal Error" : "No State Changes Recorded",
+                            -1,
+                            "(Reconstructed Entry)",
+                            Instant.ofEpochMilli(domainInfo.getPingData().getTsLast())
+                    ))
+            );
+        }
+
+        return new DomainAvailabilityEvents(domainName, domainInfo,
+                List.of(new DomainAvailabilityEvent(
+                        false,
+                        "Data Unavailable",
+                        -1,
+                        "(Reconstructed Entry)",
+                        Instant.EPOCH
+                ))
+        );
+
     }
 
 
