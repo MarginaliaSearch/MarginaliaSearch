@@ -8,7 +8,10 @@ public record WorkLogEntry(String id, String ts, String path, int cnt) {
     private static final Pattern splitPattern = Pattern.compile("\\s+");
 
     static WorkLogEntry parse(String line) {
-        String[] parts = splitPattern.split(line);
+        int end = line.indexOf('#');
+        if (end < 0) end = line.length();
+
+        String[] parts = splitPattern.split(line.substring(0, end));
         return new WorkLogEntry(parts[0], parts[1], parts[2], Integer.parseInt(parts[3]));
     }
 
