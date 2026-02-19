@@ -1,6 +1,7 @@
 package nu.marginalia.index.searchset.connectivity;
 
 import it.unimi.dsi.fastutil.ints.Int2ByteOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import org.jetbrains.annotations.Nullable;
 
 public class ConnectivityView {
@@ -13,6 +14,10 @@ public class ConnectivityView {
     }
     private ConnectivityView() { this.connectivity = null; }
 
+    public boolean isEmpty() {
+        return connectivity.isEmpty();
+    }
+
     public static ConnectivityView empty() {
         return EMPTY;
     }
@@ -24,5 +29,13 @@ public class ConnectivityView {
 
         int ord = connectivity.getOrDefault(id, (byte) DomainSetConnectivity.UNREACHABLE.ordinal());
         return values[ord];
+    }
+
+    public Int2IntOpenHashMap emulateRankData() {
+        Int2IntOpenHashMap ret = new Int2IntOpenHashMap(connectivity.size());
+        connectivity.forEach((k,v) -> {
+            ret.put((int) k, values[v].rankValue);
+        });
+        return ret;
     }
 }

@@ -3,6 +3,7 @@ package nu.marginalia.index.searchset;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import gnu.trove.list.TIntList;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import nu.marginalia.db.DomainRankingSetsService;
 import nu.marginalia.db.DomainTypes;
@@ -14,6 +15,7 @@ import nu.marginalia.domainranking.data.LinkGraphSource;
 import nu.marginalia.domainranking.data.SimilarityGraphSource;
 import nu.marginalia.index.IndexFactory;
 import nu.marginalia.index.searchset.connectivity.ConnectivitySets;
+import nu.marginalia.index.searchset.connectivity.ConnectivityView;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.slf4j.Logger;
@@ -103,10 +105,13 @@ public class SearchSetsService {
     }
 
     /** Recalculates the primary ranking set.  This gets baked into the identifiers in the index, effectively
-     * changing their sort order, so it's important to run this before reconstructing the indices. */
+     * changing their sort order, so it's important to run this _before_ reconstructing the indices. */
     public void recalculatePrimaryRank() {
         try {
-            domainRankingSetsService.get(primaryRankingSet).ifPresent(this::updateDomainRankings);
+            connectivitySets.recalculate();
+
+            domainRankingSetsService.get(primaryRankingSet).ifPresent(this::updateMainDomainRankings);
+
             eventLog.logEvent("RANKING-SET-RECALCULATED", primaryRankingSet);
         } catch (SQLException e) {
             logger.warn("Failed to primary ranking set", e);
@@ -136,7 +141,6 @@ public class SearchSetsService {
             eventLog.logEvent("RANKING-SET-RECALCULATED", rankingSet.name());
         }
 
-        connectivitySets.recalculate();
     }
 
     private void recalculateNormal(DomainRankingSetsService.DomainRankingSet rankingSet) {
@@ -184,7 +188,39 @@ public class SearchSetsService {
         }
     }
 
-    private void updateDomainRankings(DomainRankingSetsService.DomainRankingSet rankingSet) {
+    private void updateMainDomainRankings(DomainRankingSetsService.DomainRankingSet rankingSet) {
+
+        ConnectivityView connectivityView = connectivitySets.getView();
+
+        if (!connectivityView.isEmpty()) {
+            // If connectivity data is available, use it for ranking as well
+
+            var connectivityData = connectivityView.emulateRankData();
+            useMainDomainRankings(connectivityData);
+
+            if (nodeId == 1) {
+                // The EC_DOMAIN table has a field that reflects the rank, this needs to be set for search result ordering to
+                // make sense, but only do this on the primary node to avoid excessive db locks
+
+                var pageRankData = getMainDomainRankings(rankingSet);
+                dbUpdateRanks.execute(pageRankData);
+            }
+        }
+        else {
+            // Connectivity unavailable, use pagerank-style ranking
+
+            var pageRankData = getMainDomainRankings(rankingSet);
+            useMainDomainRankings(pageRankData);
+
+            if (nodeId == 1) {
+                // The EC_DOMAIN table has a field that reflects the rank, this needs to be set for search result ordering to
+                // make sense, but only do this on the primary node to avoid excessive db locks
+                dbUpdateRanks.execute(pageRankData);
+            }
+        }
+    }
+
+    private Int2IntOpenHashMap getMainDomainRankings(DomainRankingSetsService.DomainRankingSet rankingSet) {
         List<String> domains = List.of(rankingSet.domains());
 
         final GraphSource source;
@@ -192,26 +228,19 @@ public class SearchSetsService {
         if (domains.isEmpty()) {
             // Similarity ranking does not behave well with an empty set of domains
             source = linksDomains;
-        }
-        else {
+        } else {
             source = similarityDomains;
         }
 
-        var ranks = PageRankDomainRanker
-                        .forDomainNames(source, domains)
-                        .calculate(rankingSet.depth(), () -> new RankingResultHashMapAccumulator(rankingSet.depth()));
-
-        synchronized (this) {
-            domainRankings = new DomainRankings(ranks);
-        }
-
-        domainRankings.save(indexFactory.getSearchSetsBase());
-
-        if (nodeId == 1) {
-            // The EC_DOMAIN table has a field that reflects the rank, this needs to be set for search result ordering to
-            // make sense, but only do this on the primary node to avoid excessive db locks
-            dbUpdateRanks.execute(ranks);
-        }
+        return PageRankDomainRanker
+                .forDomainNames(source, domains)
+                .calculate(rankingSet.depth(), () -> new RankingResultHashMapAccumulator(rankingSet.depth()));
     }
 
+    private void useMainDomainRankings(Int2IntOpenHashMap data) {
+        synchronized (this) {
+            domainRankings = new DomainRankings(data);
+        }
+        domainRankings.save(indexFactory.getSearchSetsBase());
+    }
 }
