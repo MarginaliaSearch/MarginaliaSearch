@@ -8,8 +8,6 @@ import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.reverse.FullReverseIndexReader;
 import nu.marginalia.index.reverse.PrioReverseIndexReader;
 import nu.marginalia.index.reverse.WordLexicon;
-import nu.marginalia.index.searchset.connectivity.ConnectivitySets;
-import nu.marginalia.index.searchset.connectivity.ConnectivityView;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.LanguageDefinition;
 import nu.marginalia.storage.FileStorageService;
@@ -29,18 +27,13 @@ public class IndexFactory {
     private final Path liveStorage;
     private final LanguageConfiguration languageConfiguration;
     private static final Logger logger = LoggerFactory.getLogger(IndexFactory.class);
-    private final ConnectivityView connectivityView;
 
     @Inject
-    public IndexFactory(FileStorageService fileStorageService,
-                        LanguageConfiguration languageConfiguration,
-                        ConnectivitySets connectivitySets
-                        ) {
+    public IndexFactory(FileStorageService fileStorageService, LanguageConfiguration languageConfiguration) {
 
         this.fileStorageService = fileStorageService;
         this.liveStorage = IndexLocations.getCurrentIndex(fileStorageService);
         this.languageConfiguration = languageConfiguration;
-        this.connectivityView = connectivitySets.getView();
     }
 
     public CombinedIndexReader getCombinedIndexReader() throws IOException {
