@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -39,6 +40,10 @@ public interface SerializableCrawlDataStream extends AutoCloseable {
     /** An iterator-like access to domain data  This must be closed otherwise it will leak off-heap memory! */
     static SerializableCrawlDataStream openDataStream(Path fullPath) throws IOException
     {
+        if (!Files.exists(fullPath)) {
+            logger.error("Missing file: {}", fullPath);
+            return SerializableCrawlDataStream.empty();
+        }
 
         String fileName = fullPath.getFileName().toString();
 
