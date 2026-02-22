@@ -43,12 +43,17 @@
 }
 <div class="max-w-[1000px] mx-auto flex gap-1 flex-col md:flex-row place-items-center md:place-items-start py-4 basis-1/2">
     <div class="border dark:border-gray-600 rounded flex flex-col space-x-4 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-100 text-sm p-4 items-center">
+
         <div class="flex flex-row gap-2 place-items-center">
-            <i class="fas fa-hourglass text-2xl animate-pulse"></i>
-            <div class="px-2">
-                The search engine is currently seeing a lot of fairly aggressive bot activity.
-                Please wait for <span data-tr="${1+waitDuration.getSeconds()}" id="countdown">${1+waitDuration.getSeconds()}</span> seconds before proceeding.
-            </div>
+            <i class="fas fa-clock text-2xl animate-pulse"></i>
+            <h1 class="font-bold text-2xl">Wait A Moment</h1>
+        </div>
+
+        <div>
+            The search engine is currently seeing a lot of fairly aggressive bot activity.
+        </div>
+        <div>
+            Please wait for <span class="font-bold" data-tr="${1+waitDuration.getSeconds()}" id="countdown">${1+waitDuration.getSeconds()}</span> seconds before proceeding.
         </div>
 
         <noscript class="my-2">

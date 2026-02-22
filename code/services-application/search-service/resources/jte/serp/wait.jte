@@ -53,19 +53,20 @@
 </header>
 
 <div class="max-w-[1400px] mx-auto flex gap-6">
-    <!-- Sidebar -->
-    @template.serp.part.sidebar(filters = filters)
-    @template.serp.part.language-menu(languageDefinitions = languageDefinitions, parameters = parameters)
-
     <!-- Main content -->
-    <main class="flex-1 py-4 p-2 sm:p-4 max-w-3xl space-y-4">
+    <main class="flex-1 py-4 p-2 sm:p-4 space-y-4 mx-auto">
         <div class="border dark:border-gray-600 rounded flex flex-col space-x-4 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-100 text-sm p-4 items-center">
+
             <div class="flex flex-row gap-2 place-items-center">
-                <i class="fas fa-hourglass text-2xl animate-pulse"></i>
-                <div class="px-2">
+                <i class="fas fa-clock text-2xl animate-pulse"></i>
+                <h1 class="font-bold text-2xl">Wait A Moment</h1>
+            </div>
+
+            <div>
                 The search engine is currently seeing a lot of fairly aggressive bot activity.
-                Please wait for <span data-tr="${1+waitDuration.getSeconds()}" id="countdown">${1+waitDuration.getSeconds()}</span> seconds before proceeding.
-                </div>
+            </div>
+            <div>
+                Please wait for <span class="font-bold" data-tr="${1+waitDuration.getSeconds()}" id="countdown">${1+waitDuration.getSeconds()}</span> seconds before proceeding.
             </div>
 
             <noscript class="my-2">
