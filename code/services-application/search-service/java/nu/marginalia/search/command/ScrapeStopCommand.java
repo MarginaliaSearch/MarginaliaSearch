@@ -20,7 +20,7 @@ public class ScrapeStopCommand implements SearchCommandInterface {
     private final ScrapeStopper scrapeStopper;
     private final LanguageConfiguration languageConfiguration;
 
-    private final RateLimiter rateLimiter = RateLimiter.queryPerMinuteLimiter(30);
+    private final RateLimiter rateLimiter = RateLimiter.queryPerMinuteLimiter(60);
 
     @Inject
     public ScrapeStopCommand(ScrapeStopper scrapeStopper,

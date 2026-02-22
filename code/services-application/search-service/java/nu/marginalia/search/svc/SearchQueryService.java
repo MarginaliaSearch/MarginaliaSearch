@@ -28,7 +28,6 @@ public class SearchQueryService {
     private final DbDomainQueries domainQueries;
     private final WebsiteUrl websiteUrl;
     private final SearchErrorPageService errorPageService;
-    private final ScrapeStopper scrapeStopper;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final List<SearchCommandInterface> specialCommands = new ArrayList<>();
@@ -52,13 +51,11 @@ public class SearchQueryService {
             LangCommand langCommand,
             ScrapeStopCommand scrapeStopCommand,
             SiteRedirectCommand siteRedirectCommand,
-            ScrapeStopper scrapeStopper,
             SearchCommand searchCommand
     ) {
         this.domainQueries = domainQueries;
         this.websiteUrl = websiteUrl;
         this.errorPageService = errorPageService;
-        this.scrapeStopper = scrapeStopper;
 
         specialCommands.add(scrapeStopCommand);
         specialCommands.add(redirectCommand);
