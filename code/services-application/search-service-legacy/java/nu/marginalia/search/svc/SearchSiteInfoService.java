@@ -12,10 +12,13 @@ import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
+import nu.marginalia.scrapestopper.ScrapeStopper;
 import nu.marginalia.screenshot.ScreenshotService;
 import nu.marginalia.search.SearchOperator;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.svc.SearchFlagSiteService.FlagSiteFormData;
+import nu.marginalia.service.server.RateLimiter;
+import org.apache.lucene.store.RateLimitedIndexOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -23,8 +26,8 @@ import spark.Response;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
+import java.time.Duration;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -39,9 +42,13 @@ public class SearchSiteInfoService {
     private final SearchFlagSiteService flagSiteService;
     private final DbDomainQueries domainQueries;
     private final MustacheRenderer<Object> renderer;
+    private final MustacheRenderer<Object> waitRenderer;
     private final FeedsClient feedsClient;
     private final LiveCaptureClient liveCaptureClient;
     private final ScreenshotService screenshotService;
+
+    private final ScrapeStopper scrapeStopper;
+    private final RateLimiter rateLimiter = RateLimiter.queryPerMinuteLimiter(30);
 
     @Inject
     public SearchSiteInfoService(SearchOperator searchOperator,
@@ -51,7 +58,7 @@ public class SearchSiteInfoService {
                                  DbDomainQueries domainQueries,
                                  FeedsClient feedsClient,
                                  LiveCaptureClient liveCaptureClient,
-                                 ScreenshotService screenshotService) throws IOException
+                                 ScreenshotService screenshotService, ScrapeStopper scrapeStopper) throws IOException
     {
         this.searchOperator = searchOperator;
         this.domainInfoClient = domainInfoClient;
@@ -59,26 +66,58 @@ public class SearchSiteInfoService {
         this.domainQueries = domainQueries;
 
         this.renderer = rendererFactory.renderer("search/site-info/site-info");
+        this.waitRenderer = rendererFactory.renderer("search/wait-page");
 
         this.feedsClient = feedsClient;
         this.liveCaptureClient = liveCaptureClient;
         this.screenshotService = screenshotService;
+        this.scrapeStopper = scrapeStopper;
     }
 
     public Object handle(Request request, Response response) throws SQLException, TimeoutException {
         String domainName = request.params("site");
         String view = request.queryParamOrDefault("view", "info");
 
+        String remoteIp = request.headers("X-Forwarded-For");
+        String sst = request.queryParamOrDefault("sst", "");
+        ScrapeStopper.TokenState tokenState = scrapeStopper.validateToken(sst, remoteIp);
+
+        if (!rateLimiter.isAllowed() && tokenState != ScrapeStopper.TokenState.VALIDATED) {
+            if (tokenState == ScrapeStopper.TokenState.INVALID)
+                sst = scrapeStopper.getToken("SITE", remoteIp, Duration.ofSeconds(3), Duration.ofMinutes(1), 10);
+
+            int waitDuration = (int) scrapeStopper.getRemaining(sst).orElseThrow().toSeconds() + 1;
+            Map<String, String> queryParams = new LinkedHashMap<>();
+            request.queryParams().forEach(param -> {
+                queryParams.put(param, request.queryParams(param));
+            });
+            queryParams.put("sst", sst);
+            StringJoiner redirUrlBuilder = new StringJoiner("&", "?", "");
+            queryParams.forEach((k,v) -> {
+                redirUrlBuilder.add(k + "=" + v);
+            });
+
+
+            response.header("Cache-Control", "no-store");
+
+            return waitRenderer.render(Map.of(
+                    "waitDuration", waitDuration,
+                    "redirUrl", redirUrlBuilder.toString()
+            ));
+        }
+
+
+
         if (null == domainName || domainName.isBlank()) {
             return null;
         }
 
         var model = switch (view) {
-            case "links" -> listLinks(domainName);
-            case "docs" -> listDocs(domainName);
-            case "info" -> listInfo(domainName);
-            case "report" -> reportSite(domainName);
-            default -> listInfo(domainName);
+            case "links" -> listLinks(domainName, sst);
+            case "docs" -> listDocs(domainName, sst);
+            case "info" -> listInfo(domainName, sst);
+            case "report" -> reportSite(domainName, sst);
+            default -> listInfo(domainName, sst);
         };
 
         return renderer.render(model);
@@ -87,6 +126,7 @@ public class SearchSiteInfoService {
     public Object handlePost(Request request, Response response) throws SQLException {
         String domainName = request.params("site");
         String view = request.queryParamOrDefault("view", "info");
+        String sst = request.queryParamOrDefault("sst", "");
 
         if (null == domainName || domainName.isBlank()) {
             return null;
@@ -107,16 +147,17 @@ public class SearchSiteInfoService {
 
         var complaints = flagSiteService.getExistingComplaints(domainId);
 
-        var model = new ReportDomain(domainName, domainId, complaints, List.of(), true);
+        var model = new ReportDomain(domainName, sst, domainId, complaints, List.of(), true);
 
         return renderer.render(model);
     }
 
-    private Object reportSite(String domainName) throws SQLException {
+    private Object reportSite(String domainName, String sst) throws SQLException {
         int domainId = domainQueries.getDomainId(new EdgeDomain(domainName));
         var existingComplaints = flagSiteService.getExistingComplaints(domainId);
 
         return new ReportDomain(domainName,
+                sst,
                 domainId,
                 existingComplaints,
                 flagSiteService.getCategories(),
@@ -124,13 +165,14 @@ public class SearchSiteInfoService {
     }
 
 
-    private Backlinks listLinks(String domainName) throws TimeoutException {
+    private Backlinks listLinks(String domainName, String sst) throws TimeoutException {
         return new Backlinks(domainName,
+                sst,
                 domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),
                 searchOperator.doBacklinkSearch(domainName));
     }
 
-    private SiteInfoWithContext listInfo(String domainName) throws TimeoutException {
+    private SiteInfoWithContext listInfo(String domainName, String sst) throws TimeoutException {
 
         final int domainId = domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1);
 
@@ -168,6 +210,7 @@ public class SearchSiteInfoService {
         }
 
         var result = new SiteInfoWithContext(domainName,
+                sst,
                 domainId,
                 url,
                 hasScreenshot,
@@ -241,19 +284,21 @@ public class SearchSiteInfoService {
                     .build();
     }
 
-    private Docs listDocs(String domainName) throws TimeoutException {
+    private Docs listDocs(String domainName, String sst) throws TimeoutException {
         int domainId = domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1);
         return new Docs(domainName,
+                sst,
                 domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),
                 searchOperator.doSiteSearch(domainName, domainId, 100));
     }
 
     public record Docs(Map<String, Boolean> view,
                        String domain,
+                       String sst,
                        long domainId,
                        List<UrlDetails> results) {
-        public Docs(String domain, long domainId, List<UrlDetails> results) {
-            this(Map.of("docs", true), domain, domainId, results);
+        public Docs(String domain, String sst, long domainId, List<UrlDetails> results) {
+            this(Map.of("docs", true), domain, sst, domainId, results);
         }
 
         public String focusDomain() { return domain; }
@@ -265,9 +310,9 @@ public class SearchSiteInfoService {
         }
     }
 
-    public record Backlinks(Map<String, Boolean> view, String domain, long domainId, List<UrlDetails> results) {
-        public Backlinks(String domain, long domainId, List<UrlDetails> results) {
-            this(Map.of("links", true), domain, domainId, results);
+    public record Backlinks(Map<String, Boolean> view, String domain, String sst, long domainId, List<UrlDetails> results) {
+        public Backlinks(String domain, String sst, long domainId, List<UrlDetails> results) {
+            this(Map.of("links", true), domain, sst, domainId, results);
         }
 
         public String query() { return "links:" + domain; }
@@ -280,6 +325,7 @@ public class SearchSiteInfoService {
     public record SiteInfoWithContext(Map<String, Boolean> view,
                                       Map<String, Boolean> domainState,
                                       String domain,
+                                      String sst,
                                       int domainId,
                                       String siteUrl,
                                       boolean hasScreenshot,
@@ -290,6 +336,7 @@ public class SearchSiteInfoService {
                                       List<UrlDetails> samples
                                       ) {
         public SiteInfoWithContext(String domain,
+                                   String sst,
                                    int domainId,
                                    String siteUrl,
                                    boolean hasScreenshot,
@@ -303,6 +350,7 @@ public class SearchSiteInfoService {
             this(Map.of("info", true),
                     Map.of(domainInfoState(domainInformation), true),
                     domain,
+                    sst,
                     domainId,
                     siteUrl,
                     hasScreenshot,
@@ -394,17 +442,19 @@ public class SearchSiteInfoService {
     public record ReportDomain(
             Map<String, Boolean> view,
             String domain,
+            String sst,
             int domainId,
             List<SearchFlagSiteService.FlagSiteComplaintModel> complaints,
             List<SearchFlagSiteService.CategoryItem> category,
             boolean submitted)
     {
         public ReportDomain(String domain,
+                            String sst,
                             int domainId,
                             List<SearchFlagSiteService.FlagSiteComplaintModel> complaints,
                             List<SearchFlagSiteService.CategoryItem> category,
                             boolean submitted) {
-            this(Map.of("report", true), domain, domainId, complaints, category, submitted);
+            this(Map.of("report", true), domain, sst, domainId, complaints, category, submitted);
         }
 
         public String query() { return "site:" + domain; }

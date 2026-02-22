@@ -38,6 +38,7 @@ dependencies {
     implementation project(':code:common:config')
 
     implementation project(':code:libraries:easy-lsh')
+    implementation project(':code:libraries:scrape-stopper')
     implementation project(':code:functions:language-processing')
     implementation project(':code:libraries:braille-block-punch-cards')
 

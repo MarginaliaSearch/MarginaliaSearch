@@ -113,6 +113,8 @@ public class DecoratedSearchResults {
         return params.searchTitle().value;
     }
 
+    public String getSst() { return params.sst(); }
+
     public int page() {
         return params.page();
     }
