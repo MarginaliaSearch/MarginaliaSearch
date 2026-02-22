@@ -1,6 +1,7 @@
 package nu.marginalia.search.command;
 
 import com.google.inject.Inject;
+import io.jooby.Context;
 import io.jooby.MapModelAndView;
 import io.jooby.ModelAndView;
 import nu.marginalia.language.config.LanguageConfiguration;
@@ -24,7 +25,7 @@ public class SearchCommand implements SearchCommandInterface {
     }
 
     @Override
-    public Optional<ModelAndView<?>> process(SearchParameters parameters) throws InterruptedException, TimeoutException {
+    public Optional<ModelAndView<?>> process(SearchParameters parameters, Context ctx) throws InterruptedException, TimeoutException {
         DecoratedSearchResults results;
 
         if (parameters.requiresPOST() && "GET".equalsIgnoreCase(parameters.requestMethod())) {

@@ -13,10 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.StringJoiner;
+import java.util.*;
 
 public record SearchParameters(WebsiteUrl url,
                                String query,
@@ -28,6 +25,7 @@ public record SearchParameters(WebsiteUrl url,
                                String languageIsoCode,
                                String requestMethod,
                                @Nullable CompiledSearchFilterSpec filterSpec,
+                               @Nullable String scrapeStopperToken,
                                boolean newFilter,
                                int page
                                ) {
@@ -48,6 +46,7 @@ public record SearchParameters(WebsiteUrl url,
                 "en",
                 "GET",
                 null,
+                null,
                 false,
                 page);
     }
@@ -65,34 +64,37 @@ public record SearchParameters(WebsiteUrl url,
     }
 
     public SearchParameters withProfile(SearchProfile profile) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, scrapeStopperToken, true, page);
     }
 
     public SearchParameters withJs(SearchJsParameter js) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec,  scrapeStopperToken, true, page);
     }
     public SearchParameters withAdtech(SearchAdtechParameter adtech) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec,  scrapeStopperToken, true, page);
     }
 
     public SearchParameters withRecent(SearchRecentParameter recent) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec,  scrapeStopperToken, true, page);
     }
 
     public SearchParameters withTitle(SearchTitleParameter title) {
-        return new SearchParameters(url, query, profile, js, recent, title, adtech, languageIsoCode, requestMethod, filterSpec, true, page);
+        return new SearchParameters(url, query, profile, js, recent, title, adtech, languageIsoCode, requestMethod, filterSpec,  scrapeStopperToken, true, page);
     }
 
     public SearchParameters withLanguage(String languageIsoCode) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec,  scrapeStopperToken, true, page);
     }
 
     public SearchParameters withPage(int page) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, false, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec,  scrapeStopperToken, false, page);
     }
 
     public SearchParameters withQuery(String query) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, false, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec,  scrapeStopperToken, false, page);
+    }
+    public SearchParameters withSst(String sst) {
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec,  sst, false, page);
     }
 
     public String renderUrlWithoutSiteFocus() {
@@ -159,6 +161,9 @@ public record SearchParameters(WebsiteUrl url,
         }
         if (newFilter) {
             pathBuilder.append("&newfilter=").append(Boolean.valueOf(newFilter).toString());
+        }
+        if (scrapeStopperToken != null) {
+            pathBuilder.append("&sst=").append(scrapeStopperToken);
         }
 
         return pathBuilder.toString();

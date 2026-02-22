@@ -26,6 +26,7 @@ import nu.marginalia.domclassifier.DomSampleClassifier;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.gson.GsonFactory;
+import nu.marginalia.scrapestopper.ScrapeStopper;
 import nu.marginalia.screenshot.ScreenshotService;
 import nu.marginalia.search.SearchOperator;
 import nu.marginalia.search.model.GroupedUrlDetails;
@@ -72,9 +73,11 @@ public class SearchSiteInfoService {
 
     private final HikariDataSource dataSource;
     private final DDGTrackerData ddgTrackerData;
+    private final ScrapeStopper scrapeStopper;
     private final SearchSiteSubscriptionService searchSiteSubscriptions;
 
-    private final RateLimiter rateLimiter = RateLimiter.queryPerMinuteLimiter(60);
+    private final RateLimiter softRateLimiter = RateLimiter.queryPerMinuteLimiter(30);
+    private final RateLimiter hardRateLimiter = RateLimiter.queryPerMinuteLimiter(60);
 
     private final DomSampleClassifier domSampleClassifier;
 
@@ -90,6 +93,7 @@ public class SearchSiteInfoService {
                                  DomSampleClient domSampleClient,
                                  DomSampleClassifier domSampleClassifier,
                                  DDGTrackerData ddgTrackerData,
+                                 ScrapeStopper scrapeStopper,
                                  SearchSiteSubscriptionService searchSiteSubscriptions)
     {
         this.searchOperator = searchOperator;
@@ -104,6 +108,7 @@ public class SearchSiteInfoService {
         this.domSampleClient = domSampleClient;
         this.domSampleClassifier = domSampleClassifier;
         this.ddgTrackerData = ddgTrackerData;
+        this.scrapeStopper = scrapeStopper;
         this.searchSiteSubscriptions = searchSiteSubscriptions;
 
         Thread.ofPlatform().name("Recently Added Domains Model Updater").start(this::modelUpdater);
@@ -173,6 +178,7 @@ public class SearchSiteInfoService {
             Context context,
             @PathParam String domainName,
             @QueryParam String view,
+            @QueryParam String sst,
             @QueryParam Integer page
     ) throws SQLException, ExecutionException, TimeoutException {
 
@@ -183,17 +189,39 @@ public class SearchSiteInfoService {
 
         page = Objects.requireNonNullElse(page, 1);
         view = Objects.requireNonNullElse(view, "info");
+        sst = Objects.requireNonNullElse(sst, "");
+
+        if (!softRateLimiter.isAllowed()) {
+            String remoteIp = context.header("X-Forwarded-For").valueOrNull();
+
+            ScrapeStopper.TokenState tokenState = scrapeStopper.validateToken(sst, remoteIp);
+            if (tokenState != ScrapeStopper.TokenState.VALIDATED) {
+                context.setResponseHeader("Cache-Control", "no-store");
+
+                if (tokenState == ScrapeStopper.TokenState.INVALID) {
+                    sst = scrapeStopper.getToken("SITE", remoteIp, Duration.ofSeconds(3), Duration.ofMinutes(5), 10);
+                }
+
+                Duration waitTime = scrapeStopper.getRemaining(sst).orElseThrow();
+
+                return new MapModelAndView("siteinfo/main.jte",
+                        Map.of("model",
+                                new ScrapeStopperModel(sst, waitTime, domainName, view, page),
+                                "navbar", NavbarModel.SITEINFO)
+                );
+            }
+        }
 
         SiteInfoModel model = switch (view) {
-            case "links" -> listLinks(domainName, page);
-            case "docs" -> listDocs(domainName, page);
-            case "info" -> listInfo(context, domainName);
-            case "traffic" -> listSiteRequests(context, domainName);
-            case "availability" -> listAvailabilityEvents(context, domainName);
-            case "secevents" -> listSecurityEvents(context, domainName);
-            case "secdetails" -> getSecurityChangeDetails(context, domainName);
-            case "report" -> reportSite(domainName);
-            default -> listInfo(context, domainName);
+            case "links" -> listLinks(domainName, sst, page);
+            case "docs" -> listDocs(domainName, sst, page);
+            case "info" -> listInfo(context, domainName, sst);
+            case "traffic" -> listSiteRequests(context, domainName, sst);
+            case "availability" -> listAvailabilityEvents(context, domainName, sst);
+            case "secevents" -> listSecurityEvents(context, domainName, sst);
+            case "secdetails" -> getSecurityChangeDetails(context, domainName, sst);
+            case "report" -> reportSite(domainName, sst);
+            default -> listInfo(context, domainName, sst);
         };
 
         return new MapModelAndView("siteinfo/main.jte",
@@ -238,17 +266,18 @@ public class SearchSiteInfoService {
 
         var complaints = flagSiteService.getExistingComplaints(domainId);
 
-        var model = new ReportDomain(domainName, domainId, complaints, List.of(), true);
+        var model = new ReportDomain(domainName, "", domainId, complaints, List.of(), true);
 
         return new MapModelAndView("siteinfo/main.jte",
                 Map.of("model", model, "navbar", NavbarModel.SITEINFO));
     }
 
-    private ReportDomain reportSite(String domainName) throws SQLException {
+    private ReportDomain reportSite(String domainName, String sst) throws SQLException {
         int domainId = domainQueries.getDomainId(new EdgeDomain(domainName));
         var existingComplaints = flagSiteService.getExistingComplaints(domainId);
 
         return new ReportDomain(domainName,
+                sst,
                 domainId,
                 existingComplaints,
                 flagSiteService.getCategories(),
@@ -256,16 +285,17 @@ public class SearchSiteInfoService {
     }
 
 
-    private Backlinks listLinks(String domainName, int page) throws TimeoutException {
+    private Backlinks listLinks(String domainName, String sst, int page) throws TimeoutException {
         var results = searchOperator.doBacklinkSearch(domainName, page);
         return new Backlinks(domainName,
+                sst,
                 domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),
                 GroupedUrlDetails.groupResults(results.results),
                 results.resultPages
         );
     }
 
-    private SiteInfoWithContext listInfo(Context context, String domainName) throws ExecutionException, TimeoutException {
+    private SiteInfoWithContext listInfo(Context context, String domainName, String sst) throws ExecutionException, TimeoutException {
 
         var domain = new EdgeDomain(domainName);
         final int domainId = domainQueries.tryGetDomainId(domain).orElse(-1);
@@ -280,7 +310,7 @@ public class SearchSiteInfoService {
 
         boolean isSubscribed = searchSiteSubscriptions.isSubscribed(context, domain);
 
-        boolean rateLimited = !rateLimiter.isAllowed();
+        boolean rateLimited = !hardRateLimiter.isAllowed();
         if (domainId < 0) {
             domainInfoFuture = CompletableFuture.failedFuture(new Exception("Unknown Domain ID"));
             similarSetFuture = CompletableFuture.failedFuture(new Exception("Unknown Domain ID"));
@@ -320,6 +350,7 @@ public class SearchSiteInfoService {
 
 
         var result = new SiteInfoWithContext(domainName,
+                sst,
                 isSubscribed,
                 domainQueries.otherSubdomains(domain, 5),
                 domainId,
@@ -396,11 +427,12 @@ public class SearchSiteInfoService {
                 .build();
     }
 
-    private Docs listDocs(String domainName, int page) throws TimeoutException {
+    private Docs listDocs(String domainName, String sst, int page) throws TimeoutException {
         int domainId = domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1);
         var results = searchOperator.doSiteSearch(domainName, domainId, 100, page);
 
         return new Docs(domainName,
+                sst,
                 domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),
                 results.results.stream().sorted(Comparator.comparing(deets -> -deets.topology)).toList(),
                 results.resultPages
@@ -408,14 +440,14 @@ public class SearchSiteInfoService {
     }
 
 
-    private SiteInfoModel listSiteRequests(Context context, String domainName) {
-        if (!rateLimiter.isAllowed()) {
-            return forServiceUnavailable(domainName);
+    private SiteInfoModel listSiteRequests(Context context, String domainName, String sst) {
+        if (!hardRateLimiter.isAllowed()) {
+            return forServiceUnavailable(domainName, sst);
         }
 
         Optional<RpcDomainSampleRequests> sample = domSampleClient.getSampleRequests(domainName.toLowerCase());
         if (sample.isEmpty()) {
-            return forNoData(domainName);
+            return forNoData(domainName, sst);
         }
 
         final EdgeDomain currentDomain = new EdgeDomain(domainName);
@@ -484,10 +516,10 @@ public class SearchSiteInfoService {
                 .thenComparing(req -> req.domain.topDomain)
                 .thenComparing(req -> req.domain.toString()));
 
-        return new TrafficSample(domainName, requestSummary, requests);
+        return new TrafficSample(domainName, sst, requestSummary, requests);
     }
 
-    private DomainAvailabilityEvents listAvailabilityEvents(Context context, String domainName) {
+    private DomainAvailabilityEvents listAvailabilityEvents(Context context, String domainName, String sst) {
         final Future<RpcDomainInfoResponse> domainInfoFuture;
         int domainId = domainQueries.getDomainId(new EdgeDomain(domainName));
 
@@ -531,7 +563,9 @@ public class SearchSiteInfoService {
 
 
             if (!events.isEmpty()) {
-                return new DomainAvailabilityEvents(domainName, waitForFuture(domainInfoFuture, () -> createDummySiteInfo(domainName)), events);
+                return new DomainAvailabilityEvents(domainName,
+                        sst,
+                        waitForFuture(domainInfoFuture, () -> createDummySiteInfo(domainName)), events);
             }
 
         }
@@ -545,7 +579,9 @@ public class SearchSiteInfoService {
         if (domainInfo.hasPingData()) {
             var pingData = domainInfo.getPingData();
 
-            return new DomainAvailabilityEvents(domainName, domainInfo,
+            return new DomainAvailabilityEvents(domainName,
+                    sst,
+                    domainInfo,
                     List.of(new DomainAvailabilityEvent(
                             domainInfo.getPingData().getServerAvailable(),
                             errored ? "Internal Error" : "No State Changes Recorded",
@@ -556,7 +592,9 @@ public class SearchSiteInfoService {
             );
         }
 
-        return new DomainAvailabilityEvents(domainName, domainInfo,
+        return new DomainAvailabilityEvents(domainName,
+                sst,
+                domainInfo,
                 List.of(new DomainAvailabilityEvent(
                         false,
                         "Data Unavailable",
@@ -569,7 +607,7 @@ public class SearchSiteInfoService {
     }
 
 
-    private SecurityChangeEvents listSecurityEvents(Context context, String domainName) {
+    private SecurityChangeEvents listSecurityEvents(Context context, String domainName, String sst) {
         final Future<RpcDomainInfoResponse> domainInfoFuture;
         int domainId = domainQueries.getDomainId(new EdgeDomain(domainName));
 
@@ -630,6 +668,7 @@ public class SearchSiteInfoService {
             }
 
             return new SecurityChangeEvents(domainName,
+                    sst,
                     waitForFuture(domainInfoFuture, () -> createDummySiteInfo(domainName)),
                     events);
         }
@@ -637,12 +676,13 @@ public class SearchSiteInfoService {
             logger.error("Exception when fetching security change events for {}", domainName, ex);
 
             return new SecurityChangeEvents(domainName,
+                    sst,
                     waitForFuture(domainInfoFuture, () -> createDummySiteInfo(domainName)),
                     List.of());
         }
     }
 
-    private SecurityChangeDetails getSecurityChangeDetails(Context context, String domainName) {
+    private SecurityChangeDetails getSecurityChangeDetails(Context context, String domainName, String sst) {
 
         int domainId = domainQueries.getDomainId(new EdgeDomain(domainName));
         long changeId = context.query("changeId").longValue();
@@ -675,7 +715,7 @@ public class SearchSiteInfoService {
                     afterObject = gson.fromJson(new InputStreamReader(gzis), Map.class);
                 }
 
-                return new SecurityChangeDetails(domainName, changeId, beforeObject, afterObject);
+                return new SecurityChangeDetails(domainName, sst, changeId, beforeObject, afterObject);
             }
         }
         catch (SQLException | IOException ex) {
@@ -686,9 +726,23 @@ public class SearchSiteInfoService {
 
     public interface SiteInfoModel {
         String domain();
+        String sst();
+    }
+
+    public record ScrapeStopperModel(String sst,
+                                     Duration waitTime,
+                                     String domain,
+                                     String view,
+                                     int page) implements SiteInfoModel {
+
+        public String redirUrl() {
+            return String.format("?view=%s&page=%d&sst=%s", view, page, sst);
+        }
+
     }
 
     public record Docs(String domain,
+                       String sst,
                        long domainId,
                        List<UrlDetails> results,
                        List<ResultsPage> pages) implements SiteInfoModel  {
@@ -703,6 +757,7 @@ public class SearchSiteInfoService {
     }
 
     public record Backlinks(String domain,
+                            String sst,
                             long domainId,
                             List<GroupedUrlDetails> results,
                             List<ResultsPage> pages
@@ -716,6 +771,7 @@ public class SearchSiteInfoService {
     }
 
     public record SiteInfoWithContext(String domain,
+                                      String sst,
                                       boolean isSubscribed,
                                       List<DbDomainQueries.DomainWithNode> siblingDomains,
                                       int domainId,
@@ -796,6 +852,7 @@ public class SearchSiteInfoService {
 
     public record DomainAvailabilityEvents(
             String domain,
+            String sst,
             RpcDomainInfoResponse domainInformation,
             List<DomainAvailabilityEvent> events
     ) implements SiteInfoModel {}
@@ -812,6 +869,7 @@ public class SearchSiteInfoService {
 
     public record SecurityChangeEvents(
             String domain,
+            String sst,
             RpcDomainInfoResponse domainInformation,
             List<SecurityChangeEvent> events
     ) implements SiteInfoModel {}
@@ -836,6 +894,7 @@ public class SearchSiteInfoService {
 
     public record SecurityChangeDetails(
             String domain,
+            String sst,
             long changeId,
             Map<String, Object> before,
             Map<String, Object> after
@@ -884,6 +943,7 @@ public class SearchSiteInfoService {
 
     public record ReportDomain(
             String domain,
+            String sst,
             int domainId,
             List<SearchFlagSiteService.FlagSiteComplaintModel> complaints,
             List<SearchFlagSiteService.CategoryItem> category,
@@ -897,6 +957,7 @@ public class SearchSiteInfoService {
     }
 
     public record TrafficSample(String domain,
+                                String sst,
                                 boolean hasData,
                                 boolean serviceAvailable,
                                 Map<DomSampleClassification, Integer> requestSummary,
@@ -933,18 +994,19 @@ public class SearchSiteInfoService {
         }
 
         public TrafficSample(String domain,
+                             String sst,
                              Map<DomSampleClassification, Integer> requestSummary,
                              List<RequestsForTargetDomain> requests
         ) {
-            this(domain, true, true, requestSummary, requests);
+            this(domain, sst, true, true, requestSummary, requests);
         }
 
-        static TrafficSample forNoData(String domain) {
-            return new TrafficSample(domain, false, true, Map.of(), List.of());
+        static TrafficSample forNoData(String domain, String sst) {
+            return new TrafficSample(domain, sst, false, true, Map.of(), List.of());
         }
 
-        static TrafficSample forServiceUnavailable(String domain) {
-            return new TrafficSample(domain, true, false, Map.of(), List.of());
+        static TrafficSample forServiceUnavailable(String domain, String sst) {
+            return new TrafficSample(domain, sst, true, false, Map.of(), List.of());
         }
 
 

@@ -1,6 +1,7 @@
 package nu.marginalia.search.command;
 
 import com.google.inject.Inject;
+import io.jooby.Context;
 import io.jooby.MapModelAndView;
 import io.jooby.ModelAndView;
 import nu.marginalia.language.config.LanguageConfiguration;
@@ -22,7 +23,7 @@ public class LangCommand implements SearchCommandInterface {
     }
 
     @Override
-    public Optional<ModelAndView<?>> process(SearchParameters parameters) {
+    public Optional<ModelAndView<?>> process(SearchParameters parameters, Context ctx) {
 
         String query = parameters.query();
         Matcher matcher = queryPatternPredicate.matcher(query);

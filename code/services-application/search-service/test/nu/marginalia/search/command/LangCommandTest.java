@@ -26,19 +26,19 @@ class LangCommandTest {
     void testProcess() {
         assertRedirect(langCommand.process(SearchParameters.defaultsForQuery(
                 new WebsiteUrl("https://www.example.com/"), "cats lang:sv", 1
-        )));
+        ), ));
         assertRedirect(langCommand.process(SearchParameters.defaultsForQuery(
                 new WebsiteUrl("https://www.example.com/"), "cats lang:sv dogs", 1
-        )));
+        ), ));
         assertRedirect(langCommand.process(SearchParameters.defaultsForQuery(
                 new WebsiteUrl("https://www.example.com/"), "lang:sv", 1
-        )));
+        ), ));
         assertNoRedirect(langCommand.process(SearchParameters.defaultsForQuery(
                 new WebsiteUrl("https://www.example.com/"), "lang:svenska", 1
-        )));
+        ), ));
         assertNoRedirect(langCommand.process(SearchParameters.defaultsForQuery(
                 new WebsiteUrl("https://www.example.com/"), "slang:sv", 1
-        )));
+        ), ));
     }
 
     static void assertRedirect(Optional<ModelAndView<?>> result) {

@@ -14,6 +14,7 @@
 <body bgcolor="black"> <!-- avoid flashbang with 1993 HTML -->
 <div style="visibility: hidden">
     @template.serp.part.searchform(query = results.getParams().query(),
+                                   scrapeStopToken = results.getParams().scrapeStopperToken(),
                                    profile = results.getProfile(),
                                    filters = results.getFilters(),
                                    languageIsoCode = results.getLanguageIsoCode(),

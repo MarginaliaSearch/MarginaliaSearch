@@ -141,6 +141,7 @@ public class MockedSearchResults {
     public static SearchSiteInfoService.SiteInfoWithContext mockSiteInfoData() throws URISyntaxException {
         return new SearchSiteInfoService.SiteInfoWithContext(
                 "www.example.com",
+                "SST",
                 false,
                 List.of(
                         new DbDomainQueries.DomainWithNode(new EdgeDomain("example.com"), 1),
@@ -211,6 +212,7 @@ public class MockedSearchResults {
     public static Object mockBacklinkData() throws URISyntaxException {
         return new SearchSiteInfoService.Backlinks(
                 "www.example.com",
+                "SST",
                 4,
                 List.of(
                         new GroupedUrlDetails(
@@ -236,6 +238,7 @@ public class MockedSearchResults {
     public static SearchSiteInfoService.Docs mockDocsData() throws URISyntaxException {
         return new SearchSiteInfoService.Docs(
                 "www.example.com",
+                "SST",
                 1,
                 List.of(
                         mockUrlDetails("https://www.example.com/", "lorem ipsum"),
@@ -252,6 +255,7 @@ public class MockedSearchResults {
     public static SearchSiteInfoService.ReportDomain mockReportDomain() {
         return new SearchSiteInfoService.ReportDomain(
                 "www.example.com",
+                "SST",
                 1,
                 List.of(new SearchFlagSiteService.FlagSiteComplaintModel(
                         "BAD",
@@ -297,6 +301,7 @@ public class MockedSearchResults {
     public static Object mockAvailabilityData() {
         return new SearchSiteInfoService.DomainAvailabilityEvents(
                 "www.example.com",
+                "SST",
                 RpcDomainInfoResponse.newBuilder()
                         .setDomain("www.example.com")
                         .setBlacklisted(false)
@@ -365,6 +370,7 @@ public class MockedSearchResults {
     public static Object mockSecurityEvents() {
         return new SearchSiteInfoService.SecurityChangeEvents(
                 "www.example.com",
+                "SST",
                 RpcDomainInfoResponse.newBuilder()
                         .setDomain("www.example.com")
                         .setBlacklisted(false)
@@ -469,6 +475,7 @@ public class MockedSearchResults {
         ));
         return new SearchSiteInfoService.TrafficSample(
                 "example.com",
+                "sst",
                 Map.of(
                         DomSampleClassification.ADS, 3,
                         DomSampleClassification.TRACKING, 10
@@ -481,6 +488,7 @@ public class MockedSearchResults {
     public static Object mockSecurityDetails() {
         return new SearchSiteInfoService.SecurityChangeDetails(
                 "www.example.com",
+                "SST",
                 45100L,
                 Map.of(
                         "foo", "ABCDEFGHIHJ",

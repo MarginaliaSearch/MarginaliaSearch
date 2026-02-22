@@ -17,7 +17,7 @@
     <div class="max-w-[1400px] mx-auto px-4 py-4">
         <div class="flex items-center">
             <h1 class="text-md sm:text-xl mr-8 font-serif whitespace-nowrap"><a href="/">Marginalia Search</a></h1>
-            @template.serp.part.searchform(query = model.parameters().query(), profile = model.parameters().profileStr(), filters = model.filters(), languageIsoCode = "en", page = 1, requestMethod = "GET", displayUrl = null)
+            @template.serp.part.searchform(query = model.parameters().query(), scrapeStopToken = model.parameters().scrapeStopperToken(), profile = model.parameters().profileStr(), filters = model.filters(), languageIsoCode = "en", page = 1, requestMethod = "GET", displayUrl = null)
         </div>
     </div>
 </header>

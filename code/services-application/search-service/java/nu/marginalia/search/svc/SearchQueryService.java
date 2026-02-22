@@ -11,8 +11,10 @@ import nu.marginalia.api.searchquery.model.CompiledSearchFilterSpec;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.functions.searchquery.searchfilter.SearchFilterParser;
 import nu.marginalia.functions.searchquery.searchfilter.model.SearchFilterSpec;
+import nu.marginalia.scrapestopper.ScrapeStopper;
 import nu.marginalia.search.command.*;
 import nu.marginalia.search.model.*;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +28,7 @@ public class SearchQueryService {
     private final DbDomainQueries domainQueries;
     private final WebsiteUrl websiteUrl;
     private final SearchErrorPageService errorPageService;
+    private final ScrapeStopper scrapeStopper;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final List<SearchCommandInterface> specialCommands = new ArrayList<>();
@@ -47,13 +50,17 @@ public class SearchQueryService {
             DefinitionCommand definitionCommand,
             BangCommand bangCommand,
             LangCommand langCommand,
+            ScrapeStopCommand scrapeStopCommand,
             SiteRedirectCommand siteRedirectCommand,
+            ScrapeStopper scrapeStopper,
             SearchCommand searchCommand
     ) {
         this.domainQueries = domainQueries;
         this.websiteUrl = websiteUrl;
         this.errorPageService = errorPageService;
+        this.scrapeStopper = scrapeStopper;
 
+        specialCommands.add(scrapeStopCommand);
         specialCommands.add(redirectCommand);
         specialCommands.add(convertCommand);
         specialCommands.add(definitionCommand);
@@ -75,6 +82,7 @@ public class SearchQueryService {
             @QueryParam String adtech,
             @QueryParam String lang,
             @QueryParam Integer page,
+            @QueryParam String sst,
             Context context
     ) {
         try {
@@ -88,16 +96,17 @@ public class SearchQueryService {
                     Objects.requireNonNullElse(lang, "en"),
                     context.getMethod(),
                     null,
+                    sst,
                     false,
                     Objects.requireNonNullElse(page,1));
 
             for (var cmd : specialCommands) {
-                var maybe = cmd.process(parameters);
+                var maybe = cmd.process(parameters, context);
                 if (maybe.isPresent())
                     return maybe.get();
             }
 
-            return defaultCommand.process(parameters).orElseThrow();
+            return defaultCommand.process(parameters, context).orElseThrow();
         }
         catch (Exception ex) {
             logger.error("Error", ex);
@@ -118,6 +127,7 @@ public class SearchQueryService {
             @FormParam String adtech,
             @FormParam String lang,
             @FormParam String filterSpec,
+            @FormParam String sst,
             @FormParam Integer page,
             Context context
     ) {
@@ -142,16 +152,17 @@ public class SearchQueryService {
                     Objects.requireNonNullElse(lang, "en"),
                     context.getMethod(),
                     filter,
+                    sst,
                     false,
                     Objects.requireNonNullElse(page,1));
 
             for (var cmd : specialCommands) {
-                var maybe = cmd.process(parameters);
+                var maybe = cmd.process(parameters, context);
                 if (maybe.isPresent())
                     return maybe.get();
             }
 
-            return defaultCommand.process(parameters).orElseThrow();
+            return defaultCommand.process(parameters, context).orElseThrow();
         }
         catch (Exception ex) {
             logger.error("Error", ex);
