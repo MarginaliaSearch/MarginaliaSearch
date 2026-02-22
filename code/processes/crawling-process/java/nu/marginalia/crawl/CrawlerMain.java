@@ -322,7 +322,7 @@ public class CrawlerMain extends ProcessMainClass {
             domainsToCrawl.removeIf(domain -> availabilityData.get(domain) == DomainAvailability.MISSING);
 
             if (domainsToCrawl.size() != sizeOriginal) {
-                logger.info("Removed {} crawl tasks for unreachable domains", (domainsToCrawl.size() - sizeOriginal));
+                logger.info("Removed {} crawl tasks for unreachable domains", (sizeOriginal - domainsToCrawl.size()));
             }
         }
 
