@@ -10,7 +10,6 @@ import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.ConverterModule;
 import nu.marginalia.converting.processor.DomainProcessor;
 import nu.marginalia.converting.writer.ConverterBatchWriter;
-import nu.marginalia.coordination.DomainCoordinationModule;
 import nu.marginalia.coordination.DomainCoordinator;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.db.DomainBlacklist;
@@ -122,7 +121,6 @@ public class LiveCrawlerMain extends ProcessMainClass {
         try {
             Injector injector = Guice.createInjector(
                     new LiveCrawlerModule(),
-                    new DomainCoordinationModule(),
                     new ProcessConfigurationModule("crawler"),
                     new ConverterModule(),
                     new ServiceDiscoveryModule(),

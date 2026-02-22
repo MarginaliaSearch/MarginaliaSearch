@@ -86,7 +86,17 @@ public class LocalDomainCoordinator implements DomainCoordinator {
     }
 
     private Semaphore defaultPermits(String topDomain) {
-        return new Semaphore(DefaultDomainPermits.defaultPermits(topDomain));
+        return new Semaphore(
+                switch (topDomain) {
+                    case "wordpress.com" -> 16;
+                    case "blogspot.com",
+                         "tumblr.com",
+                         "neocities.org",
+                         "github.io" -> 8;
+                    case "substack.com" -> 1;
+                    default -> 2;
+                }
+        );
     }
 
     private Instant nextPermissibleRequestTime(String key) {

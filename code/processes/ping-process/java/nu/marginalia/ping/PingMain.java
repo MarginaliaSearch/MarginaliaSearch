@@ -5,7 +5,6 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import nu.marginalia.WmsaHome;
-import nu.marginalia.coordination.DomainCoordinationModule;
 import nu.marginalia.geoip.GeoIpDictionary;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mqapi.ProcessInboxNames;
@@ -79,7 +78,6 @@ public class PingMain extends ProcessMainClass {
         Injector injector = Guice.createInjector(
                 new PingModule(),
                 new ServiceDiscoveryModule(),
-                new DomainCoordinationModule(),
                 new ProcessConfigurationModule("ping"),
                 new DatabaseModule(false)
         );

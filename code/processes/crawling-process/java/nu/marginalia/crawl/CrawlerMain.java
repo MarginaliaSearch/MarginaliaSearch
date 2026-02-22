@@ -11,7 +11,6 @@ import nu.marginalia.WmsaHome;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.atags.source.AnchorTagsSource;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
-import nu.marginalia.coordination.DomainCoordinationModule;
 import nu.marginalia.coordination.DomainCoordinator;
 import nu.marginalia.coordination.DomainLock;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
@@ -170,7 +169,6 @@ public class CrawlerMain extends ProcessMainClass {
                     new CrawlerModule(),
                     new ProcessConfigurationModule("crawler"),
                     new ServiceDiscoveryModule(),
-                    new DomainCoordinationModule(),
                     new DatabaseModule(false)
             );
             var crawler = injector.getInstance(CrawlerMain.class);

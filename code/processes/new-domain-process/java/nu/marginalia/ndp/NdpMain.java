@@ -5,7 +5,6 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import nu.marginalia.WmsaHome;
-import nu.marginalia.coordination.DomainCoordinationModule;
 import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.geoip.GeoIpDictionary;
 import nu.marginalia.mq.MessageQueueFactory;
@@ -133,7 +132,6 @@ public class NdpMain extends ProcessMainClass {
         Injector injector = Guice.createInjector(
                 new NdpModule(),
                 new ServiceDiscoveryModule(),
-                new DomainCoordinationModule(),
                 new ProcessConfigurationModule("ndp"),
                 new DatabaseModule(false)
         );

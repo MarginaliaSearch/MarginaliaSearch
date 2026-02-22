@@ -5,7 +5,6 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import io.jooby.ExecutionMode;
 import io.jooby.Jooby;
-import nu.marginalia.coordination.DomainCoordinationModule;
 import nu.marginalia.service.MainClass;
 import nu.marginalia.service.ServiceId;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
@@ -28,10 +27,8 @@ public class AssistantMain extends MainClass {
 
         Injector injector = Guice.createInjector(
                 new AssistantModule(),
-                new DomainCoordinationModule(),
                 new ServiceConfigurationModule(ServiceId.Assistant),
                 new ServiceDiscoveryModule(),
-                new DomainCoordinationModule(),
                 new DatabaseModule(false)
         );
 
