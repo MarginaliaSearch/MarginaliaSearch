@@ -17,7 +17,7 @@
 <span id="content-start"></span>
 
 <div class="infobox">
-    Showing results containing links between <a href="/site/{{domainA}}">{{domainA}}</a> and <a href="/site/{{domainB}}">{{domainB}}</a>.
+    Showing results containing links between <a href="/site/{{domainA}}?sst={{sst}}">{{domainA}}</a> and <a href="/site/{{domainB}}?sst={{sst}}">{{domainB}}</a>.
 </div>
 {{#each tests}}{{.}}{{/each}}
 <div {{#if hasBoth}}id="crosstalk-view"{{/if}}>

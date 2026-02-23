@@ -12,13 +12,12 @@ import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
-import nu.marginalia.scrapestopper.ScrapeStopper;
 import nu.marginalia.screenshot.ScreenshotService;
+import nu.marginalia.search.ScrapeStopperInterceptor;
 import nu.marginalia.search.SearchOperator;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.svc.SearchFlagSiteService.FlagSiteFormData;
 import nu.marginalia.service.server.RateLimiter;
-import org.apache.lucene.store.RateLimitedIndexOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -26,7 +25,6 @@ import spark.Response;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -42,12 +40,11 @@ public class SearchSiteInfoService {
     private final SearchFlagSiteService flagSiteService;
     private final DbDomainQueries domainQueries;
     private final MustacheRenderer<Object> renderer;
-    private final MustacheRenderer<Object> waitRenderer;
     private final FeedsClient feedsClient;
     private final LiveCaptureClient liveCaptureClient;
     private final ScreenshotService screenshotService;
 
-    private final ScrapeStopper scrapeStopper;
+    private final ScrapeStopperInterceptor scrapeStopperInterceptor;
     private final RateLimiter rateLimiter = RateLimiter.queryPerMinuteLimiter(30);
 
     @Inject
@@ -58,7 +55,8 @@ public class SearchSiteInfoService {
                                  DbDomainQueries domainQueries,
                                  FeedsClient feedsClient,
                                  LiveCaptureClient liveCaptureClient,
-                                 ScreenshotService screenshotService, ScrapeStopper scrapeStopper) throws IOException
+                                 ScreenshotService screenshotService,
+                                 ScrapeStopperInterceptor scrapeStopperInterceptor) throws IOException
     {
         this.searchOperator = searchOperator;
         this.domainInfoClient = domainInfoClient;
@@ -66,58 +64,31 @@ public class SearchSiteInfoService {
         this.domainQueries = domainQueries;
 
         this.renderer = rendererFactory.renderer("search/site-info/site-info");
-        this.waitRenderer = rendererFactory.renderer("search/wait-page");
 
         this.feedsClient = feedsClient;
         this.liveCaptureClient = liveCaptureClient;
         this.screenshotService = screenshotService;
-        this.scrapeStopper = scrapeStopper;
+        this.scrapeStopperInterceptor = scrapeStopperInterceptor;
     }
 
     public Object handle(Request request, Response response) throws SQLException, TimeoutException {
+        var intercept = scrapeStopperInterceptor.intercept("I", rateLimiter, request, response);
+        if (intercept instanceof ScrapeStopperInterceptor.InterceptRedirect redirect)
+            return redirect.result();
+
         String domainName = request.params("site");
         String view = request.queryParamOrDefault("view", "info");
-
-        String remoteIp = request.headers("X-Forwarded-For");
-        String sst = request.queryParamOrDefault("sst", "");
-        ScrapeStopper.TokenState tokenState = scrapeStopper.validateToken(sst, remoteIp);
-
-        if (!rateLimiter.isAllowed() && tokenState != ScrapeStopper.TokenState.VALIDATED) {
-            if (tokenState == ScrapeStopper.TokenState.INVALID)
-                sst = scrapeStopper.getToken("SITE", remoteIp, Duration.ofSeconds(3), Duration.ofMinutes(1), 10);
-
-            int waitDuration = (int) scrapeStopper.getRemaining(sst).orElseThrow().toSeconds() + 1;
-            Map<String, String> queryParams = new LinkedHashMap<>();
-            request.queryParams().forEach(param -> {
-                queryParams.put(param, request.queryParams(param));
-            });
-            queryParams.put("sst", sst);
-            StringJoiner redirUrlBuilder = new StringJoiner("&", "?", "");
-            queryParams.forEach((k,v) -> {
-                redirUrlBuilder.add(k + "=" + v);
-            });
-
-
-            response.header("Cache-Control", "no-store");
-
-            return waitRenderer.render(Map.of(
-                    "waitDuration", waitDuration,
-                    "redirUrl", redirUrlBuilder.toString()
-            ));
-        }
-
-
 
         if (null == domainName || domainName.isBlank()) {
             return null;
         }
 
         var model = switch (view) {
-            case "links" -> listLinks(domainName, sst);
-            case "docs" -> listDocs(domainName, sst);
-            case "info" -> listInfo(domainName, sst);
-            case "report" -> reportSite(domainName, sst);
-            default -> listInfo(domainName, sst);
+            case "links" -> listLinks(domainName, intercept.sst());
+            case "docs" -> listDocs(domainName, intercept.sst());
+            case "info" -> listInfo(domainName, intercept.sst());
+            case "report" -> reportSite(domainName, intercept.sst());
+            default -> listInfo(domainName, intercept.sst());
         };
 
         return renderer.render(model);
