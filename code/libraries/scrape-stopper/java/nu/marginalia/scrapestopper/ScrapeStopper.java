@@ -34,7 +34,7 @@ public class ScrapeStopper {
         });
     }
 
-    public String getToken(String domain,
+    public String getToken(String zone,
                            String remoteIp,
                            Duration delay,
                            Duration validDuration,
@@ -45,9 +45,13 @@ public class ScrapeStopper {
 
         Token token = new Token(validAfter, validUntil, remoteIp, uses);
 
+        return assignSst(zone, token);
+    }
+
+    public String assignSst(String zone, Token token) {
         for (;;) {
             String maybeKey = String.format("%s-%08x",
-                    domain,
+                    zone,
                     ThreadLocalRandom.current().nextLong(0, Long.MAX_VALUE));
 
             if (tokens.put(maybeKey, token) == null) {
@@ -56,10 +60,26 @@ public class ScrapeStopper {
         }
     }
 
+    /** Move the token assocated with the provided sst to a new sst.
+     *
+     * This operation may fail through, and if that happens, it should be interpreted
+     * as though the SST was invalid.
+     *
+     */
+    public Optional<String> relocateToken(String sst, String zone) {
+        Token token;
+
+        if (null == (token = tokens.remove(sst)))
+            return Optional.empty();
+
+        return Optional.of(assignSst(zone, token));
+    }
 
     public Optional<Duration> getRemaining(String tokenId) {
         return Optional.ofNullable(tokens.get(tokenId)).map(Token::timeUntilValid);
     }
+
+
 
     public enum TokenState {
         EARLY,

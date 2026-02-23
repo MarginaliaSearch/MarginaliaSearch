@@ -25,7 +25,7 @@ public record SearchParameters(WebsiteUrl url,
                                String languageIsoCode,
                                String requestMethod,
                                @Nullable CompiledSearchFilterSpec filterSpec,
-                               @Nullable String scrapeStopperToken,
+                               @Nullable String sst,
                                boolean newFilter,
                                int page
                                ) {
@@ -64,34 +64,34 @@ public record SearchParameters(WebsiteUrl url,
     }
 
     public SearchParameters withProfile(SearchProfile profile) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, scrapeStopperToken, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, sst, true, page);
     }
 
     public SearchParameters withJs(SearchJsParameter js) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec,  scrapeStopperToken, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, sst, true, page);
     }
     public SearchParameters withAdtech(SearchAdtechParameter adtech) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec,  scrapeStopperToken, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, sst, true, page);
     }
 
     public SearchParameters withRecent(SearchRecentParameter recent) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec,  scrapeStopperToken, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, sst, true, page);
     }
 
     public SearchParameters withTitle(SearchTitleParameter title) {
-        return new SearchParameters(url, query, profile, js, recent, title, adtech, languageIsoCode, requestMethod, filterSpec,  scrapeStopperToken, true, page);
+        return new SearchParameters(url, query, profile, js, recent, title, adtech, languageIsoCode, requestMethod, filterSpec, sst, true, page);
     }
 
     public SearchParameters withLanguage(String languageIsoCode) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec,  scrapeStopperToken, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, sst, true, page);
     }
 
     public SearchParameters withPage(int page) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec,  scrapeStopperToken, false, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, sst, false, page);
     }
 
     public SearchParameters withQuery(String query) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec,  scrapeStopperToken, false, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, sst, false, page);
     }
     public SearchParameters withSst(String sst) {
         return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec,  sst, false, page);
@@ -162,8 +162,8 @@ public record SearchParameters(WebsiteUrl url,
         if (newFilter) {
             pathBuilder.append("&newfilter=").append(Boolean.valueOf(newFilter).toString());
         }
-        if (scrapeStopperToken != null) {
-            pathBuilder.append("&sst=").append(scrapeStopperToken);
+        if (sst != null) {
+            pathBuilder.append("&sst=").append(sst);
         }
 
         return pathBuilder.toString();

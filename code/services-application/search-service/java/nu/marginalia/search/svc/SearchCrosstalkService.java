@@ -9,6 +9,7 @@ import io.jooby.annotation.Path;
 import io.jooby.annotation.QueryParam;
 import nu.marginalia.scrapestopper.ScrapeStopper;
 import nu.marginalia.search.JteRenderer;
+import nu.marginalia.search.ScrapeStopperInterceptor;
 import nu.marginalia.search.SearchOperator;
 import nu.marginalia.search.model.NavbarModel;
 import nu.marginalia.search.model.SimpleSearchResults;
@@ -29,45 +30,33 @@ public class SearchCrosstalkService {
     private static final Logger logger = LoggerFactory.getLogger(SearchCrosstalkService.class);
 
     private final SearchOperator searchOperator;
-    private final ScrapeStopper scrapeStopper;
+    private final ScrapeStopperInterceptor scrapeStopperInterceptor;
 
     private final RateLimiter rateLimiter = RateLimiter.queryPerMinuteLimiter(15);
 
     @Inject
     public SearchCrosstalkService(SearchOperator searchOperator,
-                                  ScrapeStopper scrapeStopper
+                                  ScrapeStopperInterceptor scrapeStopperInterceptor
                                   ) throws IOException
     {
         this.searchOperator = searchOperator;
-        this.scrapeStopper = scrapeStopper;
+        this.scrapeStopperInterceptor = scrapeStopperInterceptor;
     }
 
     @GET
     @Path("/crosstalk")
     public ModelAndView<?> crosstalk(Context context,
-                                     @QueryParam String domains,
-                                     @QueryParam String sst
+                                     @QueryParam String domains
                                      ) throws SQLException, TimeoutException {
 
-        if (!rateLimiter.isAllowed()) {
-            String remoteIp = context.header("X-Forwarded-For").valueOrNull();
+        var interceptResult = scrapeStopperInterceptor.intercept("CT", rateLimiter, context);
 
-            ScrapeStopper.TokenState tokenState = scrapeStopper.validateToken(sst, remoteIp);
-            if (tokenState != ScrapeStopper.TokenState.VALIDATED) {
-                context.setResponseHeader("Cache-Control", "no-store");
-
-                if (tokenState == ScrapeStopper.TokenState.INVALID) {
-                    sst = scrapeStopper.getToken("CT", remoteIp, Duration.ofSeconds(3), Duration.ofMinutes(5), 10);
-                }
-
-                Duration waitTime = scrapeStopper.getRemaining(sst).orElseThrow();
-
-                return new MapModelAndView("siteinfo/ctwait.jte",
-                        Map.of("model",
-                                new CrosstalkWait(domains, sst, waitTime),
-                                "navbar", NavbarModel.SITEINFO)
-                );
-            }
+        if (interceptResult instanceof ScrapeStopperInterceptor.InterceptRedirect redir) {
+            return new MapModelAndView("siteinfo/ctwait.jte",
+                    Map.of("model",
+                            new CrosstalkWait(domains, redir.sst(), redir.waitTime()),
+                            "navbar", NavbarModel.SITEINFO)
+            );
         }
 
         String[] parts = StringUtils.split(domains, ',');

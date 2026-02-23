@@ -15,9 +15,11 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Singleton
 public class ScrapeStopperInterceptor {
+    private final double pReroll = 0.75;
 
     private final ScrapeStopper scrapeStopper;
     private final RendererFactory rendererFactory;
@@ -44,16 +46,28 @@ public class ScrapeStopperInterceptor {
 
         if (limiter.isAllowed())
             return new InterceptPass(sst);
-        if (tokenState == ScrapeStopper.TokenState.VALIDATED)
+
+        if (tokenState == ScrapeStopper.TokenState.VALIDATED) {
+            if (ThreadLocalRandom.current().nextDouble() > pReroll) {
+                var newSst = scrapeStopper.relocateToken(sst, zone);
+
+                // Concurrent relocates, let's revalidate this token
+                if (newSst.isEmpty())
+                    return intercept(zone, limiter, request, response);
+
+                sst = newSst.get();
+
+            }
+
             return new InterceptPass(sst);
+        }
 
         if (tokenState == ScrapeStopper.TokenState.INVALID)
-            sst = scrapeStopper.getToken(
-                    zone,
+            sst = scrapeStopper.getToken(zone,
                     remoteIp,
                     Duration.ofSeconds(3),
-                    Duration.ofMinutes(1),
-                    10);
+                    Duration.ofMinutes(5),
+                    ThreadLocalRandom.current().nextInt(8, 20));
 
         response.header("Cache-Control", "no-store");
 

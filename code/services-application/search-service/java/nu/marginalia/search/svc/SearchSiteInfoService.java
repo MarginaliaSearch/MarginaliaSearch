@@ -28,6 +28,7 @@ import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.scrapestopper.ScrapeStopper;
 import nu.marginalia.screenshot.ScreenshotService;
+import nu.marginalia.search.ScrapeStopperInterceptor;
 import nu.marginalia.search.SearchOperator;
 import nu.marginalia.search.model.GroupedUrlDetails;
 import nu.marginalia.search.model.NavbarModel;
@@ -73,7 +74,7 @@ public class SearchSiteInfoService {
 
     private final HikariDataSource dataSource;
     private final DDGTrackerData ddgTrackerData;
-    private final ScrapeStopper scrapeStopper;
+    private final ScrapeStopperInterceptor scrapeStopperInterceptor;
     private final SearchSiteSubscriptionService searchSiteSubscriptions;
 
     private final RateLimiter softRateLimiter = RateLimiter.queryPerMinuteLimiter(30);
@@ -93,7 +94,7 @@ public class SearchSiteInfoService {
                                  DomSampleClient domSampleClient,
                                  DomSampleClassifier domSampleClassifier,
                                  DDGTrackerData ddgTrackerData,
-                                 ScrapeStopper scrapeStopper,
+                                 ScrapeStopperInterceptor scrapeStopperInterceptor,
                                  SearchSiteSubscriptionService searchSiteSubscriptions)
     {
         this.searchOperator = searchOperator;
@@ -108,7 +109,7 @@ public class SearchSiteInfoService {
         this.domSampleClient = domSampleClient;
         this.domSampleClassifier = domSampleClassifier;
         this.ddgTrackerData = ddgTrackerData;
-        this.scrapeStopper = scrapeStopper;
+        this.scrapeStopperInterceptor = scrapeStopperInterceptor;
         this.searchSiteSubscriptions = searchSiteSubscriptions;
 
         Thread.ofPlatform().name("Recently Added Domains Model Updater").start(this::modelUpdater);
@@ -178,7 +179,6 @@ public class SearchSiteInfoService {
             Context context,
             @PathParam String domainName,
             @QueryParam String view,
-            @QueryParam String sst,
             @QueryParam Integer page
     ) throws SQLException, ExecutionException, TimeoutException {
 
@@ -187,30 +187,22 @@ public class SearchSiteInfoService {
             return new MapModelAndView("redirect.jte", Map.of("url", "/site"));
         }
 
+
         page = Objects.requireNonNullElse(page, 1);
         view = Objects.requireNonNullElse(view, "info");
-        sst = Objects.requireNonNullElse(sst, "");
 
-        if (!softRateLimiter.isAllowed()) {
-            String remoteIp = context.header("X-Forwarded-For").valueOrNull();
+        ScrapeStopperInterceptor.InterceptionResult interceptionResult
+                = scrapeStopperInterceptor.intercept("SI", softRateLimiter, context);
 
-            ScrapeStopper.TokenState tokenState = scrapeStopper.validateToken(sst, remoteIp);
-            if (tokenState != ScrapeStopper.TokenState.VALIDATED) {
-                context.setResponseHeader("Cache-Control", "no-store");
-
-                if (tokenState == ScrapeStopper.TokenState.INVALID) {
-                    sst = scrapeStopper.getToken("SITE", remoteIp, Duration.ofSeconds(3), Duration.ofMinutes(5), 10);
-                }
-
-                Duration waitTime = scrapeStopper.getRemaining(sst).orElseThrow();
-
-                return new MapModelAndView("siteinfo/main.jte",
-                        Map.of("model",
-                                new ScrapeStopperModel(sst, waitTime, domainName, view, page),
-                                "navbar", NavbarModel.SITEINFO)
-                );
-            }
+        if (interceptionResult instanceof ScrapeStopperInterceptor.InterceptRedirect redir) {
+            return new MapModelAndView("siteinfo/main.jte",
+                    Map.of("model",
+                            new ScrapeStopperModel(redir.sst(), redir.waitTime(), domainName, view, page),
+                            "navbar", NavbarModel.SITEINFO)
+            );
         }
+
+        String sst = interceptionResult.sst();
 
         SiteInfoModel model = switch (view) {
             case "links" -> listLinks(domainName, sst, page);
