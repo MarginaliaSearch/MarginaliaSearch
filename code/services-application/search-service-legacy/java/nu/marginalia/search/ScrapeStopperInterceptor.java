@@ -6,6 +6,7 @@ import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.scrapestopper.ScrapeStopper;
 import nu.marginalia.service.server.RateLimiter;
+import org.jetbrains.annotations.Nullable;
 import spark.Request;
 import spark.Response;
 
@@ -40,6 +41,8 @@ public class ScrapeStopperInterceptor {
     }
 
     public InterceptionResult intercept(String zone,
+                                        @Nullable
+                                        String zoneContext,
                                         RateLimiter limiter,
                                         Request request,
                                         Response response)
@@ -49,7 +52,7 @@ public class ScrapeStopperInterceptor {
 
         String remoteIp = request.headers("X-Forwarded-For");
         String sst = request.queryParamOrDefault("sst", "");
-        ScrapeStopper.TokenState tokenState = scrapeStopper.validateToken(sst, remoteIp);
+        ScrapeStopper.TokenState tokenState = scrapeStopper.validateToken(sst, remoteIp, zoneContext);
 
         if (limiter.isAllowed())
             return new InterceptPass(sst);
@@ -60,7 +63,7 @@ public class ScrapeStopperInterceptor {
 
                 // Concurrent relocates, let's revalidate this token
                 if (newSst.isEmpty())
-                    return intercept(zone, limiter, request, response);
+                    return intercept(zone, zoneContext, limiter, request, response);
 
                 sst = newSst.get();
 

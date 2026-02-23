@@ -192,7 +192,7 @@ public class SearchSiteInfoService {
         view = Objects.requireNonNullElse(view, "info");
 
         ScrapeStopperInterceptor.InterceptionResult interceptResult
-                = scrapeStopperInterceptor.intercept("SI", softRateLimiter, context);
+                = scrapeStopperInterceptor.intercept("SI", domainName, softRateLimiter, context);
 
         if (interceptResult instanceof ScrapeStopperInterceptor.InterceptRedirect redir) {
             return new MapModelAndView("siteinfo/main.jte",

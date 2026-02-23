@@ -72,11 +72,13 @@ public class SearchSiteInfoService {
     }
 
     public Object handle(Request request, Response response) throws SQLException, TimeoutException {
-        var intercept = scrapeStopperInterceptor.intercept("I", rateLimiter, request, response);
+        String domainName = request.params("site");
+
+        var intercept = scrapeStopperInterceptor.intercept("I", domainName, rateLimiter, request, response);
         if (intercept instanceof ScrapeStopperInterceptor.InterceptRedirect redirect)
             return redirect.result();
 
-        String domainName = request.params("site");
+
         String view = request.queryParamOrDefault("view", "info");
 
         if (null == domainName || domainName.isBlank()) {

@@ -40,13 +40,16 @@ public class SearchQueryService {
     }
 
     public Object pathSearch(Request request, Response response) {
-        var intercept = scrapeStopperInterceptor.intercept("S", rateLimiter, request, response);
+
+        SearchParameters params = parseParameters(request);
+
+        var intercept = scrapeStopperInterceptor.intercept("S", params.query(), rateLimiter, request, response);
         if (intercept instanceof ScrapeStopperInterceptor.InterceptRedirect redir)
             return redir.result();
 
         try {
             return searchCommandEvaulator.eval(response,
-                    parseParameters(request).withSst(intercept.sst())
+                    params.withSst(intercept.sst())
             );
         }
         catch (RedirectException ex) {

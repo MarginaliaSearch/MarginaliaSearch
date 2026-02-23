@@ -90,10 +90,16 @@ public class ScrapeStopper {
     public TokenState validateToken(String tokenId, String remoteIp) {
         return Optional.ofNullable(tokenId)
                 .map(tokens::get)
-                .map(token -> token.validate(remoteIp))
+                .map(token -> token.validate(remoteIp, null))
                 .orElse(TokenState.INVALID);
     }
 
+    public TokenState validateToken(String tokenId, String remoteIp, String context) {
+        return Optional.ofNullable(tokenId)
+                .map(tokens::get)
+                .map(token -> token.validate(remoteIp, context))
+                .orElse(TokenState.INVALID);
+    }
 }
 
 
@@ -104,6 +110,7 @@ class Token {
     private AtomicInteger remainingUses;
 
     private volatile Instant lastValidation;
+    private volatile String lastContext;
 
     Token(Instant validAfter,
                   Instant validUntil,
@@ -116,7 +123,7 @@ class Token {
         this.remainingUses = new AtomicInteger(uses);
     }
 
-    public ScrapeStopper.TokenState validate(String remoteIp) {
+    public ScrapeStopper.TokenState validate(String remoteIp, String context) {
         if (!Objects.equals(remoteIp, this.remoteIp))
             return ScrapeStopper.TokenState.INVALID;
 
@@ -138,9 +145,13 @@ class Token {
             }
         }
 
+        if (context != null && lastContext == context)
+            return ScrapeStopper.TokenState.VALIDATED;
+
         if (remainingUses.decrementAndGet() <= 0)
             return ScrapeStopper.TokenState.INVALID;
 
+        this.lastContext = context;
         this.lastValidation = Instant.now();
 
         return ScrapeStopper.TokenState.VALIDATED;

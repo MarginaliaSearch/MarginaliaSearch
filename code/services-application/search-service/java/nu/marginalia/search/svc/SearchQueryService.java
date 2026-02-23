@@ -157,6 +157,7 @@ public class SearchQueryService {
 
         var interceptResult = scrapeStopperInterceptor.intercept(
                 "SE",
+                parameters.query(),
                 rateLimiter,
                 context,
                 parameters.sst());

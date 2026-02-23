@@ -8,6 +8,7 @@ import nu.marginalia.scrapestopper.ScrapeStopper;
 import nu.marginalia.search.model.NavbarModel;
 import nu.marginalia.search.svc.SearchSiteInfoService;
 import nu.marginalia.service.server.RateLimiter;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.util.Map;
@@ -30,6 +31,8 @@ public class ScrapeStopperInterceptor {
     }
 
     public InterceptionResult intercept(String zone,
+                                        @Nullable
+                                        String zoneContext,
                                         RateLimiter limiter,
                                         Context context,
                                         String sst)
@@ -46,14 +49,15 @@ public class ScrapeStopperInterceptor {
 
         String remoteIp = context.header("X-Forwarded-For").valueOrNull();
 
-        ScrapeStopper.TokenState tokenState = scrapeStopper.validateToken(sst, remoteIp);
+        ScrapeStopper.TokenState tokenState = scrapeStopper.validateToken(sst, remoteIp, zoneContext);
+
         if (tokenState == ScrapeStopper.TokenState.VALIDATED) {
             if (isRerollEnabled && ThreadLocalRandom.current().nextDouble() > pReroll) {
                 var newSst = scrapeStopper.relocateToken(sst, zone);
 
                 // Concurrent relocates, let's revalidate this token
                 if (newSst.isEmpty())
-                    return intercept(zone, limiter, context, sst);
+                    return intercept(zone, zoneContext, limiter, context, sst);
 
                 sst = newSst.get();
             }
@@ -76,10 +80,12 @@ public class ScrapeStopperInterceptor {
     }
 
     public InterceptionResult intercept(String zone,
+                                        @Nullable
+                                        String zoneContext,
                                         RateLimiter limiter,
                                         Context context) {
         String sst = context.query("sst").value("");
-        return intercept(zone, limiter, context, sst);
+        return intercept(zone, zoneContext, limiter, context, sst);
     }
 
     public sealed interface InterceptionResult {

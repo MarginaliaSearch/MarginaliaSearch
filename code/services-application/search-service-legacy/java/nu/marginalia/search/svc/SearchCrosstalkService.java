@@ -37,11 +37,13 @@ public class SearchCrosstalkService {
     }
 
     public Object handle(Request request, Response response) throws SQLException, TimeoutException {
-        var intercept = scrapeStopperInterceptor.intercept("CT", rateLimiter, request, response);
+        String domains = request.queryParams("domains");
+
+        var intercept = scrapeStopperInterceptor.intercept("CT", domains, rateLimiter, request, response);
         if (intercept instanceof ScrapeStopperInterceptor.InterceptRedirect redir)
             return redir.result();
 
-        String domains = request.queryParams("domains");
+
         String[] parts = StringUtils.split(domains, ',');
 
         if (parts.length != 2) {

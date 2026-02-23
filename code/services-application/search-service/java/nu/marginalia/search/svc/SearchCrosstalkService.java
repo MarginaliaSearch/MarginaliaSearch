@@ -50,7 +50,7 @@ public class SearchCrosstalkService {
                                      @QueryParam String domains
                                      ) throws SQLException, TimeoutException {
 
-        var interceptResult = scrapeStopperInterceptor.intercept("CT", rateLimiter, context);
+        var interceptResult = scrapeStopperInterceptor.intercept("CT", domains, rateLimiter, context);
 
         if (interceptResult instanceof ScrapeStopperInterceptor.InterceptRedirect redir) {
             return new MapModelAndView("siteinfo/ctwait.jte",
