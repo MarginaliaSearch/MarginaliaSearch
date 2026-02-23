@@ -45,7 +45,9 @@ public class SearchQueryService {
             return redir.result();
 
         try {
-            return searchCommandEvaulator.eval(response, parseParameters(request));
+            return searchCommandEvaulator.eval(response,
+                    parseParameters(request).withSst(intercept.sst())
+            );
         }
         catch (RedirectException ex) {
             response.redirect(ex.newUrl);

@@ -79,6 +79,9 @@ public record SearchParameters(String query,
     public SearchParameters withTitle(SearchTitleParameter title) {
         return new SearchParameters(query, profile, js, recent, title, adtech, sst, true, page);
     }
+    public SearchParameters withSst(String sst) {
+        return new SearchParameters(query, profile, js, recent, searchTitle, adtech, sst, true, page);
+    }
 
     public SearchParameters withPage(int page) {
         return new SearchParameters(query, profile, js, recent, searchTitle, adtech, sst, false, page);
