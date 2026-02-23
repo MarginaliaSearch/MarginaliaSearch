@@ -72,7 +72,7 @@ public class ScrapeStopperInterceptor {
                     remoteIp,
                     Duration.ofSeconds(3),
                     Duration.ofMinutes(5),
-                    ThreadLocalRandom.current().nextInt(8, 20));
+                    ThreadLocalRandom.current().nextInt(10, 50));
 
         response.header("Cache-Control", "no-store");
 
