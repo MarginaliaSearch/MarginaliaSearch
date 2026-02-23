@@ -17,6 +17,8 @@ import java.util.concurrent.ThreadLocalRandom;
 public class ScrapeStopperInterceptor {
 
     private final boolean isEnabled = Boolean.getBoolean("search.useScrapeStopper");
+    private final boolean isRerollEnabled = Boolean.getBoolean("search.scrapeStopper.rerollSst");
+
     private final double pReroll = 0.75;
 
     private final ScrapeStopper scrapeStopper;
@@ -46,7 +48,7 @@ public class ScrapeStopperInterceptor {
 
         ScrapeStopper.TokenState tokenState = scrapeStopper.validateToken(sst, remoteIp);
         if (tokenState == ScrapeStopper.TokenState.VALIDATED) {
-            if (ThreadLocalRandom.current().nextDouble() > pReroll) {
+            if (isRerollEnabled && ThreadLocalRandom.current().nextDouble() > pReroll) {
                 var newSst = scrapeStopper.relocateToken(sst, zone);
 
                 // Concurrent relocates, let's revalidate this token
