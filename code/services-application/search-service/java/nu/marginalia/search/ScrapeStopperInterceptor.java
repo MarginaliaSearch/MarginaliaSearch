@@ -16,8 +16,10 @@ import java.util.concurrent.ThreadLocalRandom;
 @Singleton
 public class ScrapeStopperInterceptor {
 
-    private final ScrapeStopper scrapeStopper;
+    private final boolean isEnabled = Boolean.getBoolean("search.useScrapeStopper");
     private final double pReroll = 0.75;
+
+    private final ScrapeStopper scrapeStopper;
 
     @Inject
     public ScrapeStopperInterceptor(ScrapeStopper scrapeStopper)
@@ -30,7 +32,7 @@ public class ScrapeStopperInterceptor {
                                         Context context,
                                         String sst)
     {
-        if (limiter.isAllowed()) {
+        if (!isEnabled || limiter.isAllowed()) {
             return new InterceptPass(sst);
         }
 

@@ -19,6 +19,8 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Singleton
 public class ScrapeStopperInterceptor {
+
+    private final boolean isEnabled = Boolean.getBoolean("search.useScrapeStopper");
     private final double pReroll = 0.75;
 
     private final ScrapeStopper scrapeStopper;
@@ -40,6 +42,9 @@ public class ScrapeStopperInterceptor {
                                         Request request,
                                         Response response)
     {
+        if (!isEnabled)
+            return new InterceptPass("");
+
         String remoteIp = request.headers("X-Forwarded-For");
         String sst = request.queryParamOrDefault("sst", "");
         ScrapeStopper.TokenState tokenState = scrapeStopper.validateToken(sst, remoteIp);
