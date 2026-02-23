@@ -2,13 +2,18 @@ package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
 import nu.marginalia.WebsiteUrl;
+import nu.marginalia.renderer.RendererFactory;
+import nu.marginalia.search.ScrapeStopperInterceptor;
 import nu.marginalia.search.command.CommandEvaluator;
 import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.exceptions.RedirectException;
+import nu.marginalia.service.server.RateLimiter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
+
+import java.io.IOException;
 
 public class SearchQueryService {
 
@@ -17,17 +22,28 @@ public class SearchQueryService {
     private final CommandEvaluator searchCommandEvaulator;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    private final ScrapeStopperInterceptor scrapeStopperInterceptor;
+    private final RateLimiter rateLimiter = RateLimiter.queryPerMinuteLimiter(60);
+
     @Inject
     public SearchQueryService(
             WebsiteUrl websiteUrl,
+            RendererFactory rendererFactory,
             SearchErrorPageService errorPageService,
-            CommandEvaluator searchCommandEvaulator) {
+            CommandEvaluator searchCommandEvaulator,
+            ScrapeStopperInterceptor scrapeStopperInterceptor) throws IOException {
+
         this.websiteUrl = websiteUrl;
         this.errorPageService = errorPageService;
         this.searchCommandEvaulator = searchCommandEvaulator;
+        this.scrapeStopperInterceptor = scrapeStopperInterceptor;
     }
 
     public Object pathSearch(Request request, Response response) {
+        var intercept = scrapeStopperInterceptor.intercept("S", rateLimiter, request, response);
+        if (intercept instanceof ScrapeStopperInterceptor.InterceptRedirect redir)
+            return redir.result();
+
         try {
             return searchCommandEvaulator.eval(response, parseParameters(request));
         }

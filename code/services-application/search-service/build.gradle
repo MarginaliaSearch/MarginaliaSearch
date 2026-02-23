@@ -37,6 +37,7 @@ dependencies {
     implementation project(':code:libraries:easy-lsh')
     implementation project(':code:functions:language-processing')
     implementation project(':code:libraries:braille-block-punch-cards')
+    implementation project(':code:libraries:scrape-stopper')
 
     implementation project(':code:index:live-capture:api')
     implementation project(':code:functions:math:api')

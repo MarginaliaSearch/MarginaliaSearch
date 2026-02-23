@@ -1,6 +1,7 @@
 package nu.marginalia.search.command;
 
 import com.google.inject.Inject;
+import io.jooby.Context;
 import io.jooby.MapModelAndView;
 import io.jooby.ModelAndView;
 import nu.marginalia.search.model.SearchParameters;
@@ -17,7 +18,7 @@ public class BrowseRedirectCommand implements SearchCommandInterface {
     public BrowseRedirectCommand() {}
 
     @Override
-    public Optional<ModelAndView<?>> process(SearchParameters parameters) {
+    public Optional<ModelAndView<?>> process(SearchParameters parameters, Context ctx) {
         if (!queryPatternPredicate.test(parameters.query())) {
             return Optional.empty();
         }

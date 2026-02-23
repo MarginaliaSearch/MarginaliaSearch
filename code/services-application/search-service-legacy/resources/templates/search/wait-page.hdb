@@ -1,0 +1,24 @@
+<html lang="en-US">
+    <head>
+        <title>Error</title>
+        <link rel="stylesheet" href="/serp.css">
+        <meta http-equiv="refresh" content="{{waitDuration}}; URL='{{{redirUrl}}}'">
+    </head>
+    <body>
+        <div class="infobox">
+            <h1>Wait For A Moment</h1>
+            <p>The search engine is currently barraged by queries from bots</p>
+            <p>Please wait for <b id="countdown" data-tr="{{waitDuration}}">{{waitDuration}}</b> seconds.  If your browser supports it,
+             it will refresh on its own.  Otherwise, you can use <a href="{{redirUrl}}">this link</a> to manually proceed.
+        </div>
+   </body>
+   <script lang="javascript">
+         window.setInterval(()=>{
+             const cd = document.getElementById('countdown');
+             var tr = cd.getAttribute('data-tr');
+             tr--;
+             cd.setAttribute('data-tr', tr);
+             cd.innerHTML=tr;
+         }, 1000);
+   </script>
+</html>

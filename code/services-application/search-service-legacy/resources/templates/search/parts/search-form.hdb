@@ -10,6 +10,8 @@
         <input type="hidden" name="searchTitle" value="{{searchTitle}}">
         <input type="hidden" name="profile" value="{{profile}}">
         <input type="hidden" name="recent" value="{{recent}}">
+        <input type="hidden" name="sst" value="{{sst}}">
+
 
         <input type="submit" form="search-form" title="Execute Search" value="Search" autocomplete="off">
     </div>

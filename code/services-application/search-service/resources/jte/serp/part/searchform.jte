@@ -2,6 +2,7 @@
 
 @param String query
 @param String profile
+@param String scrapeStopToken
 @param String languageIsoCode
 @param SearchFilters filters
 
@@ -44,6 +45,7 @@
 
     </div>
 
+    @if (scrapeStopToken != null) <input type="hidden" name="sst" value="${scrapeStopToken}"> @endif
     @if (filters.removeJsOption.isSet()) <input type="hidden" name="js" value="${filters.removeJsOption.value()}"> @endif
     @if (filters.reduceAdtechOption.isSet()) <input type="hidden" name="adtech" value="${filters.reduceAdtechOption.value()}"> @endif
     @if (filters.searchTitleOption.isSet()) <input type="hidden" name="searchTitle" value="${filters.searchTitleOption.value()}"> @endif

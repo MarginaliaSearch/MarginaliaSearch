@@ -20,6 +20,7 @@ public record SearchParameters(String query,
                                SearchRecentParameter recent,
                                SearchTitleParameter searchTitle,
                                SearchAdtechParameter adtech,
+                               String sst,
                                boolean newFilter,
                                int page
                                ) {
@@ -32,6 +33,7 @@ public record SearchParameters(String query,
                 SearchRecentParameter.DEFAULT,
                 SearchTitleParameter.DEFAULT,
                 SearchAdtechParameter.DEFAULT,
+                "",
                 false,
                 page
         );
@@ -49,6 +51,7 @@ public record SearchParameters(String query,
                 SearchRecentParameter.parse(request.queryParams("recent")),
                 SearchTitleParameter.parse(request.queryParams("searchTitle")),
                 SearchAdtechParameter.parse(request.queryParams("adtech")),
+                request.queryParamOrDefault("sst", ""),
                 "true".equals(request.queryParams("newfilter")),
                 Integer.parseInt(Objects.requireNonNullElse(request.queryParams("page"), "1"))
             );
@@ -59,30 +62,30 @@ public record SearchParameters(String query,
     }
 
     public SearchParameters withProfile(SearchProfile profile) {
-        return new SearchParameters(query, profile, js, recent, searchTitle, adtech, true, page);
+        return new SearchParameters(query, profile, js, recent, searchTitle, adtech, sst, true, page);
     }
 
     public SearchParameters withJs(SearchJsParameter js) {
-        return new SearchParameters(query, profile, js, recent, searchTitle, adtech, true, page);
+        return new SearchParameters(query, profile, js, recent, searchTitle, adtech, sst, true, page);
     }
     public SearchParameters withAdtech(SearchAdtechParameter adtech) {
-        return new SearchParameters(query, profile, js, recent, searchTitle, adtech, true, page);
+        return new SearchParameters(query, profile, js, recent, searchTitle, adtech, sst, true, page);
     }
 
     public SearchParameters withRecent(SearchRecentParameter recent) {
-        return new SearchParameters(query, profile, js, recent, searchTitle, adtech, true, page);
+        return new SearchParameters(query, profile, js, recent, searchTitle, adtech, sst, true, page);
     }
 
     public SearchParameters withTitle(SearchTitleParameter title) {
-        return new SearchParameters(query, profile, js, recent, title, adtech, true, page);
+        return new SearchParameters(query, profile, js, recent, title, adtech, sst, true, page);
     }
 
     public SearchParameters withPage(int page) {
-        return new SearchParameters(query, profile, js, recent, searchTitle, adtech, false, page);
+        return new SearchParameters(query, profile, js, recent, searchTitle, adtech, sst, false, page);
     }
 
     public String renderUrl(WebsiteUrl baseUrl) {
-        String path = String.format("/search?query=%s&profile=%s&js=%s&adtech=%s&recent=%s&searchTitle=%s&newfilter=%s&page=%d",
+        String path = String.format("/search?query=%s&profile=%s&js=%s&adtech=%s&recent=%s&searchTitle=%s&newfilter=%s&page=%d&sst=%s",
                 URLEncoder.encode(query, StandardCharsets.UTF_8),
                 URLEncoder.encode(profile.filterId, StandardCharsets.UTF_8),
                 URLEncoder.encode(js.value, StandardCharsets.UTF_8),
@@ -90,7 +93,8 @@ public record SearchParameters(String query,
                 URLEncoder.encode(recent.value, StandardCharsets.UTF_8),
                 URLEncoder.encode(searchTitle.value, StandardCharsets.UTF_8),
                 Boolean.valueOf(newFilter).toString(),
-                page
+                page,
+                URLEncoder.encode(sst, StandardCharsets.UTF_8)
                 );
 
         return baseUrl.withPath(path);

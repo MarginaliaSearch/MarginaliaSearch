@@ -14,7 +14,7 @@ class BangCommandTest {
     void testWikipediaRedirect() {
         BangCommand bc = new BangCommand();
 
-        assertTrue(bc.process(SearchParameters.defaultsForQuery(new WebsiteUrl("test"), "!w plato", 1)).isPresent());
-        assertFalse(bc.process(SearchParameters.defaultsForQuery(new WebsiteUrl("test"), "plato", 1)).isPresent());
+        assertTrue(bc.process(SearchParameters.defaultsForQuery(new WebsiteUrl("test"), "!w plato", 1), null).isPresent());
+        assertFalse(bc.process(SearchParameters.defaultsForQuery(new WebsiteUrl("test"), "plato", 1), null).isPresent());
     }
 }

@@ -61,6 +61,7 @@ public class SearchFilters {
                 "en",
                 "GET",
                 null,
+                null,
                 false,
                 1));
     }
