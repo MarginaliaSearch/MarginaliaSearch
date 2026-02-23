@@ -103,6 +103,8 @@ class Token {
     private final String remoteIp;
     private AtomicInteger remainingUses;
 
+    private volatile Instant lastValidation;
+
     Token(Instant validAfter,
                   Instant validUntil,
                   String remoteIp,
@@ -124,8 +126,22 @@ class Token {
         if (Instant.now().isAfter(validUntil))
             return ScrapeStopper.TokenState.INVALID;
 
+        var lastValidation = this.lastValidation;
+
+        if (lastValidation != null) {
+            Duration timeSinceValidation = Duration.between(lastValidation, Instant.now());
+
+            if (timeSinceValidation.minusSeconds(1).isNegative()) {
+                remainingUses.set(0);
+
+                return ScrapeStopper.TokenState.INVALID;
+            }
+        }
+
         if (remainingUses.decrementAndGet() <= 0)
             return ScrapeStopper.TokenState.INVALID;
+
+        this.lastValidation = Instant.now();
 
         return ScrapeStopper.TokenState.VALIDATED;
     }

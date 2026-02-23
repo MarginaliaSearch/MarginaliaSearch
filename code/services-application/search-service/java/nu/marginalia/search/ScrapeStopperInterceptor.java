@@ -28,10 +28,16 @@ public class ScrapeStopperInterceptor {
     }
 
     public InterceptionResult intercept(String zone,
-                                RateLimiter limiter,
+                                        RateLimiter limiter,
                                         Context context,
                                         String sst)
     {
+
+        // Regardless whether enabled, we don't want to honor Sec-Purpose requests
+        if (context.header("Sec-Purpose").isPresent()) {
+            return new InterceptPrefetch(sst);
+        }
+
         if (!isEnabled || limiter.isAllowed()) {
             return new InterceptPass(sst);
         }
@@ -80,4 +86,5 @@ public class ScrapeStopperInterceptor {
 
     public record InterceptRedirect(String sst, Duration waitTime) implements InterceptionResult {}
     public record InterceptPass(String sst) implements InterceptionResult {}
+    public record InterceptPrefetch(String sst) implements InterceptionResult {}
 }

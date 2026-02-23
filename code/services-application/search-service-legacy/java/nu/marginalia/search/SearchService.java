@@ -10,10 +10,7 @@ import nu.marginalia.service.server.SparkService;
 import nu.marginalia.service.server.StaticResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
-import spark.Route;
-import spark.Spark;
+import spark.*;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -55,6 +52,9 @@ public class SearchService extends SparkService {
 
         Spark.staticFiles.expireTime(600);
 
+        Spark.before("/search", this::denyPrefetch);
+        Spark.before("/site/:site", this::denyPrefetch);
+
         SearchServiceMetrics.get("/search", searchQueryService::pathSearch);
 
         SearchServiceMetrics.get("/", frontPageService::render);
@@ -79,6 +79,11 @@ public class SearchService extends SparkService {
         Spark.awaitInitialization();
     }
 
+
+    private void denyPrefetch(Request request, Response response) {
+        if (request.headers().contains("Sec-Purpose"))
+            Spark.halt(400);
+    }
 
 
     /** Wraps a route with a timer and a counter */

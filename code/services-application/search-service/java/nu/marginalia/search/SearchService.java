@@ -1,10 +1,7 @@
 package nu.marginalia.search;
 
 import com.google.inject.Inject;
-import io.jooby.Context;
-import io.jooby.Jooby;
-import io.jooby.MediaType;
-import io.jooby.StatusCode;
+import io.jooby.*;
 import io.prometheus.metrics.core.metrics.Counter;
 import io.prometheus.metrics.core.metrics.Histogram;
 import nu.marginalia.WebsiteUrl;
@@ -15,6 +12,7 @@ import nu.marginalia.search.svc.*;
 import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.service.server.JoobyService;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,6 +88,14 @@ public class SearchService extends JoobyService {
 
         final String startTimeAttribute = "start-time";
 
+        jooby.error(NoSuchElementException.class, new ErrorHandler() {
+            @Override
+            public void apply(@NotNull Context ctx, @NotNull Throwable cause, @NotNull StatusCode code) {
+                ctx.setResponseCode(code.value());
+                ctx.send("Nothing");
+            }
+        });
+
         jooby.get("/export-opml", siteSubscriptionService::exportOpml);
 
         jooby.get("/site/https://*", this::handleSiteUrlRedirect);
@@ -125,10 +131,6 @@ public class SearchService extends JoobyService {
                 return emptySvg;
             }
             return "";
-        });
-
-        jooby.before((Context ctx) -> {
-            ctx.setAttribute(startTimeAttribute, System.nanoTime());
         });
 
         jooby.after((Context ctx, Object result, Throwable failure) -> {

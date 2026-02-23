@@ -191,18 +191,21 @@ public class SearchSiteInfoService {
         page = Objects.requireNonNullElse(page, 1);
         view = Objects.requireNonNullElse(view, "info");
 
-        ScrapeStopperInterceptor.InterceptionResult interceptionResult
+        ScrapeStopperInterceptor.InterceptionResult interceptResult
                 = scrapeStopperInterceptor.intercept("SI", softRateLimiter, context);
 
-        if (interceptionResult instanceof ScrapeStopperInterceptor.InterceptRedirect redir) {
+        if (interceptResult instanceof ScrapeStopperInterceptor.InterceptRedirect redir) {
             return new MapModelAndView("siteinfo/main.jte",
                     Map.of("model",
                             new ScrapeStopperModel(redir.sst(), redir.waitTime(), domainName, view, page),
                             "navbar", NavbarModel.SITEINFO)
             );
         }
+        if (interceptResult instanceof ScrapeStopperInterceptor.InterceptPrefetch prefetch) {
+            throw new NoSuchElementException();
+        }
 
-        String sst = interceptionResult.sst();
+        String sst = interceptResult.sst();
 
         SiteInfoModel model = switch (view) {
             case "links" -> listLinks(domainName, sst, page);

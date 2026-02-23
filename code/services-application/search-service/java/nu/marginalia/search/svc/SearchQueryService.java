@@ -177,6 +177,9 @@ public class SearchQueryService {
                             )
                     );
         }
+        if (interceptResult instanceof ScrapeStopperInterceptor.InterceptPrefetch prefetch) {
+            throw new NoSuchElementException();
+        }
 
         try {
             for (var cmd : specialCommands) {

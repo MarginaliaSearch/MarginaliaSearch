@@ -24,6 +24,7 @@ import java.sql.SQLException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.TimeoutException;
 
 public class SearchCrosstalkService {
@@ -57,6 +58,9 @@ public class SearchCrosstalkService {
                             new CrosstalkWait(domains, redir.sst(), redir.waitTime()),
                             "navbar", NavbarModel.SITEINFO)
             );
+        }
+        if (interceptResult instanceof ScrapeStopperInterceptor.InterceptPrefetch prefetch) {
+            throw new NoSuchElementException();
         }
 
         String[] parts = StringUtils.split(domains, ',');
