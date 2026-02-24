@@ -127,7 +127,7 @@ class Token {
         if (!Objects.equals(remoteIp, this.remoteIp))
             return ScrapeStopper.TokenState.INVALID;
 
-        if (context != null && lastContext == context)
+        if (context != null && Objects.equals(lastContext,context))
             return ScrapeStopper.TokenState.VALIDATED;
 
         if (Instant.now().isBefore(validAfter))

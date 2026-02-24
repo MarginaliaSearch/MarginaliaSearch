@@ -52,6 +52,7 @@ public class ScrapeStopperInterceptor {
         ScrapeStopper.TokenState tokenState = scrapeStopper.validateToken(sst, remoteIp, zoneContext);
 
         if (tokenState == ScrapeStopper.TokenState.VALIDATED) {
+
             if (isRerollEnabled && ThreadLocalRandom.current().nextDouble() > pReroll) {
                 var newSst = scrapeStopper.relocateToken(sst, zone);
 
