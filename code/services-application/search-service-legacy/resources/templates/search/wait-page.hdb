@@ -19,6 +19,6 @@
              cd.setAttribute('data-tr', tr);
              cd.innerHTML=tr;
          }, 1000);
-         window.setTimeout(()=> { location.replace('{{redirUrl}}'); }, waitDuration*1000);
+         window.setTimeout(()=> { location.replace('{{{redirUrl}}}'); }, {{waitDuration}}*1000);
    </script>
 </html>
