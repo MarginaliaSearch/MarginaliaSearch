@@ -54,9 +54,6 @@ public class ScrapeStopperInterceptor {
         String sst = request.queryParamOrDefault("sst", "");
         ScrapeStopper.TokenState tokenState = scrapeStopper.validateToken(sst, remoteIp, zoneContext);
 
-        if (limiter.isAllowed())
-            return new InterceptPass(sst);
-
         if (tokenState == ScrapeStopper.TokenState.VALIDATED) {
             if (isRerollEnabled && ThreadLocalRandom.current().nextDouble() > pReroll) {
                 var newSst = scrapeStopper.relocateToken(sst, zone);
@@ -69,6 +66,9 @@ public class ScrapeStopperInterceptor {
 
             }
 
+            return new InterceptPass(sst);
+        }
+        else if (limiter.isAllowed()) {
             return new InterceptPass(sst);
         }
 

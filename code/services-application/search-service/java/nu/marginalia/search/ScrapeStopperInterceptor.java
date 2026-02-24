@@ -43,7 +43,7 @@ public class ScrapeStopperInterceptor {
             return new InterceptPrefetch(sst);
         }
 
-        if (!isEnabled || limiter.isAllowed()) {
+        if (!isEnabled) {
             return new InterceptPass(sst);
         }
 
@@ -62,6 +62,9 @@ public class ScrapeStopperInterceptor {
                 sst = newSst.get();
             }
 
+            return new InterceptPass(sst);
+        }
+        else if (limiter.isAllowed()) {
             return new InterceptPass(sst);
         }
 
