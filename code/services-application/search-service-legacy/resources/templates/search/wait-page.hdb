@@ -8,7 +8,7 @@
             <h1>Wait For A Moment</h1>
             <p>The search engine is currently barraged by queries from bots</p>
             <p>Please wait for <b id="countdown" data-tr="{{waitDuration}}">{{waitDuration}}</b> seconds.  If your browser supports it,
-             it will refresh on its own.  Otherwise, you can use <a href="{{redirUrl}}">this link</a> to manually proceed.
+             it will refresh on its own.  Otherwise, you can use <a href="{{{redirUrl}}}">this link</a> to manually proceed.
         </div>
    </body>
    <script lang="javascript">
