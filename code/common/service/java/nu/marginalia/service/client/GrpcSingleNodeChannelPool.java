@@ -87,9 +87,7 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
             }
         }
 
-        synchronized (this) {
-            notifyAll();
-        }
+        notifyAll();
     }
 
     // Mostly for testing
