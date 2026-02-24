@@ -19,6 +19,7 @@ jte {
     targetDirectory = file('build/classes/jte-precompiled').toPath()
     generate()
 }
+
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))

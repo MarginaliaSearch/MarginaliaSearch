@@ -106,8 +106,8 @@ public class JoobyService {
                 config.externalAddress());
 
         // FIXME:  This won't work outside of docker, may need to submit a PR to jooby to allow classpaths here
-        if (Files.exists(Path.of("/app/resources/jte")) || Files.exists(Path.of("/app/classes/jte-precompiled"))) {
-            jooby.install(new JteModule(Path.of("/app/resources/jte"), Path.of("/app/classes/jte-precompiled")));
+        if (Files.exists(Path.of("/app/resources/jte")) || Files.exists(Path.of("/app/classes"))) {
+            jooby.install(new JteModule(Path.of("/app/resources/jte"), Path.of("/app/classes")));
         }
         if (Files.exists(Path.of("/app/resources/static"))) {
             jooby.assets("/*", Paths.get("/app/resources/static"));
