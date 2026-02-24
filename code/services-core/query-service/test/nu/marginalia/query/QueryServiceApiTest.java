@@ -14,6 +14,7 @@ import nu.marginalia.functions.searchquery.QueryGRPCService;
 import nu.marginalia.nsfw.NsfwFilterModule;
 import nu.marginalia.service.client.GrpcChannelPoolFactoryIf;
 import nu.marginalia.service.client.TestGrpcChannelPoolFactory;
+import nu.marginalia.service.server.Initialization;
 import nu.marginalia.test.TestMigrationLoader;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.parallel.Execution;
@@ -70,7 +71,7 @@ public class QueryServiceApiTest {
         });
 
         queryChannelFactory = new TestGrpcChannelPoolFactory(List.of(injector.getInstance(QueryGRPCService.class)));
-        queryClient = new QueryClient(queryChannelFactory);
+        queryClient = new QueryClient(queryChannelFactory, new Initialization());
     }
 
     @AfterEach

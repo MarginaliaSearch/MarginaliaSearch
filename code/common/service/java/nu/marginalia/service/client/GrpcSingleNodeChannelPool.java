@@ -87,6 +87,9 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
             }
         }
 
+        synchronized (this) {
+            notifyAll();
+        }
     }
 
     // Mostly for testing
@@ -236,6 +239,7 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
             if (timeLeft <= 0) return false;
             this.wait(timeLeft);
         }
+
         return hasChannel();
     }
 

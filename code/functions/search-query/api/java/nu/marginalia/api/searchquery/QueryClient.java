@@ -10,6 +10,7 @@ import nu.marginalia.service.client.GrpcChannelPoolFactoryIf;
 import nu.marginalia.service.client.GrpcSingleNodeChannelPool;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import nu.marginalia.service.discovery.property.ServicePartition;
+import nu.marginalia.service.server.Initialization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,13 +33,22 @@ public class QueryClient  {
     private final GrpcSingleNodeChannelPool<QueryApiGrpc.QueryApiBlockingStub> queryApiPool;
 
     @Inject
-    public QueryClient(GrpcChannelPoolFactoryIf channelPoolFactory) throws InterruptedException {
+    public QueryClient(GrpcChannelPoolFactoryIf channelPoolFactory,
+                       Initialization initialization
+                       ) throws InterruptedException
+    {
         this.queryApiPool = channelPoolFactory.createSingle(
                 ServiceKey.forGrpcApi(QueryApiGrpc.class, ServicePartition.any()),
                 QueryApiGrpc::newBlockingStub);
 
-        // Hold up initialization until we have a downstream connection
-        this.queryApiPool.awaitChannel(Duration.ofSeconds(5));
+        initialization.addCallback(() -> {
+            // Hold up initialization until we have a downstream connection
+            try {
+                this.queryApiPool.awaitChannel(Duration.ofSeconds(5));
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     @CheckReturnValue
@@ -92,7 +102,6 @@ public class QueryClient  {
         }
 
         return true;
-
     }
 
 }
