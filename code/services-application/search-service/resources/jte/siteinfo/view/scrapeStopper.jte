@@ -42,7 +42,7 @@
                 cd.innerHTML=tr;
             }, 1000);
 
-            window.setTimeout(()=> { window.location='${model.redirUrl()}'; }, ${waitDuration.toMillis()});
+            window.setTimeout(()=> { location.replace('${model.redirUrl()}'); }, ${waitDuration.toMillis()});
         </script>
     </div>
 </main>

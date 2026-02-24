@@ -82,7 +82,7 @@
                     cd.innerHTML=tr;
                 }, 1000);
 
-                window.setTimeout(()=> { window.location='${parameters.renderUrl()}'; }, ${waitDuration.toMillis()});
+                window.setTimeout(()=> { location.replace('${parameters.renderUrl()}'); }, ${waitDuration.toMillis()});
             </script>
         </div>
     </main>
