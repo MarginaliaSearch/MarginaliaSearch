@@ -127,6 +127,9 @@ class Token {
         if (!Objects.equals(remoteIp, this.remoteIp))
             return ScrapeStopper.TokenState.INVALID;
 
+        if (context != null && lastContext == context)
+            return ScrapeStopper.TokenState.VALIDATED;
+
         if (Instant.now().isBefore(validAfter))
             return ScrapeStopper.TokenState.EARLY;
 
@@ -144,9 +147,6 @@ class Token {
                 return ScrapeStopper.TokenState.INVALID;
             }
         }
-
-        if (context != null && lastContext == context)
-            return ScrapeStopper.TokenState.VALIDATED;
 
         if (remainingUses.decrementAndGet() <= 0)
             return ScrapeStopper.TokenState.INVALID;
