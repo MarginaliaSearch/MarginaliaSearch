@@ -166,7 +166,7 @@
     </div>
     <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-600 p-2">
         <div class="flex items-center gap-2 text-xs">
-            <a class="underline" href="?view=secdetails&changeId=${event.changeId()}">Details</a>
+            <a class="underline" href="?view=secdetails&changeId=${event.changeId()}&sst=${events.sst()}">Details</a>
 
             <div class="flex-grow">
             </div>
