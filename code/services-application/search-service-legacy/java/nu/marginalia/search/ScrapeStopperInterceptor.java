@@ -2,6 +2,7 @@ package nu.marginalia.search;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.WebsiteUrl;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.scrapestopper.ScrapeStopper;
@@ -31,7 +32,8 @@ public class ScrapeStopperInterceptor {
     private final MustacheRenderer<Object> waitRenderer;
 
     @Inject
-    public ScrapeStopperInterceptor(ScrapeStopper scrapeStopper, RendererFactory rendererFactory)
+    public ScrapeStopperInterceptor(ScrapeStopper scrapeStopper,
+                                    RendererFactory rendererFactory)
             throws IOException
     {
         this.scrapeStopper = scrapeStopper;
@@ -90,7 +92,7 @@ public class ScrapeStopperInterceptor {
 
     private String constructRedirectUrl(String sst, Request request) {
 
-        StringJoiner redirUrlBuilder = new StringJoiner("&", "?", "");
+        StringJoiner redirUrlBuilder = new StringJoiner("&", request.pathInfo() + "?", "");
 
         for (String name: request.queryParams()) {
             if ("sst".equalsIgnoreCase(name))
