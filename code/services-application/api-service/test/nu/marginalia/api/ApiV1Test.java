@@ -7,6 +7,8 @@ import com.zaxxer.hikari.HikariDataSource;
 import io.jooby.Jooby;
 import io.jooby.StatusCode;
 import io.jooby.test.MockRouter;
+import nu.marginalia.api.polar.PolarBenefits;
+import nu.marginalia.api.polar.PolarClient;
 import nu.marginalia.service.client.GrpcChannelPoolFactoryIf;
 import nu.marginalia.service.client.TestGrpcChannelPoolFactory;
 import nu.marginalia.test.TestMigrationLoader;
@@ -63,6 +65,8 @@ public class ApiV1Test {
             protected void configure() {
                 bind(HikariDataSource.class).toInstance(dataSource);
                 bind(GrpcChannelPoolFactoryIf.class).toInstance(testGrpcChannelPoolFactory);
+                bind(PolarClient.class).toInstance(PolarClient.asDisabled());
+                bind(PolarBenefits.class).toInstance(PolarBenefits.asDisabled());
             }
         }).getInstance(ApiV1.class);
 

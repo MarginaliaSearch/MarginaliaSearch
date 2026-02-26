@@ -10,14 +10,23 @@ public class ApiSearchResult {
     public double quality;
     public String format; // "pdf", "html", "text", etc.
 
+    public int resultsFromDomain;
+
     public List<List<ApiSearchResultQueryDetails>> details = new ArrayList<>();
 
-    public ApiSearchResult(String url, String title, String description, double quality, String format, List<List<ApiSearchResultQueryDetails>> details) {
+    public ApiSearchResult(String url,
+                           String title,
+                           String description,
+                           double quality,
+                           String format,
+                           int resultsFromDomain,
+                           List<List<ApiSearchResultQueryDetails>> details) {
         this.url = url;
         this.title = title;
         this.description = description;
         this.quality = quality;
         this.format = format;
+        this.resultsFromDomain = resultsFromDomain;
         this.details = details;
     }
 

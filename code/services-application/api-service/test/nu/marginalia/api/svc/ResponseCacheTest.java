@@ -29,8 +29,8 @@ class ResponseCacheTest {
             EnumSet.noneOf(ApiLicenseOptions.class)
     );
 
-    ApiSearchResults resultsA = new ApiSearchResults("x", "y", Collections.emptyList());
-    ApiSearchResults resultsB = new ApiSearchResults("x", "y", Collections.emptyList());
+    ApiSearchResults resultsA = new ApiSearchResults("x", "y", 1,1, Collections.emptyList());
+    ApiSearchResults resultsB = new ApiSearchResults("x", "y", 1, 1, Collections.emptyList());
 
     @BeforeEach
     public void setUp() {

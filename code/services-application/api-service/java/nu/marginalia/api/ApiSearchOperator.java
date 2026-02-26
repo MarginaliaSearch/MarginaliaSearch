@@ -34,6 +34,7 @@ public class ApiSearchOperator {
                                     int count,
                                     int timeout,
                                     int domainCount,
+                                    int page,
                                     QueryFilterSpec filterSpec,
                                     NsfwFilterTier filterTier,
                                     String langIsoCode,
@@ -52,9 +53,11 @@ public class ApiSearchOperator {
                         .setResultsTotal(Math.min(100, count))
                         .setTimeoutMs(Math.clamp(timeout, 50, 250))
                         .build(),
-                1);
+                page);
 
         return new ApiSearchResults(license.license(), query,
+                page,
+                rsp.totalPages(),
                 rsp.results()
                         .stream()
                         .map(this::convert)
@@ -67,6 +70,7 @@ public class ApiSearchOperator {
     public ApiSearchResults v1query(String query,
                                     int count,
                                     int domainCount,
+                                    int page,
                                     int index,
                                     NsfwFilterTier filterTier,
                                     String langIsoCode,
@@ -85,9 +89,11 @@ public class ApiSearchOperator {
                         .setResultsTotal(Math.min(100, count))
                         .setTimeoutMs(150)
                         .build(),
-                1);
+                page);
 
         return new ApiSearchResults(license.license(), query,
+                page,
+                rsp.totalPages(),
                 rsp.results()
                 .stream()
                 .map(this::convert)
@@ -129,6 +135,7 @@ public class ApiSearchOperator {
                 url.getDescription(),
                 sanitizeNaN(url.rankingScore, -100),
                 url.getShortFormat(),
+                url.resultsFromDomain,
                 details
         );
     }

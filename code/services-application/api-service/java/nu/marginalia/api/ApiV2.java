@@ -380,6 +380,7 @@ public class ApiV2 {
         int timeout = context.query().get("timeout").intValue(150);
         String filterName = context.query().get("filter").valueOrNull();
         int nsfw = context.query().get("nsfw").intValue(1);
+        int page = context.query().get("page").intValue(1);
         String langIsoCode = context.query("lang").value("en");
 
         NsfwFilterTier nsfwFilterTier;
@@ -401,7 +402,7 @@ public class ApiV2 {
         try (var _ = ApiMetrics.wmsa_api_query_time.labelValues(license.key()).startTimer())
         {
             return searchOperator
-                    .v2query(query, count, timeout, domainCount, filter, nsfwFilterTier, langIsoCode, license);
+                    .v2query(query, count, timeout, domainCount, page, filter, nsfwFilterTier, langIsoCode, license);
         }
         catch (TimeoutException ex) {
             context.setResponseCode(504);
