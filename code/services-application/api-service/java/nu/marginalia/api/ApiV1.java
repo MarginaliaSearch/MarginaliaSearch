@@ -153,7 +153,7 @@ public class ApiV1 {
         try (var _ = ApiMetrics.wmsa_api_query_time.labelValues(license.key()).startTimer())
         {
             return searchOperator
-                    .v1query(query, count, domainCount, index, page, nsfwFilterTier, langIsoCode, license);
+                    .v1query(query, count, domainCount, page, index, nsfwFilterTier, langIsoCode, license);
         }
         catch (TimeoutException ex) {
             context.setResponseCode(504);
