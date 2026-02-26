@@ -138,6 +138,7 @@ public class ApiV1 {
         int domainCount = context.query().get("dc").intValue(2);
         int index = context.query().get("index").intValue(20);
         int nsfw = context.query().get("nsfw").intValue(1);
+        int page = context.query().get("page").intValue(1);
         String langIsoCode = context.query("lang").value("en");
 
         NsfwFilterTier nsfwFilterTier;
@@ -152,7 +153,7 @@ public class ApiV1 {
         try (var _ = ApiMetrics.wmsa_api_query_time.labelValues(license.key()).startTimer())
         {
             return searchOperator
-                    .v1query(query, count, domainCount, index, nsfwFilterTier, langIsoCode, license);
+                    .v1query(query, count, domainCount, page, index, nsfwFilterTier, langIsoCode, license);
         }
         catch (TimeoutException ex) {
             context.setResponseCode(504);

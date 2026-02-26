@@ -84,7 +84,6 @@ public class IndexClient {
 
         final int requestedMaxResults = indexRequest.getQueryLimits().getResultsTotal();
         int filterTier = indexRequest.getNsfwFilterTierValue();
-        AtomicInteger totalNumResults = new AtomicInteger(0);
 
         Instant bailInstant  = Instant.now().plusMillis((int) (2 * indexRequest.getQueryLimits().getTimeoutMs()));
 
@@ -163,6 +162,8 @@ public class IndexClient {
         results.removeIf(item -> isBlacklisted(item, filterTier));
         results.sort(comparator);
 
+        int totalNumResults = results.size();
+
         int sublistStart = Math.max(0, (pagination.page - 1) * pagination.pageSize);
         int sublistEnd = Math.min(results.size(), sublistStart + pagination.pageSize);
 
@@ -171,7 +172,7 @@ public class IndexClient {
         if (sublistStart < sublistEnd) ret = results.subList(sublistStart, sublistEnd);
         else ret = List.of();
 
-        return new AggregateQueryResponse(ret, pagination.page(), totalNumResults.get());
+        return new AggregateQueryResponse(ret, pagination.page(), totalNumResults);
     }
 
     static String[] tierNames = {
