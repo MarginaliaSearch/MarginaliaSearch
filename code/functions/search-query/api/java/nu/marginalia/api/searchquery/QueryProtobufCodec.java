@@ -18,27 +18,27 @@ import java.util.Map;
 public class QueryProtobufCodec {
 
 
-    public static QueryResponse convertQueryResponse(RpcQsResponse query) {
-        var results = new ArrayList<DecoratedSearchResultItem>(query.getResultsCount());
+    public static QueryResponse convertQueryResponse(RpcQsResponse rsp) {
+        var results = new ArrayList<DecoratedSearchResultItem>(rsp.getResultsCount());
 
-        for (int i = 0; i < query.getResultsCount(); i++) {
-            results.add(convertDecoratedResult(query.getResults(i)));
+        for (int i = 0; i < rsp.getResultsCount(); i++) {
+            results.add(convertDecoratedResult(rsp.getResults(i)));
         }
 
-        var requestPagination = query.getPagination();
+        var requestPagination = rsp.getPagination();
         int totalResults = requestPagination.getTotalResults();
         int pageSize = requestPagination.getPageSize();
         int totalPages = (totalResults + pageSize - 1) / Math.max(1, pageSize);
 
         return new QueryResponse(
-                query.getSpecs().getQueryLimits(),
-                query.getSpecs().getTerms(),
+                rsp.getSpecs().getQueryLimits(),
+                rsp.getSpecs().getTerms(),
                 results,
-                query.getSearchTermsHumanList(),
-                query.getProblemsList(),
-                query.getPagination().getPage(),
+                rsp.getSearchTermsHumanList(),
+                rsp.getProblemsList(),
+                rsp.getPagination().getPage(),
                 totalPages,
-                query.getDomain()
+                rsp.getDomain()
         );
     }
 
