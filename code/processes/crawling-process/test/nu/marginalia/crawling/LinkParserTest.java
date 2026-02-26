@@ -3,9 +3,11 @@ package nu.marginalia.crawling;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.EdgeUrl;
 import org.jsoup.Jsoup;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,6 +26,15 @@ class LinkParserTest {
         }
 
         return lnk.get().toString();
+    }
+
+    @Test
+    void testCluzet() throws Exception {
+        String toString = new EdgeUrl("http://lord.re/actors/françois-cluzet/").toString();
+        String asUri = new EdgeUrl("http://lord.re/actors/françois-cluzet/").asURI().toString();
+
+        Assertions.assertEquals("http://lord.re/actors/fran%C3%A7ois-cluzet/", toString);
+        Assertions.assertEquals(toString, asUri);
     }
 
     @Test
