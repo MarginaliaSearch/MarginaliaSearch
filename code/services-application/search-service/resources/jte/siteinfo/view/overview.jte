@@ -116,7 +116,7 @@
                     either annoying search engine spam, or tasteless content bad faith content.</p>
 
                 <p>Sometimes this is in error.  Blacklisting can be appealed using
-                    the <a class="underline text-liteblue dark:text-blue-200" href="?view=report">Report Form</a>.
+                    the <a class="underline text-liteblue dark:text-blue-200" href="?view=report&sst=${siteInfo.sst()}">Report Form</a>.
                 </p>
                 <p>In the interest of transparency, the full list of blacklisted domains is periodically
                     published at
@@ -171,7 +171,7 @@
                 @for (DbDomainQueries.DomainWithNode sibling : siteInfo.siblingDomains())
                     <tr>
                         <td class="px-3 py-6 md:py-3 whitespace-nowrap">
-                            <a class="text-liteblue dark:text-blue-200" href="/site/${sibling.domain().toString()}">${sibling.domain().toString()}</a>
+                            <a class="text-liteblue dark:text-blue-200" href="/site/${sibling.domain().toString()}?sst=${siteInfo.sst()}">${sibling.domain().toString()}</a>
 
                             @if (!sibling.isIndexed())
                                 <i class="ml-1 fa-regular fa-question-circle text-gray-400 dark:text-gray-600 text-xs" title="Not indexed"></i>
@@ -230,13 +230,13 @@
 
 @if (!siteInfo.similar().isEmpty() || !siteInfo.linking().isEmpty())
     <div class="mx-auto md:py-4 px-4 flex-1 space-y-4 content md:block w-full md:w-auto hidden sm:block">
-        @template.siteinfo.part.linkedDomains("Similar Domains", siteInfo.domain(), siteInfo.similar())
-        @template.siteinfo.part.linkedDomains("Linked Domains", siteInfo.domain(), siteInfo.linking())
+        @template.siteinfo.part.linkedDomains(title = "Similar Domains", sst = siteInfo.sst(), domainName = siteInfo.domain(), list = siteInfo.similar())
+        @template.siteinfo.part.linkedDomains(title = "Linked Domains", sst = siteInfo.sst(), domainName = siteInfo.domain(), list = siteInfo.linking())
     </div>
     <aside id="mobile-menu" class="fixed inset-0 z-50 flex justify-center bg-white/90 dark:bg-black/90 backdrop-blur-sm hidden p-2 h-screen overflow-scroll">
         <div class="w-full">
-        @template.siteinfo.part.linkedDomains("Similar Domains", siteInfo.domain(), siteInfo.similar())
-        @template.siteinfo.part.linkedDomains("Linked Domains", siteInfo.domain(), siteInfo.linking())
+        @template.siteinfo.part.linkedDomains(title = "Similar Domains", sst = siteInfo.sst(), domainName = siteInfo.domain(), list = siteInfo.similar())
+        @template.siteinfo.part.linkedDomains(title = "Linked Domains", sst = siteInfo.sst(), domainName = siteInfo.domain(), list = siteInfo.linking())
         </div>
     </aside>
     <button class="fixed bottom-10 right-5 sm:hidden text-sm bg-margeblue text-white p-4 rounded-xl active:text-slate-200" id="filter-button">

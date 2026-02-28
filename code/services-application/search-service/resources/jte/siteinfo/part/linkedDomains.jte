@@ -2,6 +2,7 @@
 @import java.util.List
 
 @param String title
+@param String sst
 @param String domainName
 @param List<SimilarDomain> list
 
@@ -29,7 +30,7 @@
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                         <td class="px-3 py-6 md:py-3 whitespace-nowrap">
                             @if(item.linkType().isLinked())
-                                <a href="/crosstalk?domains=${domainName},${item.url().getDomain().toString()}"
+                                <a href="/crosstalk?domains=${domainName},${item.url().getDomain().toString()}&sst=${sst}"
                                    class="text-liteblue dark:text-blue-200 ${item.linkType().faIcon()}"
                                    title="${item.linkType().getDescription()}">
                                 </a>
@@ -50,7 +51,7 @@
                                 <i class="fas fa-link mr-1"></i>
                             @endif
 
-                            <a href="/site/${item.url().getDomain().toString()}?view=similar"
+                            <a href="/site/${item.url().getDomain().toString()}?view=similar&sst=${sst}"
                                rel="external noopener nofollow"
                                class="text-liteblue dark:text-blue-200 dark:text-blue-200">
                                 ${item.url().getDomain().toString()}
