@@ -7,6 +7,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import io.jooby.Context;
 import io.jooby.MapModelAndView;
 import io.jooby.ModelAndView;
+import io.jooby.ValueNode;
 import io.jooby.annotation.*;
 import nu.marginalia.api.domains.DomainInfoClient;
 import nu.marginalia.api.domains.RpcDomainInfoResponse;
@@ -228,7 +229,16 @@ public class SearchSiteInfoService {
     public ModelAndView<?> toggleSubscription(Context context, @PathParam String domainName) throws SQLException {
         searchSiteSubscriptions.toggleSubscription(context, new EdgeDomain(domainName));
 
-        return new MapModelAndView("redirect.jte", Map.of("url", "/site/"+domainName));
+        String sstBit;
+        ValueNode sstParam = context.query("sst");
+
+        if (sstParam.isPresent()) {
+            sstBit = "?sst=" + sstParam.value();
+        }
+        else {
+            sstBit = "";
+        }
+        return new MapModelAndView("redirect.jte", Map.of("url", "/site/"+domainName+sstBit));
     }
 
     @POST

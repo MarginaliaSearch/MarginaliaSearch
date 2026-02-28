@@ -3,7 +3,9 @@ package nu.marginalia.search;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.jooby.Context;
+import io.jooby.Cookie;
 import io.jooby.MapModelAndView;
+import io.jooby.SameSite;
 import nu.marginalia.scrapestopper.ScrapeStopper;
 import nu.marginalia.search.model.NavbarModel;
 import nu.marginalia.search.svc.SearchSiteInfoService;
@@ -45,6 +47,19 @@ public class ScrapeStopperInterceptor {
 
         if (!isEnabled) {
             return new InterceptPass(sst);
+        }
+
+        String cookieName = "sst-"+zone;
+
+        if (null == sst || sst.isBlank()) {
+            sst = context.cookie(cookieName).valueOrNull();
+        }
+        else if (!sst.equals(context.cookie(cookieName).valueOrNull())) {
+            context.setResponseCookie(
+                    new Cookie(cookieName, sst)
+                            .setMaxAge(Duration.ofMinutes(5))
+                            .setSameSite(SameSite.STRICT)
+            );
         }
 
         String remoteIp = context.header("X-Forwarded-For").valueOrNull();
