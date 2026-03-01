@@ -425,6 +425,7 @@ public class IndexResultRankingService {
                     case CODE -> 0.25f;
                     case EXTERNAL_LINKTEXT -> 2.0f;
                     case BODY -> 1.0f;
+                    case DOC_URL -> 0.75f;
                     default -> 0.0f;
                 };
             }
@@ -446,6 +447,7 @@ public class IndexResultRankingService {
                     case CODE -> 0.25f;
                     case EXTERNAL_LINKTEXT -> 1.5f;
                     case BODY -> 0.5f;
+                    case DOC_URL -> 0.5f;
                     default -> 0.0f;
                 };
             }
@@ -564,6 +566,7 @@ public class IndexResultRankingService {
                     case CODE -> 0.25f;
                     case BODY -> 1.0f;
                     case EXTERNAL_LINKTEXT -> 1.5f;
+                    case DOC_URL -> 0.5f;
                     default -> 0.0f;
                 };
             }
