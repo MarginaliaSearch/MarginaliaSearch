@@ -1,10 +1,10 @@
 package nu.marginalia.search.command.commands;
 
 import com.google.inject.Inject;
+import io.jooby.Context;
 import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.exceptions.RedirectException;
-import spark.Response;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -24,7 +24,7 @@ public class BangCommand implements SearchCommandInterface {
     }
 
     @Override
-    public Optional<Object> process(Response response, SearchParameters parameters) {
+    public Optional<Object> process(SearchParameters parameters, Context context) {
 
         for (var entry : bangsToPattern.entrySet()) {
             String bangPattern = entry.getKey();

@@ -1,11 +1,11 @@
 package nu.marginalia.search.command.commands;
 
 import com.google.inject.Inject;
+import io.jooby.Context;
 import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.command.SearchParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Response;
 
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -23,7 +23,7 @@ public class SiteRedirectCommand implements SearchCommandInterface {
     }
 
     @Override
-    public Optional<Object> process(Response response, SearchParameters parameters) {
+    public Optional<Object> process(SearchParameters parameters, Context context) {
         if (!queryPatternPredicate.test(parameters.query())) {
             return Optional.empty();
         }

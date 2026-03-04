@@ -4,10 +4,10 @@ import com.google.inject.Inject;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.search.SearchOperator;
+import io.jooby.Context;
 import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.model.DecoratedSearchResults;
-import spark.Response;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -27,7 +27,7 @@ public class SearchCommand implements SearchCommandInterface {
     }
 
     @Override
-    public Optional<Object> process(Response response, SearchParameters parameters) {
+    public Optional<Object> process(SearchParameters parameters, Context context) {
         try {
             DecoratedSearchResults results = searchOperator.doSearch(parameters);
             return Optional.of(searchResultsRenderer.render(results));

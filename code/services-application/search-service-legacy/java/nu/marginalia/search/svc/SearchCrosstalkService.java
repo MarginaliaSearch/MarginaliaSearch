@@ -8,10 +8,10 @@ import nu.marginalia.search.SearchOperator;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.service.server.RateLimiter;
 import org.apache.commons.lang3.StringUtils;
+import io.jooby.Context;
+import io.jooby.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -36,10 +36,11 @@ public class SearchCrosstalkService {
         this.renderer = rendererFactory.renderer("search/site-info/site-crosstalk");
     }
 
-    public Object handle(Request request, Response response) throws SQLException, TimeoutException {
-        String domains = request.queryParams("domains");
+    public Object handle(Context ctx) throws SQLException, TimeoutException {
+        ctx.setResponseType(MediaType.html);
+        String domains = ctx.query("domains").valueOrNull();
 
-        var intercept = scrapeStopperInterceptor.intercept("CT", domains, rateLimiter, request, response);
+        var intercept = scrapeStopperInterceptor.intercept("CT", domains, rateLimiter, ctx);
         if (intercept instanceof ScrapeStopperInterceptor.InterceptRedirect redir)
             return redir.result();
 
@@ -49,8 +50,6 @@ public class SearchCrosstalkService {
         if (parts.length != 2) {
             throw new IllegalArgumentException("Expected exactly two domains");
         }
-
-        response.type("text/html");
 
         for (int i = 0; i < parts.length; i++) {
             parts[i] = parts[i].trim();
