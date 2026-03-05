@@ -41,7 +41,7 @@ public class QueryClient  {
                 ServiceKey.forGrpcApi(QueryApiGrpc.class, ServicePartition.any()),
                 QueryApiGrpc::newBlockingStub);
 
-        initialization.addCallback(() -> {
+        initialization.addCallback("query-api-channel", () -> {
             // Hold up initialization until we have a downstream connection
             try {
                 this.queryApiPool.awaitChannel(Duration.ofSeconds(5));
