@@ -2,24 +2,21 @@ package nu.marginalia.explorer;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
+import io.jooby.Context;
+import io.jooby.Jooby;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.service.server.BaseServiceParams;
-import nu.marginalia.service.server.SparkService;
-import nu.marginalia.service.server.StaticResources;
+import nu.marginalia.service.server.JoobyService;
 import org.jetbrains.annotations.NotNull;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
 
 import java.sql.SQLException;
 import java.util.*;
 
-public class ExplorerService extends SparkService {
+public class ExplorerService extends JoobyService {
 
     private final MustacheRenderer<Object> renderer;
     private final HikariDataSource dataSource;
-    private final StaticResources staticResources;
 
     record SearchResult(
             String domain,
@@ -40,45 +37,38 @@ public class ExplorerService extends SparkService {
     @Inject
     public ExplorerService(BaseServiceParams params,
                            RendererFactory rendererFactory,
-                           HikariDataSource dataSource,
-                           StaticResources staticResources
+                           HikariDataSource dataSource
                            ) throws Exception
 
     {
 
-        super(params);
+        super(params, List.of(), List.of());
 
         renderer = rendererFactory.renderer("explorer/explorer");
 
         this.dataSource = dataSource;
-        this.staticResources = staticResources;
-
-        Spark.get("/", this::serveIndex, this::render);
-        Spark.get("/search", this::search, this::render);
-        Spark.get("/:resource", this::serveStatic);
     }
 
+    @Override
+    public void startJooby(Jooby jooby) {
+        super.startJooby(jooby);
 
-    private Object serveStatic(Request request, Response response) {
-        String resource = request.params("resource");
-
-        staticResources.serveStatic("explore", resource, request, response);
-
-        return "";
+        jooby.get("/", ctx -> renderer.render(serveIndex(ctx)));
+        jooby.get("/search", ctx -> renderer.render(search(ctx)));
     }
 
-    public String render(Object results) {
-        return renderer.render(results);
-    }
-
-    private SearchResults serveIndex(Request request, Response response) {
+    private SearchResults serveIndex(Context ctx) {
 
         return new SearchResults("", "", null, Collections.emptyList());
     }
 
 
-    private SearchResults search(Request request, Response response) throws SQLException {
-        String query = request.queryParams("domain");
+    private SearchResults search(Context ctx) throws SQLException {
+        String query = ctx.query("domain").valueOrNull();
+
+        if (query == null) {
+            return serveIndex(ctx);
+        }
 
         query = trimUrlJunk(query);
 
@@ -213,8 +203,8 @@ public class ExplorerService extends SparkService {
 
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                SELECT DOMAIN.ID, IFNULL(ALIAS.ID, DOMAIN.ID), DOMAIN.INDEXED>0 OR ALIAS.INDEXED>0, ALIAS.DOMAIN_NAME 
-                FROM EC_DOMAIN DOMAIN 
+                SELECT DOMAIN.ID, IFNULL(ALIAS.ID, DOMAIN.ID), DOMAIN.INDEXED>0 OR ALIAS.INDEXED>0, ALIAS.DOMAIN_NAME
+                FROM EC_DOMAIN DOMAIN
                 LEFT JOIN EC_DOMAIN ALIAS ON DOMAIN.DOMAIN_ALIAS=ALIAS.ID
                 WHERE DOMAIN.DOMAIN_NAME=?
                 """)) {
@@ -233,7 +223,7 @@ public class ExplorerService extends SparkService {
         return new DomainIdInformation(-1, -1,  false, null);
     }
 
-    private String trimUrlJunk(String query) {
+    static String trimUrlJunk(String query) {
         if (query.startsWith("http://")) {
             query = query.substring(7);
         }
