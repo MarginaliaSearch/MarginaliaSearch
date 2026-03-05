@@ -148,7 +148,6 @@ dependencyResolutionManagement {
             library('mariadb-client', 'org.mariadb.jdbc', 'mariadb-java-client').version('3.0.6')
             library('hikaricp', 'com.zaxxer:HikariCP:5.0.1')
 
-            library('spark', 'com.sparkjava', 'spark-core').version('2.9.4')
             library('guice', 'com.google.inject', 'guice').version('7.0.0')
             library('guava', 'com.google.guava', 'guava').version('32.0.1-jre')
             library('protobuf', 'com.google.protobuf', 'protobuf-java').version('3.16.3')
@@ -230,10 +229,6 @@ dependencyResolutionManagement {
             library('curator-framework', 'org.apache.curator','curator-framework').version('5.6.0')
             library('curator-x-discovery', 'org.apache.curator','curator-x-discovery').version('5.6.0')
 
-            library('jetty-server','org.eclipse.jetty','jetty-server').version('9.4.54.v20240208')
-            library('jetty-util','org.eclipse.jetty','jetty-util').version('9.4.54.v20240208')
-            library('jetty-servlet','org.eclipse.jetty','jetty-servlet').version('9.4.54.v20240208')
-
             library('slop', 'nu.marginalia', 'slop').version('0.0.17-SNAPSHOT')
             library('jooby-netty','io.jooby','jooby-netty').version(joobyVersion)
             library('jooby-jte','io.jooby','jooby-jte').version(joobyVersion)
@@ -244,7 +239,6 @@ dependencyResolutionManagement {
             library('jte','gg.jte','jte').version('3.1.15')
 
             library('pdfbox', 'org.apache.pdfbox', 'pdfbox').version('3.0.5')
-            bundle('jetty', ['jetty-server', 'jetty-util', 'jetty-servlet'])
 
             bundle('slf4j', ['slf4j.api', 'log4j.api', 'log4j.core', 'log4j.slf4j'])
             bundle('slf4j.test', ['slf4j.jdk14'])

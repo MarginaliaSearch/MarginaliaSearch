@@ -60,7 +60,6 @@ dependencies {
         exclude group: 'com.google.guava'
     }
     implementation libs.bundles.jooby
-    implementation libs.bundles.jetty
     implementation libs.opencsv
     implementation libs.trove
     implementation libs.fastutil
