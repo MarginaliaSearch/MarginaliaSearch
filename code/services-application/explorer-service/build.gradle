@@ -52,4 +52,5 @@ dependencies {
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
     testImplementation libs.jooby.test
+    testImplementation project(':code:libraries:test-helpers')
 }

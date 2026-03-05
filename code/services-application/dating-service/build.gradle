@@ -55,7 +55,6 @@ dependencies {
     testImplementation libs.mockito
     testImplementation libs.jooby.test
     testImplementation project(':code:libraries:test-helpers')
-    testImplementation project(':code:libraries:message-queue')
 
 }
 
