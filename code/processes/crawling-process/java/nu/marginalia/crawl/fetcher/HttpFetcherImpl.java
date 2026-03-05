@@ -59,6 +59,9 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -68,7 +71,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Singleton
 public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
 
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private static final Logger logger = LoggerFactory.getLogger(HttpFetcherImpl.class);
     private final String userAgentString;
     private final String userAgentIdentifier;
 
@@ -682,17 +685,35 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                 return TimeValue.ofSeconds(2);
             }
 
-            try {
-                int retryAfterTime = (int) Math.round(Double.parseDouble(retryAfter));
-                retryAfterTime = Math.clamp(retryAfterTime, 1, 10);
-
-                return TimeValue.ofSeconds(retryAfterTime);
-            } catch (NumberFormatException e) {
-                logger.warn("Invalid Retry-After header: {}", retryAfter);
+            int retryAfterTime = parseRetryAfterSeconds(retryAfter);
+            if (retryAfterTime > 0) {
+                return TimeValue.ofSeconds(Math.clamp(retryAfterTime, 1, 10));
             }
         }
 
         return TimeValue.ofSeconds(2);
+    }
+
+    /** Parse a Retry-After header value, which can be either a number of seconds
+     *  or an HTTP-date (RFC 9110).  Returns the delay in seconds, or -1 on failure. */
+    static int parseRetryAfterSeconds(String retryAfter) {
+        if (retryAfter == null) return -1;
+
+        // Try as a number of seconds first
+        try {
+            return (int) Math.round(Double.parseDouble(retryAfter));
+        } catch (NumberFormatException ignored) {}
+
+        // Try as an HTTP-date; RFC 9110 mandates GMT but we also accept
+        // numeric offsets like +0000 since servers in the wild use both
+        try {
+            Instant target = ZonedDateTime.parse(retryAfter, DateTimeFormatter.RFC_1123_DATE_TIME).toInstant();
+            long seconds = Duration.between(Instant.now(), target).toSeconds();
+            return (int) Math.max(seconds, 0);
+        } catch (DateTimeParseException ignored) {}
+
+        logger.warn("Invalid Retry-After header: {}", retryAfter);
+        return -1;
     }
 
     public static class RateLimitException extends Exception {
@@ -706,12 +727,11 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
         public StackTraceElement[] getStackTrace() { return new StackTraceElement[0]; }
 
         public Duration retryAfter() {
-            try {
-                return Duration.ofSeconds(Integer.parseInt(retryAfter));
+            int seconds = parseRetryAfterSeconds(retryAfter);
+            if (seconds > 0) {
+                return Duration.ofSeconds(seconds);
             }
-            catch (NumberFormatException ex) {
-                return Duration.ofSeconds(1);
-            }
+            return Duration.ofSeconds(1);
         }
     }
 
