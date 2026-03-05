@@ -53,30 +53,30 @@ public class ExplorerService extends JoobyService {
     public void startJooby(Jooby jooby) {
         super.startJooby(jooby);
 
-        jooby.get("/", ctx -> renderer.render(serveIndex(ctx)));
-        jooby.get("/search", ctx -> renderer.render(search(ctx)));
+        jooby.get("/", this::serveIndex);
+        jooby.get("/search", this::search);
     }
 
-    private SearchResults serveIndex(Context ctx) {
+    private Object serveIndex(Context ctx) throws Exception {
 
-        return new SearchResults("", "", null, Collections.emptyList());
+        return renderer.render(new SearchResults("", "", null, Collections.emptyList()));
     }
 
 
-    private SearchResults search(Context ctx) throws SQLException {
+    private Object search(Context ctx) throws Exception {
         String query = ctx.query("domain").valueOrNull();
 
         if (query == null) {
-            return serveIndex(ctx);
+            return renderer.render(new SearchResults("", "", null, Collections.emptyList()));
         }
 
         query = trimUrlJunk(query);
 
         DomainIdInformation domainId = getDomainId(query);
         if (!domainId.isPresent()) {
-            return new SearchResults(query,
+            return renderer.render(new SearchResults(query,
                     "Could not find such a domain (maybe try adding/removing www?)",
-                    null, Collections.emptyList());
+                    null, Collections.emptyList()));
         }
 
         var relatedDomains = getRelatedDomains(domainId);
@@ -89,10 +89,10 @@ public class ExplorerService extends JoobyService {
                  not very interesting to look at either as everyone links to them and there's no real pattern to discern.
                 """;
 
-            return new SearchResults(query, message, domainId.alias, relatedDomains);
+            return renderer.render(new SearchResults(query, message, domainId.alias, relatedDomains));
         }
 
-        return new SearchResults(query, "", domainId.alias, relatedDomains);
+        return renderer.render(new SearchResults(query, "", domainId.alias, relatedDomains));
     }
 
     private List<SearchResult> getRelatedDomains(DomainIdInformation domainIdInformation) throws SQLException {

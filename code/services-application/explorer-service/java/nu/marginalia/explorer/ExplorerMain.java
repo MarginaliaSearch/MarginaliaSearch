@@ -37,11 +37,11 @@ public class ExplorerMain extends MainClass {
         );
 
         // Orchestrate the boot order for the services
-        var registry = injector.getInstance(ServiceRegistryIf.class);
-        var configuration = injector.getInstance(ServiceConfiguration.class);
+        ServiceRegistryIf registry = injector.getInstance(ServiceRegistryIf.class);
+        ServiceConfiguration configuration = injector.getInstance(ServiceConfiguration.class);
         orchestrateBoot(registry, configuration);
 
-        var main = injector.getInstance(ExplorerMain.class);
+        ExplorerMain main = injector.getInstance(ExplorerMain.class);
         injector.getInstance(Initialization.class).setReady();
 
         Jooby.runApp(new String[] { "application.env=prod" }, ExecutionMode.WORKER, () -> new Jooby() {
