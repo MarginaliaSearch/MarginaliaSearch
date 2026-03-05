@@ -3,6 +3,8 @@ package nu.marginalia.control;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import io.jooby.ExecutionMode;
+import io.jooby.Jooby;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.service.MainClass;
@@ -25,9 +27,11 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipFile;
 
 public class ControlMain extends MainClass {
+    private final ControlService service;
 
     @Inject
     public ControlMain(ControlService service) {
+        this.service = service;
     }
 
     public static void main(String... args) throws Exception {
@@ -40,11 +44,11 @@ public class ControlMain extends MainClass {
                 new ServiceConfigurationModule(ServiceId.Control));
 
         // Orchestrate the boot order for the services
-        var registry = injector.getInstance(ServiceRegistryIf.class);
-        var configuration = injector.getInstance(ServiceConfiguration.class);
+        ServiceRegistryIf registry = injector.getInstance(ServiceRegistryIf.class);
+        ServiceConfiguration configuration = injector.getInstance(ServiceConfiguration.class);
 
         // Ensures we download POS tag models from control svc at first boot
-        var languageConfig = injector.getInstance(LanguageConfiguration.class);
+        LanguageConfiguration languageConfig = injector.getInstance(LanguageConfiguration.class);
 
         // This must be run before orchestrateBoot, so that the other services don't
         // start up until we're done
@@ -52,9 +56,18 @@ public class ControlMain extends MainClass {
 
         orchestrateBoot(registry, configuration);
 
-
-        injector.getInstance(ControlMain.class);
+        ControlMain main = injector.getInstance(ControlMain.class);
         injector.getInstance(Initialization.class).setReady();
+
+        Jooby.runApp(new String[] { "application.env=prod" }, ExecutionMode.WORKER, () -> new Jooby() {
+            {
+                main.start(this);
+            }
+        });
+    }
+
+    public void start(Jooby jooby) {
+        service.startJooby(jooby);
     }
 
     static void downloadAncillaryFiles(Path dataPath) throws Exception {
@@ -101,7 +114,7 @@ public class ControlMain extends MainClass {
         System.out.println("Downloading " + source + " to " + dest);
         try {
             if (!Files.exists(dest)) {
-                try (var in = new BufferedInputStream(source.toURL().openStream())) {
+                try (BufferedInputStream in = new BufferedInputStream(source.toURL().openStream())) {
                     Files.copy(in, dest);
                 }
             }
@@ -116,7 +129,7 @@ public class ControlMain extends MainClass {
         System.out.println("Downloading " + source + " to " + dest);
         try {
             if (!Files.exists(dest)) {
-                try (var in = new GZIPInputStream(new BufferedInputStream(source.toURL().openStream()))) {
+                try (GZIPInputStream in = new GZIPInputStream(new BufferedInputStream(source.toURL().openStream()))) {
                     Files.copy(in, dest);
                 }
             }

@@ -2,13 +2,13 @@ package nu.marginalia.control.app.svc;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
+import io.jooby.Context;
+import io.jooby.Jooby;
+import io.jooby.MediaType;
+import io.jooby.StatusCode;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.control.app.model.ApiKeyModel;
-import org.eclipse.jetty.util.StringUtil;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -22,6 +22,8 @@ public class ApiKeyService {
     private final HikariDataSource dataSource;
     private final ControlRendererFactory rendererFactory;
 
+    private ControlRendererFactory.Renderer apiKeysRenderer;
+
     @Inject
     public ApiKeyService(HikariDataSource dataSource,
                          ControlRendererFactory rendererFactory
@@ -30,46 +32,50 @@ public class ApiKeyService {
         this.rendererFactory = rendererFactory;
     }
 
-    public void register() throws IOException {
+    public void register(Jooby jooby) throws IOException {
 
-        var apiKeysRenderer = rendererFactory.renderer("control/app/api-keys");
+        apiKeysRenderer = rendererFactory.renderer("control/app/api-keys");
 
-        Spark.get("/api-keys", this::apiKeysModel, apiKeysRenderer::render);
-        Spark.post("/api-keys", this::createApiKey, Redirects.redirectToApiKeys);
-        Spark.delete("/api-keys/:key", this::deleteApiKey, Redirects.redirectToApiKeys);
+        jooby.get("/api-keys", this::apiKeysModel);
+        jooby.post("/api-keys", this::createApiKey);
+        jooby.delete("/api-keys/{key}", this::deleteApiKey);
         // HTML forms don't support the DELETE verb :-(
-        Spark.post("/api-keys/:key/delete", this::deleteApiKey, Redirects.redirectToApiKeys);
+        jooby.post("/api-keys/{key}/delete", this::deleteApiKey);
 
     }
 
-    private Object createApiKey(Request request, Response response) {
-        String license = request.queryParams("license");
-        String name = request.queryParams("name");
-        String email = request.queryParams("email");
-        int rate = Integer.parseInt(request.queryParams("rate"));
+    private Object apiKeysModel(Context ctx) {
+        ctx.setResponseType(MediaType.html);
+        return apiKeysRenderer.render(Map.of("apikeys", getApiKeys()));
+    }
 
-        if (StringUtil.isBlank(license) ||
-                StringUtil.isBlank(name) ||
-                StringUtil.isBlank(email) ||
+    private Object createApiKey(Context ctx) {
+        String license = ctx.form("license").valueOrNull();
+        String name = ctx.form("name").valueOrNull();
+        String email = ctx.form("email").valueOrNull();
+        int rate = Integer.parseInt(ctx.form("rate").valueOrNull());
+
+        if (license == null || license.isBlank() ||
+                name == null || name.isBlank() ||
+                email == null || email.isBlank() ||
                 rate <= 0)
         {
-            response.status(400);
+            ctx.setResponseCode(StatusCode.BAD_REQUEST_CODE);
             return "";
         }
 
         addApiKey(license, name, email, rate);
 
-        return "";
+        ctx.setResponseType(MediaType.html);
+        return Redirects.redirectToApiKeys.render(null);
     }
 
-    private Object deleteApiKey(Request request, Response response) {
-        String licenseKey = request.params("key");
+    private Object deleteApiKey(Context ctx) {
+        String licenseKey = ctx.path("key").value();
         deleteApiKey(licenseKey);
-        return "";
-    }
 
-    private Object apiKeysModel(Request request, Response response) {
-        return Map.of("apikeys", getApiKeys());
+        ctx.setResponseType(MediaType.html);
+        return Redirects.redirectToApiKeys.render(null);
     }
 
 

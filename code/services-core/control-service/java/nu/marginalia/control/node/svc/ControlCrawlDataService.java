@@ -3,14 +3,13 @@ package nu.marginalia.control.node.svc;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.jooby.Context;
 import nu.marginalia.executor.client.ExecutorClient;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
 
 import javax.annotation.Nullable;
 import java.io.BufferedReader;
@@ -55,16 +54,16 @@ public class ControlCrawlDataService {
 
 
 
-    public Object crawlParquetInfo(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-        var fsid = FileStorageId.parse(request.queryParams("fid"));
+    public Object crawlParquetInfo(Context ctx) throws SQLException {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
+        var fsid = FileStorageId.parse(ctx.query("fid").valueOrNull());
 
-        String path = request.queryParams("path");
+        String path = ctx.query("path").valueOrNull();
 
-        int after = Integer.parseInt(request.queryParamOrDefault("page", "0"));
-        String urlGlob = request.queryParamOrDefault("urlGlob", "").replace("'", "''");
-        String selectedContentType = request.queryParamOrDefault("contentType", "ALL").replace("'", "''");
-        String selectedHttpStatus = request.queryParamOrDefault("httpStatus", "ALL").replace("'", "''");
+        int after = Integer.parseInt(ctx.query("page").value("0"));
+        String urlGlob = ctx.query("urlGlob").value("").replace("'", "''");
+        String selectedContentType = ctx.query("contentType").value("ALL").replace("'", "''");
+        String selectedHttpStatus = ctx.query("httpStatus").value("ALL").replace("'", "''");
 
         var url = executorClient.remoteFileURL(fileStorageService.getStorage(fsid), path).toString();
 

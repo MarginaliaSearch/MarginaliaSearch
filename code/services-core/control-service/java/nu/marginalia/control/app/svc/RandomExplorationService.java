@@ -3,11 +3,11 @@ package nu.marginalia.control.app.svc;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import gnu.trove.list.array.TIntArrayList;
+import io.jooby.Context;
+import io.jooby.Jooby;
+import io.jooby.MediaType;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.model.EdgeDomain;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -21,6 +21,8 @@ public class RandomExplorationService {
     private final HikariDataSource dataSource;
     private final ControlRendererFactory rendererFactory;
 
+    private ControlRendererFactory.Renderer reviewRandomDomainsRenderer;
+
     @Inject
     public RandomExplorationService(HikariDataSource dataSource,
                                     ControlRendererFactory rendererFactory
@@ -29,31 +31,31 @@ public class RandomExplorationService {
         this.rendererFactory = rendererFactory;
     }
 
-    public void register() throws IOException {
-        var reviewRandomDomainsRenderer = rendererFactory.renderer("control/app/review-random-domains");
+    public void register(Jooby jooby) throws IOException {
+        reviewRandomDomainsRenderer = rendererFactory.renderer("control/app/review-random-domains");
 
-        Spark.get("/review-random-domains", this::reviewRandomDomainsModel, reviewRandomDomainsRenderer::render);
-
-        Spark.post("/review-random-domains", this::reviewRandomDomainsAction);
+        jooby.get("/review-random-domains", this::reviewRandomDomainsModel);
+        jooby.post("/review-random-domains", this::reviewRandomDomainsAction);
     }
 
-    private Object reviewRandomDomainsModel(Request request, Response response) throws SQLException {
-        String afterVal = Objects.requireNonNullElse(request.queryParams("after"), "0");
+    private Object reviewRandomDomainsModel(Context ctx) throws SQLException {
+        String afterVal = Objects.requireNonNullElse(ctx.query("after").valueOrNull(), "0");
         int after = Integer.parseInt(afterVal);
         var domains = getDomains(after, 25);
         int nextAfter = domains.stream().mapToInt(RandomExplorationService.RandomDomainResult::id).max().orElse(Integer.MAX_VALUE);
 
-        return Map.of("domains", domains,
-                "after", nextAfter);
-
+        ctx.setResponseType(MediaType.html);
+        return reviewRandomDomainsRenderer.render(
+                Map.of("domains", domains,
+                       "after", nextAfter));
     }
 
-    private Object reviewRandomDomainsAction(Request request, Response response) throws SQLException {
+    private Object reviewRandomDomainsAction(Context ctx) throws SQLException {
         TIntArrayList idList = new TIntArrayList();
 
-        request.queryParams().forEach(key -> {
+        ctx.formMap().keySet().forEach(key -> {
             if (key.startsWith("domain-")) {
-                String value = request.queryParams(key);
+                String value = ctx.form(key).valueOrNull();
                 if ("on".equalsIgnoreCase(value)) {
                     int id = Integer.parseInt(key.substring(7));
                     idList.add(id);
@@ -63,7 +65,7 @@ public class RandomExplorationService {
 
         removeRandomDomains(idList.toArray());
 
-        String after = request.queryParams("after");
+        String after = ctx.form("after").valueOrNull();
 
         return """
                 <?doctype html>

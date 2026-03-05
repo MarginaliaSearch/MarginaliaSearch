@@ -1,11 +1,11 @@
 package nu.marginalia.control.sys.svc;
 
 import com.google.inject.Inject;
+import io.jooby.Context;
+import io.jooby.Jooby;
+import io.jooby.MediaType;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.control.ControlValidationError;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
 
 import java.io.IOException;
 import java.util.Map;
@@ -18,19 +18,20 @@ public class ControlErrorHandler {
         this.renderer = rendererFactory.renderer("control/error");
     }
 
-    public void render(ControlValidationError error, Request request, Response response) {
-        String text = renderer.render(
+    public String render(ControlValidationError error) {
+        return renderer.render(
                 Map.of(
                 "title", error.title,
                 "messageLong", error.messageLong,
                 "redirect", error.redirect
                 )
         );
-
-        response.body(text);
     }
 
-    public void register() {
-        Spark.exception(ControlValidationError.class, this::render);
+    public void register(Jooby jooby) {
+        jooby.error(ControlValidationError.class, (ctx, cause, code) -> {
+            ctx.setResponseType(MediaType.html);
+            ctx.send(render((ControlValidationError) cause));
+        });
     }
 }

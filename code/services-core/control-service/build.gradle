@@ -59,10 +59,9 @@ dependencies {
     implementation libs.protobuf
 
     implementation libs.trove
-    implementation dependencies.create(libs.spark.get()) {
-        exclude group: 'org.eclipse.jetty'
+    implementation dependencies.create(libs.jooby.netty.get()) {
+        exclude group: 'org.slf4j'
     }
-    implementation libs.bundles.jetty
     implementation libs.fastutil
     implementation libs.commons.io
     implementation libs.bundles.mariadb
@@ -70,6 +69,7 @@ dependencies {
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
+    testImplementation libs.jooby.test
     testImplementation platform('org.testcontainers:testcontainers-bom:1.21.4')
     testImplementation libs.commons.codec
     testImplementation 'org.testcontainers:mariadb:1.21.4'

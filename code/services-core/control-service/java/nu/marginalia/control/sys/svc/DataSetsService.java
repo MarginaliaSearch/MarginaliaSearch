@@ -2,13 +2,13 @@ package nu.marginalia.control.sys.svc;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.jooby.Context;
+import io.jooby.Jooby;
+import io.jooby.MediaType;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.db.DomainTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -23,6 +23,8 @@ public class DataSetsService {
     private final ControlRendererFactory rendererFactory;
     private final DomainTypes domainTypes;
 
+    private ControlRendererFactory.Renderer datasetsRenderer;
+
     @Inject
     public DataSetsService(ControlRendererFactory rendererFactory,
                            DomainTypes domainTypes) {
@@ -30,28 +32,33 @@ public class DataSetsService {
         this.domainTypes = domainTypes;
     }
 
-    public void register() throws IOException {
-        var datasetsRenderer = rendererFactory.renderer("control/sys/data-sets");
+    public void register(Jooby jooby) throws IOException {
+        datasetsRenderer = rendererFactory.renderer("control/sys/data-sets");
 
-        Spark.get("/datasets", this::dataSetsModel, datasetsRenderer::render);
-        Spark.post("/datasets", this::updateDataSets, datasetsRenderer::render);
+        jooby.get("/datasets", this::serveDataSets);
+        jooby.post("/datasets", this::updateDataSets);
     }
 
-    public Object dataSetsModel(Request request, Response response) {
+    private Object serveDataSets(Context ctx) {
+        ctx.setResponseType(MediaType.html);
+        return datasetsRenderer.render(dataSetsModel(ctx));
+    }
+
+    private Object updateDataSets(Context ctx) throws SQLException {
+        updateUrl(DomainTypes.Type.BLOG, ctx.form("blogs").value(""));
+        updateUrl(DomainTypes.Type.CRAWL, ctx.form("crawl").value(""));
+        updateUrl(DomainTypes.Type.SMALL, ctx.form("smallweb").value(""));
+
+        ctx.setResponseType(MediaType.html);
+        return datasetsRenderer.render(dataSetsModel(ctx));
+    }
+
+    public Object dataSetsModel(Context ctx) {
         return Map.of(
                 "blogs", domainTypes.getUrlForSelection(DomainTypes.Type.BLOG),
                 "crawl", domainTypes.getUrlForSelection(DomainTypes.Type.CRAWL),
                 "smallweb", domainTypes.getUrlForSelection(DomainTypes.Type.SMALL)
                 );
-    }
-
-    public Object updateDataSets(Request request, Response response) throws SQLException {
-
-        updateUrl(DomainTypes.Type.BLOG, request.queryParamOrDefault("blogs", ""));
-        updateUrl(DomainTypes.Type.CRAWL, request.queryParamOrDefault("crawl", ""));
-        updateUrl(DomainTypes.Type.SMALL, request.queryParamOrDefault("smallweb", ""));
-
-        return dataSetsModel(request, response);
     }
 
     private void updateUrl(DomainTypes.Type type, String newValue) {

@@ -238,6 +238,7 @@ dependencyResolutionManagement {
             library('jooby-netty','io.jooby','jooby-netty').version(joobyVersion)
             library('jooby-jte','io.jooby','jooby-jte').version(joobyVersion)
             library('jooby-apt','io.jooby','jooby-apt').version(joobyVersion)
+            library('jooby-test','io.jooby','jooby-test').version(joobyVersion)
 
             library('wiremock', 'org.wiremock','wiremock').version('3.11.0')
             library('jte','gg.jte','jte').version('3.1.15')
