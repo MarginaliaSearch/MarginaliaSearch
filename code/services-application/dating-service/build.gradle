@@ -41,10 +41,9 @@ dependencies {
     implementation dependencies.create(libs.guice.get()) {
         exclude group: 'com.google.guava'
     }
-    implementation dependencies.create(libs.spark.get()) {
-        exclude group: 'org.eclipse.jetty'
+    implementation dependencies.create(libs.jooby.netty.get()) {
+        exclude group: 'org.slf4j'
     }
-    implementation libs.bundles.jetty
     implementation libs.opencsv
     implementation libs.trove
     implementation libs.fastutil
@@ -54,6 +53,9 @@ dependencies {
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
+    testImplementation libs.jooby.test
+    testImplementation project(':code:libraries:test-helpers')
+    testImplementation project(':code:libraries:message-queue')
 
 }
 

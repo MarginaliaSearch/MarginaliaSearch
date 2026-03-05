@@ -1,6 +1,12 @@
 package nu.marginalia.dating;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
+import io.jooby.Context;
+import io.jooby.Jooby;
+import io.jooby.StatusCode;
+import io.jooby.exception.StatusCodeException;
 import nu.marginalia.browse.DbBrowseDomainsRandom;
 import nu.marginalia.browse.DbBrowseDomainsSimilarCosine;
 import nu.marginalia.browse.model.BrowseResult;
@@ -9,22 +15,25 @@ import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.screenshot.ScreenshotService;
 import nu.marginalia.service.server.BaseServiceParams;
-import nu.marginalia.service.server.SparkService;
+import nu.marginalia.service.server.JoobyService;
 import org.jetbrains.annotations.NotNull;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
 
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
-public class DatingService extends SparkService {
+public class DatingService extends JoobyService {
     private final DomainBlacklist blacklist;
     private final DbBrowseDomainsSimilarCosine browseSimilarCosine;
     private final DbBrowseDomainsRandom browseRandom;
     private final MustacheRenderer<BrowseResult> datingRenderer;
     private final ScreenshotService screenshotService;
-    private final String SESSION_OBJECT_NAME = "so";
+
+    private static final String SESSION_ID_KEY = "dating-session-id";
+
+    private final Cache<String, DatingSessionObject> sessionMap = CacheBuilder.newBuilder()
+            .expireAfterAccess(30, TimeUnit.MINUTES)
+            .maximumSize(10_000)
+            .build();
 
     @Inject
     public DatingService(BaseServiceParams params,
@@ -35,8 +44,7 @@ public class DatingService extends SparkService {
                          ScreenshotService screenshotService)
             throws Exception
     {
-
-        super(params);
+        super(params, List.of(), List.of());
 
         this.blacklist = blacklist;
 
@@ -44,46 +52,53 @@ public class DatingService extends SparkService {
         this.browseSimilarCosine = browseSimilarCosine;
         this.browseRandom = browseRandom;
         this.screenshotService = screenshotService;
-
-        Spark.get("/reset", this::getReset);
-        Spark.get("/", this::getInitSession);
-        Spark.get("/view", this::getCurrent);
-        Spark.get("/next", this::getNext);
-        Spark.get("/similar/:id", this::getSimilar);
-        Spark.get("/rewind", this::getRewind);
-        Spark.get("/init", this::getInitSession);
     }
 
-    private Object getInitSession(Request request, Response response) {
-        var sessionObjectOpt = getSession(request);
+    @Override
+    public void startJooby(Jooby jooby) {
+        super.startJooby(jooby);
+
+        jooby.get("/reset", this::getReset);
+        jooby.get("/", this::getInitSession);
+        jooby.get("/view", this::getCurrent);
+        jooby.get("/next", this::getNext);
+        jooby.get("/similar/{id}", this::getSimilar);
+        jooby.get("/rewind", this::getRewind);
+        jooby.get("/init", this::getInitSession);
+    }
+
+    private Object getInitSession(Context ctx) {
+        Optional<DatingSessionObject> sessionObjectOpt = getSession(ctx);
         if (sessionObjectOpt.isEmpty()) {
-            request.session(true).attribute(SESSION_OBJECT_NAME, new DatingSessionObject());
+            String id = UUID.randomUUID().toString();
+            ctx.session().put(SESSION_ID_KEY, id);
+            sessionMap.put(id, new DatingSessionObject());
         }
-        response.redirect("https://explore.marginalia.nu/view");
+        ctx.sendRedirect("https://explore.marginalia.nu/view");
         return "";
     }
 
-    private String getReset(Request request, Response response) {
-        var sessionObjectOpt = getSession(request);
+    private String getReset(Context ctx) {
+        Optional<DatingSessionObject> sessionObjectOpt = getSession(ctx);
         if (sessionObjectOpt.isEmpty()) {
-            response.redirect("https://explore.marginalia.nu/");
+            ctx.sendRedirect("https://explore.marginalia.nu/");
             return "";
         }
-        var session = sessionObjectOpt.get();
+        DatingSessionObject session = sessionObjectOpt.get();
         session.resetQueue();
 
-        return getNext(request, response);
+        return getNext(ctx);
     }
 
-    private String getCurrent(Request request, Response response) {
-        var sessionObjectOpt = getSession(request);
+    private String getCurrent(Context ctx) {
+        Optional<DatingSessionObject> sessionObjectOpt = getSession(ctx);
         if (sessionObjectOpt.isEmpty()) {
-            response.redirect("https://explore.marginalia.nu/");
+            ctx.sendRedirect("https://explore.marginalia.nu/");
             return "";
         }
-        var session = sessionObjectOpt.get();
+        DatingSessionObject session = sessionObjectOpt.get();
 
-        var current = session.getCurrent();
+        BrowseResult current = session.getCurrent();
         if (current == null) {
             BrowseResult res = session.next(browseRandom, blacklist);
             res = findViableDomain(session, res);
@@ -94,13 +109,13 @@ public class DatingService extends SparkService {
         return datingRenderer.render(current, Map.of("back", session.hasHistory()));
     }
 
-    private String getNext(Request request, Response response) {
-        var sessionObjectOpt = getSession(request);
+    private String getNext(Context ctx) {
+        Optional<DatingSessionObject> sessionObjectOpt = getSession(ctx);
         if (sessionObjectOpt.isEmpty()) {
-            response.redirect("https://explore.marginalia.nu/");
+            ctx.sendRedirect("https://explore.marginalia.nu/");
             return "";
         }
-        var session = sessionObjectOpt.get();
+        DatingSessionObject session = sessionObjectOpt.get();
 
         BrowseResult res = session.next(browseRandom, blacklist);
 
@@ -108,47 +123,46 @@ public class DatingService extends SparkService {
 
         session.browseForward(res);
 
-        response.redirect("https://explore.marginalia.nu/view");
+        ctx.sendRedirect("https://explore.marginalia.nu/view");
         return "";
     }
 
-    private String getRewind(Request request, Response response) {
-        var sessionObjectOpt = getSession(request);
+    private String getRewind(Context ctx) {
+        Optional<DatingSessionObject> sessionObjectOpt = getSession(ctx);
         if (sessionObjectOpt.isEmpty()) {
-            response.redirect("https://explore.marginalia.nu/");
+            ctx.sendRedirect("https://explore.marginalia.nu/");
             return "";
         }
-        var session = sessionObjectOpt.get();
+        DatingSessionObject session = sessionObjectOpt.get();
 
         BrowseResult res = session.takeFromHistory();
         if (res == null) {
-            Spark.halt(404);
-            return "";
+            throw new StatusCodeException(StatusCode.NOT_FOUND);
         }
 
         session.browseBackward(res);
 
-        response.redirect("https://explore.marginalia.nu/view");
+        ctx.sendRedirect("https://explore.marginalia.nu/view");
         return "";
     }
 
 
-    private String getSimilar(Request request, Response response) {
-        var sessionObjectOpt = getSession(request);
+    private String getSimilar(Context ctx) {
+        Optional<DatingSessionObject> sessionObjectOpt = getSession(ctx);
         if (sessionObjectOpt.isEmpty()) {
-            response.redirect("https://explore.marginalia.nu/");
+            ctx.sendRedirect("https://explore.marginalia.nu/");
             return "";
         }
-        var session = sessionObjectOpt.get();
+        DatingSessionObject session = sessionObjectOpt.get();
 
-        int id = Integer.parseInt(request.params("id"));
+        int id = Integer.parseInt(ctx.path("id").value());
         BrowseResult res = session.nextSimilar(id, browseSimilarCosine, blacklist);
 
         res = findViableDomain(session, res);
 
         session.browseForward(res);
 
-        response.redirect("https://explore.marginalia.nu/view");
+        ctx.sendRedirect("https://explore.marginalia.nu/view");
         return "";
     }
 
@@ -161,9 +175,13 @@ public class DatingService extends SparkService {
     }
 
 
-    private Optional<DatingSessionObject> getSession(Request request) {
-        return Optional.ofNullable(request.session(false))
-                .map(s -> s.attribute(SESSION_OBJECT_NAME))
-                .map(DatingSessionObject.class::cast);
+    private Optional<DatingSessionObject> getSession(Context ctx) {
+        String sessionId = ctx.sessionOrNull() != null
+                ? ctx.session().get(SESSION_ID_KEY).valueOrNull()
+                : null;
+        if (sessionId == null) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(sessionMap.getIfPresent(sessionId));
     }
 }
