@@ -56,6 +56,8 @@ dependencies {
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
+    testImplementation libs.fasttext
+    testImplementation libs.sqlite
     testImplementation libs.mockito
     testImplementation platform('org.testcontainers:testcontainers-bom:1.21.4')
     testImplementation libs.commons.codec
