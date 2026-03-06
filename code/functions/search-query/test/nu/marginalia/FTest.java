@@ -24,6 +24,8 @@ public class FTest {
                 WHERE LABEL IS NOT NULL
                 AND TITLE IS NOT NULL 
                 AND TEXT IS NOT NULL
+                AND LABEL IS NOT 'unlabeled'
+                AND CONFIDENCE > 0.75
                 """);
 
              ResultSet rs = stmt.executeQuery();
@@ -99,13 +101,13 @@ public class FTest {
         JFastText fastText = new JFastText();
         fastText.loadModel(model.toString());
 
-        int cnt = 5000;
+        int cnt = 1000;
 
         try (Connection docDbConn = DriverManager.getConnection("jdbc:sqlite:" + docDbPath);
              Connection sampleDbConn = DriverManager.getConnection("jdbc:sqlite:" + sampleDbPath);
              Statement docDbStatement = docDbConn.createStatement();
              PreparedStatement sampleDbPs = sampleDbConn.prepareStatement("""
-                     INSERT INTO samples (label, title, text, url)
+                     INSERT OR IGNORE INTO samples (label, title, text, url)
                      VALUES (?, ?, ?, ?)
                      """);
 
@@ -134,6 +136,7 @@ public class FTest {
                         sampleDbPs.setString(3, desc);
                         sampleDbPs.setString(4, url);
                         sampleDbPs.execute();
+
                         System.out.println(labelProba.label + ":" + Math.exp(labelProba.logProb) + ": " + url + "\n" + title + " " + desc);
                         System.out.println("---");
                         cnt--;
@@ -150,12 +153,12 @@ public class FTest {
 
     @Test
     public void test() throws Exception {
-//        exportTrainingFile("/home/vlofgren/Code/nsfwfilter/samples.db",
-//                Path.of("/tmp/training_data.txt"),
-//                Path.of("/tmp/testing_data.txt"),
-//                0.8
-//                );
-//        train(Path.of("/tmp/training_data.txt"), Path.of("/tmp/testing_data.txt"), Path.of("/tmp/model.jft"));
+        exportTrainingFile("/home/vlofgren/Code/nsfwfilter/samples.db",
+                Path.of("/tmp/training_data.txt"),
+                Path.of("/tmp/testing_data.txt"),
+                0.8
+                );
+        train(Path.of("/tmp/training_data.txt"), Path.of("/tmp/testing_data.txt"), Path.of("/tmp/model.jft"));
 
         growSampleDataWithMislabeledData(Path.of("/mnt/p/storage2/tmp/documents.db"), Path.of("/home/vlofgren/Code/nsfwfilter/samples.db"), Path.of("/tmp/model.jft.bin"));
 
