@@ -62,6 +62,7 @@ dependencies {
     implementation libs.bundles.jooby
     implementation libs.bundles.jetty
     implementation libs.opencsv
+    implementation libs.sqlite
     implementation libs.trove
     implementation libs.fastutil
     implementation libs.bundles.gson
