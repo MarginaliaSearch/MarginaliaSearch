@@ -50,7 +50,7 @@ public class ScrapeStopper {
 
     public String assignSst(String zone, Token token) {
         for (;;) {
-            String maybeKey = String.format("%s-%16x",
+            String maybeKey = String.format("%s-%016x",
                     zone,
                     ThreadLocalRandom.current().nextLong(0, Long.MAX_VALUE));
 
