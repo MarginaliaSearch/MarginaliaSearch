@@ -1,24 +1,22 @@
-package nu.marginalia.btree;
+package nu.marginalia.btree.legacy;
 
 import nu.marginalia.array.LongArray;
-import nu.marginalia.btree.model.BTreeContext;
-import nu.marginalia.btree.model.BTreeHeader;
 
 /*
  * End-of-block mark that's used as a sentinel to verify that
- * the BTreeWriter's caller actually writes as much as they say
+ * the LegacyBTreeWriter's caller actually writes as much as they say
  * they want to. (Failing to do so will corrupt the tree)
  *
  */
-class BTreeDogEar {
+class LegacyBTreeDogEar {
 
     private final LongArray sentinelSlice;
 
-    public static BTreeDogEar empty() {
-        return new BTreeDogEar(null);
+    public static LegacyBTreeDogEar empty() {
+        return new LegacyBTreeDogEar(null);
     }
 
-    public static BTreeDogEar create(BTreeContext ctx, BTreeHeader header, LongArray base) {
+    public static LegacyBTreeDogEar create(LegacyBTreeContext ctx, LegacyBTreeHeader header, LongArray base) {
 
         if (header.numEntries() > 3) {
             var sentinelSlice = base.range(
@@ -27,12 +25,12 @@ class BTreeDogEar {
             sentinelSlice.set(0, 4L);
             sentinelSlice.set(1, 5L);
             sentinelSlice.set(2, 1L);
-            return new BTreeDogEar(sentinelSlice);
+            return new LegacyBTreeDogEar(sentinelSlice);
         }
 
-        return BTreeDogEar.empty();
+        return LegacyBTreeDogEar.empty();
     }
-    private BTreeDogEar(LongArray sentinelSlice) {
+    private LegacyBTreeDogEar(LongArray sentinelSlice) {
         this.sentinelSlice = sentinelSlice;
     }
 

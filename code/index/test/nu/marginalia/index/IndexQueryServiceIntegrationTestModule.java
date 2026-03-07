@@ -7,6 +7,8 @@ import nu.marginalia.index.journal.IndexJournalSlopWriter;
 import nu.marginalia.index.searchset.DomainRankings;
 import nu.marginalia.index.searchset.SearchSetAny;
 import nu.marginalia.index.searchset.SearchSetsService;
+import nu.marginalia.index.searchset.connectivity.ConnectivitySets;
+import nu.marginalia.index.searchset.connectivity.ConnectivityView;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeat;
@@ -79,6 +81,10 @@ public class IndexQueryServiceIntegrationTestModule extends AbstractModule {
             bind(SearchSetsService.class).toInstance(setsServiceMock);
 
             bind(ServiceEventLog.class).toInstance(Mockito.mock(ServiceEventLog.class));
+
+            ConnectivitySets connectivitySetsMock = Mockito.mock(ConnectivitySets.class);
+            when(connectivitySetsMock.getView()).thenReturn(new ConnectivityView(new it.unimi.dsi.fastutil.ints.Int2ByteOpenHashMap()));
+            bind(ConnectivitySets.class).toInstance(connectivitySetsMock);
 
             bind(IndexJournalSlopWriter.class).toInstance(new IndexJournalSlopWriter(IndexJournal.allocateName(fastDir.resolve("iw"), "en"), 0));
 

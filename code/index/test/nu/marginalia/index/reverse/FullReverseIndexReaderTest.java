@@ -106,7 +106,7 @@ class FullReverseIndexReaderTest {
             preindex.delete();
         }
 
-        return new FullReverseIndexReader("test", List.of(new WordLexicon("en", wordsFile)), docsFile, docsValuesFile, posFile);
+        return new FullReverseIndexReader("test", List.of(WordLexicon.openBuffered("en", wordsFile)), docsFile, docsValuesFile, posFile);
 
     }
 }

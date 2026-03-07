@@ -1,9 +1,7 @@
-package nu.marginalia.btree.model;
+package nu.marginalia.btree.legacy;
 
-import nu.marginalia.btree.BTreeWriter;
-
-/** Specifies the parameters of a BTree. */
-public class BTreeContext {
+/** Specifies the parameters of a legacy BTree. */
+public class LegacyBTreeContext {
     public final int maxLayers;
     public final int entrySize;
     private final int blockSizeBits;
@@ -20,7 +18,7 @@ public class BTreeContext {
      *                          with to reduce the need for RAM.
      *
      */
-    public BTreeContext(int maxLayers, int entrySize, BTreeBlockSize blockSize) {
+    public LegacyBTreeContext(int maxLayers, int entrySize, LegacyBTreeBlockSize blockSize) {
         this.maxLayers = maxLayers;
         this.entrySize = entrySize;
         this.blockSizeBits = blockSize.blockSizeBits;
@@ -28,7 +26,7 @@ public class BTreeContext {
     }
 
     public long calculateSize(int numEntries) {
-        var header = BTreeWriter.makeHeader(this, 0, numEntries);
+        var header = LegacyBTreeWriter.makeHeader(this, 0, numEntries);
 
         long size;
         if (header.layers() == 0)

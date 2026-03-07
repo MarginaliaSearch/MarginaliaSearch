@@ -1,25 +1,24 @@
-package nu.marginalia.btree;
+package nu.marginalia.btree.legacy;
 
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.page.LongQueryBuffer;
-import nu.marginalia.btree.model.BTreeContext;
-import nu.marginalia.btree.model.BTreeHeader;
+import nu.marginalia.btree.BTreeReaderIf;
 
 import static java.lang.Math.min;
 
-public class BTreeReader {
+public class LegacyBTreeReader implements BTreeReaderIf {
 
     private final LongArray index;
     private final LongArray data;
 
-    public final BTreeContext ctx;
-    private final BTreeHeader header;
+    public final LegacyBTreeContext ctx;
+    private final LegacyBTreeHeader header;
 
     private final long dataBlockEnd;
 
-    public BTreeReader(LongArray file, BTreeContext ctx, long offset) {
+    public LegacyBTreeReader(LongArray file, LegacyBTreeContext ctx, long offset) {
         this.ctx = ctx;
-        this.header = new BTreeHeader(file, offset);
+        this.header = new LegacyBTreeHeader(file, offset);
 
         dataBlockEnd = (long) ctx.entrySize * header.numEntries();
         index = file.range(header.indexOffsetLongs(), header.dataOffsetLongs());
@@ -35,12 +34,25 @@ public class BTreeReader {
         return index;
     }
 
-    public BTreeHeader getHeader() {
+    public LegacyBTreeHeader getHeader() {
         return header;
     }
 
     public int numEntries() {
         return header.numEntries();
+    }
+
+    @Override
+    public int entrySize() {
+        return ctx.entrySize;
+    }
+
+    @Override
+    public long getEntryValue(long entryOffset) {
+        if (ctx.entrySize == 1) {
+            return data.get(entryOffset);
+        }
+        return data.get(entryOffset + 1);
     }
 
     /** Keeps all items in buffer that exist in the btree */
@@ -84,6 +96,7 @@ public class BTreeReader {
      *
      * @return file offset of entry matching keyRaw, negative if absent
      */
+    @Override
     public long findEntry(final long key) {
         BTreePointer ip = new BTreePointer(header);
 
@@ -106,6 +119,7 @@ public class BTreeReader {
      * <p>
      * Caveat: The keys are assumed to be sorted.
      */
+    @Override
     public long[] queryData(long[] keys, int offset) {
 
         assert(isSorted(keys)) : "The input array docIds is assumed to be sorted";
@@ -172,7 +186,7 @@ public class BTreeReader {
                 "offset = " + pointerOffset + "]";
         }
 
-        public BTreePointer(BTreeHeader header) {
+        public BTreePointer(LegacyBTreeHeader header) {
             layer = header.layers() - 1;
             pointerOffset = 0;
             layerOffsets = header.getRelativeLayerOffsets(ctx);

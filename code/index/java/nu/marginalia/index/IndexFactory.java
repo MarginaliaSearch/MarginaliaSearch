@@ -4,9 +4,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.index.config.IndexFileName;
+import nu.marginalia.index.config.ReverseIndexParameters;
 import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.reverse.FullReverseIndexReader;
 import nu.marginalia.index.reverse.PrioReverseIndexReader;
+import nu.marginalia.btree.paged.PagedBTreeWriter;
 import nu.marginalia.index.reverse.WordLexicon;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.model.LanguageDefinition;
@@ -15,9 +17,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,12 +66,12 @@ public class IndexFactory {
             String languageIsoCode = languageDefinition.isoCode();
             Path wordsFile = getCurrentPath(new IndexFileName.FullWords(languageIsoCode));
             if (Files.exists(wordsFile)) {
-                wordLexicons.add(new WordLexicon(languageIsoCode, wordsFile));
+                wordLexicons.add(openWordLexicon(languageIsoCode, wordsFile));
             }
             else if ("en".equalsIgnoreCase(languageIsoCode)) {
                 // FIXME:  Backward compatibility, remove after ~ dec 2025
                 wordsFile = liveStorage.resolve("rev-words.dat");
-                wordLexicons.add(new WordLexicon("en", wordsFile));
+                wordLexicons.add(WordLexicon.openLegacy("en", wordsFile));
             }
         }
 
@@ -86,12 +92,12 @@ public class IndexFactory {
             String languageIsoCode = languageDefinition.isoCode();
             Path wordsFile = getCurrentPath(new IndexFileName.PrioWords(languageIsoCode));
             if (Files.exists(wordsFile)) {
-                wordLexicons.add(new WordLexicon(languageIsoCode, wordsFile));
+                wordLexicons.add(openWordLexicon(languageIsoCode, wordsFile));
             }
             else if ("en".equalsIgnoreCase(languageIsoCode)) {
                 // FIXME:  Backward compatibility, remove after ~ dec 2025
                 wordsFile = liveStorage.resolve("rev-prio-words.dat");
-                wordLexicons.add(new WordLexicon("en", wordsFile));
+                wordLexicons.add(WordLexicon.openLegacy("en", wordsFile));
             }
         }
 
@@ -106,6 +112,33 @@ public class IndexFactory {
         Path spansFile = getCurrentPath(new IndexFileName.ForwardSpansData());
 
         return new ForwardIndexReader(docIdsFile, docDataFile, spansFile);
+    }
+
+    private static final boolean useBuffered = Boolean.getBoolean("index.wordLexicon.useBuffered");
+    private static final int poolSizeBytes = Integer.getInteger("index.wordLexicon.poolSizeBytes", 64 * 1024 * 1024);
+
+    /** Open a WordLexicon, detecting the file format from the magic number. */
+    private WordLexicon openWordLexicon(String languageIsoCode, Path wordsFile) throws IOException {
+        if (!isPagedBTreeFormat(wordsFile)) {
+            return WordLexicon.openLegacy(languageIsoCode, wordsFile);
+        }
+
+        if (useBuffered) {
+            return WordLexicon.openBuffered(languageIsoCode, wordsFile);
+        }
+
+        int poolSizePages = poolSizeBytes / ReverseIndexParameters.BTREE_PAGE_SIZE_BYTES;
+        return WordLexicon.openDirect(languageIsoCode, wordsFile, poolSizePages);
+    }
+
+    private static boolean isPagedBTreeFormat(Path file) throws IOException {
+        try (FileChannel ch = FileChannel.open(file, StandardOpenOption.READ)) {
+            if (ch.size() < 4) return false;
+            ByteBuffer buf = ByteBuffer.allocate(4).order(ByteOrder.nativeOrder());
+            ch.read(buf, 0);
+            buf.flip();
+            return buf.getInt() == PagedBTreeWriter.MAGIC;
+        }
     }
 
     private Path getCurrentPath(IndexFileName fileName) {

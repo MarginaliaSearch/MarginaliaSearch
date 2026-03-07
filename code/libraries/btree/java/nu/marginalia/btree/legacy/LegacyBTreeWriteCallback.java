@@ -1,9 +1,9 @@
-package nu.marginalia.btree;
+package nu.marginalia.btree.legacy;
 
 import nu.marginalia.array.LongArray;
 
 import java.io.IOException;
 
-public interface BTreeWriteCallback {
+public interface LegacyBTreeWriteCallback {
     void write(LongArray slice) throws IOException;
 }

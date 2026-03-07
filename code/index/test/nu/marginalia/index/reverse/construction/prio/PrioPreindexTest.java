@@ -85,7 +85,7 @@ class PrioPreindexTest {
         assertTrue(Files.exists(wordsFile));
         assertTrue(Files.exists(docsFile));
 
-        var indexReader = new PrioReverseIndexReader("test", List.of(new WordLexicon("en", wordsFile)), docsFile);
+        var indexReader = new PrioReverseIndexReader("test", List.of(WordLexicon.openBuffered("en", wordsFile)), docsFile);
         var lc = new IndexLanguageContext("en", null, indexReader.getWordLexicon("en"));
 
         var entrySource = indexReader.documents(lc, "50", termId("50"));
@@ -146,7 +146,7 @@ class PrioPreindexTest {
         assertTrue(Files.exists(wordsFile));
         assertTrue(Files.exists(docsFile));
 
-        var indexReader = new PrioReverseIndexReader("test", List.of(new WordLexicon("en", wordsFile)), docsFile);
+        var indexReader = new PrioReverseIndexReader("test", List.of(WordLexicon.openBuffered("en", wordsFile)), docsFile);
 
         var lc = new IndexLanguageContext("en", null, indexReader.getWordLexicon("en"));
 

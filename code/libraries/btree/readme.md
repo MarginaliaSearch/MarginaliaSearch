@@ -1,46 +1,68 @@
 # BTree
 
-This package contains a small library for creating and reading a static b-tree in as implicit pointer-less datastructure.
-Both binary indices (i.e. sets) are supported, as well as arbitrary multiple-of-keysize key-value mappings where the data is 
-interlaced with the keys in the leaf nodes. This is a fairly low-level datastructure. 
+This library provides static B-tree and B+-tree indices for sorted long keys
+with optional associated values.  Both binary indices (sets, entrySize=1) and
+key-value mappings (entrySize=2+) are supported.
 
-The b-trees are specified through a [BTreeContext](java/nu/marginalia/btree/model/BTreeContext.java)
-which contains information about the data and index layout.
+Two implementations exist behind the common interfaces
+[BTreeReaderIf](java/nu/marginalia/btree/BTreeReaderIf.java) and
+[BTreeWriterIf](java/nu/marginalia/btree/BTreeWriterIf.java):
 
-The b-trees are written through a [BTreeWriter](java/nu/marginalia/btree/BTreeWriter.java) and 
-read with a [BTreeReader](java/nu/marginalia/btree/BTreeReader.java). 
+## Paged B+-tree (new, preferred)
 
-## Demo
+Located in `nu.marginalia.btree.paged`.
+
+A page-oriented B+-tree that writes a self-contained file with a header,
+leaf pages and internal pages.  Data lives only in the leaves; internal
+nodes store separator keys and child pointers.
+
+Key properties:
+- Self-describing file format with a magic number (`0x42545245`),
+  page size, entry size and tree height in the header.
+- Configurable page size (power of 2, minimum 512 bytes).
+- Two reader strategies:
+  - **direct** -- O_DIRECT reads with a user-space LRU page cache.
+  - **buffered** -- buffered reads via the OS page cache using
+    pread() with fadvise(RANDOM).
+- Written with [PagedBTreeWriter](java/nu/marginalia/btree/paged/PagedBTreeWriter.java),
+  read with [PagedBTreeReader](java/nu/marginalia/btree/paged/PagedBTreeReader.java).
+
+### Demo
 
 ```java
-BTreeContext ctx = new BTreeContext(
-        4,  // num layers max
-        1,  // entry size, 1 = the leaf node has just just the key
-        BTreeBlockSize.BS_4096); // page size
+Path file = Path.of("index.bt");
 
-// Allocate a memory area to work in, see the array library for how to do this with files
-LongArray array = LongArray.allocate(8192);
-
-// Write a btree at offset 123 in the area
-long[] items = new long[400];
-BTreeWriter writer = new BTreeWriter(array, ctx);
-final int offsetInFile = 123;
-
-long btreeSize = writer.write(offsetInFile, items.length, slice -> {
-    // here we *must* write items.length * entry.size words in slice
-    // these items must be sorted!!
-
+// Write
+var writer = new PagedBTreeWriter(file, 4096, 2); // pageSize=4096, entrySize=2
+writer.write(items.length, sink -> {
     for (int i = 0; i < items.length; i++) {
-        slice.set(i, items[i]);
+        sink.put(keys[i], values[i]); // must be in ascending key order
     }
 });
 
-// Read the BTree
+// Read (buffered, uses OS page cache)
+try (var reader = PagedBTreeReader.buffered(file)) {
+    long value = reader.getValue(someKey); // -1 if not found
+}
 
-BTreeReader reader = new BTreeReader(array, ctx, offsetInFile);
-reader.findEntry(items[0]);
+// Read (direct, O_DIRECT with LRU cache)
+try (var reader = PagedBTreeReader.direct(file, 256)) { // 256 cached pages
+    long value = reader.getValue(someKey);
+}
 ```
+
+## Legacy B-tree (deprecated)
+
+Located in `nu.marginalia.btree.legacy`.
+
+An implicit pointer-less B-tree stored inside a memory-mapped `LongArray`.
+The tree layout is described by a `LegacyBTreeContext` which specifies
+the number of layers, entry size and block size.  This implementation has
+known correctness issues and poor performance characteristics, and is
+being phased out in favor of the paged B+-tree above.
 
 ## Useful Resources
 
-Youtube: [Abdul Bari, 10.2 B Trees and B+ Trees. How they are useful in Databases](https://www.youtube.com/watch?v=aZjYr87r1b8). This isn't exactly the design implemented in this library, but very well presented and a good refresher.
+Youtube: [Abdul Bari, 10.2 B Trees and B+ Trees. How they are useful in Databases](https://www.youtube.com/watch?v=aZjYr87r1b8).
+This is not exactly the design implemented in this library, but it is very
+well presented and a good refresher.

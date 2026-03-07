@@ -2,7 +2,8 @@ package nu.marginalia.index.reverse.construction.prio;
 
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
-import nu.marginalia.btree.BTreeWriter;
+import nu.marginalia.btree.legacy.LegacyBTreeWriter;
+import nu.marginalia.btree.paged.PagedBTreeWriter;
 import nu.marginalia.index.config.ReverseIndexParameters;
 import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.index.reverse.construction.CountToOffsetTransformer;
@@ -96,22 +97,34 @@ public class PrioPreindex {
             throw new IllegalStateException("offsets.size() too big!");
         }
 
-        // Estimate the size of the words index data
-        long wordsSize = ReverseIndexParameters.wordsBTreeContext.calculateSize((int) offsets.size());
+        // Construct the words B-tree
+        int numWords = (int) offsets.size();
 
-        // Construct the tree
-        LongArray wordsArray = LongArrayFactory.mmapForWritingConfined(outputFileWords, wordsSize);
+        if (ReverseIndexParameters.useLegacyBTree()) {
+            long wordsSize = ReverseIndexParameters.wordsBTreeContext.calculateSize(numWords);
+            LongArray wordsArray = LongArrayFactory.mmapForWritingConfined(outputFileWords, wordsSize);
 
-        new BTreeWriter(wordsArray, ReverseIndexParameters.wordsBTreeContext)
-            .write(0, (int) offsets.size(), mapRegion -> {
-            for (long i = 0; i < offsets.size(); i++) {
-                mapRegion.set(2*i, wordIds.get(i));
-                mapRegion.set(2*i + 1, offsets.get(i));
-            }
-        });
+            new LegacyBTreeWriter(wordsArray, ReverseIndexParameters.wordsBTreeContext)
+                .write(0, numWords, mapRegion -> {
+                for (long i = 0; i < offsets.size(); i++) {
+                    mapRegion.set(2*i, wordIds.get(i));
+                    mapRegion.set(2*i + 1, offsets.get(i));
+                }
+            });
 
-        wordsArray.force();
-        wordsArray.close();
+            wordsArray.force();
+            wordsArray.close();
+        } else {
+            var writer = new PagedBTreeWriter(outputFileWords,
+                    ReverseIndexParameters.BTREE_PAGE_SIZE_BYTES,
+                    ReverseIndexParameters.BTREE_ENTRY_SIZE);
+
+            writer.write(numWords, sink -> {
+                for (long i = 0; i < offsets.size(); i++) {
+                    sink.put(wordIds.get(i), offsets.get(i));
+                }
+            });
+        }
     }
 
     /** Delete all files associated with this pre-index */

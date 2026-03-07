@@ -1,17 +1,15 @@
-package nu.marginalia.btree;
+package nu.marginalia.btree.legacy;
 
 import nu.marginalia.array.LongArray;
-import nu.marginalia.btree.model.BTreeContext;
-import nu.marginalia.btree.model.BTreeHeader;
 
 import java.io.IOException;
 
 
-public class BTreeWriter {
-    private final BTreeContext ctx;
+public class LegacyBTreeWriter {
+    private final LegacyBTreeContext ctx;
     private final LongArray map;
 
-    public BTreeWriter(LongArray map, BTreeContext ctx) {
+    public LegacyBTreeWriter(LongArray map, LegacyBTreeContext ctx) {
         this.map = map;
         this.ctx = ctx;
     }
@@ -20,10 +18,10 @@ public class BTreeWriter {
      *
      * @return The size of the written data
      */
-    public long write(long offset, int numEntries, BTreeWriteCallback writeIndexCallback)
+    public long write(long offset, int numEntries, LegacyBTreeWriteCallback writeIndexCallback)
             throws IOException
     {
-        BTreeHeader header = makeHeader(ctx, offset, numEntries);
+        LegacyBTreeHeader header = makeHeader(ctx, offset, numEntries);
 
         // Write the header
         map.set(offset, ((long) header.layers() << 32L) | ((long)header.numEntries() & 0xFFFF_FFFFL));
@@ -46,7 +44,7 @@ public class BTreeWriter {
         // Prepare to write the data
         var slice = map.range(startRange, endRange);
 
-        final BTreeDogEar dogEar = createDogEar(ctx, header, slice);
+        final LegacyBTreeDogEar dogEar = createDogEar(ctx, header, slice);
 
         writeIndexCallback.write(slice);
 
@@ -68,24 +66,24 @@ public class BTreeWriter {
     }
 
 
-    private BTreeDogEar createDogEar(BTreeContext ctx, BTreeHeader header, LongArray slice) {
-        if (BTreeWriter.class.desiredAssertionStatus()) {
-            return BTreeDogEar.create(ctx, header, slice);
+    private LegacyBTreeDogEar createDogEar(LegacyBTreeContext ctx, LegacyBTreeHeader header, LongArray slice) {
+        if (LegacyBTreeWriter.class.desiredAssertionStatus()) {
+            return LegacyBTreeDogEar.create(ctx, header, slice);
         }
         else {
-            return BTreeDogEar.empty();
+            return LegacyBTreeDogEar.empty();
         }
     }
 
-    public static BTreeHeader makeHeader(BTreeContext ctx, long baseOffset, int numEntries) {
+    public static LegacyBTreeHeader makeHeader(LegacyBTreeContext ctx, long baseOffset, int numEntries) {
         final int numLayers = ctx.numIndexLayers(numEntries);
 
         // Calculate the offset for the index relative to the header start
-        long indexOffset = baseOffset + BTreeHeader.BTreeHeaderSizeLongs;
+        long indexOffset = baseOffset + LegacyBTreeHeader.BTreeHeaderSizeLongs;
 
         if (numLayers > 0) {
             // Align the index to the next page
-            indexOffset += (int) (ctx.pageSize() - ((baseOffset + BTreeHeader.BTreeHeaderSizeLongs) % ctx.pageSize()));
+            indexOffset += (int) (ctx.pageSize() - ((baseOffset + LegacyBTreeHeader.BTreeHeaderSizeLongs) % ctx.pageSize()));
         }
 
         // Calculate the offset for the data relative to the header start
@@ -94,10 +92,10 @@ public class BTreeWriter {
             dataOffset += ctx.indexLayerSize(numEntries, layer);
         }
 
-        return new BTreeHeader(numLayers, numEntries, indexOffset, dataOffset);
+        return new LegacyBTreeHeader(numLayers, numEntries, indexOffset, dataOffset);
     }
 
-    private void writeIndex(BTreeHeader header) {
+    private void writeIndex(LegacyBTreeHeader header) {
         long indexedDataStepSize = ctx.pageSize();
 
         /*  Index layer 0 indexes the data itself
@@ -118,7 +116,7 @@ public class BTreeWriter {
      * @param stepSize The step size of the indexed data
      * @param layer The layer to write
      */
-    private void writeIndexLayer(BTreeHeader header,
+    private void writeIndexLayer(LegacyBTreeHeader header,
                                  final long stepSize,
                                  final int layer) {
 
@@ -127,15 +125,6 @@ public class BTreeWriter {
 
         long writeOffset = 0;
 
-        // Write the index layer
-
-        // Each index layer implicitly indexes the data layer below it,
-        // so that for the data segment corresponding to each index value,
-        // has values that are smaller than or equal to the index value.
-
-        // Thus to construct the index, we take the last value of each data segment
-        // and write it to the index layer
-
         for (long readOffset = 0;
              readOffset + stepSize <= header.numEntries();
              readOffset += stepSize)
@@ -143,16 +132,11 @@ public class BTreeWriter {
             final long dest = layerStart + writeOffset++;
 
             final long src = dataStart
-                    + readOffset * ctx.entrySize      // relative offset of the data range
-                    + (stepSize - 1) * ctx.entrySize; // relative offset of the last entry in the data range
+                    + readOffset * ctx.entrySize
+                    + (stepSize - 1) * ctx.entrySize;
 
             map.set(dest, map.get(src));
         }
-
-        // If the index block is not completely filled with data,
-        // top up the remaining index block with LONG_MAX as we require
-        // the index to be fully populated and sorted for the binary search
-        // to work
 
         final long trailerStart = layerStart + writeOffset;
         final long trailerEnd = trailerStart

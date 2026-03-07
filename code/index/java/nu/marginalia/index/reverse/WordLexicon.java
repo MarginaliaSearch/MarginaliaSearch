@@ -2,7 +2,9 @@ package nu.marginalia.index.reverse;
 
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
-import nu.marginalia.btree.BTreeReader;
+import nu.marginalia.btree.BTreeReaderIf;
+import nu.marginalia.btree.legacy.LegacyBTreeReader;
+import nu.marginalia.btree.paged.PagedBTreeReader;
 import nu.marginalia.ffi.LinuxSystemCalls;
 import nu.marginalia.index.config.ReverseIndexParameters;
 
@@ -11,20 +13,33 @@ import java.nio.file.Path;
 
 public class WordLexicon {
     public final String languageIsoCode;
-    private final LongArray words;
-    private final BTreeReader wordsBTreeReader;
-    private final long wordsDataOffset;
+    private final BTreeReaderIf reader;
+    private final AutoCloseable resource;
 
-    public WordLexicon(String languageIsoCode, Path fileName) throws IOException {
+    private WordLexicon(String languageIsoCode, BTreeReaderIf reader, AutoCloseable resource) {
         this.languageIsoCode = languageIsoCode;
+        this.reader = reader;
+        this.resource = resource;
+    }
 
+    /** Open a legacy mmap-backed B-tree word lexicon. */
+    public static WordLexicon openLegacy(String languageIsoCode, Path fileName) throws IOException {
+        LongArray words = LongArrayFactory.mmapForReadingShared(fileName);
+        LinuxSystemCalls.madviseRandom(words.getMemorySegment());
+        LegacyBTreeReader reader = new LegacyBTreeReader(words, ReverseIndexParameters.wordsBTreeContext, 0);
+        return new WordLexicon(languageIsoCode, reader, words::close);
+    }
 
-        this.words = LongArrayFactory.mmapForReadingShared(fileName);
+    /** Open a paged B+-tree word lexicon using buffered reads via the OS page cache. */
+    public static WordLexicon openBuffered(String languageIsoCode, Path fileName) throws IOException {
+        PagedBTreeReader reader = PagedBTreeReader.buffered(fileName);
+        return new WordLexicon(languageIsoCode, reader, reader);
+    }
 
-        LinuxSystemCalls.madviseRandom(this.words.getMemorySegment());
-
-        this.wordsBTreeReader = new BTreeReader(this.words, ReverseIndexParameters.wordsBTreeContext, 0);
-        this.wordsDataOffset = wordsBTreeReader.getHeader().dataOffsetLongs();
+    /** Open a paged B+-tree word lexicon using O_DIRECT with a user-space buffer pool. */
+    public static WordLexicon openDirect(String languageIsoCode, Path fileName, int poolSizePages) throws IOException {
+        PagedBTreeReader reader = PagedBTreeReader.direct(fileName, poolSizePages);
+        return new WordLexicon(languageIsoCode, reader, reader);
     }
 
     /** Calculate the offset of the word in the documents.
@@ -32,15 +47,14 @@ public class WordLexicon {
      * in the index.
      */
     public long wordOffset(long termId) {
-        long idx = wordsBTreeReader.findEntry(termId);
-
-        if (idx < 0)
-            return -1L;
-
-        return words.get(wordsDataOffset + idx + 1);
+        return reader.getValue(termId);
     }
 
     public void close() {
-        words.close();
+        try {
+            resource.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -91,14 +91,14 @@ public class PerfTestMain {
                 ),
                 new FullReverseIndexReader(
                         "full",
-                        List.of(new WordLexicon("en", indexDir.resolve("ir/rev-words-en.dat"))),
+                        List.of(WordLexicon.openBuffered("en", indexDir.resolve("ir/rev-words-en.dat"))),
                         indexDir.resolve("ir/rev-docs.dat"),
                         indexDir.resolve("ir/rev-docs-values.dat"),
                         indexDir.resolve("ir/rev-positions.dat")
                 ),
                 new PrioReverseIndexReader(
                         "prio",
-                        List.of(new WordLexicon("en", indexDir.resolve("ir/rev-prio-words-en.dat"))),
+                        List.of(WordLexicon.openBuffered("en", indexDir.resolve("ir/rev-prio-words-en.dat"))),
                         indexDir.resolve("ir/rev-prio-docs.dat")
                 )
         );
