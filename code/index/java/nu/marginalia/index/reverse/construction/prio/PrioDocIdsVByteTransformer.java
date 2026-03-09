@@ -49,18 +49,40 @@ public class PrioDocIdsVByteTransformer implements LongArrayTransformations.Long
         writeBuffer.order(ByteOrder.LITTLE_ENDIAN);
         writeBuffer.putInt(distinctCount);
         writeBuffer.order(ByteOrder.nativeOrder());
-
-        // Compress using DocIdCompressor
-        long[] deduped = (distinctCount < sizeL) ? Arrays.copyOf(docIds, distinctCount) : docIds;
-        ArrayCompressorInput input = new ArrayCompressorInput(deduped);
-        ByteBufferCompressorBuffer compressorBuffer = new ByteBufferCompressorBuffer(writeBuffer);
-        DocIdCompressor.compress(input, distinctCount, compressorBuffer);
-
-        // Flush writeBuffer to channel
         writeBuffer.flip();
         while (writeBuffer.hasRemaining()) {
             int written = writeChannel.write(writeBuffer, writeOffsetB);
             writeOffsetB += written;
+        }
+
+        // Compressed output may exceed the fixed-size write buffer for high-frequency terms,
+        // so we compress in batches, flushing each to the channel before continuing.
+        long[] deduped = (distinctCount < sizeL) ? Arrays.copyOf(docIds, distinctCount) : docIds;
+
+        int offset = 0;
+        long prevValue = 0;
+
+        while (offset < distinctCount) {
+            writeBuffer.clear();
+
+            long[] remaining = (offset == 0) ? deduped : Arrays.copyOfRange(deduped, offset, distinctCount);
+            ArrayCompressorInput input = new ArrayCompressorInput(remaining);
+            int batchSize = DocIdCompressor.calcMaxEntries(input, writeBuffer.capacity());
+            if (batchSize == 0) {
+                throw new IllegalStateException("Buffer too small for even one entry");
+            }
+
+            ByteBufferCompressorBuffer compressorBuffer = new ByteBufferCompressorBuffer(writeBuffer);
+            DocIdCompressor.compress(input, batchSize, compressorBuffer, prevValue);
+
+            prevValue = deduped[offset + batchSize - 1];
+            offset += batchSize;
+
+            writeBuffer.flip();
+            while (writeBuffer.hasRemaining()) {
+                int written = writeChannel.write(writeBuffer, writeOffsetB);
+                writeOffsetB += written;
+            }
         }
 
         startL = endL;

@@ -112,6 +112,48 @@ class PrioDocIdsVByteTransformerTest {
     }
 
     @Test
+    public void testLargeSegment() throws IOException {
+        // Enough entries with large deltas to exceed the 64KB write buffer,
+        // exercising the multi-batch flush path
+        int count = 10000;
+        long[] docIds = new long[count];
+        for (int i = 0; i < count; i++) {
+            docIds[i] = UrlIdCodec.encodeId(i, i * 7);
+        }
+
+        try (FileChannel writeChannel = (FileChannel) Files.newByteChannel(inputFile, StandardOpenOption.WRITE)) {
+            ByteBuffer buffer = ByteBuffer.allocate(count * 8).order(ByteOrder.LITTLE_ENDIAN);
+            for (long id : docIds) {
+                buffer.putLong(id);
+            }
+            writeChannel.write(buffer.flip());
+        }
+
+        try (FileChannel writeChannel = (FileChannel) Files.newByteChannel(outputFile, StandardOpenOption.WRITE);
+             FileChannel readChannel = (FileChannel) Files.newByteChannel(inputFile);
+             PrioDocIdsVByteTransformer transformer = new PrioDocIdsVByteTransformer(writeChannel, readChannel))
+        {
+            long pos = transformer.transform(0, count);
+            assertEquals(0, pos);
+        }
+
+        // Read back and verify all entries
+        try (FileChannel readChannel = (FileChannel) Files.newByteChannel(outputFile)) {
+            var lqb = new nu.marginalia.array.page.LongQueryBuffer(count + 16);
+            PrioIndexVByteEntrySource source = new PrioIndexVByteEntrySource("test", "term", readChannel, 0);
+
+            source.read(lqb);
+
+            assertEquals(count, lqb.size());
+            long[] result = lqb.copyData();
+            for (int i = 0; i < count; i++) {
+                assertEquals(docIds[i], result[i], "Mismatch at index " + i);
+            }
+            assertFalse(source.hasMore());
+        }
+    }
+
+    @Test
     public void testMultipleSegments() throws IOException {
         long[] segment1 = {
                 UrlIdCodec.encodeId(0, 0),

@@ -49,13 +49,22 @@ public class DocIdCompressor {
      * @return the number of bytes written
      * */
     public static long compress(CompressorInput input, int n, WritableCompressorBufferIf output) {
+        return compress(input, n, output, 0);
+    }
+
+    /** Compress at most n items from the give input, into the provided output,
+     * using startPrev as the initial delta base for continuation across batches.
+     *
+     * @return the number of bytes written
+     * */
+    public static long compress(CompressorInput input, int n, WritableCompressorBufferIf output, long startPrev) {
         assert n <= input.size();
 
         final long offsetStart = output.getPos();
 
         final byte[] sizes = new byte[10];
 
-        long prev = 0;
+        long prev = startPrev;
 
         int i = 0;
         while (i < n) {
