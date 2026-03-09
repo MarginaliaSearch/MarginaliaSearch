@@ -18,7 +18,7 @@ nodes store separator keys and child pointers.
 
 Key properties:
 - Self-describing file format with a magic number (`0x42545245`),
-  page size, entry size and tree height in the header.
+  format version, page size, entry size and tree height in the header.
 - Configurable page size (power of 2, minimum 512 bytes).
 - Two reader strategies:
   - **direct** -- O_DIRECT reads with a user-space LRU page cache.

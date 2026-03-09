@@ -21,6 +21,7 @@ import java.nio.file.StandardOpenOption;
  * Header page layout (all values little-endian):
  * <pre>
  *   int: magic number (0x42545245 = "BTRE")
+ *   int: format version (currently 1)
  *   int: page size in bytes
  *   int: entry size (longs per entry)
  *   int: number of entries
@@ -46,6 +47,7 @@ import java.nio.file.StandardOpenOption;
 public class PagedBTreeWriter implements BTreeWriterIf {
 
     public static final int MAGIC = 0x42545245; // "BTRE"
+    public static final int FORMAT_VERSION = 1;
     static final int FLAG_LEAF = 0x01;
     static final int FLAG_INTERNAL = 0x02;
     static final int PAGE_HEADER_BYTES = 8; // int numEntries/numKeys + int flags
@@ -245,6 +247,7 @@ public class PagedBTreeWriter implements BTreeWriterIf {
     private void writeHeader(FileChannel channel, int numEntries, long rootOffset, int height) throws IOException {
         ByteBuffer header = ByteBuffer.allocate(pageSizeBytes).order(java.nio.ByteOrder.nativeOrder());
         header.putInt(MAGIC);
+        header.putInt(FORMAT_VERSION);
         header.putInt(pageSizeBytes);
         header.putInt(entrySize);
         header.putInt(numEntries);

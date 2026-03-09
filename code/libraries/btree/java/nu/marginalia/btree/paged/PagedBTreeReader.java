@@ -237,13 +237,18 @@ public class PagedBTreeReader implements BTreeReaderIf, AutoCloseable {
 
     private static HeaderData readHeader(Path filePath) throws IOException {
         try (FileChannel ch = FileChannel.open(filePath, StandardOpenOption.READ)) {
-            ByteBuffer header = ByteBuffer.allocate(32).order(java.nio.ByteOrder.nativeOrder());
+            ByteBuffer header = ByteBuffer.allocate(36).order(java.nio.ByteOrder.nativeOrder());
             ch.read(header, 0);
             header.flip();
 
             int magic = header.getInt();
             if (magic != MAGIC) {
                 throw new IOException("Not a valid paged B+-tree file (bad magic)");
+            }
+            int version = header.getInt();
+            if (version != FORMAT_VERSION) {
+                throw new IOException("Unsupported B+-tree format version: " + version
+                        + " (expected " + FORMAT_VERSION + ")");
             }
             return new HeaderData(
                     header.getInt(),  // pageSizeBytes
