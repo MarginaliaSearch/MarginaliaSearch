@@ -11,6 +11,7 @@ import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.db.DomainBlacklistImpl;
 import nu.marginalia.model.id.UrlIdCodec;
+import nu.marginalia.nsfw.document.NsfwDocumentFilter;
 import nu.marginalia.nsfw.domain.NsfwDomainFilter;
 import nu.marginalia.service.NodeConfigurationWatcherIf;
 import nu.marginalia.service.client.GrpcChannelPoolFactoryIf;
@@ -37,6 +38,7 @@ public class IndexClient {
     private final List<GrpcSingleNodeChannelPool<IndexApiGrpc.IndexApiFutureStub>> channelPools;
     private final DomainBlacklistImpl blacklist;
     private final NsfwDomainFilter nsfwDomainFilter;
+    private final NsfwDocumentFilter nsfwDocumentFilter;
 
     Counter wmsa_index_query_count = Counter.builder()
             .name("wmsa_nsfw_filter_result_count")
@@ -52,8 +54,10 @@ public class IndexClient {
     public IndexClient(GrpcChannelPoolFactoryIf channelPoolFactory,
                        DomainBlacklistImpl blacklist,
                        NsfwDomainFilter nsfwDomainFilter,
+                       NsfwDocumentFilter nsfwDocumentFilter,
                        NodeConfigurationWatcherIf nodeConfigurationWatcher
                        ) {
+        this.nsfwDocumentFilter = nsfwDocumentFilter;
         channelPools = new ArrayList<>();
 
         for (int node: nodeConfigurationWatcher.getQueryNodes()) {
@@ -159,7 +163,20 @@ public class IndexClient {
             }
         }
 
-        results.removeIf(item -> isBlacklisted(item, filterTier));
+        if (filterTier == 1) {
+            results.removeIf(item -> isBlacklisted(item, 1));
+        }
+
+        if (filterTier == 2) {
+            results.removeIf(item -> {
+                if (isBlacklisted(item, 2))
+                    return true;
+                if (nsfwDocumentFilter.nsfwProba(item.getTitle(), item.getDescription()) > 0.75)
+                    return true;
+                return false;
+            });
+        }
+
         results.sort(comparator);
 
         int totalNumResults = results.size();
