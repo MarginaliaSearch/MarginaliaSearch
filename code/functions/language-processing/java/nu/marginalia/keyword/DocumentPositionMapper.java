@@ -33,7 +33,7 @@ public class DocumentPositionMapper {
         // Next create some padding space to avoid cross-matching
         pos += 2;
 
-        mapUrlWordPositions(pos, wordsBuilder, metadata, urlKeywords);
+        pos = mapUrlWordPositions(pos, wordsBuilder, metadata, urlKeywords);
 
         // Next create some padding space to avoid cross-matching
         pos += 2;
@@ -108,7 +108,7 @@ public class DocumentPositionMapper {
     }
 
 
-    void mapUrlWordPositions(int startPos,
+    int mapUrlWordPositions(int startPos,
                               DocumentKeywordsBuilder wordsBuilder,
                               KeywordMetadata metadata,
                               UrlKeywords urlKeywords)
@@ -137,7 +137,11 @@ public class DocumentPositionMapper {
             }
         }
 
+        pos++; // advance past the last word so the span end includes it
+
         wordsBuilder.addSpans(extLinkRecorder.finish(pos));
+
+        return pos;
     }
 
     void mapLinkTextPositions(int startPos,

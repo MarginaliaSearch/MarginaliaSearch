@@ -4,6 +4,7 @@ import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.keyword.extractors.UrlKeywords;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.keyword.model.DocumentWordSpan;
 import nu.marginalia.language.config.LanguageConfigLocation;
@@ -13,6 +14,7 @@ import nu.marginalia.language.model.DocumentSentence;
 import nu.marginalia.language.model.LanguageDefinition;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.language.sentence.tag.HtmlTag;
+import nu.marginalia.model.EdgeUrl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +24,7 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -203,6 +206,110 @@ class DocumentPositionMapperTest {
 
         assertEquals(9, span.start());
         assertEquals(10, span.end());
+    }
+
+    @Test
+    public void testUrlWordPositions() throws URISyntaxException {
+        DocumentKeywordsBuilder keywordsBuilder = new DocumentKeywordsBuilder();
+        UrlKeywords urlKeywords = new UrlKeywords(new EdgeUrl("https://memex.marginalia.nu/projects/search"));
+
+        int endPos = positionMapper.mapUrlWordPositions(5, keywordsBuilder, Mockito.mock(KeywordMetadata.class), urlKeywords);
+
+        // URL should produce words for: memex, marginalia, nu, projects, search
+        // positions start at 6 (startPos + 1)
+        assertTrue(endPos > 5, "End position must advance past start position");
+
+        var urlSpans = keywordsBuilder.wordSpans.get(HtmlTag.DOC_URL);
+        assertNotNull(urlSpans);
+        assertFalse(urlSpans.isEmpty());
+
+        // All URL word positions should be within the span
+        DocumentWordSpan urlSpan = urlSpans.getFirst();
+        for (var entry : keywordsBuilder.wordToPos.entrySet()) {
+            for (int pos : entry.getValue()) {
+                assertTrue(pos >= urlSpan.start() && pos < urlSpan.end(),
+                        "Position " + pos + " for word '" + entry.getKey() + "' should be within URL span [" + urlSpan.start() + ", " + urlSpan.end() + ")");
+            }
+        }
+    }
+
+    @Test
+    public void testUrlAndLinkTextSpansDontOverlap() throws URISyntaxException {
+        DocumentKeywordsBuilder keywordsBuilder = new DocumentKeywordsBuilder();
+        DocumentLanguageData dld = new DocumentLanguageData(english,
+                se.extractSentencesFromString(english, "Hello world this is a test document", EnumSet.of(HtmlTag.BODY)),
+                "Hello world"
+        );
+        UrlKeywords urlKeywords = new UrlKeywords(new EdgeUrl("https://example.com/hello/world/page"));
+
+        var sentences = se.extractSentencesFromString(english, "Interesting link text", EnumSet.of(HtmlTag.EXTERNAL_LINKTEXT));
+        TIntList counts = new TIntArrayList(new int[] { 1 });
+        LinkTexts linkTexts = new LinkTexts(sentences, counts);
+
+        positionMapper.mapPositionsAndExtractSimpleKeywords(keywordsBuilder, Mockito.mock(KeywordMetadata.class), dld, linkTexts, urlKeywords);
+
+        var urlSpans = keywordsBuilder.wordSpans.get(HtmlTag.DOC_URL);
+        var linkSpans = keywordsBuilder.wordSpans.get(HtmlTag.EXTERNAL_LINKTEXT);
+
+        assertNotNull(urlSpans, "URL spans should be present");
+        assertNotNull(linkSpans, "Link text spans should be present");
+        assertFalse(urlSpans.isEmpty(), "URL spans should not be empty");
+        assertFalse(linkSpans.isEmpty(), "Link text spans should not be empty");
+
+        // Verify no URL span overlaps with any link text span
+        for (DocumentWordSpan urlSpan : urlSpans) {
+            for (DocumentWordSpan linkSpan : linkSpans) {
+                assertTrue(urlSpan.end() <= linkSpan.start() || linkSpan.end() <= urlSpan.start(),
+                        "URL span [" + urlSpan.start() + ", " + urlSpan.end() + ") overlaps with link text span ["
+                                + linkSpan.start() + ", " + linkSpan.end() + ")");
+            }
+        }
+    }
+
+    @Test
+    public void testBodyAndUrlSpansDontOverlap() throws URISyntaxException {
+        DocumentKeywordsBuilder keywordsBuilder = new DocumentKeywordsBuilder();
+        DocumentLanguageData dld = new DocumentLanguageData(english,
+                se.extractSentencesFromString(english, "Some body text here", EnumSet.of(HtmlTag.BODY)),
+                "Some body text"
+        );
+        UrlKeywords urlKeywords = new UrlKeywords(new EdgeUrl("https://example.nu/articles/testing"));
+
+        var sentences = se.extractSentencesFromString(english, "Link", EnumSet.of(HtmlTag.EXTERNAL_LINKTEXT));
+        TIntList counts = new TIntArrayList(new int[] { 1 });
+        LinkTexts linkTexts = new LinkTexts(sentences, counts);
+
+        positionMapper.mapPositionsAndExtractSimpleKeywords(keywordsBuilder, Mockito.mock(KeywordMetadata.class), dld, linkTexts, urlKeywords);
+
+        var bodySpans = keywordsBuilder.wordSpans.get(HtmlTag.BODY);
+        var urlSpans = keywordsBuilder.wordSpans.get(HtmlTag.DOC_URL);
+
+        assertNotNull(bodySpans);
+        assertNotNull(urlSpans);
+
+        for (DocumentWordSpan bodySpan : bodySpans) {
+            for (DocumentWordSpan urlSpan : urlSpans) {
+                assertTrue(bodySpan.end() <= urlSpan.start() || urlSpan.end() <= bodySpan.start(),
+                        "Body span [" + bodySpan.start() + ", " + bodySpan.end() + ") overlaps with URL span ["
+                                + urlSpan.start() + ", " + urlSpan.end() + ")");
+            }
+        }
+    }
+
+    @Test
+    public void testUrlReturnValueAdvancesPosition() throws URISyntaxException {
+        DocumentKeywordsBuilder keywordsBuilder = new DocumentKeywordsBuilder();
+        UrlKeywords urlKeywords = new UrlKeywords(new EdgeUrl("https://example.nu/a/b/c/d/e"));
+
+        int startPos = 10;
+        int endPos = positionMapper.mapUrlWordPositions(startPos, keywordsBuilder, Mockito.mock(KeywordMetadata.class), urlKeywords);
+
+        // The returned position must account for all URL words processed,
+        // plus one extra to close the span (matching mapDocumentPositions convention)
+        DocumentSentence urlSentence = urlKeywords.searchableKeywords();
+        int expectedEnd = startPos + urlSentence.length() + 1;
+        assertEquals(expectedEnd, endPos,
+                "Returned position should be startPos + number of URL keyword slots + 1");
     }
 
     @Test
