@@ -6,7 +6,7 @@ import com.google.inject.Injector;
 import io.jooby.ExecutionMode;
 import io.jooby.Jooby;
 import nu.marginalia.livecapture.LivecaptureModule;
-import nu.marginalia.nsfw.NsfwFilterModule;
+import nu.marginalia.nsfw.domain.NsfwDomainFilterModule;
 import nu.marginalia.service.MainClass;
 import nu.marginalia.service.ServiceId;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
@@ -36,7 +36,7 @@ public class IndexMain extends MainClass {
                 new IndexModule(),
                 new DatabaseModule(false),
                 new ServiceDiscoveryModule(),
-                new NsfwFilterModule(),
+                new NsfwDomainFilterModule(),
                 new LivecaptureModule(),
                 new ServiceConfigurationModule(ServiceId.Index)
         );

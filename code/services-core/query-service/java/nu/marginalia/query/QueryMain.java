@@ -3,7 +3,7 @@ package nu.marginalia.query;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import nu.marginalia.nsfw.NsfwFilterModule;
+import nu.marginalia.nsfw.domain.NsfwDomainFilterModule;
 import nu.marginalia.service.MainClass;
 import nu.marginalia.service.ServiceId;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
@@ -27,7 +27,7 @@ public class QueryMain extends MainClass {
         Injector injector = Guice.createInjector(
                 new QueryModule(),
                 new DatabaseModule(false),
-                new NsfwFilterModule(),
+                new NsfwDomainFilterModule(),
                 new ServiceDiscoveryModule(),
                 new ServiceConfigurationModule(ServiceId.Query)
         );

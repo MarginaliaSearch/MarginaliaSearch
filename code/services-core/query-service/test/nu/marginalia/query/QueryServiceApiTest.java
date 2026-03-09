@@ -11,7 +11,7 @@ import nu.marginalia.api.searchquery.QueryFilterSpec;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.functions.searchquery.QueryGRPCService;
-import nu.marginalia.nsfw.NsfwFilterModule;
+import nu.marginalia.nsfw.domain.NsfwDomainFilterModule;
 import nu.marginalia.service.client.GrpcChannelPoolFactoryIf;
 import nu.marginalia.service.client.TestGrpcChannelPoolFactory;
 import nu.marginalia.service.server.Initialization;
@@ -60,7 +60,7 @@ public class QueryServiceApiTest {
 
         indexChannelFactory = new TestGrpcChannelPoolFactory(List.of(indexApiMock));
 
-        var injector = Guice.createInjector(new NsfwFilterModule(),
+        var injector = Guice.createInjector(new NsfwDomainFilterModule(),
                 new AbstractModule() {
             @Override
             protected void configure() {

@@ -19,7 +19,7 @@ include 'code:functions:favicon'
 include 'code:functions:favicon:api'
 include 'code:functions:domain-info'
 include 'code:functions:domain-info:api'
-include 'code:functions:nsfw-domain-filter'
+include 'code:functions:nsfw-filter'
 
 include 'code:functions:link-graph:partition'
 include 'code:functions:link-graph:aggregate'
@@ -234,7 +234,7 @@ dependencyResolutionManagement {
             library('jetty-util','org.eclipse.jetty','jetty-util').version('9.4.54.v20240208')
             library('jetty-servlet','org.eclipse.jetty','jetty-servlet').version('9.4.54.v20240208')
 
-            library('slop', 'nu.marginalia', 'slop').version('0.0.17-SNAPSHOT')
+            library('slop', 'nu.marginalia', 'slop').version('0.0.19-SNAPSHOT')
             library('jooby-netty','io.jooby','jooby-netty').version(joobyVersion)
             library('jooby-jte','io.jooby','jooby-jte').version(joobyVersion)
             library('jooby-apt','io.jooby','jooby-apt').version(joobyVersion)

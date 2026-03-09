@@ -20,13 +20,16 @@ dependencies {
 
     implementation libs.bundles.slf4j
     implementation libs.prometheus
+    implementation libs.sqlite
     implementation libs.guava
+    implementation libs.bundles.gson
     implementation libs.commons.lang3
     implementation dependencies.create(libs.guice.get()) {
         exclude group: 'com.google.guava'
     }
     implementation libs.notnull
     implementation libs.fastutil
+    implementation libs.slop
     implementation libs.bundles.mariadb
 
 
@@ -40,4 +43,15 @@ dependencies {
     testImplementation 'org.testcontainers:mariadb:1.21.4'
     testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
     testImplementation project(':code:libraries:test-helpers')
+}
+
+tasks.register('trainNsfwModel', JavaExec) {
+    description = 'Train the NSFW document classifier and save the model'
+    group = 'training'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'nu.marginalia.nsfw.document.NsfwDocumentTrainer'
+    args = [
+        "${project.projectDir}/data",
+        "${rootProject.projectDir}/run/model/nsfw-model"
+    ]
 }

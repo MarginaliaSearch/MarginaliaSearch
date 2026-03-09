@@ -11,7 +11,7 @@ import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.db.DomainBlacklistImpl;
 import nu.marginalia.model.id.UrlIdCodec;
-import nu.marginalia.nsfw.NsfwDomainFilter;
+import nu.marginalia.nsfw.domain.NsfwDomainFilter;
 import nu.marginalia.service.NodeConfigurationWatcherIf;
 import nu.marginalia.service.client.GrpcChannelPoolFactoryIf;
 import nu.marginalia.service.client.GrpcMultiNodeChannelPool;

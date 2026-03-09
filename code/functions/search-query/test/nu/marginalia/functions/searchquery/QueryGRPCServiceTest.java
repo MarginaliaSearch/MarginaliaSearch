@@ -16,7 +16,7 @@ import nu.marginalia.functions.searchquery.searchfilter.SearchFilterParser;
 import nu.marginalia.functions.searchquery.searchfilter.SearchFilterStore;
 import nu.marginalia.language.config.LanguageConfigLocation;
 import nu.marginalia.language.config.LanguageConfiguration;
-import nu.marginalia.nsfw.NsfwDomainFilter;
+import nu.marginalia.nsfw.domain.NsfwDomainFilter;
 import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.test.TestMigrationLoader;
