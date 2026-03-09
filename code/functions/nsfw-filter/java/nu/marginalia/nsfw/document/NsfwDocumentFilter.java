@@ -22,7 +22,7 @@ public class NsfwDocumentFilter {
     private final boolean modelLoaded;
 
     @Inject
-    private NsfwDocumentFilter() {
+    public NsfwDocumentFilter() {
         this(WmsaHome.getModelsPath().resolve("nsfw-model"));
     }
 
