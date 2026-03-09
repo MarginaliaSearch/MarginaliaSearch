@@ -35,6 +35,10 @@ public class NsfwDocumentFilter {
         } catch (Exception ex) {
             logger.warn("Failed to load NSFW model", ex);
             loadedOk = false;
+        } catch (Throwable t) {
+            logger.warn("Failed to load NSFW model", t);
+            loadedOk = false;
+            throw t;
         }
 
         this.model = model;
