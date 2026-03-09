@@ -42,6 +42,11 @@ public class WordLexicon {
         return new WordLexicon(languageIsoCode, reader, reader);
     }
 
+    /** Return the format version of the underlying B-tree. */
+    public int formatVersion() {
+        return reader.formatVersion();
+    }
+
     /** Calculate the offset of the word in the documents.
      * If the return-value is negative, the term does not exist
      * in the index.

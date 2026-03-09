@@ -81,12 +81,22 @@ public class PrioPreindex {
         offsets.transformEach(0, offsets.size(), new CountToOffsetTransformer(1));
 
         // Write the docs file
-        try (var intermediateDocChannel = documents.createDocumentsFileChannel();
-             var destFileChannel = (FileChannel) Files.newByteChannel(outputFileDocs, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
-             var transformer = new PrioDocIdsTransformer(destFileChannel, intermediateDocChannel)
-        ) {
-            destFileChannel.position(destFileChannel.size());
-            offsets.transformEachIO(0, offsets.size(), transformer);
+        if (ReverseIndexParameters.useLegacyBTree()) {
+            try (var intermediateDocChannel = documents.createDocumentsFileChannel();
+                 var destFileChannel = (FileChannel) Files.newByteChannel(outputFileDocs, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+                 var transformer = new PrioDocIdsTransformer(destFileChannel, intermediateDocChannel)
+            ) {
+                destFileChannel.position(destFileChannel.size());
+                offsets.transformEachIO(0, offsets.size(), transformer);
+            }
+        } else {
+            try (var intermediateDocChannel = documents.createDocumentsFileChannel();
+                 var destFileChannel = (FileChannel) Files.newByteChannel(outputFileDocs, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+                 var transformer = new PrioDocIdsVByteTransformer(destFileChannel, intermediateDocChannel)
+            ) {
+                destFileChannel.position(destFileChannel.size());
+                offsets.transformEachIO(0, offsets.size(), transformer);
+            }
         }
 
         LongArray wordIds = segments.wordIds;

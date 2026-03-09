@@ -32,6 +32,7 @@ public class PagedBTreeReader implements BTreeReaderIf, AutoCloseable {
     private final int height;
     private final int leafCapacity;
     private final int internalCapacity;
+    private final int formatVersion;
 
     /** Open a paged B+-tree file for reading using O_DIRECT with a user-space LRU buffer pool.
      *
@@ -60,6 +61,7 @@ public class PagedBTreeReader implements BTreeReaderIf, AutoCloseable {
         this.numEntries = hd.numEntries;
         this.rootOffset = hd.rootOffset;
         this.height = hd.height;
+        this.formatVersion = hd.formatVersion;
         this.leafCapacity = (pageSizeBytes - PAGE_HEADER_BYTES) / (entrySize * 8);
         this.internalCapacity = (pageSizeBytes - PAGE_HEADER_BYTES - 8) / 16;
     }
@@ -76,8 +78,14 @@ public class PagedBTreeReader implements BTreeReaderIf, AutoCloseable {
         this.numEntries = numEntries;
         this.rootOffset = rootOffset;
         this.height = height;
+        this.formatVersion = 0;
         this.leafCapacity = (pageSizeBytes - PAGE_HEADER_BYTES) / (entrySize * 8);
         this.internalCapacity = (pageSizeBytes - PAGE_HEADER_BYTES - 8) / 16;
+    }
+
+    @Override
+    public int formatVersion() {
+        return formatVersion;
     }
 
     @Override
@@ -246,11 +254,12 @@ public class PagedBTreeReader implements BTreeReaderIf, AutoCloseable {
                 throw new IOException("Not a valid paged B+-tree file (bad magic)");
             }
             int version = header.getInt();
-            if (version != FORMAT_VERSION) {
+            if (version < 1 || version > FORMAT_VERSION) {
                 throw new IOException("Unsupported B+-tree format version: " + version
-                        + " (expected " + FORMAT_VERSION + ")");
+                        + " (expected 1.." + FORMAT_VERSION + ")");
             }
             return new HeaderData(
+                    version,
                     header.getInt(),  // pageSizeBytes
                     header.getInt(),  // entrySize
                     header.getInt(),  // numEntries
@@ -260,6 +269,6 @@ public class PagedBTreeReader implements BTreeReaderIf, AutoCloseable {
         }
     }
 
-    private record HeaderData(int pageSizeBytes, int entrySize, int numEntries,
-                              long rootOffset, int height) {}
+    private record HeaderData(int formatVersion, int pageSizeBytes, int entrySize,
+                              int numEntries, long rootOffset, int height) {}
 }

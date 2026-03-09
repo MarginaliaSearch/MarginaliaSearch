@@ -47,7 +47,7 @@ import java.nio.file.StandardOpenOption;
 public class PagedBTreeWriter implements BTreeWriterIf {
 
     public static final int MAGIC = 0x42545245; // "BTRE"
-    public static final int FORMAT_VERSION = 1;
+    public static final int FORMAT_VERSION = 2;
     static final int FLAG_LEAF = 0x01;
     static final int FLAG_INTERNAL = 0x02;
     static final int PAGE_HEADER_BYTES = 8; // int numEntries/numKeys + int flags

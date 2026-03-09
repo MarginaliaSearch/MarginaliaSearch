@@ -11,7 +11,9 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 
-/** Constructs document ids list priority reverse index */
+/** @deprecated Used only for writing format version 1 (gamma/delta) data.
+ * New indexes use {@link PrioDocIdsVByteTransformer} (format version 2). */
+@Deprecated
 public class PrioDocIdsTransformer implements LongArrayTransformations.LongIOTransformer, AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(PrioDocIdsTransformer.class);

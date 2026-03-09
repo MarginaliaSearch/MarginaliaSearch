@@ -9,6 +9,11 @@ package nu.marginalia.btree;
  */
 public interface BTreeReaderIf {
 
+    /** Return the format version of this B-tree file.
+     * Legacy BTrees that predate versioning return 0.
+     */
+    default int formatVersion() { return 0; }
+
     /** Look up a key in the B-tree.
      *
      * @param key the key to search for

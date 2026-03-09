@@ -42,20 +42,24 @@ public class PrioReverseIndexReader {
     }
 
     public EntrySource documents(IndexLanguageContext languageContext, String term, long termId) {
-        if (languageContext.wordLexiconPrio == null) {
+        var lexicon = languageContext.wordLexiconPrio;
+        if (null == lexicon) {
             logger.warn("Reverse index is not ready, dropping query");
             return new EmptyEntrySource("prio", term);
         }
 
-        long offset = languageContext.wordLexiconPrio.wordOffset(termId);
+        long offset = lexicon.wordOffset(termId);
 
         if (offset < 0) // No documents
             return new EmptyEntrySource("prio", term);
 
-        return new PrioIndexEntrySource(name,
-                term,
-                documentsChannel,
-                offset);
+        int version = lexicon.formatVersion();
+
+        if (version <= 1) {
+            return new PrioIndexEntrySource(name, term, documentsChannel, offset);
+        }
+
+        return new PrioIndexVByteEntrySource(name, term, documentsChannel, offset);
     }
 
     /**
@@ -72,7 +76,7 @@ public class PrioReverseIndexReader {
         if (offset < 0) // No documents
             return 0;
 
-        ByteBuffer buffer = ByteBuffer.allocate(4);
+        ByteBuffer buffer = ByteBuffer.allocate(4).order(java.nio.ByteOrder.LITTLE_ENDIAN);
         try {
             documentsChannel.read(buffer, offset);
         } catch (IOException e) {
@@ -80,6 +84,10 @@ public class PrioReverseIndexReader {
             return 0;
         }
 
+        int version = lexicon.formatVersion();
+        if (version >= 2) {
+            return buffer.getInt(0);
+        }
         return buffer.getInt(0) & 0x3FFF_FFFF;
 
     }

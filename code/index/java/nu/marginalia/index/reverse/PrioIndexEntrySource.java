@@ -10,6 +10,9 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 
+/** @deprecated Used only for reading format version 1 (gamma/delta) data.
+ * New indexes use {@link PrioIndexVByteEntrySource} (format version 2). */
+@Deprecated
 public class PrioIndexEntrySource implements EntrySource {
     private final String name;
 
