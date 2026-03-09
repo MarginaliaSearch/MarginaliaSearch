@@ -1,4 +1,4 @@
-package nu.marginalia.nsfw;
+package nu.marginalia.nsfw.domain;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -6,7 +6,7 @@ import jakarta.inject.Named;
 
 import java.util.List;
 
-public class NsfwFilterModule extends AbstractModule {
+public class NsfwDomainFilterModule extends AbstractModule {
 
     @Provides
     @Named("nsfw.dangerLists")

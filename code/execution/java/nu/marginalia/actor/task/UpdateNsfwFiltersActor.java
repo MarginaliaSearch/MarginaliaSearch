@@ -7,7 +7,7 @@ import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.persistence.MqPersistence;
-import nu.marginalia.nsfw.NsfwDomainFilter;
+import nu.marginalia.nsfw.domain.NsfwDomainFilter;
 import nu.marginalia.service.module.ServiceConfiguration;
 
 @Singleton

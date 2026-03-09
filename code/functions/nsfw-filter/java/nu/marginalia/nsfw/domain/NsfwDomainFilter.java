@@ -1,4 +1,4 @@
-package nu.marginalia.nsfw;
+package nu.marginalia.nsfw.domain;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
