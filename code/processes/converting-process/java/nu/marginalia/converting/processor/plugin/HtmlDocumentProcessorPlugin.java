@@ -34,6 +34,7 @@ import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
+import nu.marginalia.nsfw.document.NsfwDocumentFilter;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
