@@ -18,11 +18,8 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /** Evaluates a trained NSFW model against test data or real document
  *  database data.  Supports two modes:
@@ -63,16 +60,29 @@ public class NsfwDocumentEvaluator {
             case "evaluate" -> {
                 runEvaluation();
             }
-            case "active-learning" -> {
+            case "active-learning-docdb" -> {
                 if (args.length < 2) {
-                    System.err.println("Mode takes a document db as path");
+                    System.err.println("Mode takes a document db as argument");
                     System.err.println("usage: active-learning db-path");
                     return;
                 }
 
-                runActiveLearning(
+                runActiveLearningDocDb(
                         Path.of(args[1]),
                         WmsaHome.getModelsPath().resolve("nsfw-model")
+                );
+            }
+            case "active-learning-api" -> {
+                if (args.length < 2) {
+                    System.err.println("Mode takes an API key  as argument");
+                    System.err.println("usage: active-learning api-key");
+                    return;
+                }
+
+                runActiveLearningSearchAPI(
+                        args[1],
+                        WmsaHome.getModelsPath().resolve("nsfw-model"),
+                        Arrays.stream(args).skip(2).collect(Collectors.joining(" "))
                 );
             }
             default -> {
@@ -100,7 +110,7 @@ public class NsfwDocumentEvaluator {
 
         NsfwDocumentTrainer trainer = new NsfwDocumentTrainer(FEATURES_FILE);
         trainer.train(0.1f, 1000, trainingPath);
-        trainer.saveWeights(Path.of("/tmp/nsfw-model"));
+        trainer.saveWeights(Path.of("/home/vlofgren/Code/MarginaliaSearch/run/model/nsfw-model"));
 
         evaluate(trainer.getModel(), testingPath);
     }
@@ -109,7 +119,7 @@ public class NsfwDocumentEvaluator {
      *  via Ollama.  Results are written as a timestamped file in
      *  the training data directory.
      */
-    static void runActiveLearning(Path docDbPath,
+    static void runActiveLearningDocDb(Path docDbPath,
                                    Path modelPath) throws IOException, SQLException {
         String timestamp = java.time.LocalDateTime.now()
                 .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"));
@@ -207,6 +217,121 @@ public class NsfwDocumentEvaluator {
 
                 if (labeled % 100 == 0) {
                     logger.info("Progress: {} labeled, {} skipped", labeled, skipped);
+                }
+            }
+        }
+
+        logger.info("Active learning complete: {} labeled, {} skipped, written to {}",
+                labeled, skipped, outputPath);
+        logger.info("Ollama labels: {} NSFW, {} SAFE", ollamaNsfw, ollamaSafe);
+        if (labeled > 0) {
+            logger.info("Model agreed with Ollama on {}/{} ({} %)",
+                    modelAgreed, labeled, 100 * modelAgreed / labeled);
+        }
+    }
+
+
+
+    /** Scan real documents, find ambiguous cases, and label them
+     *  via Ollama.  Results are written as a timestamped file in
+     *  the training data directory.
+     */
+    static void runActiveLearningSearchAPI(String apiKey, Path modelPath, String query) throws IOException, SQLException {
+        String timestamp = java.time.LocalDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"));
+        Path outputPath = TRAINING_DATA_DIR.resolve("ollama-" + timestamp + ".txt");
+
+        NsfwDocumentFilter filter = new NsfwDocumentFilter(modelPath);
+
+        IntOpenHashSet seenHashes = loadExistingHashes(TRAINING_DATA_DIR);
+
+        int labeled = 0;
+        int skipped = 0;
+        int ollamaNsfw = 0;
+        int ollamaSafe = 0;
+        int modelAgreed = 0;
+
+        try (MarginaliaApiClient apiClient = new MarginaliaApiClient(apiKey);
+             OllamaNsfwLabeler ollama = new OllamaNsfwLabeler("localhost", 11434, OllamaNsfwLabeler.DEFAULT_MODEL);
+             BufferedWriter writer = Files.newBufferedWriter(outputPath,
+                     StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
+
+            String lastLabeledDomain = null;
+
+
+            int page = 1;
+
+            while (true) {
+                var rsp = apiClient.query(query + " qs=RF_TITLE", page++, 100, 2);
+                if (rsp.results().isEmpty())
+                    break;
+
+                for (var result : rsp.results()) {
+                    String title = result.title();
+                    String description = result.description();
+                    String url = result.url();
+
+                    if (title == null || title.isBlank()) {
+                        continue;
+                    }
+
+                    // After labeling a sample, skip remaining rows from the
+                    // same domain to avoid bias from domain-sorted URLs
+                    if (lastLabeledDomain != null) {
+                        String domain = extractDomain(url);
+                        if (lastLabeledDomain.equals(domain)) {
+                            continue;
+                        }
+                        lastLabeledDomain = null;
+                    }
+
+                    float proba = filter.nsfwProba(title, description);
+
+                    String text = (title + " " + (description != null ? description : ""))
+                            .toLowerCase()
+                            .replaceAll("[\\r\\n]+", " ");
+
+                    if (!seenHashes.add(text.hashCode())) {
+                        continue;
+                    }
+
+                    String label;
+                    try {
+                        label = ollama.classify(title, description != null ? description : "");
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    } catch (IOException e) {
+                        logger.warn("Ollama request failed for '{}': {}", title, e.getMessage());
+                        skipped++;
+                        continue;
+                    }
+
+                    boolean ollamaSaysNsfw = NsfwDocumentModel.LABEL_NSFW.equals(label);
+                    boolean modelSaysNsfw = proba >= 0.5f;
+
+                    if (ollamaSaysNsfw) {
+                        ollamaNsfw++;
+                    } else {
+                        ollamaSafe++;
+                    }
+                    if (ollamaSaysNsfw == modelSaysNsfw) {
+                        modelAgreed++;
+                    }
+
+                    writer.write(label + " " + text);
+                    writer.newLine();
+                    writer.flush();
+
+                    labeled++;
+                    lastLabeledDomain = extractDomain(url);
+
+                    logger.info("[{}] p={} {} | {} | {}",
+                            label, String.format("%.2f", proba), url, title, description);
+
+                    if (labeled % 100 == 0) {
+                        logger.info("Progress: {} labeled, {} skipped", labeled, skipped);
+                    }
                 }
             }
         }
