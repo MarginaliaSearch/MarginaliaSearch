@@ -28,6 +28,8 @@ hot_glue
 anal_sex
 escort_vehicle
 pussy_cat
+only_fans
+sex_work
 
 # Unigrams
 2257
@@ -41,6 +43,7 @@ slut
 girl
 dating
 xxx
+cat
 pussy
 sexy
 cock
@@ -622,3 +625,5 @@ community
 culture
 driver
 cairns
+warcraft
+cancer
