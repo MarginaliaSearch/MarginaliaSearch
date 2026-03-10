@@ -41,6 +41,7 @@ dependencies {
     implementation project(':code:libraries:coded-sequence')
     implementation project(':code:libraries:geo-ip')
     implementation project(':code:functions:language-processing')
+    implementation project(':code:functions:nsfw-filter')
 
     implementation project(':code:processes:converting-process:model')
     implementation project(':code:processes:converting-process:ft-dom-classifier')

@@ -79,7 +79,9 @@ public enum HtmlFeature {
     S3_FEATURE("special:s3"),
 
     MISSING_DOM_SAMPLE("special:nosample"),
-    UNKNOWN("special:uncategorized");
+    NSFW_CONTENT("category:nsfw"),
+    UNKNOWN("special:uncategorized")
+    ;
 
 
     private final String keyword;

@@ -1,6 +1,6 @@
 package nu.marginalia.nsfw.document;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
+import nu.marginalia.language.model.DocumentSentence;
 import nu.marginalia.slop.SlopTable;
 import nu.marginalia.slop.column.array.FloatArrayColumn;
 import nu.marginalia.slop.column.primitive.FloatColumn;
@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -42,17 +43,15 @@ class NsfwDocumentModel {
     private static final FloatColumn biasOColumn =
             new FloatColumn("biasO");
 
-    // Feature vocabulary
     private final List<String> terms;
     private final int numFeatures;
     private final Map<String, Integer> unigramIndex;
-    private final Map<String, Integer> bigramIndex;
 
-    // Network weights: input -> hidden
+    private final Map<String, Map<String, Integer>> bigramIndex;
+
     private final float[][] weightsIH;
     private final float[] biasH;
 
-    // Network weights: hidden -> output
     private final float[] weightsHO;
     private float biasO;
 
@@ -73,8 +72,12 @@ class NsfwDocumentModel {
 
         for (int i = 0; i < terms.size(); i++) {
             String term = terms.get(i);
-            if (term.indexOf('_') >= 0) {
-                bigramIndex.put(term, i);
+            int sep = term.indexOf('_');
+            if (sep >= 0) {
+                String first = term.substring(0, sep);
+                String second = term.substring(sep + 1);
+                bigramIndex.computeIfAbsent(first, k -> new HashMap<>())
+                        .put(second, i);
             } else {
                 unigramIndex.put(term, i);
             }
@@ -102,30 +105,66 @@ class NsfwDocumentModel {
         String text = sanitizeInput(title + " " + description);
         String[] words = StringUtils.split(text);
 
-        IntArrayList active = new IntArrayList();
+        BitSet active = new BitSet(numFeatures);
 
         String prevWord = null;
         for (String word : words) {
             Integer idx = unigramIndex.get(word);
             if (idx != null) {
-                active.add(idx.intValue());
+                active.set(idx);
             }
 
-            if (prevWord != null && !bigramIndex.isEmpty()) {
-                Integer bigramIdx = bigramIndex.get(prevWord + "_" + word);
-                if (bigramIdx != null) {
-                    active.add(bigramIdx.intValue());
-                }
+            if (prevWord != null) {
+                lookupBigram(active, prevWord, word);
             }
             prevWord = word;
         }
 
-        return active.toIntArray();
+        return bitSetToArray(active);
+    }
+
+    int[] extractFeatures(List<DocumentSentence> sentences) {
+        BitSet active = new BitSet(numFeatures);
+
+        for (DocumentSentence sentence : sentences) {
+            String prevWord = null;
+
+            for (int i = 0; i < sentence.wordsLowerCase.length; i++) {
+                if (sentence.isStopWord(i)) {
+                    prevWord = null;
+                    continue;
+                }
+
+                // Break bigram chain at comma separators
+                if (i > 0 && sentence.isSeparatorComma(i - 1)) {
+                    prevWord = null;
+                }
+
+                String word = sentence.wordsLowerCase[i];
+
+                Integer idx = unigramIndex.get(word);
+                if (idx != null) {
+                    active.set(idx);
+                }
+
+                if (prevWord != null) {
+                    lookupBigram(active, prevWord, word);
+                }
+                prevWord = word;
+            }
+        }
+
+        return bitSetToArray(active);
     }
 
     Set<String> knownTerms() {
         Set<String> all = new HashSet<>(unigramIndex.keySet());
-        all.addAll(bigramIndex.keySet());
+        for (Map.Entry<String, Map<String, Integer>> entry : bigramIndex.entrySet()) {
+            String first = entry.getKey();
+            for (String second : entry.getValue().keySet()) {
+                all.add(first + "_" + second);
+            }
+        }
         return all;
     }
 
@@ -290,6 +329,26 @@ class NsfwDocumentModel {
             }
         }
         return sb.toString();
+    }
+
+    private void lookupBigram(BitSet active, String first, String second) {
+        Map<String, Integer> secondMap = bigramIndex.get(first);
+        if (secondMap == null) {
+            return;
+        }
+        Integer idx = secondMap.get(second);
+        if (idx != null) {
+            active.set(idx);
+        }
+    }
+
+    private static int[] bitSetToArray(BitSet bits) {
+        int[] result = new int[bits.cardinality()];
+        int pos = 0;
+        for (int i = bits.nextSetBit(0); i >= 0; i = bits.nextSetBit(i + 1)) {
+            result[pos++] = i;
+        }
+        return result;
     }
 
     private static float sigmoid(float x) {

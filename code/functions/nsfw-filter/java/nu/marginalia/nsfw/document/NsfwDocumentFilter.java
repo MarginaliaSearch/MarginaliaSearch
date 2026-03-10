@@ -3,11 +3,13 @@ package nu.marginalia.nsfw.document;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.language.model.DocumentSentence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 
 /** NSFW document classifier for inference.  Uses a pre-trained
  *  neural network model to estimate the probability that a
@@ -53,10 +55,22 @@ public class NsfwDocumentFilter {
      *  its title and description.
      */
     public float nsfwProba(String title, String description) {
-        if (modelLoaded == false)
+        if (!modelLoaded)
             return 0.f;
 
         int[] features = model.extractFeatures(title, description);
+        return model.forward(features);
+    }
+
+    /** Return the probability that the document is NSFW based on
+     *  the words in the given sentences.  Bigrams are not formed
+     *  across sentence or comma boundaries.
+     */
+    public float nsfwProba(List<DocumentSentence> sentences) {
+        if (!modelLoaded)
+            return 0.f;
+
+        int[] features = model.extractFeatures(sentences);
         return model.forward(features);
     }
 }

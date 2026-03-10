@@ -47,7 +47,6 @@ public class NsfwDocumentEvaluator {
     private static final Path FEATURES_FILE = DATA_DIR.resolve("features.txt");
 
     public static void main(String[] args) throws IOException, SQLException {
-
         String cmd;
         if (args.length == 0) {
             cmd = "";
