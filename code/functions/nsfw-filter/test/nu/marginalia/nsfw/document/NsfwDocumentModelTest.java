@@ -1,5 +1,7 @@
 package nu.marginalia.nsfw.document;
 
+import nu.marginalia.language.model.DocumentSentence;
+import nu.marginalia.language.sentence.tag.HtmlTag;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -7,6 +9,8 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.BitSet;
+import java.util.EnumSet;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -132,5 +136,138 @@ class NsfwDocumentModelTest {
             assertTrue(idx >= 0 && idx < model.numFeatures(),
                     "Feature index " + idx + " out of bounds");
         }
+    }
+
+    @Test
+    void sentenceExtractsUnigrams() throws IOException {
+        NsfwDocumentModel model = createExtractionModel();
+        DocumentSentence sentence = createSentence("xxx", "porn");
+        int[] features = model.extractFeatures(List.of(sentence));
+
+        assertEquals(2, features.length,
+                "Expected two unigram features for 'xxx' and 'porn'");
+    }
+
+    @Test
+    void sentenceExtractsBigram() throws IOException {
+        NsfwDocumentModel model = createExtractionModel();
+        // "facial" followed by "expression" should fire unigram "facial"
+        // plus bigram "facial_expression"
+        DocumentSentence sentence = createSentence("facial", "expression");
+        int[] features = model.extractFeatures(List.of(sentence));
+
+        // facial (unigram) + facial_expression (bigram)
+        assertEquals(2, features.length,
+                "Expected unigram 'facial' and bigram 'facial_expression'");
+    }
+
+    @Test
+    void commaBreaksBigramChain() throws IOException {
+        NsfwDocumentModel model = createExtractionModel();
+        // With a comma between "facial" and "expression", the bigram
+        // should not fire
+        DocumentSentence sentence = createSentenceWithComma(
+                new String[]{"facial", "expression"},
+                new boolean[]{false, true}  // comma after "facial"
+        );
+        int[] features = model.extractFeatures(List.of(sentence));
+
+        // Only the "facial" unigram should fire, no bigram
+        assertEquals(1, features.length,
+                "Comma should prevent bigram from forming");
+    }
+
+    @Test
+    void stopWordBreaksBigramChain() throws IOException {
+        NsfwDocumentModel model = createExtractionModel();
+        // A junk/stop word between "facial" and "expression" should
+        // break the bigram chain; "-" is a stop word per WordPatterns
+        DocumentSentence sentence = createSentence("facial", "-", "expression");
+        int[] features = model.extractFeatures(List.of(sentence));
+
+        // Only the "facial" unigram should fire
+        assertEquals(1, features.length,
+                "Stop word should prevent bigram from forming");
+    }
+
+    @Test
+    void stopWordsAreNotExtractedAsFeatures() throws IOException {
+        // Use a feature list that includes a term that is also a junk word
+        NsfwDocumentModel model = createExtractionModel();
+        // "-" is a stop word; even though it wouldn't match a feature,
+        // verify the stop word itself produces no features
+        DocumentSentence sentence = createSentence("-");
+        int[] features = model.extractFeatures(List.of(sentence));
+
+        assertEquals(0, features.length,
+                "Stop words should not produce features");
+    }
+
+    @Test
+    void separateSentencesDoNotFormBigrams() throws IOException {
+        NsfwDocumentModel model = createExtractionModel();
+        // "facial" at end of first sentence, "expression" at start of second
+        DocumentSentence first = createSentence("facial");
+        DocumentSentence second = createSentence("expression");
+        int[] features = model.extractFeatures(List.of(first, second));
+
+        // Only the "facial" unigram, no bigram across sentences
+        assertEquals(1, features.length,
+                "Bigrams should not form across sentence boundaries");
+    }
+
+    @Test
+    void duplicateFeaturesAreDeduplicatedInSentences() throws IOException {
+        NsfwDocumentModel model = createExtractionModel();
+        DocumentSentence sentence = createSentence("xxx", "xxx", "xxx");
+        int[] features = model.extractFeatures(List.of(sentence));
+
+        assertEquals(1, features.length,
+                "Duplicate features should be deduplicated");
+    }
+
+    @Test
+    void multipleSentencesCollectAllFeatures() throws IOException {
+        NsfwDocumentModel model = createExtractionModel();
+        DocumentSentence first = createSentence("xxx");
+        DocumentSentence second = createSentence("porn");
+        int[] features = model.extractFeatures(List.of(first, second));
+
+        assertEquals(2, features.length,
+                "Features from multiple sentences should be collected");
+    }
+
+    private static DocumentSentence createSentence(String... words) {
+        BitSet separators = new BitSet(words.length);
+        separators.set(0, words.length);  // all spaces
+        return new DocumentSentence(
+                separators,
+                words,
+                new long[words.length],
+                words,
+                EnumSet.noneOf(HtmlTag.class),
+                new BitSet(words.length),
+                new BitSet(words.length),
+                new BitSet(words.length)
+        );
+    }
+
+    private static DocumentSentence createSentenceWithComma(String[] words, boolean[] isSpace) {
+        BitSet separators = new BitSet(words.length);
+        for (int i = 0; i < isSpace.length; i++) {
+            if (isSpace[i]) {
+                separators.set(i);
+            }
+        }
+        return new DocumentSentence(
+                separators,
+                words,
+                new long[words.length],
+                words,
+                EnumSet.noneOf(HtmlTag.class),
+                new BitSet(words.length),
+                new BitSet(words.length),
+                new BitSet(words.length)
+        );
     }
 }
