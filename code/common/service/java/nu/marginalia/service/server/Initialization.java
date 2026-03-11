@@ -16,7 +16,9 @@ import java.util.List;
 public class Initialization {
     private boolean initialized;
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final List<Runnable> callbacks = new ArrayList<>();
+    private final List<NamedCallback> callbacks = new ArrayList<>();
+
+    private record NamedCallback(String name, Runnable action) {}
 
     public static Initialization already() {
         Initialization init = new Initialization();
@@ -31,16 +33,20 @@ public class Initialization {
             notifyAll();
         }
 
-        callbacks.forEach(Runnable::run);
+        for (NamedCallback callback : callbacks) {
+            long start = System.currentTimeMillis();
+            callback.action().run();
+            logger.info("Callback {} completed in {}ms", callback.name(), System.currentTimeMillis() - start);
+        }
         callbacks.clear();
     }
 
-    public void addCallback(Runnable callback) {
+    public void addCallback(String name, Runnable callback) {
         boolean runNow;
 
         synchronized (this) {
             if (!initialized) {
-                callbacks.add(callback);
+                callbacks.add(new NamedCallback(name, callback));
                 runNow = false;
             } else {
                 runNow = true;
@@ -48,7 +54,9 @@ public class Initialization {
         }
 
         if (runNow) {
+            long start = System.currentTimeMillis();
             callback.run();
+            logger.info("Initialization callback: {}={}ms", name, System.currentTimeMillis() - start);
         }
     }
 

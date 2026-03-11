@@ -29,6 +29,11 @@ dependencies {
     implementation libs.bundles.junit
     implementation libs.mockito
     implementation libs.bundles.flyway
+    implementation platform('org.testcontainers:testcontainers-bom:1.21.4')
+    implementation 'org.testcontainers:mariadb:1.21.4'
+    implementation 'org.testcontainers:junit-jupiter:1.21.4'
+    implementation libs.bundles.curator
+    implementation libs.commons.codec
 }
 
 test {

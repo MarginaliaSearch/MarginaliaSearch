@@ -2,13 +2,13 @@ package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
+import io.jooby.Context;
+import io.jooby.StatusCode;
+import io.jooby.exception.StatusCodeException;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.db.DbDomainQueries;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
 
 import java.sql.SQLException;
 
@@ -28,9 +28,9 @@ public class SearchAddToCrawlQueueService {
         this.dataSource = dataSource;
     }
 
-    public Object suggestCrawling(Request request, Response response) throws SQLException {
-        int id = Integer.parseInt(request.queryParams("id"));
-        boolean nomisclick = "on".equals(request.queryParams("nomisclick"));
+    public Object suggestCrawling(Context ctx) throws SQLException {
+        int id = ctx.form("id").intValue();
+        boolean nomisclick = "on".equals(ctx.form("nomisclick").valueOrNull());
 
         String domainName = getDomainName(id);
 
@@ -42,9 +42,8 @@ public class SearchAddToCrawlQueueService {
             logger.info("Nomisclick not set, not adding {} to crawl queue", domainName);
         }
 
-        response.redirect(websiteUrl.withPath("/site/" + domainName));
-
-        return "";
+        ctx.sendRedirect(websiteUrl.withPath("/site/" + domainName));
+        return ctx;
     }
 
     private void addToCrawlQueue(int id) throws SQLException {
@@ -61,8 +60,7 @@ public class SearchAddToCrawlQueueService {
     private String getDomainName(int id) {
         var domain = domainQueries.getDomain(id);
         if (domain.isEmpty())
-            Spark.halt(404);
+            throw new StatusCodeException(StatusCode.NOT_FOUND);
         return domain.get().toString();
     }
 }
-

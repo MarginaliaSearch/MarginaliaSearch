@@ -75,10 +75,10 @@ public class JoobyService {
 
         serviceName = System.getProperty("service-name");
 
-        initialization.addCallback(params.heartbeat::start);
-        initialization.addCallback(messageQueueInbox::start);
-        initialization.addCallback(() -> params.eventLog.logEvent("SVC-INIT", serviceName + ":" + config.node()));
-        initialization.addCallback(() -> serviceRegistry.announceInstance(config.instanceUuid()));
+        initialization.addCallback("heartbeat", params.heartbeat::start);
+        initialization.addCallback("message-queue-inbox", messageQueueInbox::start);
+        initialization.addCallback("event-log", () -> params.eventLog.logEvent("SVC-INIT", serviceName + ":" + config.node()));
+        initialization.addCallback("announce-instance", () -> serviceRegistry.announceInstance(config.instanceUuid()));
 
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
             if (e instanceof ServiceNotAvailableException) {

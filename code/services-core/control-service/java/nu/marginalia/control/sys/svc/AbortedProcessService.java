@@ -4,6 +4,9 @@ import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
+import io.jooby.Context;
+import io.jooby.Jooby;
+import io.jooby.MediaType;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.control.RedirectControl;
 import nu.marginalia.control.sys.model.AbortedProcess;
@@ -17,9 +20,6 @@ import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -42,6 +42,8 @@ public class AbortedProcessService {
     private final MqPersistence mqPersistence;
     private final NodeConfigurationService nodeConfigurationService;
 
+    private ControlRendererFactory.Renderer abortedProcessesRenderer;
+
     @Inject
     public AbortedProcessService(HikariDataSource dataSource,
                                  FileStorageService fileStorageService,
@@ -58,22 +60,25 @@ public class AbortedProcessService {
         this.nodeConfigurationService = nodeConfigurationService;
     }
 
-    public void register() throws IOException {
-        var abortedProcessesRenderer = rendererFactory.renderer("control/sys/aborted-processes");
+    public void register(Jooby jooby) throws IOException {
+        abortedProcessesRenderer = rendererFactory.renderer("control/sys/aborted-processes");
 
-        Spark.get("/aborted-processes", this::abortedProcessesModel, abortedProcessesRenderer::render);
-        Spark.get("/aborted-processes/", this::abortedProcessesModel, abortedProcessesRenderer::render);
-        Spark.post("/aborted-processes/:id", this::restartProcess, redirectControl.renderRedirectAcknowledgement("Restarting...", "/"));
+        jooby.get("/aborted-processes", this::abortedProcessesModel);
+        jooby.get("/aborted-processes/", this::abortedProcessesModel);
+        jooby.post("/aborted-processes/{id}", this::restartProcess);
     }
 
-    private Object abortedProcessesModel(Request request, Response response) {
-        return Map.of("abortedProcesses", getAbortedProcesses());
+    private Object abortedProcessesModel(Context ctx) {
+        ctx.setResponseType(MediaType.html);
+        return abortedProcessesRenderer.render(Map.of("abortedProcesses", getAbortedProcesses()));
     }
 
-    private Object restartProcess(Request request, Response response) throws SQLException {
-        long msgId = Long.parseLong(request.params("id"));
+    private Object restartProcess(Context ctx) throws SQLException {
+        long msgId = Long.parseLong(ctx.path("id").value());
         mqPersistence.updateMessageState(msgId, MqMessageState.NEW);
-        return "";
+
+        ctx.setResponseType(MediaType.html);
+        return redirectControl.justRender("Restarting...", "/");
     }
 
 

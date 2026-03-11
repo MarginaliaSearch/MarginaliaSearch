@@ -60,7 +60,6 @@ dependencies {
         exclude group: 'com.google.guava'
     }
     implementation libs.bundles.jooby
-    implementation libs.bundles.jetty
     implementation libs.opencsv
     implementation libs.sqlite
     implementation libs.trove
@@ -71,6 +70,6 @@ dependencies {
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
-
+    testImplementation project(':code:libraries:test-helpers')
 
 }

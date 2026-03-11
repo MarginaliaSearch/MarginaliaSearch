@@ -5,10 +5,10 @@ import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
+import io.jooby.Context;
+import io.jooby.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -39,8 +39,9 @@ public class SearchFrontPageService {
         this.searchVisitorCount = searchVisitorCount;
     }
 
-    public String render(Request request, Response response) {
-        response.header("Cache-control", "public,max-age=3600");
+    public String render(Context ctx) {
+        ctx.setResponseType(MediaType.html);
+        ctx.setResponseHeader("Cache-control", "public,max-age=3600");
 
         return template.render(new IndexModel(
                 getNewsItems(),
@@ -74,7 +75,7 @@ public class SearchFrontPageService {
         return items;
     }
 
-    public Object renderNewsFeed(Request request, Response response) {
+    public Object renderNewsFeed(Context ctx) {
         List<NewsItem> newsItems = getNewsItems();
 
         StringBuilder sb = new StringBuilder();
@@ -106,7 +107,7 @@ public class SearchFrontPageService {
         sb.append("</channel>\n");
         sb.append("</rss>\n");
 
-        response.type("application/rss+xml");
+        ctx.setResponseType(MediaType.valueOf("application/rss+xml"));
 
         return sb.toString();
     }

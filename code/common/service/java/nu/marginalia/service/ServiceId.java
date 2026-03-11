@@ -11,7 +11,7 @@ public enum ServiceId {
     Control("control-service"),
 
     Dating("dating-service"),
-    Status("setatus-service"),
+    Status("status-service"),
     Explorer("explorer-service"),
 
     NOT_A_SERVICE("NOT_A_SERVICE")

@@ -1,13 +1,13 @@
 package nu.marginalia.control.sys.svc;
 
 import com.google.inject.Inject;
+import io.jooby.Context;
+import io.jooby.Jooby;
+import io.jooby.MediaType;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.control.ControlValidationError;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.db.DomainRankingSetsService;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -17,6 +17,10 @@ public class ControlDomainRankingSetsService {
     private final ControlRendererFactory rendererFactory;
     private final DomainRankingSetsService domainRankingSetsService;
 
+    private ControlRendererFactory.Renderer datasetsRenderer;
+    private ControlRendererFactory.Renderer updateDatasetRenderer;
+    private ControlRendererFactory.Renderer newDatasetRenderer;
+
     @Inject
     public ControlDomainRankingSetsService(ControlRendererFactory rendererFactory,
                                            DomainRankingSetsService domainRankingSetsService) {
@@ -24,32 +28,47 @@ public class ControlDomainRankingSetsService {
         this.domainRankingSetsService = domainRankingSetsService;
     }
 
-    public void register() throws IOException {
-        var datasetsRenderer = rendererFactory.renderer("control/sys/domain-ranking-sets");
-        var updateDatasetRenderer = rendererFactory.renderer("control/sys/update-domain-ranking-set");
-        var newDatasetRenderer = rendererFactory.renderer("control/sys/new-domain-ranking-set");
+    public void register(Jooby jooby) throws IOException {
+        datasetsRenderer = rendererFactory.renderer("control/sys/domain-ranking-sets");
+        updateDatasetRenderer = rendererFactory.renderer("control/sys/update-domain-ranking-set");
+        newDatasetRenderer = rendererFactory.renderer("control/sys/new-domain-ranking-set");
 
-        Spark.get("/domain-ranking-sets", this::rankingSetsModel, datasetsRenderer::render);
-        Spark.get("/domain-ranking-sets/new", (rq,rs) -> new Object(), newDatasetRenderer::render);
-        Spark.get("/domain-ranking-sets/:id", this::rankingSetModel, updateDatasetRenderer::render);
-        Spark.post("/domain-ranking-sets/:id", this::alterSetModel, Redirects.redirectToRankingDataSets);
+        jooby.get("/domain-ranking-sets", this::rankingSetsModel);
+        jooby.get("/domain-ranking-sets/new", this::serveNewRankingSet);
+        jooby.get("/domain-ranking-sets/{id}", this::rankingSetModel);
+        jooby.post("/domain-ranking-sets/{id}", this::alterSetModel);
     }
 
-    private Object alterSetModel(Request request, Response response) throws SQLException {
-        final String act = request.queryParams("act");
-        final String id = request.params("id");
+    private Object rankingSetsModel(Context ctx) {
+        ctx.setResponseType(MediaType.html);
+        return datasetsRenderer.render(Map.of("rankingSets", domainRankingSetsService.getAll()));
+    }
+
+    private Object serveNewRankingSet(Context ctx) {
+        ctx.setResponseType(MediaType.html);
+        return newDatasetRenderer.render(new Object());
+    }
+
+    private Object rankingSetModel(Context ctx) throws SQLException {
+        ctx.setResponseType(MediaType.html);
+        DomainRankingSetsService.DomainRankingSet model = domainRankingSetsService.get(ctx.path("id").value()).orElseThrow();
+        return updateDatasetRenderer.render(Map.of("rankingSet", model));
+    }
+
+    private Object alterSetModel(Context ctx) throws SQLException {
+        final String act = ctx.query("act").valueOrNull();
+        final String id = ctx.path("id").value();
 
         if ("update".equals(act)) {
             domainRankingSetsService.upsert(new DomainRankingSetsService.DomainRankingSet(
                     id,
-                    request.queryParams("description"),
-                    Integer.parseInt(request.queryParams("depth")),
-                    request.queryParams("definition")
+                    ctx.form("description").valueOrNull(),
+                    Integer.parseInt(ctx.form("depth").value()),
+                    ctx.form("definition").valueOrNull()
             ));
-            return "";
         }
         else if ("delete".equals(act)) {
-            var model = domainRankingSetsService.get(id).orElseThrow();
+            DomainRankingSetsService.DomainRankingSet model = domainRankingSetsService.get(id).orElseThrow();
             if (model.isSpecial()) {
                 throw new ControlValidationError("Cannot delete special ranking set",
                         """
@@ -58,10 +77,9 @@ public class ControlDomainRankingSetsService {
                         "/domain-ranking-sets");
             }
             domainRankingSetsService.delete(model);
-            return "";
         }
         else if ("create".equals(act)) {
-            if (domainRankingSetsService.get(request.queryParams("name")).isPresent()) {
+            if (domainRankingSetsService.get(ctx.form("name").valueOrNull()).isPresent()) {
                 throw new ControlValidationError("Ranking set with that name already exists",
                         """
                                 Ensure the new data set has a unique name and try again.
@@ -70,25 +88,20 @@ public class ControlDomainRankingSetsService {
             }
 
             domainRankingSetsService.upsert(new DomainRankingSetsService.DomainRankingSet(
-                    request.queryParams("name").toUpperCase(),
-                    request.queryParams("description"),
-                    Integer.parseInt(request.queryParams("depth")),
-                    request.queryParams("definition")
+                    ctx.form("name").value("").toUpperCase(),
+                    ctx.form("description").valueOrNull(),
+                    Integer.parseInt(ctx.form("depth").value()),
+                    ctx.form("definition").valueOrNull()
             ));
-            return "";
+        }
+        else {
+            throw new ControlValidationError("Unknown action", """
+                    An unknown action was requested and the system does not understand how to act on it.
+                    """,
+                "/domain-ranking-sets");
         }
 
-        throw new ControlValidationError("Unknown action", """
-                An unknown action was requested and the system does not understand how to act on it.
-                """,
-            "/domain-ranking-sets");
-    }
-
-    private Object rankingSetsModel(Request request, Response response) {
-        return Map.of("rankingSets", domainRankingSetsService.getAll());
-    }
-    private Object rankingSetModel(Request request, Response response) throws SQLException {
-        var model = domainRankingSetsService.get(request.params("id")).orElseThrow();
-        return Map.of("rankingSet", model);
+        ctx.setResponseType(MediaType.html);
+        return Redirects.redirectToRankingDataSets.render(null);
     }
 }

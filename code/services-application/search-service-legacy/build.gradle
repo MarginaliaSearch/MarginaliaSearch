@@ -4,7 +4,6 @@ plugins {
     id 'io.freefair.sass-java' version '8.4'
     id 'application'
     id 'com.gradleup.shadow'
-    id 'jvm-test-suite'
 
     id 'com.google.cloud.tools.jib' version '3.4.5'
 }
@@ -64,10 +63,9 @@ dependencies {
         exclude group: 'com.google.guava'
     }
     implementation libs.handlebars
-    implementation dependencies.create(libs.spark.get()) {
-        exclude group: 'org.eclipse.jetty'
+    implementation dependencies.create(libs.jooby.netty.get()) {
+        exclude group: 'org.slf4j'
     }
-    implementation libs.bundles.jetty
     implementation libs.opencsv
     implementation libs.trove
     implementation libs.fastutil
@@ -78,12 +76,11 @@ dependencies {
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
+    testImplementation libs.bundles.grpc
+    testImplementation libs.jooby.test
 
-    testImplementation platform('org.testcontainers:testcontainers-bom:1.21.4')
     testImplementation libs.commons.codec
     testImplementation libs.jsoup
-    testImplementation 'org.testcontainers:mariadb:1.21.4'
-    testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
     testImplementation project(':code:libraries:test-helpers')
 }
 

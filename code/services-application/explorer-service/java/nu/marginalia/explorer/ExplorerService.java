@@ -2,24 +2,21 @@ package nu.marginalia.explorer;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
+import io.jooby.Context;
+import io.jooby.Jooby;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.service.server.BaseServiceParams;
-import nu.marginalia.service.server.SparkService;
-import nu.marginalia.service.server.StaticResources;
+import nu.marginalia.service.server.JoobyService;
 import org.jetbrains.annotations.NotNull;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
 
 import java.sql.SQLException;
 import java.util.*;
 
-public class ExplorerService extends SparkService {
+public class ExplorerService extends JoobyService {
 
     private final MustacheRenderer<Object> renderer;
     private final HikariDataSource dataSource;
-    private final StaticResources staticResources;
 
     record SearchResult(
             String domain,
@@ -40,53 +37,46 @@ public class ExplorerService extends SparkService {
     @Inject
     public ExplorerService(BaseServiceParams params,
                            RendererFactory rendererFactory,
-                           HikariDataSource dataSource,
-                           StaticResources staticResources
+                           HikariDataSource dataSource
                            ) throws Exception
 
     {
 
-        super(params);
+        super(params, List.of(), List.of());
 
         renderer = rendererFactory.renderer("explorer/explorer");
 
         this.dataSource = dataSource;
-        this.staticResources = staticResources;
+    }
 
-        Spark.get("/", this::serveIndex, this::render);
-        Spark.get("/search", this::search, this::render);
-        Spark.get("/:resource", this::serveStatic);
+    @Override
+    public void startJooby(Jooby jooby) {
+        super.startJooby(jooby);
+
+        jooby.get("/", this::serveIndex);
+        jooby.get("/search", this::search);
+    }
+
+    private Object serveIndex(Context ctx) throws Exception {
+
+        return renderer.render(new SearchResults("", "", null, Collections.emptyList()));
     }
 
 
-    private Object serveStatic(Request request, Response response) {
-        String resource = request.params("resource");
+    private Object search(Context ctx) throws Exception {
+        String query = ctx.query("domain").valueOrNull();
 
-        staticResources.serveStatic("explore", resource, request, response);
-
-        return "";
-    }
-
-    public String render(Object results) {
-        return renderer.render(results);
-    }
-
-    private SearchResults serveIndex(Request request, Response response) {
-
-        return new SearchResults("", "", null, Collections.emptyList());
-    }
-
-
-    private SearchResults search(Request request, Response response) throws SQLException {
-        String query = request.queryParams("domain");
+        if (query == null) {
+            return renderer.render(new SearchResults("", "", null, Collections.emptyList()));
+        }
 
         query = trimUrlJunk(query);
 
         DomainIdInformation domainId = getDomainId(query);
         if (!domainId.isPresent()) {
-            return new SearchResults(query,
+            return renderer.render(new SearchResults(query,
                     "Could not find such a domain (maybe try adding/removing www?)",
-                    null, Collections.emptyList());
+                    null, Collections.emptyList()));
         }
 
         var relatedDomains = getRelatedDomains(domainId);
@@ -99,10 +89,10 @@ public class ExplorerService extends SparkService {
                  not very interesting to look at either as everyone links to them and there's no real pattern to discern.
                 """;
 
-            return new SearchResults(query, message, domainId.alias, relatedDomains);
+            return renderer.render(new SearchResults(query, message, domainId.alias, relatedDomains));
         }
 
-        return new SearchResults(query, "", domainId.alias, relatedDomains);
+        return renderer.render(new SearchResults(query, "", domainId.alias, relatedDomains));
     }
 
     private List<SearchResult> getRelatedDomains(DomainIdInformation domainIdInformation) throws SQLException {
@@ -213,8 +203,8 @@ public class ExplorerService extends SparkService {
 
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                SELECT DOMAIN.ID, IFNULL(ALIAS.ID, DOMAIN.ID), DOMAIN.INDEXED>0 OR ALIAS.INDEXED>0, ALIAS.DOMAIN_NAME 
-                FROM EC_DOMAIN DOMAIN 
+                SELECT DOMAIN.ID, IFNULL(ALIAS.ID, DOMAIN.ID), DOMAIN.INDEXED>0 OR ALIAS.INDEXED>0, ALIAS.DOMAIN_NAME
+                FROM EC_DOMAIN DOMAIN
                 LEFT JOIN EC_DOMAIN ALIAS ON DOMAIN.DOMAIN_ALIAS=ALIAS.ID
                 WHERE DOMAIN.DOMAIN_NAME=?
                 """)) {
@@ -233,7 +223,7 @@ public class ExplorerService extends SparkService {
         return new DomainIdInformation(-1, -1,  false, null);
     }
 
-    private String trimUrlJunk(String query) {
+    static String trimUrlJunk(String query) {
         if (query.startsWith("http://")) {
             query = query.substring(7);
         }

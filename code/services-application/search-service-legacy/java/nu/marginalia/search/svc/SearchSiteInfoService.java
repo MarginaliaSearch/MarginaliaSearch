@@ -18,10 +18,10 @@ import nu.marginalia.search.SearchOperator;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.svc.SearchFlagSiteService.FlagSiteFormData;
 import nu.marginalia.service.server.RateLimiter;
+import io.jooby.Context;
+import io.jooby.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -71,21 +71,22 @@ public class SearchSiteInfoService {
         this.scrapeStopperInterceptor = scrapeStopperInterceptor;
     }
 
-    public Object handle(Request request, Response response) throws SQLException, TimeoutException {
-        String domainName = request.params("site");
+    public Object handle(Context ctx) throws SQLException, TimeoutException {
+        ctx.setResponseType(MediaType.html);
+        String domainName = ctx.path("site").value();
 
-        var intercept = scrapeStopperInterceptor.intercept("I", domainName, rateLimiter, request, response);
+        ScrapeStopperInterceptor.InterceptionResult intercept = scrapeStopperInterceptor.intercept("I", domainName, rateLimiter, ctx);
         if (intercept instanceof ScrapeStopperInterceptor.InterceptRedirect redirect)
             return redirect.result();
 
 
-        String view = request.queryParamOrDefault("view", "info");
+        String view = ctx.query("view").value("info");
 
         if (null == domainName || domainName.isBlank()) {
             return null;
         }
 
-        var model = switch (view) {
+        Object model = switch (view) {
             case "links" -> listLinks(domainName, intercept.sst());
             case "docs" -> listDocs(domainName, intercept.sst());
             case "info" -> listInfo(domainName, intercept.sst());
@@ -96,10 +97,11 @@ public class SearchSiteInfoService {
         return renderer.render(model);
     }
 
-    public Object handlePost(Request request, Response response) throws SQLException {
-        String domainName = request.params("site");
-        String view = request.queryParamOrDefault("view", "info");
-        String sst = request.queryParamOrDefault("sst", "");
+    public Object handlePost(Context ctx) throws SQLException {
+        ctx.setResponseType(MediaType.html);
+        String domainName = ctx.path("site").value();
+        String view = ctx.query("view").value("info");
+        String sst = ctx.query("sst").value("");
 
         if (null == domainName || domainName.isBlank()) {
             return null;
@@ -112,22 +114,22 @@ public class SearchSiteInfoService {
 
         FlagSiteFormData formData = new FlagSiteFormData(
                 domainId,
-                request.queryParams("category"),
-                request.queryParams("description"),
-                request.queryParams("sampleQuery")
+                ctx.form("category").valueOrNull(),
+                ctx.form("description").valueOrNull(),
+                ctx.form("sampleQuery").valueOrNull()
         );
         flagSiteService.insertComplaint(formData);
 
-        var complaints = flagSiteService.getExistingComplaints(domainId);
+        List<SearchFlagSiteService.FlagSiteComplaintModel> complaints = flagSiteService.getExistingComplaints(domainId);
 
-        var model = new ReportDomain(domainName, sst, domainId, complaints, List.of(), true);
+        ReportDomain model = new ReportDomain(domainName, sst, domainId, complaints, List.of(), true);
 
         return renderer.render(model);
     }
 
     private Object reportSite(String domainName, String sst) throws SQLException {
         int domainId = domainQueries.getDomainId(new EdgeDomain(domainName));
-        var existingComplaints = flagSiteService.getExistingComplaints(domainId);
+        List<SearchFlagSiteService.FlagSiteComplaintModel> existingComplaints = flagSiteService.getExistingComplaints(domainId);
 
         return new ReportDomain(domainName,
                 sst,
@@ -182,7 +184,7 @@ public class SearchSiteInfoService {
             url = sampleResults.getFirst().url.withPathAndParam("/", null).toString();
         }
 
-        var result = new SiteInfoWithContext(domainName,
+        SiteInfoWithContext result = new SiteInfoWithContext(domainName,
                 sst,
                 domainId,
                 url,
@@ -213,7 +215,7 @@ public class SearchSiteInfoService {
         // also throttle the requests to at most 5 per view.
 
         if (result.similar() != null) {
-            for (var similar : result.similar()) {
+            for (SimilarDomain similar : result.similar()) {
                 if (similar.screenshot()) {
                     continue;
                 }
@@ -226,7 +228,7 @@ public class SearchSiteInfoService {
         }
 
         if (result.linking() != null) {
-            for (var linking : result.linking()) {
+            for (SimilarDomain linking : result.linking()) {
                 if (linking.screenshot()) {
                     continue;
                 }

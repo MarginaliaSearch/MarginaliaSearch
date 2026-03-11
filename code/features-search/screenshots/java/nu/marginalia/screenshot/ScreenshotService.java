@@ -3,12 +3,12 @@ package nu.marginalia.screenshot;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
+import io.jooby.Context;
+import io.jooby.MediaType;
 import nu.marginalia.db.DbDomainQueries;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -48,13 +48,15 @@ public class ScreenshotService {
         return false;
     }
 
-    public Object serveScreenshotRequest(Request request, Response response) {
-        if (Strings.isNullOrEmpty(request.params("id"))) {
-            response.redirect("https://search.marginalia.nu/");
-            return null;
+    /** Jooby-compatible handler for screenshot requests */
+    public Object serveScreenshotRequest(Context ctx) {
+        String idStr = ctx.path("id").valueOrNull();
+        if (Strings.isNullOrEmpty(idStr)) {
+            ctx.sendRedirect("https://search.marginalia.nu/");
+            return ctx;
         }
 
-        int id = parseInt(request.params("id"));
+        int id = parseInt(idStr);
 
         try (var conn = dataSource.getConnection();
              var ps = conn.prepareStatement("""
@@ -66,12 +68,12 @@ public class ScreenshotService {
             ps.setInt(1, id);
             var rsp = ps.executeQuery();
             if (rsp.next()) {
-                response.type(rsp.getString(1));
-                response.status(200);
-                response.header("Cache-control", "public,max-age=3600");
+                ctx.setResponseType(MediaType.valueOf(rsp.getString(1)));
+                ctx.setResponseCode(200);
+                ctx.setResponseHeader("Cache-control", "public,max-age=3600");
 
-                IOUtils.copy(rsp.getBlob(2).getBinaryStream(), response.raw().getOutputStream());
-                return "";
+                IOUtils.copy(rsp.getBlob(2).getBinaryStream(), ctx.responseStream());
+                return ctx;
             }
         }
         catch (IOException ex) {
@@ -81,16 +83,15 @@ public class ScreenshotService {
             logger.warn("SQL error", ex);
         }
 
-        return serveSvgPlaceholder(response, id);
+        return serveSvgPlaceholder(ctx, id);
     }
 
-    private Object serveSvgPlaceholder(Response response, int id) {
-
+    private Object serveSvgPlaceholder(Context ctx, int id) {
         var name = domainQueries.getDomain(id).map(Object::toString)
                 .orElse("[Screenshot Not Yet Captured]");
 
-        response.type("image/svg+xml");
-        
+        ctx.setResponseType(MediaType.valueOf("image/svg+xml"));
+
         return """
                 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
                 <svg
@@ -120,4 +121,5 @@ public class ScreenshotService {
                 </svg>
                 """.formatted(name);
     }
+
 }
