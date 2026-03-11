@@ -4,6 +4,7 @@ import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.keyword.extractors.UrlKeywords;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.keyword.model.DocumentWordSpan;
 import nu.marginalia.language.config.LanguageConfigLocation;
@@ -13,6 +14,7 @@ import nu.marginalia.language.model.DocumentSentence;
 import nu.marginalia.language.model.LanguageDefinition;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.language.sentence.tag.HtmlTag;
+import nu.marginalia.model.EdgeUrl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,11 +24,13 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static nu.marginalia.keyword.DocumentPositionMapper.matchesWordPattern;
+import static org.junit.jupiter.api.Assertions.*;
 
 class DocumentPositionMapperTest {
     private static LanguageDefinition english;
@@ -47,19 +51,19 @@ class DocumentPositionMapperTest {
 
     @Test
     public void testWordPattern() {
-        Assertions.assertTrue(positionMapper.matchesWordPattern("test"));
-        Assertions.assertTrue(positionMapper.matchesWordPattern("1234567890abcde"));
-        Assertions.assertFalse(positionMapper.matchesWordPattern("1234567890abcdef"));
+        assertTrue(matchesWordPattern("test"));
+        assertTrue(matchesWordPattern("1234567890abcde"));
+        assertFalse(matchesWordPattern("1234567890abcdef"));
 
-        Assertions.assertTrue(positionMapper.matchesWordPattern("test-test-test-test-test"));
-        Assertions.assertFalse(positionMapper.matchesWordPattern("test-test-test-test-test-test-test-test-test"));
-        Assertions.assertTrue(positionMapper.matchesWordPattern("192.168.1.100/24"));
-        Assertions.assertTrue(positionMapper.matchesWordPattern("std::vector"));
-        Assertions.assertTrue(positionMapper.matchesWordPattern("std::vector::push_back"));
+        assertTrue(matchesWordPattern("test-test-test-test-test"));
+        assertFalse(matchesWordPattern("test-test-test-test-test-test-test-test-test-test"));
+        assertTrue(matchesWordPattern("192.168.1.100/24"));
+        assertTrue(matchesWordPattern("std::vector"));
+        assertTrue(matchesWordPattern("std::vector::push_back"));
 
-        Assertions.assertTrue(positionMapper.matchesWordPattern("c++"));
-        Assertions.assertTrue(positionMapper.matchesWordPattern("m*a*s*h"));
-        Assertions.assertFalse(positionMapper.matchesWordPattern("Stulpnagelstrasse"));
+        assertTrue(matchesWordPattern("c++"));
+        assertTrue(matchesWordPattern("m*a*s*h"));
+        assertFalse(matchesWordPattern("Stulpnagelstrasse"));
     }
 
     @Test
@@ -204,5 +208,268 @@ class DocumentPositionMapperTest {
         assertEquals(10, span.end());
     }
 
+    @Test
+    public void testUrlWordPositions() throws URISyntaxException {
+        DocumentKeywordsBuilder keywordsBuilder = new DocumentKeywordsBuilder();
+        UrlKeywords urlKeywords = new UrlKeywords(new EdgeUrl("https://memex.marginalia.nu/projects/search"));
+
+        int endPos = positionMapper.mapUrlWordPositions(5, keywordsBuilder, Mockito.mock(KeywordMetadata.class), urlKeywords);
+
+        // URL should produce words for: memex, marginalia, nu, projects, search
+        // positions start at 6 (startPos + 1)
+        assertTrue(endPos > 5, "End position must advance past start position");
+
+        var urlSpans = keywordsBuilder.wordSpans.get(HtmlTag.DOC_URL);
+        assertNotNull(urlSpans);
+        assertFalse(urlSpans.isEmpty());
+
+        // All URL word positions should be within the span
+        DocumentWordSpan urlSpan = urlSpans.getFirst();
+        for (var entry : keywordsBuilder.wordToPos.entrySet()) {
+            for (int pos : entry.getValue()) {
+                assertTrue(pos >= urlSpan.start() && pos < urlSpan.end(),
+                        "Position " + pos + " for word '" + entry.getKey() + "' should be within URL span [" + urlSpan.start() + ", " + urlSpan.end() + ")");
+            }
+        }
+    }
+
+    @Test
+    public void testUrlAndLinkTextSpansDontOverlap() throws URISyntaxException {
+        DocumentKeywordsBuilder keywordsBuilder = new DocumentKeywordsBuilder();
+        DocumentLanguageData dld = new DocumentLanguageData(english,
+                se.extractSentencesFromString(english, "Hello world this is a test document", EnumSet.of(HtmlTag.BODY)),
+                "Hello world"
+        );
+        UrlKeywords urlKeywords = new UrlKeywords(new EdgeUrl("https://example.com/hello/world/page"));
+
+        var sentences = se.extractSentencesFromString(english, "Interesting link text", EnumSet.of(HtmlTag.EXTERNAL_LINKTEXT));
+        TIntList counts = new TIntArrayList(new int[] { 1 });
+        LinkTexts linkTexts = new LinkTexts(sentences, counts);
+
+        positionMapper.mapPositionsAndExtractSimpleKeywords(keywordsBuilder, Mockito.mock(KeywordMetadata.class), dld, linkTexts, urlKeywords);
+
+        var urlSpans = keywordsBuilder.wordSpans.get(HtmlTag.DOC_URL);
+        var linkSpans = keywordsBuilder.wordSpans.get(HtmlTag.EXTERNAL_LINKTEXT);
+
+        assertNotNull(urlSpans, "URL spans should be present");
+        assertNotNull(linkSpans, "Link text spans should be present");
+        assertFalse(urlSpans.isEmpty(), "URL spans should not be empty");
+        assertFalse(linkSpans.isEmpty(), "Link text spans should not be empty");
+
+        // Verify no URL span overlaps with any link text span
+        for (DocumentWordSpan urlSpan : urlSpans) {
+            for (DocumentWordSpan linkSpan : linkSpans) {
+                assertTrue(urlSpan.end() <= linkSpan.start() || linkSpan.end() <= urlSpan.start(),
+                        "URL span [" + urlSpan.start() + ", " + urlSpan.end() + ") overlaps with link text span ["
+                                + linkSpan.start() + ", " + linkSpan.end() + ")");
+            }
+        }
+    }
+
+    @Test
+    public void testBodyAndUrlSpansDontOverlap() throws URISyntaxException {
+        DocumentKeywordsBuilder keywordsBuilder = new DocumentKeywordsBuilder();
+        DocumentLanguageData dld = new DocumentLanguageData(english,
+                se.extractSentencesFromString(english, "Some body text here", EnumSet.of(HtmlTag.BODY)),
+                "Some body text"
+        );
+        UrlKeywords urlKeywords = new UrlKeywords(new EdgeUrl("https://example.nu/articles/testing"));
+
+        var sentences = se.extractSentencesFromString(english, "Link", EnumSet.of(HtmlTag.EXTERNAL_LINKTEXT));
+        TIntList counts = new TIntArrayList(new int[] { 1 });
+        LinkTexts linkTexts = new LinkTexts(sentences, counts);
+
+        positionMapper.mapPositionsAndExtractSimpleKeywords(keywordsBuilder, Mockito.mock(KeywordMetadata.class), dld, linkTexts, urlKeywords);
+
+        var bodySpans = keywordsBuilder.wordSpans.get(HtmlTag.BODY);
+        var urlSpans = keywordsBuilder.wordSpans.get(HtmlTag.DOC_URL);
+
+        assertNotNull(bodySpans);
+        assertNotNull(urlSpans);
+
+        for (DocumentWordSpan bodySpan : bodySpans) {
+            for (DocumentWordSpan urlSpan : urlSpans) {
+                assertTrue(bodySpan.end() <= urlSpan.start() || urlSpan.end() <= bodySpan.start(),
+                        "Body span [" + bodySpan.start() + ", " + bodySpan.end() + ") overlaps with URL span ["
+                                + urlSpan.start() + ", " + urlSpan.end() + ")");
+            }
+        }
+    }
+
+    @Test
+    public void testUrlReturnValueAdvancesPosition() throws URISyntaxException {
+        DocumentKeywordsBuilder keywordsBuilder = new DocumentKeywordsBuilder();
+        UrlKeywords urlKeywords = new UrlKeywords(new EdgeUrl("https://example.nu/a/b/c/d/e"));
+
+        int startPos = 10;
+        int endPos = positionMapper.mapUrlWordPositions(startPos, keywordsBuilder, Mockito.mock(KeywordMetadata.class), urlKeywords);
+
+        // The returned position must account for all URL words processed,
+        // plus one extra to close the span (matching mapDocumentPositions convention)
+        DocumentSentence urlSentence = urlKeywords.searchableKeywords();
+        int expectedEnd = startPos + urlSentence.length() + 1;
+        assertEquals(expectedEnd, endPos,
+                "Returned position should be startPos + number of URL keyword slots + 1");
+    }
+
+    @Test
+    void testSimpleWord() {
+        assertTrue(matchesWordPattern("hello"));
+        assertTrue(matchesWordPattern("a"));
+        assertTrue(matchesWordPattern("123"));
+        assertTrue(matchesWordPattern("abc123"));
+    }
+
+    @Test
+    void testWithSingleSeparator() {
+        assertTrue(matchesWordPattern("hello-world"));
+        assertTrue(matchesWordPattern("test.case"));
+        assertTrue(matchesWordPattern("foo_bar"));
+        assertTrue(matchesWordPattern("path/to"));
+        assertTrue(matchesWordPattern("a:b"));
+        assertTrue(matchesWordPattern("x+y"));
+        assertTrue(matchesWordPattern("a*b"));
+    }
+
+    @Test
+    void testMaxInitialLength() {
+        assertTrue(matchesWordPattern("123456789012345"));
+        assertTrue(matchesWordPattern("123456789012345-abc"));
+    }
+
+    @Test
+    void testMaxSeparatorGroups() {
+        assertTrue(matchesWordPattern("a-b-c-d-e-f-g-h-i"));
+        assertTrue(matchesWordPattern("1.2.3.4.5.6.7.8.9"));
+    }
+
+    @Test
+    void testMaxLengthAfterSeparator() {
+        assertTrue(matchesWordPattern("a-1234567890"));
+    }
+
+    @Test
+    void testAllSeparatorTypes() {
+        assertTrue(matchesWordPattern("a.b"));
+        assertTrue(matchesWordPattern("a-b"));
+        assertTrue(matchesWordPattern("a_b"));
+        assertTrue(matchesWordPattern("a/b"));
+        assertTrue(matchesWordPattern("a:b"));
+        assertTrue(matchesWordPattern("a+b"));
+        assertTrue(matchesWordPattern("a*b"));
+    }
+
+    @Test
+    void testTrailingSeparator() {
+        assertTrue(matchesWordPattern("hello-"));
+        assertTrue(matchesWordPattern("test."));
+        assertTrue(matchesWordPattern("abc_"));
+        assertTrue(matchesWordPattern("a-b-"));
+    }
+
+    @Test
+    void testEmptyString() {
+        assertFalse(matchesWordPattern(""));
+    }
+
+    @Test
+    void testStartsWithSeparator() {
+        assertFalse(matchesWordPattern("-hello"));
+        assertFalse(matchesWordPattern(".test"));
+        assertFalse(matchesWordPattern("_abc"));
+    }
+
+    @Test
+    void testConsecutiveSeparators() {
+        assertTrue(matchesWordPattern("hello--world"));
+        assertFalse(matchesWordPattern("a....b"));
+        assertTrue(matchesWordPattern("test-_case"));
+    }
+
+    @Test
+    void testTooLong() {
+        // More than 48 characters total
+        assertFalse(matchesWordPattern("a".repeat(49)));
+        assertFalse(matchesWordPattern("a".repeat(25) + "-" + "b".repeat(25)));
+    }
+
+    @Test
+    void testInitialSegmentTooLong() {
+        // More than 15 chars before first separator
+        assertFalse(matchesWordPattern("1234567890123456"));
+        assertFalse(matchesWordPattern("1234567890123456-abc"));
+    }
+
+    @Test
+    void testSegmentAfterSeparatorTooLong() {
+        // More than 10 chars after separator
+        assertFalse(matchesWordPattern("a-12345678901"));
+    }
+
+    @Test
+    void testTooManySeparatorGroups() {
+        // More than 8 separator groups
+        assertFalse(matchesWordPattern("a-b-c-d-e-f-g-h-i-j"));
+        assertFalse(matchesWordPattern("1.2.3.4.5.6.7.8.9.10"));
+    }
+
+    @Test
+    void testInvalidCharacters() {
+        assertFalse(matchesWordPattern("hello world"));
+        assertFalse(matchesWordPattern("a$b"));
+        assertFalse(matchesWordPattern("x&y"));
+    }
+
+    @Test
+    void testSpecialCharactersNotInAllowedSet() {
+        assertFalse(matchesWordPattern("a,b"));
+        assertFalse(matchesWordPattern("a;b"));
+        assertFalse(matchesWordPattern("a!b"));
+        assertFalse(matchesWordPattern("a?b"));
+    }
+
+    // Edge cases with lengths
+    @Test
+    void testExactly48Chars() {
+        assertTrue(matchesWordPattern("a".repeat(15) + "-" + "b".repeat(10) + "-" + "c".repeat(10) + "-" + "d".repeat(10)));
+    }
+
+    @Test
+    void testBoundaryLengths() {
+        assertTrue(matchesWordPattern("a".repeat(15)));
+        assertTrue(matchesWordPattern("a-" + "b".repeat(10)));
+        String eightGroups = "a";
+        for (int i = 0; i < 8; i++) {
+            eightGroups += "-b";
+        }
+        assertTrue(matchesWordPattern(eightGroups));
+    }
+
+    // Unicode handling
+    @Test
+    void testUnicodeCharacters() {
+        assertTrue(matchesWordPattern("café"));
+        assertTrue(matchesWordPattern("naïve"));
+        assertTrue(matchesWordPattern("é".repeat(15)));
+    }
+
+    @Test
+    void testMixedCase() {
+        assertTrue(matchesWordPattern("HelloWorld"));
+        assertTrue(matchesWordPattern("Test-Case"));
+        assertTrue(matchesWordPattern("FOO_bar_123"));
+    }
+
+    @Test
+    void testRealisticPatterns() {
+        assertTrue(matchesWordPattern("example.com"));
+        assertTrue(matchesWordPattern("sub.domain.co"));
+        assertTrue(matchesWordPattern("file.txt"));
+        assertTrue(matchesWordPattern("my-file_v2.dat"));
+        assertTrue(matchesWordPattern("v1.2.3"));
+        assertTrue(matchesWordPattern("2024-01-01"));
+        assertTrue(matchesWordPattern("my_function"));
+        assertTrue(matchesWordPattern("className"));
+    }
 
 }
