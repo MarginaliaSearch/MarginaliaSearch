@@ -117,4 +117,8 @@ public class WmsaHome {
     public static Path getLangugeConfig() {
         return getHomePath().resolve("conf/languages.xml");
     }
+
+    public static Path getModelPath() {
+        return getHomePath().resolve("model");
+    }
 }
