@@ -48,7 +48,7 @@ public class BinaryClassifierTrainer {
     }
 
 
-    public void train(Path output) throws IOException {
+    public BinaryClassifierModel train() throws IOException {
         Random r = new Random();
         List<ClassifierSample> verificationSamples = new ArrayList<>();
         List<String> verificationSamplesRaw = new ArrayList<>();
@@ -144,8 +144,6 @@ public class BinaryClassifierTrainer {
         System.out.printf("F1:         %.4f%n", f1);
         System.out.println();
 
-        model.save(output);
-        vocabulary.save(output.resolve("vocabulary.txt"));
-
+        return model;
     }
 }
