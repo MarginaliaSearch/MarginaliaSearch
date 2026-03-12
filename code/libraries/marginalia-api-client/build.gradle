@@ -1,0 +1,23 @@
+plugins {
+    id 'java'
+}
+
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
+    }
+}
+
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
+dependencies {
+    implementation project(':code:common:model')
+    implementation libs.gson
+
+    implementation libs.bundles.slf4j
+    implementation libs.bucket4j
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+}
