@@ -19,7 +19,7 @@ include 'code:functions:favicon'
 include 'code:functions:favicon:api'
 include 'code:functions:domain-info'
 include 'code:functions:domain-info:api'
-include 'code:functions:nsfw-domain-filter'
+include 'code:functions:nsfw-filter'
 
 include 'code:functions:link-graph:partition'
 include 'code:functions:link-graph:aggregate'

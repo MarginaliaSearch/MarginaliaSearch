@@ -16,6 +16,8 @@ dependencies {
     implementation project(':code:common:config')
     implementation project(':code:common:model')
     implementation project(':code:common:db')
+    implementation project(':code:libraries:classifier-net')
+    implementation project(':code:functions:language-processing')
 
 
     implementation libs.bundles.slf4j
@@ -28,7 +30,6 @@ dependencies {
     implementation libs.notnull
     implementation libs.fastutil
     implementation libs.bundles.mariadb
-
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit

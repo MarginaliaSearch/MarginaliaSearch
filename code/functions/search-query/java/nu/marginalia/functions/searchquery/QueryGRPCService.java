@@ -13,7 +13,7 @@ import nu.marginalia.api.searchquery.model.query.ProcessedQuery;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.functions.searchquery.searchfilter.SearchFilterStore;
 import nu.marginalia.index.api.IndexClient;
-import nu.marginalia.nsfw.NsfwDomainFilter;
+import nu.marginalia.nsfw.domain.NsfwDomainFilter;
 import nu.marginalia.functions.searchquery.searchfilter.SearchFilterCache;
 import nu.marginalia.service.server.DiscoverableService;
 import org.slf4j.Logger;

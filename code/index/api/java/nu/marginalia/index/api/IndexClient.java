@@ -8,13 +8,12 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.prometheus.metrics.core.metrics.Counter;
 import nu.marginalia.api.searchquery.*;
-import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.db.DomainBlacklistImpl;
 import nu.marginalia.model.id.UrlIdCodec;
-import nu.marginalia.nsfw.NsfwDomainFilter;
+import nu.marginalia.nsfw.document.NsfwDocumentFilter;
+import nu.marginalia.nsfw.domain.NsfwDomainFilter;
 import nu.marginalia.service.NodeConfigurationWatcherIf;
 import nu.marginalia.service.client.GrpcChannelPoolFactoryIf;
-import nu.marginalia.service.client.GrpcMultiNodeChannelPool;
 import nu.marginalia.service.client.GrpcSingleNodeChannelPool;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import nu.marginalia.service.discovery.property.ServicePartition;
@@ -28,8 +27,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 
 @Singleton
 public class IndexClient {
@@ -37,6 +34,7 @@ public class IndexClient {
     private final List<GrpcSingleNodeChannelPool<IndexApiGrpc.IndexApiFutureStub>> channelPools;
     private final DomainBlacklistImpl blacklist;
     private final NsfwDomainFilter nsfwDomainFilter;
+    private final NsfwDocumentFilter nsfwDocumentFilter;
 
     Counter wmsa_index_query_count = Counter.builder()
             .name("wmsa_nsfw_filter_result_count")
@@ -52,8 +50,10 @@ public class IndexClient {
     public IndexClient(GrpcChannelPoolFactoryIf channelPoolFactory,
                        DomainBlacklistImpl blacklist,
                        NsfwDomainFilter nsfwDomainFilter,
+                       NsfwDocumentFilter nsfwDocumentFilter,
                        NodeConfigurationWatcherIf nodeConfigurationWatcher
                        ) {
+        this.nsfwDocumentFilter = nsfwDocumentFilter;
         channelPools = new ArrayList<>();
 
         for (int node: nodeConfigurationWatcher.getQueryNodes()) {
@@ -159,7 +159,7 @@ public class IndexClient {
             }
         }
 
-        results.removeIf(item -> isBlacklisted(item, filterTier));
+        results.removeIf(item -> isExcluded(item, filterTier));
         results.sort(comparator);
 
         int totalNumResults = results.size();
@@ -181,16 +181,22 @@ public class IndexClient {
             "NSFW"
     };
 
-    private boolean isBlacklisted(RpcDecoratedResultItem item, int filterTier) {
+    private boolean isExcluded(RpcDecoratedResultItem item, int filterTier) {
         int domainId = UrlIdCodec.getDomainId(item.getRawItem().getCombinedId());
 
         if (blacklist.isBlacklisted(domainId)) {
             return true;
         }
+
         if (nsfwDomainFilter.isBlocked(domainId, filterTier)) {
             wmsa_index_query_count.labelValues(tierNames[filterTier]).inc();
             return true;
         }
+
+        if (filterTier == 2 && nsfwDocumentFilter.isNsfw(item.getTitle(), item.getDescription())) {
+            return true;
+        }
+
         return false;
     }
 
