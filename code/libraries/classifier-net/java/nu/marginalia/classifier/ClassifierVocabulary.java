@@ -4,6 +4,8 @@ import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import nu.marginalia.language.model.DocumentSentence;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -20,6 +22,7 @@ public class ClassifierVocabulary {
     private Map<String, Integer> vocabularyInv;
     private Map<String, Map<String, Integer>> bigramIdx = new HashMap<>();
 
+    private static final Logger logger = LoggerFactory.getLogger(ClassifierVocabulary.class);
     public int size() {
         return vocabulary.size();
     }
@@ -28,18 +31,26 @@ public class ClassifierVocabulary {
         vocabulary = new ArrayList<>(terms);
         vocabularyInv = new HashMap<>();
 
+        int unigrams = 0;
+        int bigrams = 0;
+
         for (int i = 0; i < terms.size(); i++) {
             String term = terms.get(i);
             if (!term.contains("_")) {
                 vocabularyInv.put(terms.get(i), i);
+                unigrams++;
             }
             else {
                 String[] parts = StringUtils.split(term, "_", 2);
                 bigramIdx.computeIfAbsent(parts[0],
                         _ -> new HashMap<>())
                         .put(parts[1], i);
+                bigrams++;
             }
         }
+
+        logger.info("Loaded {} unigrams and {} bigrams", unigrams, bigrams);
+
     }
 
 
