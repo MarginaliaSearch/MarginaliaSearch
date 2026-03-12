@@ -42,3 +42,13 @@ dependencies {
     testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
     testImplementation project(':code:libraries:test-helpers')
 }
+
+tasks.register('trainNsfwModel', JavaExec) {
+    description = 'Train the NSFW document classifier and save the model'
+    group = 'training'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'nu.marginalia.nsfw.document.NsfwDocumentModelTrainer'
+    args = [
+            "${rootProject.projectDir}/run/model/nsfw-model"
+    ]
+}
