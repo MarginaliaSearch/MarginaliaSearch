@@ -44,7 +44,7 @@ dependencies {
     implementation project(':code:functions:link-graph:partition')
     implementation project(':code:functions:link-graph:api')
     implementation project(':code:functions:search-query:api')
-    implementation project(':code:functions:nsfw-domain-filter')
+    implementation project(':code:functions:nsfw-filter')
     implementation project(':code:index:api')
 
     testImplementation project(path: ':code:services-core:control-service')

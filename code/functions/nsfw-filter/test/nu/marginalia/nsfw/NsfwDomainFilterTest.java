@@ -7,6 +7,7 @@ import com.google.inject.Provides;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import jakarta.inject.Named;
+import nu.marginalia.nsfw.domain.NsfwDomainFilter;
 import nu.marginalia.test.TestMigrationLoader;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;

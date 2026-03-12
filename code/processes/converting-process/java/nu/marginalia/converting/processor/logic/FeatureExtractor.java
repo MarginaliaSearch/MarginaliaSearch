@@ -10,6 +10,7 @@ import nu.marginalia.converting.processor.classifier.topic.WoodworkingDetector;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.HtmlFeature;
+import nu.marginalia.nsfw.document.NsfwDocumentFilter;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -68,17 +69,20 @@ public class FeatureExtractor {
     private final TextileCraftDetector textileCraftDetector;
     private final WoodworkingDetector woodworkingDetector;
     private final GoogleAnwersSpamDetector googleAnwersSpamDetector;
+    private final NsfwDocumentFilter nsfwFilter;
 
     @Inject
     public FeatureExtractor(RecipeDetector recipeDetector,
                             TextileCraftDetector textileCraftDetector,
                             WoodworkingDetector woodworkingDetector,
+                            NsfwDocumentFilter nsfwFilter,
                             GoogleAnwersSpamDetector googleAnwersSpamDetector)
     {
         this.recipeDetector = recipeDetector;
         this.textileCraftDetector = textileCraftDetector;
         this.woodworkingDetector = woodworkingDetector;
         this.googleAnwersSpamDetector = googleAnwersSpamDetector;
+        this.nsfwFilter = nsfwFilter;
     }
 
     public Set<HtmlFeature> getFeatures(EdgeUrl url, Document doc, DocumentHeaders headers, DocumentLanguageData dld) {
@@ -335,6 +339,10 @@ public class FeatureExtractor {
         // these should be mutually exclusive
         else if (woodworkingDetector.testP(dld) > 0.3 || textileCraftDetector.testP(dld) > 0.3)
             features.add(HtmlFeature.CATEGORY_CRAFTS);
+
+        if (nsfwFilter.isNsfw(dld.sentences())) {
+            features.add(HtmlFeature.CATEGORY_NSFW);
+        }
 
         return features;
     }

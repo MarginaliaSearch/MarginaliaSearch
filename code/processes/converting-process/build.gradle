@@ -53,6 +53,7 @@ dependencies {
     implementation project(':code:index:live-capture:api')
 
     testImplementation project(':code:functions:language-processing')
+    testImplementation project(':code:functions:nsfw-filter')
 
     implementation libs.slop
     implementation libs.bundles.slf4j
