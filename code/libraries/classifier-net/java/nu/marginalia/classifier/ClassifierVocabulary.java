@@ -2,6 +2,7 @@ package nu.marginalia.classifier;
 
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import nu.marginalia.language.model.DocumentSentence;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
@@ -17,6 +18,7 @@ import java.util.Map;
 public class ClassifierVocabulary {
     private List<String> vocabulary;
     private Map<String, Integer> vocabularyInv;
+    private Map<String, Map<String, Integer>> bigramIdx = new HashMap<>();
 
     public int size() {
         return vocabulary.size();
@@ -27,7 +29,16 @@ public class ClassifierVocabulary {
         vocabularyInv = new HashMap<>();
 
         for (int i = 0; i < terms.size(); i++) {
-            vocabularyInv.put(terms.get(i), i);
+            String term = terms.get(i);
+            if (!term.contains("_")) {
+                vocabularyInv.put(terms.get(i), i);
+            }
+            else {
+                String[] parts = StringUtils.split(term, "_", 2);
+                bigramIdx.computeIfAbsent(parts[0],
+                        _ -> new HashMap<>())
+                        .put(parts[1], i);
+            }
         }
     }
 
@@ -55,18 +66,80 @@ public class ClassifierVocabulary {
         }
     }
 
-    public int[] features(String sent) {
+    public int[] features(String... sentences) {
         IntSet features = new IntArraySet();
 
-        for (String term : StringUtils.split(sent.toLowerCase())) {
-            Integer idx = vocabularyInv.get(term);
-            if (idx != null) {
-                features.add(idx.intValue());
+        for (String sent: sentences) {
+            String prevTerm = null;
+
+            for (String term : StringUtils.split(sent.toLowerCase())) {
+                Integer idx = vocabularyInv.get(term);
+                if (idx != null) {
+                    features.add(idx.intValue());
+                }
+
+                idx = bigramIdx(prevTerm, term);
+                if (idx >= 0) {
+                    features.add(idx);
+                }
+
+                prevTerm = term;
             }
         }
 
         return features.toIntArray();
     }
+
+    public int[] features(List<DocumentSentence> sentences) {
+        IntSet features = new IntArraySet();
+
+        for (DocumentSentence sent: sentences) {
+            String prevTerm = null;
+
+            for (int i = 0; i < sent.length(); i++) {
+
+                if (sent.isStopWord(i)) {
+                    prevTerm = null;
+                    continue;
+                }
+
+                String term = sent.wordsLowerCase[i];
+
+                Integer idx = vocabularyInv.get(term);
+                if (idx != null) {
+                    features.add(idx.intValue());
+                }
+
+                int bigramIdx = bigramIdx(prevTerm, term);
+                if (bigramIdx >= 0) {
+                    features.add(bigramIdx);
+                }
+
+                if (sent.isSeparatorSpace(i)) {
+                    prevTerm = term;
+                }
+                else {
+                    prevTerm = null;
+                }
+            }
+        }
+
+        return features.toIntArray();
+    }
+
+    private int bigramIdx(String a, String b) {
+        if (a == null)
+            return -1;
+
+        Map<String, Integer> suffixes = bigramIdx.get(a);
+        if (null == suffixes)
+            return -1;
+
+        Integer idx = suffixes.get(b);
+        if (idx == null) return -1;
+        return idx;
+    }
+
 
     public ClassifierSample createSample(String sent, boolean label) {
         int[] features = features(sent);
