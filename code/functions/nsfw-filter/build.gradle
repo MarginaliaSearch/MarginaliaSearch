@@ -17,12 +17,14 @@ dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:db')
     implementation project(':code:libraries:classifier-net')
+    implementation project(':code:libraries:marginalia-api-client')
     implementation project(':code:functions:language-processing')
 
 
     implementation libs.bundles.slf4j
     implementation libs.prometheus
     implementation libs.guava
+    implementation libs.bundles.gson
     implementation libs.commons.lang3
     implementation dependencies.create(libs.guice.get()) {
         exclude group: 'com.google.guava'
@@ -51,4 +53,12 @@ tasks.register('trainNsfwModel', JavaExec) {
     args = [
             "${rootProject.projectDir}/run/model/nsfw-model"
     ]
+}
+
+tasks.register('nsfwModelGrowSampleData', JavaExec) {
+    description = 'Using qwen as an oracle, label more samples via the Marginalia API'
+    group = 'training'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'nu.marginalia.nsfw.document.NsfwDocumentModelSampleGathering'
+    args = []
 }

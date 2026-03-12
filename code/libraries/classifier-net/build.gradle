@@ -17,6 +17,7 @@ dependencies {
     implementation libs.commons.lang3
     implementation libs.fastutil
     implementation libs.slop
+    implementation libs.gson
 
     // "Illegal" dependency, but we really want DocumentSentence access
     implementation project(":code:functions:language-processing")
