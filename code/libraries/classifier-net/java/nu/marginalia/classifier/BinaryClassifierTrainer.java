@@ -3,6 +3,7 @@ package nu.marginalia.classifier;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.zip.GZIPInputStream;
 
 public class BinaryClassifierTrainer {
 
@@ -26,14 +28,18 @@ public class BinaryClassifierTrainer {
         this.vocabulary = vocabulary;
         this.labels = labels;
 
-        for (Path p: Files.newDirectoryStream(trainingDataDir, "*.txt")) {
+        for (Path p: Files.newDirectoryStream(trainingDataDir)) {
             readTrainingData(p);
         }
     }
 
     private void readTrainingData(Path path) throws IOException {
-        for (String line: Files.readAllLines(path)) {
+        for (String line: lines(path)) {
             String[] parts = StringUtils.split(line, " ", 2);
+            if (parts.length != 2) {
+                System.out.println("Weird line: '" + line + "' in file " + path);
+                continue;
+            }
             String label = parts[0];
             String sample = parts[1];
 
@@ -45,6 +51,26 @@ public class BinaryClassifierTrainer {
                 samplesRaw.add(sample);
             }
         }
+    }
+
+    public static List<String> lines(Path file) throws IOException {
+        if (!Files.isRegularFile(file))
+            return List.of();
+
+        String fileName = file.toFile().getName();
+        if (fileName.endsWith(".txt")) {
+            return Files.readAllLines(file);
+        }
+        else if (fileName.endsWith(".gz")) {
+            try (InputStreamReader ir = new InputStreamReader(
+                    new GZIPInputStream(Files.newInputStream(file, StandardOpenOption.READ))
+            )) {
+                return ir.readAllLines();
+            }
+        }
+
+        // Don't know what to do now
+        return List.of();
     }
 
 

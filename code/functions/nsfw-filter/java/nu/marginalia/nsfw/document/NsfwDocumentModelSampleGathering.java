@@ -3,6 +3,7 @@ package nu.marginalia.nsfw.document;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import nu.marginalia.classifier.BinaryClassifierModel;
+import nu.marginalia.classifier.BinaryClassifierTrainer;
 import nu.marginalia.classifier.ClassifierVocabulary;
 import nu.marginalia.classifier.learning.OllamaClient;
 import nu.marginalia.integration.MarginaliaApiClient;
@@ -45,14 +46,16 @@ public class NsfwDocumentModelSampleGathering {
 
 
     public static void runMarginaliaSearchResultTraining() throws IOException {
-        List<String> queries = List.of("call girls", "escorts");
+        List<String> queries = List.of("lesbian", "porn", "sexy", "big tits");
         Set<String> existingSamples = new HashSet<>();
 
         Path trainingDataDir = findDir("run/training-data/nsfw/samples");
 
-        for (Path p: Files.newDirectoryStream(trainingDataDir, "*.txt")) {
-            for (String line: Files.readAllLines(p)) {
+        for (Path p: Files.newDirectoryStream(trainingDataDir)) {
+            for (String line: BinaryClassifierTrainer.lines(p)) {
                 String[] parts = StringUtils.split(line, " ", 2);
+                if (parts.length != 2)
+                    continue;
                 existingSamples.add(parts[1]);
             }
         }
@@ -100,7 +103,7 @@ public class NsfwDocumentModelSampleGathering {
                     String title = result.title();
                     String description = result.description();
 
-                    String input = (title + " " + description).toLowerCase();
+                    String input = (title + " " + description).replace('\n', ' ').toLowerCase();
 
                     if (!existingSamples.add(input)) {
                         continue;
