@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.zip.GZIPOutputStream;
 
 public class NsfwDocumentModelSampleGathering {
 
@@ -64,11 +65,11 @@ public class NsfwDocumentModelSampleGathering {
 
         String timestamp = java.time.LocalDateTime.now()
                 .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"));
-        Path outputPath = trainingDataDir.resolve("ollama-" + timestamp + ".txt");
+        Path outputPath = trainingDataDir.resolve("ollama-" + timestamp + ".txt.gz");
 
         try (var labeler = new OllamaNsfwLabeler();
              var marginaliaClient = new MarginaliaApiClient(apiKey);
-             var trainingDataPw = new PrintWriter(Files.newBufferedWriter(outputPath, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE))
+             var trainingDataPw = new PrintWriter(new GZIPOutputStream(Files.newOutputStream(outputPath, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)))
             )
         {
             if (!labeler.isAvailable()) {
