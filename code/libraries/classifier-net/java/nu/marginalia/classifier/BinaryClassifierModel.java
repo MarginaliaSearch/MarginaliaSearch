@@ -203,8 +203,8 @@ public class BinaryClassifierModel {
         // Since we have no way of representing y-hats, we're doing this shift from
         // standard nomenclature
 
-        // y-hat -> Y
-        // y -> y
+        // y-hat -> y
+        // y -> y0
 
         // L = -y0 * log(y) - (1 - y0) log (1 - y)
 
