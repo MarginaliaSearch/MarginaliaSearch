@@ -125,13 +125,13 @@ public class BinaryClassifierTrainer {
                         truePositives++;
                         correct++;
                     } else {
-                        falsePositives++;
-                        falsePositivesWriter.println(verificationSamplesRaw.get(si));
+                        falseNegatives++;
+                        falseNegativesWriter.println(verificationSamplesRaw.get(si));
                     }
                 } else {
                     if (model.predict(sample.x()) > 0.5) {
-                        falseNegatives++;
-                        falseNegativesWriter.println(verificationSamplesRaw.get(si));
+                        falsePositives++;
+                        falsePositivesWriter.println(verificationSamplesRaw.get(si));
                     } else {
                         correct++;
                         trueNegatives++;
