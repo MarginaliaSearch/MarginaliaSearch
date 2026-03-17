@@ -49,7 +49,11 @@ public class NsfwDocumentFilter {
             return false;
 
         int[] features = vocabulary.features(title, description);
-        return model.predict(features) > 0.5;
+
+        if (features.length == 0)
+            return false;
+
+        return model.predict(features) > 0.75;
     }
 
     public boolean isNsfw(List<DocumentSentence> sentences) {
@@ -57,6 +61,10 @@ public class NsfwDocumentFilter {
             return false;
 
         int[] features = vocabulary.features(sentences);
-        return model.predict(features) > 0.5;
+
+        if (features.length == 0)
+            return false;
+
+        return model.predict(features) > 0.75;
     }
 }

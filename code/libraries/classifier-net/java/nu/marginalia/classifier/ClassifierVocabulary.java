@@ -70,7 +70,11 @@ public class ClassifierVocabulary {
     }
 
     public void save(Path outputFile) throws IOException {
-        try (var pw = new PrintWriter(Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING))) {
+        try (var pw = new PrintWriter(Files.newBufferedWriter(outputFile,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.WRITE,
+                StandardOpenOption.TRUNCATE_EXISTING)))
+        {
             for (String feature : vocabulary) {
                 pw.println(feature);
             }
