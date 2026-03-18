@@ -3,6 +3,7 @@ package nu.marginalia.nsfw.document;
 import com.google.inject.Inject;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.classifier.BinaryClassifierModel;
+import nu.marginalia.classifier.ClassifierSample;
 import nu.marginalia.classifier.ClassifierVocabulary;
 import nu.marginalia.language.model.DocumentSentence;
 import org.checkerframework.checker.units.qual.C;
@@ -13,11 +14,17 @@ import java.io.IOError;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
+
+import static nu.marginalia.classifier.BinaryClassifierModel.InputActivationMode.BINARY;
+import static nu.marginalia.classifier.BinaryClassifierModel.InputActivationMode.COUNTED;
 
 public class NsfwDocumentFilter {
     private final boolean isLoaded;
     private final BinaryClassifierModel model;
     private final ClassifierVocabulary vocabulary;
+
+    private final double activationThreshold = 0.75;
 
     private final Logger logger = LoggerFactory.getLogger(NsfwDocumentFilter.class);
 
@@ -48,23 +55,47 @@ public class NsfwDocumentFilter {
         if (!isLoaded)
             return false;
 
-        int[] features = vocabulary.features(title, description);
+        if (model.inputActivationMode == BINARY) {
+            int features[] = vocabulary.features(title, description);
 
-        if (features.length == 0)
-            return false;
+            if (features.length == 0)
+                return false;
 
-        return model.predict(features) > 0.75;
+            return model.predict(features) > activationThreshold;
+        }
+        else if (model.inputActivationMode == COUNTED) {
+
+            Map.Entry<int[], int[]> countedFeatures = vocabulary.countedFeatures(title, description);
+
+            int features[] = countedFeatures.getKey();
+
+            if (features.length == 0)
+                return false;
+
+            return model.predict(features, ClassifierSample.activationFromCount(countedFeatures.getValue())) > activationThreshold;
+        }
+        else throw new IllegalStateException("Unknown enum value " + model.inputActivationMode);
     }
 
     public boolean isNsfw(List<DocumentSentence> sentences) {
         if (!isLoaded)
             return false;
 
-        int[] features = vocabulary.features(sentences);
+        // Model is not appropriate for longer texts
+        if (model.inputActivationMode == BINARY)
+            return false;
+
+        Map.Entry<int[], int[]> featuresAndCounts
+                = vocabulary.countedFeatures(sentences);
+
+        int[] features = featuresAndCounts.getKey();
 
         if (features.length == 0)
             return false;
 
-        return model.predict(features) > 0.75;
+
+        return model.predict(features, ClassifierSample.activationFromCount(featuresAndCounts.getValue())) > activationThreshold;
     }
+
+
 }

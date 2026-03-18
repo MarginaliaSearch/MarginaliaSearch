@@ -14,7 +14,7 @@ class BinaryClassifierModelTest {
 
     @Test
     public void testSaveLoad(@TempDir Path tempDir) throws IOException {
-        var model = BinaryClassifierModel.forTraining(32, 8);
+        var model = BinaryClassifierModel.forTraining(32, 8, BinaryClassifierModel.InputActivationMode.BINARY);
         model.save(tempDir);
 
         Files.list(tempDir).forEach(System.out::println);
@@ -28,14 +28,14 @@ class BinaryClassifierModelTest {
                 List.of("sex", "pussy", "ass", "academy", "theory", "java")
         );
         List<ClassifierSample> samples = new ArrayList<>();
-        samples.add(vocabulary.createSample("sex ass", true));
-        samples.add(vocabulary.createSample("pussy", true));
-        samples.add(vocabulary.createSample("academy theory", false));
-        samples.add(vocabulary.createSample("java academy", false));
+        samples.add(vocabulary.createSample(BinaryClassifierModel.InputActivationMode.BINARY, "sex ass", true));
+        samples.add(vocabulary.createSample(BinaryClassifierModel.InputActivationMode.BINARY, "pussy", true));
+        samples.add(vocabulary.createSample(BinaryClassifierModel.InputActivationMode.BINARY, "academy theory", false));
+        samples.add(vocabulary.createSample(BinaryClassifierModel.InputActivationMode.BINARY, "java academy", false));
 
         System.out.println(samples);
 
-        var model = BinaryClassifierModel.forTraining(vocabulary.size(), 16);
+        var model = BinaryClassifierModel.forTraining(vocabulary.size(), 16, BinaryClassifierModel.InputActivationMode.BINARY);
 
         for (int i = 0; i < 1000; i++) {
 

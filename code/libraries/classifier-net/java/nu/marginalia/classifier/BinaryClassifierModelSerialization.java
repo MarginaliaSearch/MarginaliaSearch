@@ -1,11 +1,9 @@
 package nu.marginalia.classifier;
 
 import nu.marginalia.slop.column.array.DoubleArrayColumn;
-import nu.marginalia.slop.column.array.FloatArrayColumn;
 import nu.marginalia.slop.column.primitive.DoubleColumn;
-import nu.marginalia.slop.column.primitive.FloatColumn;
 import nu.marginalia.slop.column.primitive.IntColumn;
-import nu.marginalia.slop.desc.StorageType;
+import nu.marginalia.slop.column.string.StringColumn;
 
 public class BinaryClassifierModelSerialization {
     public static final DoubleArrayColumn weightsInputHiddenColumn =
@@ -19,6 +17,7 @@ public class BinaryClassifierModelSerialization {
 
     public static final IntColumn modelInputCount = new IntColumn("model-input-count");
     public static final IntColumn modelHiddenCount = new IntColumn("model-hidden-count");
+    public static final StringColumn modelInputActivationMode = new StringColumn("model-hidden-count");
 
 
 }

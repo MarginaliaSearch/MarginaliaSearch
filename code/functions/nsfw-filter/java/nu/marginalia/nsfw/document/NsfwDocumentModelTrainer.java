@@ -1,5 +1,6 @@
 package nu.marginalia.nsfw.document;
 
+import nu.marginalia.classifier.BinaryClassifierModel;
 import nu.marginalia.classifier.BinaryClassifierTrainer;
 import nu.marginalia.classifier.ClassifierVocabulary;
 
@@ -30,6 +31,7 @@ public class NsfwDocumentModelTrainer {
         ClassifierVocabulary vocabulary = new ClassifierVocabulary(vocabularyFile);
 
         var trainer = new BinaryClassifierTrainer(vocabulary,
+                BinaryClassifierModel.InputActivationMode.COUNTED,
                 new String[] { "__label__SAFE", "__label__NSFW" },
                 sampleDir
         );

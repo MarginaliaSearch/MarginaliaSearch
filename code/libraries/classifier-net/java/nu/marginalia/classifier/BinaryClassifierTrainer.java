@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.zip.GZIPInputStream;
@@ -17,15 +16,18 @@ import java.util.zip.GZIPInputStream;
 public class BinaryClassifierTrainer {
 
     private final ClassifierVocabulary vocabulary;
+    private final BinaryClassifierModel.InputActivationMode inputActivationMode;
     private final String[] labels;
     private List<ClassifierSample> samples = new ArrayList<>();
     private List<String> samplesRaw = new ArrayList<>();
 
     public BinaryClassifierTrainer(ClassifierVocabulary vocabulary,
+                                   BinaryClassifierModel.InputActivationMode inputActivationMode,
                                    String[] labels,
                                    Path trainingDataDir
                                    ) throws IOException {
         this.vocabulary = vocabulary;
+        this.inputActivationMode = inputActivationMode;
         this.labels = labels;
 
         for (Path p: Files.newDirectoryStream(trainingDataDir)) {
@@ -44,10 +46,10 @@ public class BinaryClassifierTrainer {
             String sample = parts[1];
 
             if (labels[0].equals(label)) {
-                samples.add(vocabulary.createSample(sample, false));
+                samples.add(vocabulary.createSample(inputActivationMode, sample, false));
                 samplesRaw.add(sample);
             } else if (labels[1].equals(label)) {
-                samples.add(vocabulary.createSample(sample, true));
+                samples.add(vocabulary.createSample(inputActivationMode, sample, true));
                 samplesRaw.add(sample);
             }
         }
@@ -92,7 +94,8 @@ public class BinaryClassifierTrainer {
         }
 
         BinaryClassifierModel model = BinaryClassifierModel.forTraining(
-                vocabulary.size(), 24
+                vocabulary.size(), 24,
+                BinaryClassifierModel.InputActivationMode.COUNTED
         );
 
         model.train(trainingSamples, 1200, 0.01);
@@ -121,7 +124,7 @@ public class BinaryClassifierTrainer {
                 total++;
 
                 if (sample.y0() > 0.5) {
-                    if (model.predict(sample.x()) > 0.5) {
+                    if (model.predict(sample) > 0.5) {
                         truePositives++;
                         correct++;
                     } else {
@@ -129,7 +132,7 @@ public class BinaryClassifierTrainer {
                         falseNegativesWriter.println(verificationSamplesRaw.get(si));
                     }
                 } else {
-                    if (model.predict(sample.x()) > 0.5) {
+                    if (model.predict(sample) > 0.5) {
                         falsePositives++;
                         falsePositivesWriter.println(verificationSamplesRaw.get(si));
                     } else {
