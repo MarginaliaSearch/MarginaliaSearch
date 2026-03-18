@@ -72,9 +72,13 @@ public class BinaryClassifierModel {
     // We select σ2 to be the sigmoid function: σ2(x) = 1 / (1 + e^(-x))
     private final ActivationFunction σ2 = new SigmoidActivationFunction();
 
+    public final InputActivationMode inputActivationMode;
+
     /* So to put it all together and make a prediction */
 
     public double predict(BitSet x) {
+        if (inputActivationMode != InputActivationMode.BINARY)
+            throw new IllegalArgumentException();
 
         double[] z1 = Arrays.copyOf(b1, M_HIDDEN);
 
@@ -108,6 +112,8 @@ public class BinaryClassifierModel {
 
     // For sparse input activation, this is a more efficient approach
     public double predict(int[] x) {
+        if (inputActivationMode != InputActivationMode.BINARY)
+            throw new IllegalArgumentException();
 
         double[] z1 = Arrays.copyOf(b1, M_HIDDEN);
 
@@ -133,11 +139,68 @@ public class BinaryClassifierModel {
         return σ2.f(z2);
     }
 
+
+    // For sparse input activation, this is a more efficient approach
+    public double predict(int[] x, double[] x_act) {
+        if (inputActivationMode != InputActivationMode.COUNTED)
+            throw new IllegalArgumentException();
+
+        double[] z1 = Arrays.copyOf(b1, M_HIDDEN);
+
+        for (int i = 0; i < M_HIDDEN; i++) {
+
+            for (int x_idx = 0; x_idx < x.length; x_idx++) {
+                int xi = x[x_idx];
+                double act = x_act[x_idx];
+
+                z1[i] += w1[i][xi] * act;
+            }
+        }
+
+        // Implementation note: Here we alias the arrays to save allocations
+        // z1 is garbled after the following loop
+        double[] a = z1;
+
+        for (int i = 0; i < M_HIDDEN; i++) {
+            a[i] = σ1.f(z1[i]);
+        }
+
+        double z2 = b2;
+        for (int h = 0; h < M_HIDDEN; h++) {
+            z2 += a[h] * w2[h];
+        }
+
+        return σ2.f(z2);
+    }
+
+    public double predict(ClassifierSample sample) {
+        if (inputActivationMode == InputActivationMode.BINARY) {
+            return predict(sample.x());
+        }
+        else if (inputActivationMode == InputActivationMode.COUNTED) {
+            return predict(sample.x(), sample.act());
+        }
+        else {
+            throw new IllegalStateException("Unknown input activation mode");
+        }
+    }
+
+
     public double trainingEpoch(List<ClassifierSample> samples, double learningRate) {
         double totalLoss = 0.;
 
         for (var sample : samples) {
-            totalLoss += trainSample(sample.y0(), sample.x(), learningRate);
+            double[] act = sample.act();
+
+            if (inputActivationMode == InputActivationMode.BINARY) {
+                totalLoss += trainSample(sample.y0(), sample.x(), learningRate);
+            }
+            else if (act != null) {
+                totalLoss += trainSample(sample.y0(), sample.x(), act, learningRate);
+            }
+            else {
+                throw new IllegalArgumentException("Input activation mode is counted, but I was proved no counted sample data");
+            }
         }
 
         return totalLoss;
@@ -154,10 +217,10 @@ public class BinaryClassifierModel {
     /**
      *
      * @param y0 - actual value
-     * @param x_idx - list of activated inputs
+     * @param x - list of activated inputs
      * @param lr - learning rate
      */
-    public double trainSample(double y0, int[] x_idx, double lr) {
+    public double trainSample(double y0, int[] x, double lr) {
 
         // To train the neural network, this is our plan:
         //
@@ -173,7 +236,7 @@ public class BinaryClassifierModel {
 
         double[] z1 = Arrays.copyOf(b1, M_HIDDEN);
         for (int i = 0; i < M_HIDDEN; i++) {
-            for (int xi : x_idx) {
+            for (int xi : x) {
                 z1[i] += w1[i][xi];
             }
         }
@@ -303,7 +366,7 @@ public class BinaryClassifierModel {
 
             // ∂L/∂w1 = ∂L/∂z1 ∂z1/∂w1 = ∂L/∂z1 * x
 
-            for (int xi : x_idx) {
+            for (int xi : x) {
                 w1[i][xi] -= lr * dLdz1;
             }
 
@@ -341,12 +404,81 @@ public class BinaryClassifierModel {
         return L;
     }
 
-    BinaryClassifierModel(int inputLayerSize, int hiddenLayerSize) {
+
+
+    /** Identical to the other trainSample, except we allow non-binary input activation
+     *
+     * @param y0 - actual value
+     * @param x - list of activated inputs
+     * @param x_act - activation level of each corresponding input
+     * @param lr - learning rate
+     */
+    public double trainSample(double y0, int[] x, double[] x_act, double lr) {
+
+        double[] z1 = Arrays.copyOf(b1, M_HIDDEN);
+        for (int i = 0; i < M_HIDDEN; i++) {
+
+            for (int x_idx = 0; x_idx < x.length; x_idx++) {
+                int xi = x[x_idx];
+                double act = x_act[x_idx];
+
+                z1[i] += w1[i][xi] * act;
+            }
+        }
+
+        double[] a = new double[M_HIDDEN];
+        for (int i = 0; i < M_HIDDEN; i++) {
+            a[i] = σ1.f(z1[i]);
+        }
+
+        double z2 = b2;
+        for (int h = 0; h < M_HIDDEN; h++) {
+            z2 += a[h] * w2[h];
+        }
+
+        double y = σ2.f(z2);
+
+        final double eps = 1E-14;
+        final double y_clamped = Math.clamp(y, eps, 1-eps);
+        double L =  - y0 * log(y_clamped)
+                - (1 - y0) * log(1 - y_clamped);
+
+        final double dL_dz2 = y - y0;
+
+        for (int i = 0; i < M_HIDDEN; i++) {
+            double dLdz1 = dL_dz2 * w2[i]
+                    * σ1.f_deriv(z1[i]);
+
+            for (int x_idx = 0; x_idx < x.length; x_idx++) {
+                int xi = x[x_idx];
+                double act = x_act[x_idx];
+
+                w1[i][xi] -= lr * dLdz1 * act;
+            }
+
+            b1[i] -= lr * dLdz1;
+        }
+
+        for (int i = 0; i < M_HIDDEN; i++) {
+            double dz2_dw2 = a[i];
+            this.w2[i] -= lr * dL_dz2 * dz2_dw2;
+        }
+
+        b2 -= lr * dL_dz2;
+
+        return L;
+    }
+
+    BinaryClassifierModel(int inputLayerSize,
+                          int hiddenLayerSize,
+                          InputActivationMode inputActivationMode)
+    {
         N_INPUTS = inputLayerSize;
         M_HIDDEN = hiddenLayerSize;
 
         b1 = new double[hiddenLayerSize];
         w1 = new double[hiddenLayerSize][];
+        this.inputActivationMode = inputActivationMode;
         for (int i = 0; i < hiddenLayerSize; i++) {
             w1[i] = new double[inputLayerSize];
         }
@@ -354,9 +486,10 @@ public class BinaryClassifierModel {
     }
 
     public static BinaryClassifierModel forTraining(int inputLayerSize,
-                                                    int hiddenLayerSize
+                                                            int hiddenLayerSize,
+                                                            InputActivationMode inputActivationMode
                                                     ) {
-        BinaryClassifierModel model = new BinaryClassifierModel(inputLayerSize, hiddenLayerSize);
+        BinaryClassifierModel model = new BinaryClassifierModel(inputLayerSize, hiddenLayerSize, inputActivationMode);
 
         model.initializeWeights();
 
@@ -368,13 +501,18 @@ public class BinaryClassifierModel {
     {
         int inputLayerSize;
         int hiddenLayerSize;
+        InputActivationMode iam;
 
         try (SlopTable table = new SlopTable(serializedModel)) {
             hiddenLayerSize = BinaryClassifierModelSerialization.modelHiddenCount.open(table).get();
             inputLayerSize = BinaryClassifierModelSerialization.modelInputCount.open(table).get();
+
+            iam = InputActivationMode.valueOf(
+                    BinaryClassifierModelSerialization.modelInputActivationMode.open(table).get()
+            );
         }
 
-        BinaryClassifierModel model = new BinaryClassifierModel(inputLayerSize, hiddenLayerSize);
+        BinaryClassifierModel model = new BinaryClassifierModel(inputLayerSize, hiddenLayerSize, iam);
 
         model.load(serializedModel);
 
@@ -416,9 +554,11 @@ public class BinaryClassifierModel {
             var biasOutputCol = BinaryClassifierModelSerialization.biasOutputColumn.create(table);
             var inputCntCol = BinaryClassifierModelSerialization.modelInputCount.create(table);
             var hiddenCntCol = BinaryClassifierModelSerialization.modelHiddenCount.create(table);
+            var activationMode = BinaryClassifierModelSerialization.modelInputActivationMode.create(table);
 
             hiddenCntCol.put(M_HIDDEN);
             inputCntCol.put(N_INPUTS);
+            activationMode.put(inputActivationMode.name());
 
             biasOutputCol.put(b2);
         }
@@ -442,4 +582,8 @@ public class BinaryClassifierModel {
         Arrays.setAll(w2, i -> random.nextGaussian() * outputScale);
     }
 
+    public enum InputActivationMode {
+        BINARY,
+        COUNTED
+    }
 }

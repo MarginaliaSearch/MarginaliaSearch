@@ -1,5 +1,7 @@
 package nu.marginalia.classifier;
 
+import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import nu.marginalia.language.model.DocumentSentence;
@@ -105,6 +107,31 @@ public class ClassifierVocabulary {
         return features.toIntArray();
     }
 
+
+    public Map.Entry<int[], int[]> countedFeatures(String... sentences) {
+        Int2IntMap features = new Int2IntArrayMap();
+
+        for (String sent: sentences) {
+            String prevTerm = null;
+
+            for (String term : StringUtils.split(sent.toLowerCase())) {
+                Integer idx = vocabularyInv.get(term);
+                if (idx != null) {
+                    features.mergeInt(idx.intValue(), 1, Integer::sum);
+                }
+
+                idx = bigramIdx(prevTerm, term);
+                if (idx >= 0) {
+                    features.mergeInt(idx.intValue(), 1, Integer::sum);
+                }
+
+                prevTerm = term;
+            }
+        }
+
+        return Map.entry(features.keySet().toIntArray(), features.values().toIntArray());
+    }
+
     public int[] features(List<DocumentSentence> sentences) {
         IntSet features = new IntArraySet();
 
@@ -142,6 +169,44 @@ public class ClassifierVocabulary {
         return features.toIntArray();
     }
 
+
+    public Map.Entry<int[], int[]> countedFeatures(List<DocumentSentence> sentences) {
+        Int2IntMap features = new Int2IntArrayMap();
+
+        for (DocumentSentence sent: sentences) {
+            String prevTerm = null;
+
+            for (int i = 0; i < sent.length(); i++) {
+
+                if (sent.isStopWord(i)) {
+                    prevTerm = null;
+                    continue;
+                }
+
+                String term = sent.wordsLowerCase[i];
+
+                Integer idx = vocabularyInv.get(term);
+                if (idx != null) {
+                    features.mergeInt(idx.intValue(), 1, Integer::sum);
+                }
+
+                int bigramIdx = bigramIdx(prevTerm, term);
+                if (bigramIdx >= 0) {
+                    features.mergeInt(bigramIdx, 1, Integer::sum);
+                }
+
+                if (sent.isSeparatorSpace(i)) {
+                    prevTerm = term;
+                }
+                else {
+                    prevTerm = null;
+                }
+            }
+        }
+
+        return Map.entry(features.keySet().toIntArray(), features.values().toIntArray());
+    }
+
     private int bigramIdx(String a, String b) {
         if (a == null)
             return -1;
@@ -156,9 +221,21 @@ public class ClassifierVocabulary {
     }
 
 
-    public ClassifierSample createSample(String sent, boolean label) {
-        int[] features = features(sent);
-        return new ClassifierSample(features, label ? 1 : 0);
+    public ClassifierSample createSample(BinaryClassifierModel.InputActivationMode activationMode, String sent, boolean label) {
+        if (activationMode == BinaryClassifierModel.InputActivationMode.BINARY) {
+            int[] features = features(sent);
+
+            return ClassifierSample.ofBinary(features, label ? 1 : 0);
+        }
+        else if (activationMode == BinaryClassifierModel.InputActivationMode.COUNTED) {
+            Map.Entry<int[], int[]> features = countedFeatures(sent);
+
+            return ClassifierSample.ofCounted(features.getKey(), features.getValue(), label ? 1 : 0);
+        }
+        else {
+            throw new IllegalArgumentException("Enum has grown, I don't know what to do with " + activationMode);
+        }
     }
+
 
 }
