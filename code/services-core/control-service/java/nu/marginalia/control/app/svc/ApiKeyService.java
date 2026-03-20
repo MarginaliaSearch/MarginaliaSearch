@@ -89,7 +89,7 @@ public class ApiKeyService {
                             rs.getString("EMAIL"),
                             rs.getInt("RATE")));
                 }
-                return ret;
+                return ret.reversed();
             }
         }
         catch (SQLException ex) {
