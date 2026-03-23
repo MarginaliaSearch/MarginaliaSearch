@@ -2,33 +2,71 @@ package nu.marginalia.nsfw.document;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import nu.marginalia.classifier.BinaryClassifierModel;
 import nu.marginalia.classifier.BinaryClassifierTrainer;
 import nu.marginalia.classifier.ClassifierVocabulary;
 import nu.marginalia.classifier.learning.OllamaClient;
 import nu.marginalia.integration.MarginaliaApiClient;
+import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.gson.GsonFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.sql.*;
+import java.util.*;
 import java.util.zip.GZIPOutputStream;
 
 public class NsfwDocumentModelSampleGathering {
 
     private final Gson gson = GsonFactory.get();
 
+    private static String prompt(BufferedReader reader, String message) throws IOException {
+        System.out.print(message);
+        System.out.flush();
+        return reader.readLine();
+    }
+
     public static void main() throws IOException {
-        runMarginaliaSearchResultTraining();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+
+        String operation = prompt(reader, "Select an operation [db, query]: ");
+
+        if (null == operation)
+            return;
+
+        if ("db".equals(operation)) {
+            String dbFile = prompt(reader, "Enter the path to a link db file: ");
+
+            if (null == dbFile)
+                return;
+
+            Path dbFileP = Path.of(dbFile);
+            if (!Files.exists(dbFileP)) {
+                System.out.println("No such file!");
+            }
+            else {
+                runLinkDbMismatchGathering(dbFileP);
+            }
+        }
+        else if ("query".equals(operation)) {
+            String key = prompt(reader, "Input API key (or nothing to use public key, prone to rate limiting): ");
+            if (key == null)
+                return;
+            if (key.isBlank()) key = "public";
+
+            runMarginaliaSearchResultTraining(key);
+        }
     }
 
     private static Path findDir(String frag) {
@@ -46,13 +84,12 @@ public class NsfwDocumentModelSampleGathering {
     }
 
 
-    public static void runMarginaliaSearchResultTraining() throws IOException {
-        List<String> queries = List.of("lesbian", "porn", "sexy", "big tits");
+    public static void runMarginaliaSearchResultTraining(String apiKey) throws IOException {
         Set<String> existingSamples = new HashSet<>();
 
-        Path trainingDataDir = findDir("run/training-data/nsfw/samples");
+        Path trainingDataDir = findDir("run/training-data/nsfw");
 
-        for (Path p: Files.newDirectoryStream(trainingDataDir)) {
+        for (Path p: Files.newDirectoryStream(trainingDataDir.resolve("samples"))) {
             for (String line: BinaryClassifierTrainer.lines(p)) {
                 String[] parts = StringUtils.split(line, " ", 2);
                 if (parts.length != 2)
@@ -61,19 +98,26 @@ public class NsfwDocumentModelSampleGathering {
             }
         }
 
-        String apiKey = Objects.requireNonNullElse(System.getenv("MARGINALIA_API_KEY"), "public");
+        List<String> queries = new ArrayList<>();
+        for (String line: Files.readAllLines(trainingDataDir.resolve("training-queries.txt"))) {
+            if (line.startsWith("#"))
+                continue;
+            if (line.isBlank())
+                continue;
+            queries.add(line.trim());
+        }
 
         String timestamp = java.time.LocalDateTime.now()
                 .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"));
-        Path outputPath = trainingDataDir.resolve("ollama-" + timestamp + ".txt.gz");
+        Path outputPath = trainingDataDir.resolve("ollama-" + timestamp + ".txt");
 
         try (var labeler = new OllamaNsfwLabeler();
              var marginaliaClient = new MarginaliaApiClient(apiKey);
-             var trainingDataPw = new PrintWriter(new GZIPOutputStream(Files.newOutputStream(outputPath, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)))
+             var trainingDataPw = new PrintWriter(Files.newOutputStream(outputPath, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE))
             )
         {
             if (!labeler.isAvailable()) {
-                System.out.println("Local ollama instance is not available");
+                System.out.println("Local ollama instance is not available, or does not have the needed model");
                 return;
             }
 
@@ -110,9 +154,9 @@ public class NsfwDocumentModelSampleGathering {
                         continue;
                     }
 
-                    int[] features = vocabulary.features(input);
+                    var sample = vocabulary.createSample(BinaryClassifierModel.InputActivationMode.COUNTED, input, false);
 
-                    boolean modelPrediction = model.predict(features) > 0.5;
+                    boolean modelPrediction = model.predict(sample) > 0.5;
                     boolean qwenPrediction = labeler.classifyNsfw(title, description);
 
                     count++;
@@ -124,6 +168,7 @@ public class NsfwDocumentModelSampleGathering {
                     System.out.println("desc: " + description);
                     System.out.println("model: " + modelPrediction);
                     System.out.println("qwen: " + qwenPrediction);
+                    System.out.println("features: " + vocabulary.featuresReverse(sample.x()));
                     System.out.println("---");
 
                     if (qwenPrediction) {
@@ -144,6 +189,110 @@ public class NsfwDocumentModelSampleGathering {
     }
 
 
+    public static void runLinkDbMismatchGathering(Path docDbPath) throws IOException {
+        Set<String> existingSamples = new HashSet<>();
+
+        Path trainingDataDir = findDir("run/training-data/nsfw");
+
+        for (Path p: Files.newDirectoryStream(trainingDataDir.resolve("samples"))) {
+            for (String line: BinaryClassifierTrainer.lines(p)) {
+                String[] parts = StringUtils.split(line, " ", 2);
+                if (parts.length != 2)
+                    continue;
+                existingSamples.add(parts[1]);
+            }
+        }
+
+        String timestamp = java.time.LocalDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"));
+        Path outputPath = trainingDataDir.resolve("ollama-" + timestamp + ".txt");
+
+        try (Connection docDbConn = DriverManager.getConnection("jdbc:sqlite:" + docDbPath);
+             var stmt = docDbConn.createStatement();
+             var labeler = new OllamaNsfwLabeler();
+             var trainingDataPw = new PrintWriter(Files.newOutputStream(outputPath, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE))
+        )
+        {
+            if (!labeler.isAvailable()) {
+                System.out.println("Local ollama instance is not available, or does not have the needed model");
+                return;
+            }
+
+
+            Path modelPath = findDir("run/model/nsfw-model");
+
+            BinaryClassifierModel model = BinaryClassifierModel.fromSerialized(modelPath);
+            ClassifierVocabulary vocabulary = new ClassifierVocabulary(modelPath.resolve("vocabulary.txt"));;
+
+
+            int count = 0;
+            int agreedCount = 0;
+
+            Object2IntOpenHashMap<EdgeDomain> countsByDomain = new Object2IntOpenHashMap<>();
+            countsByDomain.defaultReturnValue(1);
+
+            ResultSet rs = stmt.executeQuery("SELECT TITLE, DESCRIPTION, URL FROM DOCUMENT");
+            stmt.setFetchSize(1000);
+
+            while (rs.next()) {
+                String urlStr = rs.getString("URL");
+
+                String title = rs.getString("TITLE");
+                String description = rs.getString("DESCRIPTION");
+
+                String input = (title + " " + description).replace('\n', ' ').toLowerCase();
+
+                if (!existingSamples.add(input)) {
+                    continue;
+                }
+
+                var countedFeatures = vocabulary.createSample(BinaryClassifierModel.InputActivationMode.COUNTED, input, false);
+
+                boolean modelPrediction = model.predict(countedFeatures) > 0.5;
+                if (!modelPrediction)
+                    continue;
+
+                // Allow at most 5 entries per domain
+                var cntOpt = EdgeUrl.parse(urlStr)
+                        .map(EdgeUrl::getDomain)
+                        // addTo returns the previous value, but default return value is 1, so... the current count
+                        .map(domain -> countsByDomain.addTo(domain, 1));
+
+
+                if (cntOpt.isEmpty() || cntOpt.get() >= 5)
+                    continue;
+
+                boolean qwenPrediction = labeler.classifyNsfw(title, description);
+
+                count++;
+
+                if (modelPrediction == qwenPrediction)
+                    agreedCount++;
+
+                System.out.println("title: " + title);
+                System.out.println("desc: " + description);
+                System.out.println("model: " + modelPrediction);
+                System.out.println("qwen: " + qwenPrediction);
+                System.out.println("features: " + vocabulary.featuresReverse(countedFeatures.x()));
+                System.out.printf("aggregate agreement: %2.2f\n", agreedCount / (double) count);
+                System.out.println("---");
+
+                if (qwenPrediction) {
+                    trainingDataPw.println("__label__NSFW " + input);
+                }
+                else {
+                    trainingDataPw.println("__label__SAFE " + input);
+                }
+
+                trainingDataPw.flush();
+            }
+        } catch (IOException | SQLException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }
 
 
@@ -156,7 +305,7 @@ class OllamaNsfwLabeler implements AutoCloseable {
     private final Gson gson = GsonFactory.get();
 
     public OllamaNsfwLabeler() {
-        this.client = new OllamaClient(DEFAULT_MODEL);
+        this.client = new OllamaClient(Objects.requireNonNullElse(System.getenv("LABELING_MODEL"), DEFAULT_MODEL));
     }
 
     public OllamaNsfwLabeler(OllamaClient client) {

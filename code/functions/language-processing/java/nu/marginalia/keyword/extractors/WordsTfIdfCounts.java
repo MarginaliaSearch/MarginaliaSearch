@@ -93,7 +93,8 @@ public class WordsTfIdfCounts implements WordReps, Comparator<WordRep> {
         int maxC = 0;
 
         for (int c : map.values()) {
-            maxC = max(c, maxC);
+            if (c > maxC)
+                maxC = c;
         }
 
         return maxC;

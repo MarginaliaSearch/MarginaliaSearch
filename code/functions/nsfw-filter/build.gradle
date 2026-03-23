@@ -31,6 +31,7 @@ dependencies {
     }
     implementation libs.notnull
     implementation libs.fastutil
+    implementation libs.sqlite
     implementation libs.bundles.mariadb
 
     testImplementation libs.bundles.slf4j.test
@@ -60,5 +61,7 @@ tasks.register('nsfwModelGrowSampleData', JavaExec) {
     group = 'training'
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'nu.marginalia.nsfw.document.NsfwDocumentModelSampleGathering'
+    standardInput = System.in
     args = []
+    dependsOn('trainNsfwModel')
 }

@@ -98,7 +98,7 @@ public class BinaryClassifierTrainer {
                 BinaryClassifierModel.InputActivationMode.COUNTED
         );
 
-        model.train(trainingSamples, 1200, 0.01);
+        model.train(trainingSamples, 2000, 0.01);
 
         int truePositives = 0;
         int falsePositives = 0;

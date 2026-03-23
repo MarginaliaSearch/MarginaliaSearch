@@ -14,10 +14,7 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ClassifierVocabulary {
     private List<String> vocabulary;
@@ -53,6 +50,11 @@ public class ClassifierVocabulary {
 
         logger.info("Loaded {} unigrams and {} bigrams", unigrams, bigrams);
 
+    }
+
+
+    public List<String> featuresReverse(int[] x) {
+        return Arrays.stream(x).mapToObj(i -> vocabulary.get(i)).toList();
     }
 
 
