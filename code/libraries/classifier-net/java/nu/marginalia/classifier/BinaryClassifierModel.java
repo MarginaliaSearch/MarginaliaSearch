@@ -6,6 +6,7 @@ import nu.marginalia.classifier.activation.SigmoidActivationFunction;
 import nu.marginalia.slop.SlopTable;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -423,6 +424,10 @@ public class BinaryClassifierModel {
     }
 
     public void save(Path output) throws IOException {
+        if (!Files.exists(output)) {
+            Files.createDirectory(output);
+        }
+
         try (SlopTable table = new SlopTable(output)) {
             var biasHiddenCol = BinaryClassifierModelSerialization.biasHiddenColumn.create(table);
             var weightsInputHiddenCol = BinaryClassifierModelSerialization.weightsInputHiddenColumn.create(table);
