@@ -209,8 +209,10 @@ public class BinaryClassifierModel {
     public void train(List<ClassifierSample> samples, int epochs, double learningRate) {
         for (int i = 0; i < epochs; i++) {
             double loss = trainingEpoch(samples, learningRate);
-            if (i > 0 && (i % 100) == 0)
-                System.out.printf("Epoch %d, loss %f\n", i, loss / samples.size());
+            if (i > 0 && (i % 100) == 0) {
+                learningRate *= 0.95;
+                System.out.printf("Epoch %d, loss %f: lr => %2.3f\n", i, loss / samples.size(), learningRate);
+            }
         }
     }
 
@@ -222,18 +224,7 @@ public class BinaryClassifierModel {
      */
     public double trainSample(double y0, int[] x, double lr) {
 
-        // To train the neural network, this is our plan:
-        //
-        //  1.  Make a prediction based on the input vector x
-        //  2.  Calculate the loss function
-        //  3.  Do gradient descent to update the weights and biases
-
-        // Step 1, make a prediction:
-
-        // This we've done before in predict(),
-        // but it will turn out that we need to keep the preactivation z1
-        // for future use, so let's not garble it this time!
-
+        // Hidden layer preactivation
         double[] z1 = Arrays.copyOf(b1, M_HIDDEN);
         for (int i = 0; i < M_HIDDEN; i++) {
             for (int xi : x) {
@@ -258,23 +249,6 @@ public class BinaryClassifierModel {
 
         // Step 2:  Evaluate the loss function
 
-        // We're using binary cross entropy (BCE), which is a simplified
-        // form of cross entropy loss that emerges since we only have
-        // two mutually exclusive outputs.
-
-        // Nomenclature note:
-        // Since we have no way of representing y-hats, we're doing this shift from
-        // standard nomenclature
-
-        // y-hat -> y
-        // y -> y0
-
-        // L = -y0 * log(y) - (1 - y0) log (1 - y)
-
-        // Keen eyed readers will spot a problem with this, which is namely that
-        // log(0) is negative infinity.  To avoid this, we rock it like Socrates and
-        // clamp the predicted value so that it's never quite 100% certain.
-
         final double eps = 1E-14;
         final double y_clamped = Math.clamp(y, eps, 1-eps);
         double L =  - y0 * log(y_clamped)
@@ -282,124 +256,34 @@ public class BinaryClassifierModel {
 
         // Step 3: Backpropagation via gradient descent!
 
-
-        // The idea is to do a gradient descent, and adjust the weights and biases
-        // like so
-
         // w2[i] := w2[i] - lr * ∂L/∂w2|[i]
         // b2[i] := b2[i] - lr * ∂L/∂b2|[i]
         // w1[i] := w1[i] - lr * ∂L/∂w1|[i]
         // b1[i] := b1[i] - lr * ∂L/∂b1|[i]
 
-        // Note:  If you find the following math hard to follow (I sure did!),
-        // it helps to try to derive it yourself.  Below all the notation it's
-        // all just chain rules and basic algebra all the way down.
-
-        // Side quest: Finding [∂L/∂z2 = ∂L/∂y * ∂y/∂z2]
-
-        // Before we can get anywhere on finding the partial derivatives needed to update the
-        // weights we need to find
-
-        // The loss function is as a reminder
-        //
-        //      L = -y0 * log(y) - (1 - y0) log (1 - y)
-        //
-        // If you recall d(log(x))/dx = 1/x, and massage the maths a bit, you will find that
-
-        //          y - y0
-        // dL/dy = ---------
-        //         (1-y) * y
-
-        // Note that since dσ2(x)/dx = σ(x)(1-σ(x)),
-        // given y = σ2(z2)
-        //
-        // dy/dz2 = (1-y) * y  (i.e. the denominator in dL/dy)
-
-        // This falls out into an identity that given a sigmoid σ2
-
-        //   ∂L     ∂L      ∂y
-        //  ---- = ----  x -----  = y - y0
-        //  ∂z2     ∂y      ∂z2
+        // These are found through chain rule
 
         final double dL_dz2 = y - y0;
 
-        // Side quest over!
-
-        // To complicate matters, we need to update the parameters in reverse,
-        // since the hidden layer's derivatives will end up depending on the
-        // weights in the output layer (and if we go and update w2 first, our calculations will be wrong)
-
-        // So we're looking for
-
-        // ∂L/∂w1
-        // ∂L/∂b1
-
-        // We keep at it with the chain rule.
+        // Hidden layer adjustment
 
         for (int i = 0; i < M_HIDDEN; i++) {
-
-            // We know ∂L/∂z2 from the previous calculations, so that can be our starting point
-
-            // ∂L/∂z1 = ∂L/∂z2 * ∂z2/∂z1
-
-            // It's a given that
-
-            // z1(x)[i] = w1[i][j] * x[j] + b1[i]
-            // a[i] = σ1(z1[i])
-            // z2(a) = w2[i] * a[i] + b2
-
-            // So our mystery derivative is
-
-            //   ∂z2      ∂z2     ∂a
-            //   -----  = -----  ----
-            //   ∂z1       ∂a    ∂z1
-
-            // Both parts of RHS can be found
-
-            // ∂z2/∂a = w2
-            // ∂a/∂z1 is just a matter of our activation function
-
             double dLdz1 = dL_dz2 * w2[i]
                     * σ1.f_deriv(z1[i]);
-
-            // Now we just need to find
-
-            // ∂L/∂w1 = ∂L/∂z1 ∂z1/∂w1 = ∂L/∂z1 * x
 
             for (int xi : x) {
                 w1[i][xi] -= lr * dLdz1;
             }
 
-            // ∂L/∂b1 = ∂L/∂z1 ∂z1/∂b1 = ∂L/∂z1
             b1[i] -= lr * dLdz1;
         }
 
-
-        // Now we can finally address the output layer
-
-        // To adjust the output layer we need to find
-
-        // 1. ∂L/∂w2
-        // 2. ∂L/∂b2
-
+        // Output layer adjustment
         for (int i = 0; i < M_HIDDEN; i++) {
-
-            // ∂L/∂w2 = ∂L/∂z2 * ∂z2 / ∂w2
-
-            // Recall z2 = w2[i] a[i] + b2, so ∂z2/∂w2 is simply
-
             double dz2_dw2 = a[i];
-
-            // Apply changes to hidden-output weights
             this.w2[i] -= lr * dL_dz2 * dz2_dw2;
         }
-        // Output bias follows the same pattern, but with the conclusion that
-        // ∂z2/∂b2 = 1
         b2 -= lr * dL_dz2;
-
-
-        // That's it!  Weights are updated,
-        // let's report back the loss
 
         return L;
     }

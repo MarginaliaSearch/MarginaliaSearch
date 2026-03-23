@@ -32,6 +32,7 @@ only_fans
 sex_work
 
 # Unigrams
+pleasure
 2257
 escort
 whore
@@ -438,6 +439,7 @@ cam
 extreme
 camgirl
 usc
+erogenous
 
 # Negative terms
 raw
@@ -534,6 +536,7 @@ plant
 publications
 license
 schools
+school
 supported
 helpful
 saving
@@ -627,3 +630,15 @@ driver
 cairns
 warcraft
 cancer
+voting
+vote
+weirdly
+oddly
+cia
+baby
+fatwa
+senator
+senate
+professor
+easter
+polic
