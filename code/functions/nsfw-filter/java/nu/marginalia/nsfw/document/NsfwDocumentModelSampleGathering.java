@@ -109,7 +109,7 @@ public class NsfwDocumentModelSampleGathering {
 
         String timestamp = java.time.LocalDateTime.now()
                 .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"));
-        Path outputPath = trainingDataDir.resolve("ollama-" + timestamp + ".txt");
+        Path outputPath = trainingDataDir.resolve("samples").resolve("ollama-" + timestamp + ".txt");
 
         try (var labeler = new OllamaNsfwLabeler();
              var marginaliaClient = new MarginaliaApiClient(apiKey);
@@ -205,7 +205,7 @@ public class NsfwDocumentModelSampleGathering {
 
         String timestamp = java.time.LocalDateTime.now()
                 .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"));
-        Path outputPath = trainingDataDir.resolve("ollama-" + timestamp + ".txt");
+        Path outputPath = trainingDataDir.resolve("samples").resolve("ollama-" + timestamp + ".txt");
 
         try (Connection docDbConn = DriverManager.getConnection("jdbc:sqlite:" + docDbPath);
              var stmt = docDbConn.createStatement();
