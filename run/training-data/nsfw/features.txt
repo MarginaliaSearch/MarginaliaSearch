@@ -30,6 +30,8 @@ escort_vehicle
 pussy_cat
 only_fans
 sex_work
+escort_service
+escort_services
 
 # Unigrams
 pleasure
@@ -440,6 +442,7 @@ extreme
 camgirl
 usc
 erogenous
+
 
 # Negative terms
 raw
