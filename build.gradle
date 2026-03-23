@@ -48,7 +48,7 @@ subprojects.forEach {it ->
 }
 
 ext {
-    jvmVersion = 26
+    jvmVersion = 25
     dockerImageBase='container-registry.oracle.com/graalvm/jdk:25'
     dockerImageTag='latest'
     dockerImageRegistry='marginalia'
