@@ -22,6 +22,9 @@ import java.util.Set;
 @Singleton
 public class FeatureExtractor {
 
+    // Current model does not perform well enough for this, but keep the option in case we improve it or train a better one.
+    private static boolean useNsfwFilter = Boolean.getBoolean("converter.experimental.labelNsfwResults");
+
     private static final List<String> innocentTrackers = List.of(
             "twitter.com",
             "bing.com",
@@ -340,7 +343,7 @@ public class FeatureExtractor {
         else if (woodworkingDetector.testP(dld) > 0.3 || textileCraftDetector.testP(dld) > 0.3)
             features.add(HtmlFeature.CATEGORY_CRAFTS);
 
-        if (nsfwFilter.isNsfw(dld.sentences())) {
+        if (useNsfwFilter && nsfwFilter.isNsfw(dld.sentences())) {
             features.add(HtmlFeature.CATEGORY_NSFW);
         }
 
