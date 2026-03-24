@@ -126,59 +126,60 @@ public class NsfwDocumentModelSampleGathering {
             BinaryClassifierModel model = BinaryClassifierModel.fromSerialized(modelPath);
             ClassifierVocabulary vocabulary = new ClassifierVocabulary(modelPath.resolve("vocabulary.txt"));;
 
-            int page = 1;
-
             int count = 0;
             int agreedCount = 0;
 
             for (String query: queries) {
-                int currentPage = page++;
+                int page = 1;
 
-                MarginaliaApiClient.ApiResponse apiResponse = marginaliaClient.query(ctx -> {
-                    ctx.query(query + " qs=RF_TITLE"); // qs=RF_TITLE makes sure the search terms appear in the title
-                    ctx.page(currentPage);
-                    ctx.nsfw(0);
-                    ctx.count(100);
-                });
+                for (;;) {
+                    int currentPage = page++;
 
-                if (apiResponse.results().isEmpty())
-                    break;
+                    MarginaliaApiClient.ApiResponse apiResponse = marginaliaClient.query(ctx -> {
+                        ctx.query(query + " qs=RF_TITLE"); // qs=RF_TITLE makes sure the search terms appear in the title
+                        ctx.page(currentPage);
+                        ctx.nsfw(0);
+                        ctx.count(100);
+                    });
 
-                for (var result: apiResponse.results()) {
-                    String title = result.title();
-                    String description = result.description();
+                    if (apiResponse.results().isEmpty())
+                        break;
 
-                    String input = (title + " " + description).replace('\n', ' ').toLowerCase();
+                    for (var result : apiResponse.results()) {
+                        String title = result.title();
+                        String description = result.description();
 
-                    if (!existingSamples.add(input)) {
-                        continue;
+                        String input = (title + " " + description).replaceAll("\n", " ").toLowerCase();
+
+                        if (!existingSamples.add(input)) {
+                            continue;
+                        }
+
+                        var sample = vocabulary.createSample(BinaryClassifierModel.InputActivationMode.COUNTED, input, false);
+
+                        boolean modelPrediction = model.predict(sample) > 0.5;
+                        boolean qwenPrediction = labeler.classifyNsfw(title, description);
+
+                        count++;
+
+                        if (modelPrediction == qwenPrediction)
+                            agreedCount++;
+
+                        System.out.println("title: " + title);
+                        System.out.println("desc: " + description);
+                        System.out.println("model: " + modelPrediction);
+                        System.out.println("qwen: " + qwenPrediction);
+                        System.out.println("features: " + vocabulary.featuresReverse(sample.x()));
+                        System.out.println("---");
+
+                        if (qwenPrediction) {
+                            trainingDataPw.println("__label__NSFW " + input);
+                        } else {
+                            trainingDataPw.println("__label__SAFE " + input);
+                        }
+
+                        trainingDataPw.flush();
                     }
-
-                    var sample = vocabulary.createSample(BinaryClassifierModel.InputActivationMode.COUNTED, input, false);
-
-                    boolean modelPrediction = model.predict(sample) > 0.5;
-                    boolean qwenPrediction = labeler.classifyNsfw(title, description);
-
-                    count++;
-
-                    if (modelPrediction == qwenPrediction)
-                        agreedCount++;
-
-                    System.out.println("title: " + title);
-                    System.out.println("desc: " + description);
-                    System.out.println("model: " + modelPrediction);
-                    System.out.println("qwen: " + qwenPrediction);
-                    System.out.println("features: " + vocabulary.featuresReverse(sample.x()));
-                    System.out.println("---");
-
-                    if (qwenPrediction) {
-                        trainingDataPw.println("__label__NSFW " + input);
-                    }
-                    else {
-                        trainingDataPw.println("__label__SAFE " + input);
-                    }
-
-                    trainingDataPw.flush();
                 }
             }
         } catch (IOException e) {
@@ -207,6 +208,8 @@ public class NsfwDocumentModelSampleGathering {
                 .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"));
         Path outputPath = trainingDataDir.resolve("samples").resolve("ollama-" + timestamp + ".txt");
 
+        Random random = new Random();
+
         try (Connection docDbConn = DriverManager.getConnection("jdbc:sqlite:" + docDbPath);
              var stmt = docDbConn.createStatement();
              var labeler = new OllamaNsfwLabeler();
@@ -228,10 +231,20 @@ public class NsfwDocumentModelSampleGathering {
             int count = 0;
             int agreedCount = 0;
 
+            int skip = 0;
+            int cnt;
+
+            {
+                ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM DOCUMENT");
+                cnt = rs.getInt(1);
+                skip = (int) (0.8*random.nextDouble() * cnt);
+            }
+
             Object2IntOpenHashMap<EdgeDomain> countsByDomain = new Object2IntOpenHashMap<>();
             countsByDomain.defaultReturnValue(1);
 
-            ResultSet rs = stmt.executeQuery("SELECT TITLE, DESCRIPTION, URL FROM DOCUMENT");
+
+            ResultSet rs = stmt.executeQuery("SELECT TITLE, DESCRIPTION, URL FROM DOCUMENT LIMIT " + cnt + " OFFSET " + skip);
             stmt.setFetchSize(1000);
 
             while (rs.next()) {
@@ -240,7 +253,7 @@ public class NsfwDocumentModelSampleGathering {
                 String title = rs.getString("TITLE");
                 String description = rs.getString("DESCRIPTION");
 
-                String input = (title + " " + description).replace('\n', ' ').toLowerCase();
+                String input = (title + " " + description).replaceAll("\n", " ").toLowerCase();
 
                 if (!existingSamples.add(input)) {
                     continue;
