@@ -644,4 +644,6 @@ senator
 senate
 professor
 easter
-polic
+police
+service
+services
