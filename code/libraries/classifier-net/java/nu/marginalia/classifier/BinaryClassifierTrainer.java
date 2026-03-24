@@ -1,6 +1,11 @@
 package nu.marginalia.classifier;
 
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.util.Strings;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -9,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.zip.GZIPInputStream;
@@ -30,27 +36,62 @@ public class BinaryClassifierTrainer {
         this.inputActivationMode = inputActivationMode;
         this.labels = labels;
 
-        for (Path p: Files.newDirectoryStream(trainingDataDir)) {
-            readTrainingData(p);
-        }
+        readTrainingData(trainingDataDir);
     }
 
-    private void readTrainingData(Path path) throws IOException {
-        for (String line: lines(path)) {
-            String[] parts = StringUtils.split(line, " ", 2);
-            if (parts.length != 2) {
-                System.out.println("Weird line: '" + line + "' in file " + path);
-                continue;
-            }
-            String label = parts[0];
-            String sample = parts[1];
+    private void readTrainingData(Path trainingDataDir) throws IOException {
+        Int2IntOpenHashMap positives = new Int2IntOpenHashMap();
+        Int2IntOpenHashMap negatives = new Int2IntOpenHashMap();
+        Int2ObjectOpenHashMap<List<String>> featuresSamples = new Int2ObjectOpenHashMap<>();
 
-            if (labels[0].equals(label)) {
-                samples.add(vocabulary.createSample(inputActivationMode, sample, false));
-                samplesRaw.add(sample);
-            } else if (labels[1].equals(label)) {
-                samples.add(vocabulary.createSample(inputActivationMode, sample, true));
-                samplesRaw.add(sample);
+        for (Path path: Files.newDirectoryStream(trainingDataDir)) {
+            for (String line : lines(path)) {
+                String[] parts = StringUtils.split(line, " ", 2);
+                if (parts.length != 2) {
+                    System.out.println("Weird line: '" + line + "' in file " + path);
+                    continue;
+                }
+                String label = parts[0];
+                String input = parts[1];
+
+                Int2IntOpenHashMap collection;
+                boolean sampleLabel;
+
+                if (labels[0].equals(label)) {
+                    sampleLabel = false;
+                    collection = negatives;
+                } else if (labels[1].equals(label)) {
+                    sampleLabel = true;
+                    collection = positives;
+                } else {
+                    continue;
+                }
+
+                var sample = vocabulary.createSample(inputActivationMode, input, sampleLabel);
+
+                if (sample.isEmpty()) {
+                    continue;
+                }
+                int hash = sample.hashCode();
+                collection.addTo(hash, 1);
+
+                if (!featuresSamples.containsKey(hash)) {
+                    featuresSamples.put(hash, vocabulary.featuresReverse(sample.x()));
+                }
+
+                samples.add(sample);
+                samplesRaw.add(input);
+            }
+        }
+
+        // Prune negative labels from ambiguous cases
+        for (var entry: featuresSamples.int2ObjectEntrySet()) {
+            int posCnt = positives.getOrDefault(entry.getIntKey(), 0);
+            int negCnt = negatives.getOrDefault(entry.getIntKey(), 0);
+
+            if (posCnt > 5 && negCnt > 5) {
+                System.out.printf("Trimming ambiguous case (%d vs %d): %s\n", posCnt, negCnt, Strings.join(entry.getValue(), ','));
+                samples.removeIf(sample -> sample.y0() < 0.5 && sample.hashCode() == entry.getIntKey());
             }
         }
     }
