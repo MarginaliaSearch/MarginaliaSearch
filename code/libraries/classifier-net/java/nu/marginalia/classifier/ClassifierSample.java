@@ -11,6 +11,10 @@ public sealed interface ClassifierSample {
     @Nullable
     double[] act();
 
+    default boolean isEmpty() {
+        return x().length == 0;
+    }
+
     static double[] activationFromCount(int[] counts) {
         double[] activationNormalized = new double[counts.length];
 
@@ -44,6 +48,10 @@ public sealed interface ClassifierSample {
         public double[] act() {
             return null;
         }
+
+        public int hashCode() {
+            return Arrays.hashCode(x);
+        }
     }
 
     public record CountedClassifierSample(int[] x, double[] act, double y0) implements ClassifierSample {
@@ -52,6 +60,9 @@ public sealed interface ClassifierSample {
             return String.format("Features: %s, Activation: %s, label: %2.2f", Arrays.toString(x), Arrays.toString(act), y0);
         }
 
+        public int hashCode() {
+            return Arrays.hashCode(x);
+        }
     }
 
 
