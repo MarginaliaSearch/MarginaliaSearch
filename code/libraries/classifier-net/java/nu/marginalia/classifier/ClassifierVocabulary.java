@@ -92,6 +92,9 @@ public class ClassifierVocabulary {
             String prevTerm = null;
 
             for (String term : StringUtils.split(sent.toLowerCase())) {
+                term = trimTerm(term);
+
+
                 Integer idx = vocabularyInv.get(term);
                 if (idx != null) {
                     features.add(idx.intValue());
@@ -117,6 +120,8 @@ public class ClassifierVocabulary {
             String prevTerm = null;
 
             for (String term : StringUtils.split(sent.toLowerCase())) {
+                term = trimTerm(term);
+
                 Integer idx = vocabularyInv.get(term);
                 if (idx != null) {
                     features.mergeInt(idx.intValue(), 1, Integer::sum);
@@ -148,6 +153,7 @@ public class ClassifierVocabulary {
                 }
 
                 String term = sent.wordsLowerCase[i];
+                term = trimTerm(term);
 
                 Integer idx = vocabularyInv.get(term);
                 if (idx != null) {
@@ -186,6 +192,7 @@ public class ClassifierVocabulary {
                 }
 
                 String term = sent.wordsLowerCase[i];
+                term = trimTerm(term);
 
                 Integer idx = vocabularyInv.get(term);
                 if (idx != null) {
@@ -220,6 +227,31 @@ public class ClassifierVocabulary {
         Integer idx = suffixes.get(b);
         if (idx == null) return -1;
         return idx;
+    }
+
+    private String trimTerm(String term) {
+        int start = 0;
+        int end = term.length();
+        while (start < end) {
+            int c = term.charAt(start);
+            if (Character.isAlphabetic(c) || Character.isDigit(c))
+                break;
+            start++;
+        }
+
+        while (end >= start && end > 0) {
+            int c = term.charAt(end-1);
+            if (Character.isAlphabetic(c) || Character.isDigit(c))
+                break;
+            end--;
+        }
+
+        if (end > start) {
+            return term.substring(start, end);
+        }
+        else {
+            return "";
+        }
     }
 
 
