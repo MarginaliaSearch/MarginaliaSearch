@@ -124,9 +124,12 @@ public class StatefulIndex {
         }
 
         for (;;) {
-            Lock useLock = combinedIndexReader.useLock();
+            // grab a reference to avoid TOCTOU scenario
+            var currentCIR = combinedIndexReader;
+
+            Lock useLock = currentCIR.useLock();
             if (useLock.tryLock()) {
-                return new IndexReference(combinedIndexReader, useLock);
+                return new IndexReference(currentCIR, useLock);
             }
             Thread.onSpinWait();
         }
