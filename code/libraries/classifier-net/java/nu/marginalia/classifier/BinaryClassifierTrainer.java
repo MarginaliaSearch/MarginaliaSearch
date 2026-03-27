@@ -13,13 +13,13 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 public class BinaryClassifierTrainer {
+
+    private static boolean SUGGEST_NEW_TERMS = false;
 
     private final ClassifierVocabulary vocabulary;
     private final BinaryClassifierModel.InputActivationMode inputActivationMode;
@@ -42,20 +42,27 @@ public class BinaryClassifierTrainer {
     private void readTrainingData(Path trainingDataDir) throws IOException {
         Int2IntOpenHashMap positives = new Int2IntOpenHashMap();
         Int2IntOpenHashMap negatives = new Int2IntOpenHashMap();
+
         Int2ObjectOpenHashMap<List<String>> featuresSamples = new Int2ObjectOpenHashMap<>();
+
+        Map<Integer, Map<String, Integer>> termPairFrequenciesPos = new HashMap<>();
+        Map<Integer, Map<String, Integer>> termPairFrequenciesNeg = new HashMap<>();
+        Map<String, Integer> termFrequencies = new HashMap<>();
 
         for (Path path: Files.newDirectoryStream(trainingDataDir)) {
             for (String line : lines(path)) {
                 String[] parts = StringUtils.split(line, " ", 2);
+
                 if (parts.length != 2) {
                     System.out.println("Weird line: '" + line + "' in file " + path);
                     continue;
                 }
+
                 String label = parts[0];
                 String input = parts[1];
 
-                Int2IntOpenHashMap collection;
-                boolean sampleLabel;
+                final Int2IntOpenHashMap collection;
+                final boolean sampleLabel;
 
                 if (labels[0].equals(label)) {
                     sampleLabel = false;
@@ -72,17 +79,40 @@ public class BinaryClassifierTrainer {
                 if (sample.isEmpty()) {
                     continue;
                 }
+
+                Set<String> allTerms = new HashSet<>();
+                for (String term : StringUtils.split(input.toLowerCase())) {
+                    term = ClassifierVocabulary.trimTerm(term);
+                    allTerms.add(term);
+                }
+
                 int hash = sample.hashCode();
+
+                var identifiedFeatures = vocabulary.featuresReverse(sample.x());
+                for (String term2 : allTerms) {
+                    if (identifiedFeatures.contains(term2))
+                        continue;
+
+                    {
+                        Map<Integer, Map<String, Integer>> set = sample.y0() > 0.5 ? termPairFrequenciesPos : termPairFrequenciesNeg;
+                        set.computeIfAbsent(hash, _ -> new HashMap<>()).merge(term2, 1, Integer::sum);
+                    }
+
+                    termFrequencies.merge(term2, 1, Integer::sum);
+                }
+
+
                 collection.addTo(hash, 1);
 
                 if (!featuresSamples.containsKey(hash)) {
-                    featuresSamples.put(hash, vocabulary.featuresReverse(sample.x()));
+                    featuresSamples.put(hash, identifiedFeatures);
                 }
 
                 samples.add(sample);
                 samplesRaw.add(input);
             }
         }
+
 
         // Prune negative labels from ambiguous cases
         for (var entry: featuresSamples.int2ObjectEntrySet()) {
@@ -92,6 +122,40 @@ public class BinaryClassifierTrainer {
             if (posCnt > 5 && negCnt > 5) {
                 System.out.printf("Trimming ambiguous case (%d vs %d): %s\n", posCnt, negCnt, Strings.join(entry.getValue(), ','));
                 samples.removeIf(sample -> sample.y0() < 0.5 && sample.hashCode() == entry.getIntKey());
+
+                int featureHash = entry.getIntKey();
+
+                int tcTermPos = termPairFrequenciesPos.get(featureHash).values().stream().mapToInt(Integer::intValue).sum();
+                int tcTermNeg = termPairFrequenciesNeg.get(featureHash).values().stream().mapToInt(Integer::intValue).sum();
+
+
+                var posPairings = termPairFrequenciesPos.getOrDefault(featureHash, Map.of());
+                var negPairings = termPairFrequenciesNeg.getOrDefault(featureHash, Map.of());
+
+                Set<String> termsCombined = new HashSet<>(posPairings.size() + negPairings.size());
+
+                termsCombined.addAll(posPairings.keySet());
+                termsCombined.addAll(negPairings.keySet());
+
+                Map<String, Double> termsScored = new HashMap<>();
+                for (String candidateTerm: termsCombined) {
+                    int countPos = posPairings.getOrDefault(candidateTerm, 0);
+                    int countNeg = negPairings.getOrDefault(candidateTerm, 0);
+                    int tf = termFrequencies.getOrDefault(candidateTerm, posCnt + negCnt);
+
+                    if (countPos + countNeg < 5) continue;
+                    if (tf > samples.size() * 0.1) continue;
+
+
+                    double freqPos = countPos / (double) tcTermPos;
+                    double freqNeg = countNeg / (double) tcTermNeg;
+
+                    // Score by chi^2 of frequencies
+                    termsScored.put(candidateTerm, (double) (Math.pow(freqNeg - freqPos, 2) / (freqNeg + freqPos)));
+
+                }
+
+                System.out.println("Maybe add:" + termsScored.entrySet().stream().sorted(Map.Entry.<String, Double>comparingByValue()).limit(15).map(Map.Entry::getKey).collect(Collectors.joining(", ")));
             }
         }
     }

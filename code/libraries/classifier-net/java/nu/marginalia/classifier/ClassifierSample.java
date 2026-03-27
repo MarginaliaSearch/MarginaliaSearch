@@ -49,6 +49,7 @@ public sealed interface ClassifierSample {
             return null;
         }
 
+        @Override
         public int hashCode() {
             return Arrays.hashCode(x);
         }
@@ -60,6 +61,7 @@ public sealed interface ClassifierSample {
             return String.format("Features: %s, Activation: %s, label: %2.2f", Arrays.toString(x), Arrays.toString(act), y0);
         }
 
+        @Override
         public int hashCode() {
             return Arrays.hashCode(x);
         }

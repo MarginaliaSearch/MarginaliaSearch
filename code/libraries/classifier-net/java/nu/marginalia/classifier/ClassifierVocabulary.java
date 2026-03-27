@@ -229,7 +229,7 @@ public class ClassifierVocabulary {
         return idx;
     }
 
-    private String trimTerm(String term) {
+    public static String trimTerm(String term) {
         int start = 0;
         int end = term.length();
         while (start < end) {
