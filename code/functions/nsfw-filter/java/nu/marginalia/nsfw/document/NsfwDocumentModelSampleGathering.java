@@ -149,7 +149,7 @@ public class NsfwDocumentModelSampleGathering {
                         String title = result.title();
                         String description = result.description();
 
-                        String input = (title + " " + description).replaceAll("\n", " ").toLowerCase();
+                        String input = StringUtils.replaceChars(title + " " + description, '\n', ' ').toLowerCase();
 
                         if (!existingSamples.add(input)) {
                             continue;
@@ -253,7 +253,7 @@ public class NsfwDocumentModelSampleGathering {
                 String title = rs.getString("TITLE");
                 String description = rs.getString("DESCRIPTION");
 
-                String input = (title + " " + description).replaceAll("\n", " ").toLowerCase();
+                String input = StringUtils.replaceChars(title + " " + description, '\n', ' ').toLowerCase();
 
                 if (!existingSamples.add(input)) {
                     continue;
