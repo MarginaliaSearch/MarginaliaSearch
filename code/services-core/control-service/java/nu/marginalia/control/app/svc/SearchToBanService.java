@@ -1,6 +1,9 @@
 package nu.marginalia.control.app.svc;
 
 import com.google.inject.Inject;
+import io.jooby.Context;
+import io.jooby.Jooby;
+import io.jooby.MediaType;
 import nu.marginalia.api.searchquery.QueryClient;
 import nu.marginalia.api.searchquery.QueryFilterSpec;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
@@ -9,13 +12,9 @@ import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.model.EdgeUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.TimeoutException;
 
 public class SearchToBanService {
@@ -23,6 +22,8 @@ public class SearchToBanService {
     private final ControlRendererFactory rendererFactory;
     private final QueryClient queryClient;
     private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    private ControlRendererFactory.Renderer searchToBanRenderer;
 
     @Inject
     public SearchToBanService(ControlBlacklistService blacklistService,
@@ -35,35 +36,32 @@ public class SearchToBanService {
         this.queryClient = queryClient;
     }
 
-    public void register() throws IOException {
-        var searchToBanRenderer = rendererFactory.renderer("control/app/search-to-ban");
+    public void register(Jooby jooby) throws IOException {
+        searchToBanRenderer = rendererFactory.renderer("control/app/search-to-ban");
 
-        Spark.get("/search-to-ban", this::handle, searchToBanRenderer::render);
-        Spark.post("/search-to-ban", this::handle, searchToBanRenderer::render);
+        jooby.get("/search-to-ban", this::handle);
+        jooby.post("/search-to-ban", this::handlePost);
     }
 
-    public Object handle(Request request, Response response) throws TimeoutException {
-        if (Objects.equals(request.requestMethod(), "POST")) {
-            executeBlacklisting(request);
+    private Object handle(Context ctx) throws TimeoutException {
+        String q = ctx.query("q").valueOrNull();
 
-            return findResults(request.queryParams("query"));
-        }
-
-        return findResults(request.queryParams("q"));
-    }
-
-    private Object findResults(String q) throws TimeoutException {
+        Object model;
         if (q == null || q.isBlank()) {
-            return Map.of();
+            model = Map.of();
         } else {
-            return executeQuery(q);
+            model = executeQuery(q);
         }
+
+        ctx.setResponseType(MediaType.html);
+        return searchToBanRenderer.render(model);
     }
 
-    private void executeBlacklisting(Request request) {
-        String query = request.queryParams("query");
-        for (var param : request.queryParams()) {
-            logger.info(param + ": " + request.queryParams(param));
+    private Object handlePost(Context ctx) throws TimeoutException {
+        String query = ctx.form("query").valueOrNull();
+
+        for (String param : ctx.formMap().keySet()) {
+            logger.info(param + ": " + ctx.form(param).valueOrNull());
             if ("query".equals(param)) {
                 continue;
             }
@@ -71,6 +69,16 @@ public class SearchToBanService {
                     blacklistService.addToBlacklist(url.domain, query)
             );
         }
+
+        Object model;
+        if (query == null || query.isBlank()) {
+            model = Map.of();
+        } else {
+            model = executeQuery(query);
+        }
+
+        ctx.setResponseType(MediaType.html);
+        return searchToBanRenderer.render(model);
     }
 
     private Object executeQuery(String query) throws TimeoutException {

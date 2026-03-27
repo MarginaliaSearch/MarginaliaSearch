@@ -3,6 +3,8 @@ package nu.marginalia.query;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import io.jooby.ExecutionMode;
+import io.jooby.Jooby;
 import nu.marginalia.nsfw.NsfwFilterModule;
 import nu.marginalia.service.MainClass;
 import nu.marginalia.service.ServiceId;
@@ -21,6 +23,10 @@ public class QueryMain extends MainClass {
         this.service = service;
     }
 
+    public void start(Jooby jooby) {
+        service.startJooby(jooby);
+    }
+
     public static void main(String... args) {
         init(ServiceId.Query, args);
 
@@ -33,12 +39,16 @@ public class QueryMain extends MainClass {
         );
 
         // Orchestrate the boot order for the services
-        var registry = injector.getInstance(ServiceRegistryIf.class);
-        var configuration = injector.getInstance(ServiceConfiguration.class);
+        ServiceRegistryIf registry = injector.getInstance(ServiceRegistryIf.class);
+        ServiceConfiguration configuration = injector.getInstance(ServiceConfiguration.class);
         orchestrateBoot(registry, configuration);
 
-        injector.getInstance(QueryMain.class);
+        QueryMain main = injector.getInstance(QueryMain.class);
         injector.getInstance(Initialization.class).setReady();
+
+        Jooby.runApp(new String[] { "application.env=prod" }, ExecutionMode.WORKER, () -> new Jooby() {
+            { main.start(this); }
+        });
     }
 
 }

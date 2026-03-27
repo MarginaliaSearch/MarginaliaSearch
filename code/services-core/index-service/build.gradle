@@ -50,7 +50,6 @@ dependencies {
     testImplementation project(path: ':code:services-core:control-service')
 
     implementation libs.bundles.slf4j
-    implementation libs.bundles.jetty
     implementation libs.prometheus
     implementation libs.bundles.jooby
     implementation libs.notnull
@@ -79,6 +78,7 @@ dependencies {
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
+    testImplementation project(':code:libraries:test-helpers')
 
 }
 

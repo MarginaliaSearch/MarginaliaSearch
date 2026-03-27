@@ -3,19 +3,18 @@ package nu.marginalia.query;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import io.jooby.Context;
+import io.jooby.MediaType;
+import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.RpcResultRankingParameters;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
-import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
-import nu.marginalia.api.searchquery.model.query.QueryParams;
 import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.functions.searchquery.QueryGRPCService;
 import nu.marginalia.index.api.IndexClient;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
-import spark.Request;
-import spark.Response;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,21 +43,21 @@ public class QueryBasicInterface {
     }
 
     /** Handle the basic search endpoint exposed in the bare-bones search interface. */
-    public Object handleBasic(Request request, Response response) {
-        String queryString = request.queryParams("q");
+    public Object handleBasic(Context ctx) {
+        String queryString = ctx.query("q").valueOrNull();
         if (queryString == null) {
             return basicRenderer.render(new Object());
         }
 
-        int count = parseInt(requireNonNullElse(request.queryParams("count"), "10"));
-        int page = parseInt(requireNonNullElse(request.queryParams("page"), "1"));
-        int domainCount = parseInt(requireNonNullElse(request.queryParams("domainCount"), "5"));
-        String langIsoCode = requireNonNullElse(request.queryParams("lang"), "en");
-        String set = requireNonNullElse(request.queryParams("set"), "");
+        int count = parseInt(requireNonNullElse(ctx.query("count").valueOrNull(), "10"));
+        int page = parseInt(requireNonNullElse(ctx.query("page").valueOrNull(), "1"));
+        int domainCount = parseInt(requireNonNullElse(ctx.query("domainCount").valueOrNull(), "5"));
+        String langIsoCode = requireNonNullElse(ctx.query("lang").valueOrNull(), "en");
+        String set = requireNonNullElse(ctx.query("set").valueOrNull(), "");
 
-        var pagination = new IndexClient.Pagination(page, count);
+        IndexClient.Pagination pagination = new IndexClient.Pagination(page, count);
 
-        var detailedDirectResult = queryGRPCService.executeDirect(
+        QueryGRPCService.DetailedDirectResult detailedDirectResult = queryGRPCService.executeDirect(
                 queryString,
                 RpcQueryLimits.newBuilder()
                         .setResultsByDomain(domainCount)
@@ -71,7 +70,7 @@ public class QueryBasicInterface {
                 PrototypeRankingParameters.sensibleDefaults()
         );
 
-        var results = detailedDirectResult.result();
+        List<DecoratedSearchResultItem> results = detailedDirectResult.result();
 
         List<PaginationInfoPage> paginationInfo = new ArrayList<>();
 
@@ -79,8 +78,9 @@ public class QueryBasicInterface {
             paginationInfo.add(new PaginationInfoPage(i, i == pagination.page()));
         }
 
-        if (request.headers("Accept").contains("application/json")) {
-            response.type("application/json");
+        String accept = ctx.header("Accept").valueOrNull();
+        if (accept != null && accept.contains("application/json")) {
+            ctx.setResponseType(MediaType.JSON);
             return gson.toJson(results);
         }
         else {
@@ -93,24 +93,24 @@ public class QueryBasicInterface {
     }
 
     /** Handle the qdebug endpoint, which allows for query debugging and ranking parameter tuning. */
-    public Object handleAdvanced(Request request, Response response) {
-        String queryString = request.queryParams("q");
+    public Object handleAdvanced(Context ctx) {
+        String queryString = ctx.query("q").valueOrNull();
         if (queryString == null) {
             // Show the default query form if no query is given
             return qdebugRenderer.render(Map.of("rankingParams", PrototypeRankingParameters.sensibleDefaults()));
         }
 
-        int count = parseInt(requireNonNullElse(request.queryParams("count"), "10"));
-        int page = parseInt(requireNonNullElse(request.queryParams("page"), "1"));
-        int domainCount = parseInt(requireNonNullElse(request.queryParams("domainCount"), "5"));
-        String langIsoCode = requireNonNullElse(request.queryParams("lang"), "en");
-        String set = requireNonNullElse(request.queryParams("set"), "");
+        int count = parseInt(requireNonNullElse(ctx.query("count").valueOrNull(), "10"));
+        int page = parseInt(requireNonNullElse(ctx.query("page").valueOrNull(), "1"));
+        int domainCount = parseInt(requireNonNullElse(ctx.query("domainCount").valueOrNull(), "5"));
+        String langIsoCode = requireNonNullElse(ctx.query("lang").valueOrNull(), "en");
+        String set = requireNonNullElse(ctx.query("set").valueOrNull(), "");
 
-        var pagination = new IndexClient.Pagination(page, count);
+        IndexClient.Pagination pagination = new IndexClient.Pagination(page, count);
 
-        var rankingParams = debugRankingParamsFromRequest(request);
+        RpcResultRankingParameters rankingParams = debugRankingParamsFromRequest(ctx);
 
-        var detailedDirectResult = queryGRPCService.executeDirect(
+        QueryGRPCService.DetailedDirectResult detailedDirectResult = queryGRPCService.executeDirect(
                 queryString,
                 RpcQueryLimits.newBuilder()
                         .setResultsByDomain(domainCount)
@@ -123,7 +123,7 @@ public class QueryBasicInterface {
                 rankingParams
         );
 
-        var results = detailedDirectResult.result();
+        List<DecoratedSearchResultItem> results = detailedDirectResult.result();
 
         return qdebugRenderer.render(
                 Map.of("query", queryString,
@@ -133,48 +133,52 @@ public class QueryBasicInterface {
         );
     }
 
-    private RpcResultRankingParameters debugRankingParamsFromRequest(Request request) {
-        var sensibleDefaults = PrototypeRankingParameters.sensibleDefaults();
+    private RpcResultRankingParameters debugRankingParamsFromRequest(Context ctx) {
+        RpcResultRankingParameters sensibleDefaults = PrototypeRankingParameters.sensibleDefaults();
 
-        var bias = RpcTemporalBias.Bias.valueOf(stringFromRequest(request, "temporalBias", "NONE"));
+        RpcTemporalBias.Bias bias = RpcTemporalBias.Bias.valueOf(stringFromRequest(ctx, "temporalBias", "NONE"));
 
         return RpcResultRankingParameters.newBuilder()
-                .setDomainRankBonus(doubleFromRequest(request, "domainRankBonus", sensibleDefaults.getDomainRankBonus()))
-                .setQualityPenalty(doubleFromRequest(request, "qualityPenalty", sensibleDefaults.getQualityPenalty()))
-                .setShortDocumentThreshold(intFromRequest(request, "shortDocumentThreshold", sensibleDefaults.getShortDocumentThreshold()))
-                .setShortDocumentPenalty(doubleFromRequest(request, "shortDocumentPenalty", sensibleDefaults.getShortDocumentPenalty()))
-                .setTcfFirstPositionWeight(doubleFromRequest(request, "tcfFirstPositionWeight", sensibleDefaults.getTcfFirstPositionWeight()))
-                .setTcfVerbatimWeight(doubleFromRequest(request, "tcfVerbatimWeight", sensibleDefaults.getTcfVerbatimWeight()))
-                .setTcfProximityWeight(doubleFromRequest(request, "tcfProximityWeight", sensibleDefaults.getTcfProximityWeight()))
-                .setBm25B(doubleFromRequest(request, "bm25b", sensibleDefaults.getBm25B()))
-                .setBm25K(doubleFromRequest(request, "bm25k", sensibleDefaults.getBm25K()))
+                .setDomainRankBonus(doubleFromRequest(ctx, "domainRankBonus", sensibleDefaults.getDomainRankBonus()))
+                .setQualityPenalty(doubleFromRequest(ctx, "qualityPenalty", sensibleDefaults.getQualityPenalty()))
+                .setShortDocumentThreshold(intFromRequest(ctx, "shortDocumentThreshold", sensibleDefaults.getShortDocumentThreshold()))
+                .setShortDocumentPenalty(doubleFromRequest(ctx, "shortDocumentPenalty", sensibleDefaults.getShortDocumentPenalty()))
+                .setTcfFirstPositionWeight(doubleFromRequest(ctx, "tcfFirstPositionWeight", sensibleDefaults.getTcfFirstPositionWeight()))
+                .setTcfVerbatimWeight(doubleFromRequest(ctx, "tcfVerbatimWeight", sensibleDefaults.getTcfVerbatimWeight()))
+                .setTcfProximityWeight(doubleFromRequest(ctx, "tcfProximityWeight", sensibleDefaults.getTcfProximityWeight()))
+                .setBm25B(doubleFromRequest(ctx, "bm25b", sensibleDefaults.getBm25B()))
+                .setBm25K(doubleFromRequest(ctx, "bm25k", sensibleDefaults.getBm25K()))
                 .setTemporalBias(RpcTemporalBias.newBuilder().setBias(bias).build())
-                .setTemporalBiasWeight(doubleFromRequest(request, "temporalBiasWeight", sensibleDefaults.getTemporalBiasWeight()))
-                .setShortSentenceThreshold(intFromRequest(request, "shortSentenceThreshold", sensibleDefaults.getShortSentenceThreshold()))
-                .setShortSentencePenalty(doubleFromRequest(request, "shortSentencePenalty", sensibleDefaults.getShortSentencePenalty()))
-                .setBm25Weight(doubleFromRequest(request, "bm25Weight", sensibleDefaults.getBm25Weight()))
-                .setDisablePenalties(boolFromRequest(request, "disablePenalties", sensibleDefaults.getDisablePenalties()))
+                .setTemporalBiasWeight(doubleFromRequest(ctx, "temporalBiasWeight", sensibleDefaults.getTemporalBiasWeight()))
+                .setShortSentenceThreshold(intFromRequest(ctx, "shortSentenceThreshold", sensibleDefaults.getShortSentenceThreshold()))
+                .setShortSentencePenalty(doubleFromRequest(ctx, "shortSentencePenalty", sensibleDefaults.getShortSentencePenalty()))
+                .setBm25Weight(doubleFromRequest(ctx, "bm25Weight", sensibleDefaults.getBm25Weight()))
+                .setDisablePenalties(boolFromRequest(ctx, "disablePenalties", sensibleDefaults.getDisablePenalties()))
                 .setExportDebugData(true)
                 .build();
     }
 
-    double doubleFromRequest(Request request, String param, double defaultValue) {
-        return Strings.isNullOrEmpty(request.queryParams(param)) ? defaultValue : Double.parseDouble(request.queryParams(param));
+    double doubleFromRequest(Context ctx, String param, double defaultValue) {
+        String val = ctx.query(param).valueOrNull();
+        return Strings.isNullOrEmpty(val) ? defaultValue : Double.parseDouble(val);
     }
 
-    boolean boolFromRequest(Request request, String param, boolean defaultValue) {
+    boolean boolFromRequest(Context ctx, String param, boolean defaultValue) {
         if (param == null)
             return defaultValue;
 
-        return Strings.isNullOrEmpty(request.queryParams(param)) ? defaultValue : Boolean.parseBoolean(request.queryParams(param));
+        String val = ctx.query(param).valueOrNull();
+        return Strings.isNullOrEmpty(val) ? defaultValue : Boolean.parseBoolean(val);
     }
 
-    int intFromRequest(Request request, String param, int defaultValue) {
-        return Strings.isNullOrEmpty(request.queryParams(param)) ? defaultValue : parseInt(request.queryParams(param));
+    int intFromRequest(Context ctx, String param, int defaultValue) {
+        String val = ctx.query(param).valueOrNull();
+        return Strings.isNullOrEmpty(val) ? defaultValue : parseInt(val);
     }
 
-    String stringFromRequest(Request request, String param, String defaultValue) {
-        return Strings.isNullOrEmpty(request.queryParams(param)) ? defaultValue : request.queryParams(param);
+    String stringFromRequest(Context ctx, String param, String defaultValue) {
+        String val = ctx.query(param).valueOrNull();
+        return Strings.isNullOrEmpty(val) ? defaultValue : val;
     }
 
     record PaginationInfoPage(int number, boolean current) {}

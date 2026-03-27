@@ -11,7 +11,9 @@ apply plugin: 'application'
 
 test {
     maxHeapSize = "8G"
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags("docker")
+    }
 }
 
 tasks.register('fastTests', Test) {
@@ -20,7 +22,21 @@ tasks.register('fastTests', Test) {
 
     maxHeapSize = "8G"
     useJUnitPlatform {
-        excludeTags("slow", "flaky")
+        excludeTags("slow", "flaky", "docker")
+    }
+}
+
+tasks.register('dockerTests', Test) {
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+
+    maxHeapSize = "8G"
+    useJUnitPlatform {
+        includeTags("docker")
+    }
+
+    if (tasks.findByName('docker') != null) {
+        dependsOn tasks.named('docker')
     }
 }
 

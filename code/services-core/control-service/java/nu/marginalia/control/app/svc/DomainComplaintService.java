@@ -2,6 +2,11 @@ package nu.marginalia.control.app.svc;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
+import io.jooby.Context;
+import io.jooby.Jooby;
+import io.jooby.MediaType;
+import io.jooby.exception.StatusCodeException;
+import io.jooby.StatusCode;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.control.app.model.DomainComplaintCategory;
@@ -9,11 +14,11 @@ import nu.marginalia.control.app.model.DomainComplaintModel;
 import nu.marginalia.model.EdgeDomain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
@@ -30,6 +35,8 @@ public class DomainComplaintService {
     private final RandomExplorationService randomExplorationService;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    private ControlRendererFactory.Renderer domainComplaintsRenderer;
+
     @Inject
     public DomainComplaintService(HikariDataSource dataSource,
                                   ControlRendererFactory rendererFactory,
@@ -42,29 +49,31 @@ public class DomainComplaintService {
         this.randomExplorationService = randomExplorationService;
     }
 
-    public void register() throws IOException {
-        var domainComplaintsRenderer = rendererFactory.renderer("control/app/domain-complaints");
+    public void register(Jooby jooby) throws IOException {
+        domainComplaintsRenderer = rendererFactory.renderer("control/app/domain-complaints");
 
-        Spark.get("/complaints", this::complaintsModel, domainComplaintsRenderer::render);
-        Spark.post("/complaints/:domain", this::reviewComplaint, Redirects.redirectToComplaints);
+        jooby.get("/complaints", this::complaintsModel);
+        jooby.post("/complaints/{domain}", this::reviewComplaint);
     }
 
-    private Object complaintsModel(Request request, Response response) {
+    private Object complaintsModel(Context ctx) {
         Map<Boolean, List<DomainComplaintModel>> complaintsByReviewed =
                 getComplaints().stream().collect(Collectors.partitioningBy(DomainComplaintModel::reviewed));
 
-        var reviewed = complaintsByReviewed.get(true);
-        var unreviewed = complaintsByReviewed.get(false);
+        List<DomainComplaintModel> reviewed = complaintsByReviewed.get(true);
+        List<DomainComplaintModel> unreviewed = complaintsByReviewed.get(false);
 
         reviewed.sort(Comparator.comparing(DomainComplaintModel::reviewDate).reversed());
         unreviewed.sort(Comparator.comparing(DomainComplaintModel::fileDate).reversed());
 
-        return Map.of("complaintsNew", unreviewed, "complaintsReviewed", reviewed);
+        ctx.setResponseType(MediaType.html);
+        return domainComplaintsRenderer.render(
+                Map.of("complaintsNew", unreviewed, "complaintsReviewed", reviewed));
     }
 
-    private Object reviewComplaint(Request request, Response response) {
-        var domain = new EdgeDomain(request.params("domain"));
-        String action = request.queryParams("action");
+    private Object reviewComplaint(Context ctx) {
+        EdgeDomain domain = new EdgeDomain(ctx.path("domain").value());
+        String action = ctx.query("action").valueOrNull();
 
         logger.info("Reviewing complaint for domain {} with action {}", domain, action);
 
@@ -76,24 +85,24 @@ public class DomainComplaintService {
                 case "blacklist" -> blacklistDomain(domain);
                 default -> throw new UnsupportedOperationException();
             }
-
-            return "";
         }
         catch (Exception ex) {
             logger.error("Error reviewing complaint for domain " + domain, ex);
-            Spark.halt(500);
-            return "";
+            throw new StatusCodeException(StatusCode.SERVER_ERROR);
         }
+
+        ctx.setResponseType(MediaType.html);
+        return Redirects.redirectToComplaints.render(null);
     }
 
     public List<DomainComplaintModel> getComplaints() {
-        try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareStatement("""
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("""
                      SELECT EC_DOMAIN.DOMAIN_NAME AS DOMAIN, CATEGORY, DESCRIPTION, SAMPLE, FILE_DATE, REVIEWED, DECISION, REVIEW_DATE
                      FROM DOMAIN_COMPLAINT LEFT JOIN EC_DOMAIN ON EC_DOMAIN.ID=DOMAIN_COMPLAINT.DOMAIN_ID
                      """)) {
             List<DomainComplaintModel> complaints = new ArrayList<>();
-            var rs = stmt.executeQuery();
+            ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 complaints.add(new DomainComplaintModel(
                         rs.getString("DOMAIN"),
@@ -138,8 +147,8 @@ public class DomainComplaintService {
 
 
     private void setDecision(EdgeDomain domain, String decision) {
-        try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareStatement("""
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("""
                      UPDATE DOMAIN_COMPLAINT SET DECISION=?, REVIEW_DATE=NOW()
                      WHERE DOMAIN_ID=(SELECT ID FROM EC_DOMAIN WHERE DOMAIN_NAME=?)
                      AND DECISION IS NULL

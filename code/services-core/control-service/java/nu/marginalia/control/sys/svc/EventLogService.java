@@ -6,9 +6,8 @@ import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.control.sys.model.EventLogEntry;
 import nu.marginalia.control.sys.model.EventLogServiceFilter;
 import nu.marginalia.control.sys.model.EventLogTypeFilter;
+import io.jooby.Context;
 import org.apache.logging.log4j.util.Strings;
-import spark.Request;
-import spark.Response;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -23,11 +22,11 @@ public class EventLogService {
         this.dataSource = dataSource;
     }
 
-    public Object eventsListModel(Request request, Response response) {
+    public Object eventsListModel(Context ctx) {
 
-        String serviceParam = request.queryParams("service");
-        String typeParam = request.queryParams("type");
-        String afterParam = request.queryParams("after");
+        String serviceParam = ctx.query("service").valueOrNull();
+        String typeParam = ctx.query("type").valueOrNull();
+        String afterParam = ctx.query("after").valueOrNull();
 
         if (Strings.isBlank(serviceParam)) serviceParam = null;
         if (Strings.isBlank(typeParam)) typeParam = null;

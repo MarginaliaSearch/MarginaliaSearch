@@ -3,16 +3,18 @@ package nu.marginalia.control.sys.svc;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
+import io.jooby.Context;
+import io.jooby.Jooby;
+import io.jooby.MediaType;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.control.sys.model.MessageQueueEntry;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.persistence.MqPersistence;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -23,6 +25,11 @@ public class MessageQueueService {
     private final HikariDataSource dataSource;
     private final ControlRendererFactory rendererFactory;
     private final MqPersistence persistence;
+
+    private ControlRendererFactory.Renderer messageQueueRenderer;
+    private ControlRendererFactory.Renderer updateMessageStateRenderer;
+    private ControlRendererFactory.Renderer newMessageRenderer;
+    private ControlRendererFactory.Renderer viewMessageRenderer;
 
     @Inject
     public MessageQueueService(HikariDataSource dataSource,
@@ -35,33 +42,25 @@ public class MessageQueueService {
 
     }
 
-    public void register() throws IOException {
-        var messageQueueRenderer = rendererFactory.renderer("control/sys/message-queue");
-        var updateMessageStateRenderer = rendererFactory.renderer("control/sys/update-message-state");
-        var newMessageRenderer = rendererFactory.renderer("control/sys/new-message");
-        var viewMessageRenderer = rendererFactory.renderer("control/sys/view-message");
+    public void register(Jooby jooby) throws IOException {
+        this.messageQueueRenderer = rendererFactory.renderer("control/sys/message-queue");
+        this.updateMessageStateRenderer = rendererFactory.renderer("control/sys/update-message-state");
+        this.newMessageRenderer = rendererFactory.renderer("control/sys/new-message");
+        this.viewMessageRenderer = rendererFactory.renderer("control/sys/view-message");
 
-        Spark.get("/message-queue", this::listMessageQueueModel, messageQueueRenderer::render);
-        Spark.post("/message-queue/", this::createMessage, Redirects.redirectToMessageQueue);
-        Spark.get("/message-queue/new", this::newMessageModel, newMessageRenderer::render);
-        Spark.get("/message-queue/:id", this::viewMessageModel, viewMessageRenderer::render);
-        Spark.get("/message-queue/:id/reply", this::replyMessageModel, newMessageRenderer::render);
-        Spark.get("/message-queue/:id/edit", this::viewMessageForEditStateModel, updateMessageStateRenderer::render);
-        Spark.post("/message-queue/:id/edit", this::editMessageState, Redirects.redirectToMessageQueue);
-
+        jooby.get("/message-queue", this::listMessageQueueModel);
+        jooby.post("/message-queue/", this::createMessage);
+        jooby.get("/message-queue/new", this::newMessageModel);
+        jooby.get("/message-queue/{id}", this::viewMessageModel);
+        jooby.get("/message-queue/{id}/reply", this::replyMessageModel);
+        jooby.get("/message-queue/{id}/edit", this::viewMessageForEditStateModel);
+        jooby.post("/message-queue/{id}/edit", this::editMessageState);
     }
 
-
-    public Object viewMessageModel(Request request, Response response) {
-        return Map.of("message", getMessage(Long.parseLong(request.params("id"))),
-                "relatedMessages", getRelatedMessages(Long.parseLong(request.params("id"))));
-    }
-
-
-    public Object listMessageQueueModel(Request request, Response response) throws SQLException {
-        String inboxParam = request.queryParams("inbox");
-        String instanceParam = request.queryParams("instance");
-        String afterParam = request.queryParams("after");
+    private Object listMessageQueueModel(Context ctx) throws Exception {
+        String inboxParam = ctx.query("inbox").valueOrNull();
+        String instanceParam = ctx.query("instance").valueOrNull();
+        String afterParam = ctx.query("after").valueOrNull();
 
         long afterId = Optional.ofNullable(afterParam).map(Long::parseLong).orElse(Long.MAX_VALUE);
 
@@ -89,23 +88,96 @@ public class MessageQueueService {
 
         List<String> inboxes = getAllInboxes();
 
-        return Map.of("messages", entries,
+        ctx.setResponseType(MediaType.html);
+        return messageQueueRenderer.render(Map.of("messages", entries,
                 "next", next,
                 "filterInbox", Objects.requireNonNullElse(inboxParam, ""),
                 "inboxes", inboxes,
-                "mqFilter", mqFilter);
+                "mqFilter", mqFilter));
+    }
+
+    private Object createMessage(Context ctx) throws Exception {
+        String recipient = ctx.form("recipientInbox").valueOrNull();
+        String sender = ctx.form("senderInbox").valueOrNull();
+        String relatedMessage = ctx.form("relatedId").valueOrNull();
+        String function = ctx.form("function").valueOrNull();
+        String payload = ctx.form("payload").valueOrNull();
+
+        persistence.sendNewMessage(recipient,
+                sender == null || sender.isBlank() ? null : sender,
+                relatedMessage == null ? null : Long.parseLong(relatedMessage),
+                function,
+                payload,
+                null);
+
+        ctx.setResponseType(MediaType.html);
+        return Redirects.redirectToMessageQueue.render(null);
+    }
+
+    private Object newMessageModel(Context ctx) throws Exception {
+        String idParam = ctx.query("id").valueOrNull();
+
+        Object model;
+        if (null == idParam) {
+            model = Map.of("relatedId", "-1");
+        } else {
+            MessageQueueEntry message = getMessage(Long.parseLong(idParam));
+            model = (message != null) ? message : Map.of("relatedId", "-1");
+        }
+
+        ctx.setResponseType(MediaType.html);
+        return newMessageRenderer.render(model);
+    }
+
+    private Object viewMessageModel(Context ctx) throws Exception {
+        long id = Long.parseLong(ctx.path("id").value());
+        MessageQueueEntry message = getMessage(id);
+        List<MessageQueueEntry> relatedMessages = getRelatedMessages(id);
+
+        // Use HashMap instead of Map.of to permit null values (message may be null for unknown IDs)
+        HashMap<String, Object> model = new HashMap<>();
+        model.put("message", message);
+        model.put("relatedMessages", relatedMessages);
+
+        ctx.setResponseType(MediaType.html);
+        return viewMessageRenderer.render(model);
+    }
+
+    private Object replyMessageModel(Context ctx) throws Exception {
+        String idParam = ctx.path("id").value();
+        MessageQueueEntry message = getMessage(Long.parseLong(idParam));
+
+        ctx.setResponseType(MediaType.html);
+        return newMessageRenderer.render(Map.of("relatedId", message.id(),
+                "recipientInbox", message.senderInbox(),
+                "function", "REPLY"));
+    }
+
+    private Object viewMessageForEditStateModel(Context ctx) throws Exception {
+        ctx.setResponseType(MediaType.html);
+        return updateMessageStateRenderer.render(
+                persistence.getMessage(Long.parseLong(ctx.path("id").value())));
+    }
+
+    private Object editMessageState(Context ctx) throws Exception {
+        MqMessageState state = MqMessageState.valueOf(ctx.form("state").valueOrNull());
+        long id = Long.parseLong(ctx.path("id").value());
+        persistence.updateMessageState(id, state);
+
+        ctx.setResponseType(MediaType.html);
+        return Redirects.redirectToMessageQueue.render(null);
     }
 
     private List<String> getAllInboxes() throws SQLException {
         List<String> inboxes = new ArrayList<>();
-        try (var conn = dataSource.getConnection();
-             var query = conn.prepareStatement("""
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement query = conn.prepareStatement("""
                 SELECT DISTINCT RECIPIENT_INBOX
                 FROM MESSAGE_QUEUE
                 WHERE RECIPIENT_INBOX IS NOT NULL
                 """))
         {
-            var rs = query.executeQuery();
+            ResultSet rs = query.executeQuery();
             while (rs.next()) {
                 inboxes.add(rs.getString(1));
             }
@@ -128,58 +200,9 @@ public class MessageQueueService {
         return inboxes;
     }
 
-    public Object newMessageModel(Request request, Response response) {
-        String idParam = request.queryParams("id");
-        if (null == idParam)
-            return Map.of("relatedId", "-1");
-
-        var message = getMessage(Long.parseLong(idParam));
-        if (message != null)
-            return message;
-
-        return Map.of("relatedId", "-1");
-    }
-
-    public Object replyMessageModel(Request request, Response response) {
-        String idParam = request.params("id");
-
-        var message = getMessage(Long.parseLong(idParam));
-
-        return Map.of("relatedId", message.id(),
-                "recipientInbox", message.senderInbox(),
-                "function", "REPLY");
-    }
-
-    public Object createMessage(Request request, Response response) throws Exception {
-        String recipient = request.queryParams("recipientInbox");
-        String sender = request.queryParams("senderInbox");
-        String relatedMessage = request.queryParams("relatedId");
-        String function = request.queryParams("function");
-        String payload = request.queryParams("payload");
-
-        persistence.sendNewMessage(recipient,
-                sender.isBlank() ? null : sender,
-                relatedMessage == null ? null : Long.parseLong(relatedMessage),
-                function,
-                payload,
-                null);
-
-        return "";
-    }
-
-    public Object viewMessageForEditStateModel(Request request, Response response) throws SQLException {
-        return persistence.getMessage(Long.parseLong(request.params("id")));
-    }
-
-    public Object editMessageState(Request request, Response response) throws SQLException {
-        MqMessageState state = MqMessageState.valueOf(request.queryParams("state"));
-        long id = Long.parseLong(request.params("id"));
-        persistence.updateMessageState(id, state);
-        return "";
-    }
     public List<MessageQueueEntry> getLastEntries(int n) {
-        try (var conn = dataSource.getConnection();
-             var query = conn.prepareStatement("""
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement query = conn.prepareStatement("""
                 SELECT ID, RELATED_ID, AUDIT_RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
                 FROM MESSAGE_QUEUE
                 ORDER BY ID DESC
@@ -188,7 +211,7 @@ public class MessageQueueService {
 
             query.setInt(1, n);
             List<MessageQueueEntry> entries = new ArrayList<>(n);
-            var rs = query.executeQuery();
+            ResultSet rs = query.executeQuery();
             while (rs.next()) {
                 entries.add(newEntry(rs));
             }
@@ -200,8 +223,8 @@ public class MessageQueueService {
     }
 
     public MessageQueueEntry getMessage(long id) {
-        try (var conn = dataSource.getConnection();
-             var query = conn.prepareStatement("""
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement query = conn.prepareStatement("""
                 SELECT ID, RELATED_ID, AUDIT_RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
                 FROM MESSAGE_QUEUE
                 WHERE ID=?
@@ -209,7 +232,7 @@ public class MessageQueueService {
 
             query.setLong(1, id);
 
-            var rs = query.executeQuery();
+            ResultSet rs = query.executeQuery();
             if (rs.next()) {
                 return newEntry(rs);
             }
@@ -221,8 +244,8 @@ public class MessageQueueService {
     }
 
     public Object getLastEntriesForInbox(String inbox, int n) {
-        try (var conn = dataSource.getConnection();
-             var query = conn.prepareStatement("""
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement query = conn.prepareStatement("""
                 SELECT ID, RELATED_ID, AUDIT_RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
                 FROM MESSAGE_QUEUE
                 WHERE RECIPIENT_INBOX=?
@@ -233,7 +256,7 @@ public class MessageQueueService {
             query.setString(1, inbox);
             query.setInt(2, n);
             List<MessageQueueEntry> entries = new ArrayList<>(n);
-            var rs = query.executeQuery();
+            ResultSet rs = query.executeQuery();
             while (rs.next()) {
                 entries.add(newEntry(rs));
             }
@@ -245,8 +268,8 @@ public class MessageQueueService {
     }
 
     public List<MessageQueueEntry> getEntriesForInbox(String inbox, long afterId, int n) {
-        try (var conn = dataSource.getConnection();
-             var query = conn.prepareStatement("""
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement query = conn.prepareStatement("""
                 SELECT ID, RELATED_ID, AUDIT_RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
                 FROM MESSAGE_QUEUE
                 WHERE ID < ? AND (RECIPIENT_INBOX = ? OR SENDER_INBOX = ?)
@@ -260,7 +283,7 @@ public class MessageQueueService {
             query.setInt(4, n);
 
             List<MessageQueueEntry> entries = new ArrayList<>(n);
-            var rs = query.executeQuery();
+            ResultSet rs = query.executeQuery();
             while (rs.next()) {
                 entries.add(newEntry(rs));
             }
@@ -272,8 +295,8 @@ public class MessageQueueService {
     }
 
     public List<MessageQueueEntry> getEntriesForInstance(String instance, long afterId, int n) {
-        try (var conn = dataSource.getConnection();
-             var query = conn.prepareStatement("""
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement query = conn.prepareStatement("""
                 SELECT ID, RELATED_ID, AUDIT_RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
                 FROM MESSAGE_QUEUE
                 WHERE ID < ? AND OWNER_INSTANCE = ?
@@ -286,7 +309,7 @@ public class MessageQueueService {
             query.setInt(3, n);
 
             List<MessageQueueEntry> entries = new ArrayList<>(n);
-            var rs = query.executeQuery();
+            ResultSet rs = query.executeQuery();
             while (rs.next()) {
                 entries.add(newEntry(rs));
             }
@@ -298,8 +321,8 @@ public class MessageQueueService {
     }
 
     public List<MessageQueueEntry> getEntries(long afterId, int n) {
-        try (var conn = dataSource.getConnection();
-             var query = conn.prepareStatement("""
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement query = conn.prepareStatement("""
                 SELECT ID, RELATED_ID, AUDIT_RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
                 FROM MESSAGE_QUEUE
                 WHERE ID < ?
@@ -311,7 +334,7 @@ public class MessageQueueService {
             query.setInt(2, n);
 
             List<MessageQueueEntry> entries = new ArrayList<>(n);
-            var rs = query.executeQuery();
+            ResultSet rs = query.executeQuery();
             while (rs.next()) {
                 entries.add(newEntry(rs));
             }
@@ -333,8 +356,8 @@ public class MessageQueueService {
 
         // This is not a very performant way of doing this, but it's not a very common operation either
         // and only available within the operator user interface.
-        try (var conn = dataSource.getConnection();
-             var ps = conn.prepareStatement("""
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement("""
                      SELECT ID, RELATED_ID, AUDIT_RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
                      FROM MESSAGE_QUEUE
                      WHERE (ID = ? OR RELATED_ID = ? OR AUDIT_RELATED_ID = ?)
@@ -343,7 +366,7 @@ public class MessageQueueService {
                      """)) {
 
             while (!newRelatedIds.isEmpty()) {
-                var nextId = newRelatedIds.pollFirst();
+                Long nextId = newRelatedIds.pollFirst();
 
                 if (nextId == null || !queriedIds.add(nextId))
                     continue;
@@ -352,9 +375,9 @@ public class MessageQueueService {
                 ps.setLong(2, nextId);
                 ps.setLong(3, nextId);
 
-                var rs = ps.executeQuery();
+                ResultSet rs = ps.executeQuery();
                 while (rs.next()) {
-                    var entry = newEntry(rs);
+                    MessageQueueEntry entry = newEntry(rs);
 
                     if (addedIds.add(entry.id()))
                         entries.add(entry);

@@ -1,6 +1,9 @@
 package nu.marginalia.control.sys.svc;
 
 import com.google.inject.Inject;
+import io.jooby.Context;
+import io.jooby.Jooby;
+import io.jooby.MediaType;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.control.actor.ControlActor;
@@ -11,13 +14,12 @@ import nu.marginalia.executor.client.ExecutorExportClient;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.nodecfg.NodeConfigurationService;
+import nu.marginalia.nodecfg.model.NodeConfiguration;
 import nu.marginalia.service.ServiceId;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.storage.FileStorageService;
+import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageType;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
 
 import java.util.*;
 
@@ -62,28 +64,61 @@ public class ControlSysActionsService {
         return mqFactory.createOutbox(inboxName, 0, outboxName, 0, UUID.randomUUID());
     }
 
-    public void register() {
+    public void register(Jooby jooby) {
+        jooby.get("/actions", this::actionsModel);
+        jooby.post("/actions/recalculate-adjacencies-graph", this::calculateAdjacencies);
+        jooby.post("/actions/export-all", this::exportAll);
+        jooby.post("/actions/reindex-all", this::reindexAll);
+        jooby.post("/actions/reprocess-all", this::reprocessAll);
+        jooby.post("/actions/recrawl-all", this::recrawlAll);
+        jooby.post("/actions/flush-api-caches", this::flushApiCaches);
+        jooby.post("/actions/reload-blogs-list", this::reloadBlogsList);
+        jooby.post("/actions/update-nsfw-filters", this::updateNsfwFilters);
+    }
+
+    private Object actionsModel(Context ctx) throws Exception {
+        ControlRendererFactory.Renderer actionsView = rendererFactory.renderer("control/sys/sys-actions");
+        ctx.setResponseType(MediaType.html);
+
         try {
-            var actionsView = rendererFactory.renderer("control/sys/sys-actions");
+            List<Map<String, Object>> eligibleNodes = new ArrayList<>();
+            for (NodeConfiguration node : nodeConfigurationService.getAll()) {
+                if (!node.includeInPrecession()) {
+                    continue;
+                }
 
-            Spark.get("/actions", this::actionsModel, actionsView::render);
-            Spark.post("/actions/recalculate-adjacencies-graph", this::calculateAdjacencies, Redirects.redirectToOverview);
-            Spark.post("/actions/export-all", this::exportAll, Redirects.redirectToOverview);
-            Spark.post("/actions/reindex-all", this::reindexAll, Redirects.redirectToOverview);
-            Spark.post("/actions/reprocess-all", this::reprocessAll, Redirects.redirectToOverview);
-            Spark.post("/actions/recrawl-all", this::recrawlAll, Redirects.redirectToOverview);
-            Spark.post("/actions/flush-api-caches", this::flushApiCaches, Redirects.redirectToOverview);
-            Spark.post("/actions/reload-blogs-list", this::reloadBlogsList, Redirects.redirectToOverview);
+                Map<String, Object> properties = new HashMap<>();
+                properties.put("node", node);
+                properties.put("include", node.includeInPrecession());
 
-            Spark.post("/actions/update-nsfw-filters", this::updateNsfwFilters, Redirects.redirectToOverview);
+                Optional<FileStorageId> storageIdMaybe = fileStorageService.getActiveFileStorages(node.node(), FileStorageType.CRAWL_DATA).stream().findFirst();
+                if (storageIdMaybe.isPresent()) {
+                    properties.put("storage", fileStorageService.getStorage(storageIdMaybe.get()));
+                }
+
+                eligibleNodes.add(properties);
+            }
+
+            return actionsView.render(Map.of("precessionNodes", eligibleNodes));
         }
         catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private Object exportAll(Request request, Response response) {
-        String exportType = request.queryParams("exportType");
+    private Object calculateAdjacencies(Context ctx) throws Exception {
+        eventLog.logEvent("USER-ACTION", "CALCULATE-ADJACENCIES");
+
+        // This is technically not a partitioned operation, but we execute it at node 1
+        // and let the effects be global :-)
+        executorClient.calculateAdjacencies(1);
+
+        ctx.setResponseType(MediaType.html);
+        return Redirects.redirectToOverview.render(null);
+    }
+
+    private Object exportAll(Context ctx) throws Exception {
+        String exportType = ctx.form("exportType").valueOrNull();
 
         switch (exportType) {
             case "atags":
@@ -96,91 +131,55 @@ public class ControlSysActionsService {
                 throw new IllegalArgumentException("Unknown export type: " + exportType);
         }
 
-        return "";
+        ctx.setResponseType(MediaType.html);
+        return Redirects.redirectToOverview.render(null);
     }
 
-    private Object actionsModel(Request request, Response response) {
-        try {
-            List<Map<String, Object>> eligibleNodes = new ArrayList<>();
-            for (var node : nodeConfigurationService.getAll()) {
-                if (!node.includeInPrecession()) {
-                    continue;
-                }
+    private Object reindexAll(Context ctx) throws Exception {
+        eventLog.logEvent("USER-ACTION", "REINDEX-ALL");
+        controlActorService.start(ControlActor.REINDEX_ALL);
 
-                Map<String, Object> properties = new HashMap<>();
-                properties.put("node", node);
-                properties.put("include", node.includeInPrecession());
-
-                var storageIdMaybe = fileStorageService.getActiveFileStorages(node.node(), FileStorageType.CRAWL_DATA).stream().findFirst();
-                if (storageIdMaybe.isPresent()) {
-                    properties.put("storage", fileStorageService.getStorage(storageIdMaybe.get()));
-                }
-
-                eligibleNodes.add(properties);
-            }
-
-            return Map.of("precessionNodes", eligibleNodes);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        ctx.setResponseType(MediaType.html);
+        return Redirects.redirectToOverview.render(null);
     }
 
-    public Object reloadBlogsList(Request request, Response response) throws Exception {
-        eventLog.logEvent("USER-ACTION", "RELOAD-BLOGS-LIST");
+    private Object reprocessAll(Context ctx) throws Exception {
+        eventLog.logEvent("USER-ACTION", "REPROCESS-ALL");
+        controlActorService.start(ControlActor.REPROCESS_ALL);
 
-        domainTypes.reloadDomainsList(DomainTypes.Type.BLOG);
-
-        return "";
+        ctx.setResponseType(MediaType.html);
+        return Redirects.redirectToOverview.render(null);
     }
 
-    public Object updateNsfwFilters(Request request, Response response) throws Exception {
-        eventLog.logEvent("USER-ACTION", "UPDATE-NSFW-FILTERS");
+    private Object recrawlAll(Context ctx) throws Exception {
+        eventLog.logEvent("USER-ACTION", "RECRAWL-ALL");
+        controlActorService.start(ControlActor.RECRAWL_ALL);
 
-        executorClient.updateNsfwFilters();
-
-        return "";
+        ctx.setResponseType(MediaType.html);
+        return Redirects.redirectToOverview.render(null);
     }
 
-    public Object flushApiCaches(Request request, Response response) throws Exception {
+    private Object flushApiCaches(Context ctx) throws Exception {
         eventLog.logEvent("USER-ACTION", "FLUSH-API-CACHES");
         apiOutbox.sendNotice("FLUSH_CACHES", "");
 
-        return "";
+        ctx.setResponseType(MediaType.html);
+        return Redirects.redirectToOverview.render(null);
     }
 
-    public Object calculateAdjacencies(Request request, Response response) throws Exception {
-        eventLog.logEvent("USER-ACTION", "CALCULATE-ADJACENCIES");
+    private Object reloadBlogsList(Context ctx) throws Exception {
+        eventLog.logEvent("USER-ACTION", "RELOAD-BLOGS-LIST");
+        domainTypes.reloadDomainsList(DomainTypes.Type.BLOG);
 
-        // This is technically not a partitioned operation, but we execute it at node 1
-        // and let the effects be global :-)
-
-        executorClient.calculateAdjacencies(1);
-
-        return "";
+        ctx.setResponseType(MediaType.html);
+        return Redirects.redirectToOverview.render(null);
     }
 
-    public Object reindexAll(Request request, Response response) throws Exception {
-        eventLog.logEvent("USER-ACTION", "REINDEX-ALL");
+    private Object updateNsfwFilters(Context ctx) throws Exception {
+        eventLog.logEvent("USER-ACTION", "UPDATE-NSFW-FILTERS");
+        executorClient.updateNsfwFilters();
 
-        controlActorService.start(ControlActor.REINDEX_ALL);
-
-        return "";
-    }
-
-    public Object reprocessAll(Request request, Response response) throws Exception {
-        eventLog.logEvent("USER-ACTION", "REPROCESS-ALL");
-
-        controlActorService.start(ControlActor.REPROCESS_ALL);
-
-        return "";
-    }
-
-    public Object recrawlAll(Request request, Response response) throws Exception {
-        eventLog.logEvent("USER-ACTION", "RECRAWL-ALL");
-
-        controlActorService.start(ControlActor.RECRAWL_ALL);
-
-        return "";
+        ctx.setResponseType(MediaType.html);
+        return Redirects.redirectToOverview.render(null);
     }
 }

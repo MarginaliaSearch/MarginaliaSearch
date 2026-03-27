@@ -2,18 +2,20 @@ package nu.marginalia.control.node.svc;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.jooby.Context;
+import io.jooby.Jooby;
+import io.jooby.MediaType;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.executor.client.ExecutorClient;
 import nu.marginalia.storage.FileStorageService;
+import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.SQLException;
 
 @Singleton
@@ -30,86 +32,77 @@ public class ControlFileStorageService {
         this.executorClient = executorClient;
     }
 
-    public void register() throws IOException {
-        Spark.post("/storage/:fid/delete", this::flagFileForDeletionRequest, Redirects.redirectToStorage);
+    public void register(Jooby jooby) throws IOException {
+        jooby.post("/storage/{fid}/delete", this::flagFileForDeletionRequest);
 
-        Spark.post("/nodes/:id/storage/:fid/delete", this::deleteFileStorage);
-        Spark.post("/nodes/:id/storage/:fid/enable", this::enableFileStorage);
-        Spark.post("/nodes/:id/storage/:fid/disable", this::disableFileStorage);
-        Spark.get("/nodes/:id/storage/:fid/transfer", this::downloadFileFromStorage);
-
+        jooby.post("/nodes/{id}/storage/{fid}/delete", this::deleteFileStorage);
+        jooby.post("/nodes/{id}/storage/{fid}/enable", this::enableFileStorage);
+        jooby.post("/nodes/{id}/storage/{fid}/disable", this::disableFileStorage);
+        jooby.get("/nodes/{id}/storage/{fid}/transfer", this::downloadFileFromStorage);
     }
 
-    public String redirectToOverview(int nodeId) {
-        try {
-            return new Redirects.HtmlRedirect("/nodes/"+nodeId).render(null);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    private Object flagFileForDeletionRequest(Context ctx) throws SQLException {
+        FileStorageId fid = new FileStorageId(Long.parseLong(ctx.path("fid").value()));
+        fileStorageService.flagFileForDeletion(fid);
+
+        ctx.setResponseType(MediaType.html);
+        return Redirects.redirectToStorage.render(null);
     }
 
-    public String redirectToOverview(Request request) {
-        return redirectToOverview(Integer.parseInt(request.params("id")));
-    }
-
-    private Object deleteFileStorage(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-        int fileId = Integer.parseInt(request.params("fid"));
+    private Object deleteFileStorage(Context ctx) throws SQLException {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
+        int fileId = Integer.parseInt(ctx.path("fid").value());
 
         fileStorageService.flagFileForDeletion(new FileStorageId(fileId));
 
-        return redirectToOverview(request);
+        ctx.setResponseType(MediaType.html);
+        return new Redirects.HtmlRedirect("/nodes/" + nodeId).render(null);
     }
 
-    public Object downloadFileFromStorage(Request request, Response response) throws IOException, SQLException {
-        var fileStorageId = FileStorageId.parse(request.params("fid"));
+    private Object enableFileStorage(Context ctx) throws SQLException {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
+        FileStorageId fileId = new FileStorageId(Integer.parseInt(ctx.path("fid").value()));
 
-        String path = request.queryParams("path");
-
-        response.header("content-disposition", "attachment; filename=\""+path+"\"");
-
-        if (path.endsWith(".txt") || path.endsWith(".log"))
-            response.type("text/plain");
-        else
-            response.type("application/octet-stream");
-
-        var storage = fileStorageService.getStorage(fileStorageId);
-
-        try (var urlStream = executorClient.remoteFileURL(storage, path).openStream()) {
-            urlStream.transferTo(response.raw().getOutputStream());
-        }
-
-        return "";
-    }
-
-    private Object enableFileStorage(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-        FileStorageId fileId = new FileStorageId(Integer.parseInt(request.params("fid")));
-
-        var storage = fileStorageService.getStorage(fileId);
+        FileStorage storage = fileStorageService.getStorage(fileId);
         if (storage.type() == FileStorageType.CRAWL_DATA) {
             fileStorageService.disableFileStorageOfType(nodeId, storage.type());
         }
 
         fileStorageService.enableFileStorage(fileId);
 
+        ctx.setResponseType(MediaType.html);
         return "";
     }
 
-    private Object disableFileStorage(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-        int fileId = Integer.parseInt(request.params("fid"));
+    private Object disableFileStorage(Context ctx) throws SQLException {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
+        int fileId = Integer.parseInt(ctx.path("fid").value());
 
         fileStorageService.disableFileStorage(new FileStorageId(fileId));
 
+        ctx.setResponseType(MediaType.html);
         return "";
     }
 
-    public Object flagFileForDeletionRequest(Request request, Response response) throws SQLException {
-        FileStorageId fid = new FileStorageId(Long.parseLong(request.params(":fid")));
-        fileStorageService.flagFileForDeletion(fid);
-        return "";
-    }
+    public Object downloadFileFromStorage(Context ctx) throws IOException, SQLException {
+        FileStorageId fileStorageId = FileStorageId.parse(ctx.path("fid").value());
 
+        String path = ctx.query("path").valueOrNull();
+
+        ctx.setResponseHeader("content-disposition", "attachment; filename=\""+path+"\"");
+
+        if (path.endsWith(".txt") || path.endsWith(".log"))
+            ctx.setResponseType(MediaType.valueOf("text/plain"));
+        else
+            ctx.setResponseType(MediaType.valueOf("application/octet-stream"));
+
+        FileStorage storage = fileStorageService.getStorage(fileStorageId);
+
+        try (InputStream urlStream = executorClient.remoteFileURL(storage, path).openStream()) {
+            urlStream.transferTo(ctx.responseStream());
+        }
+
+        return ctx;
+    }
 
 }

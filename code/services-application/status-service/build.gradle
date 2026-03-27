@@ -45,15 +45,15 @@ dependencies {
     implementation libs.duckdb
     implementation libs.jsoup
 
-    implementation dependencies.create(libs.spark.get()) {
-        exclude group: 'org.eclipse.jetty'
+    implementation dependencies.create(libs.jooby.netty.get()) {
+        exclude group: 'org.slf4j'
     }
-    implementation libs.bundles.jetty
     implementation libs.bundles.mariadb
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
+    testImplementation project(':code:libraries:test-helpers')
 
 }
 

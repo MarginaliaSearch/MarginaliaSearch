@@ -2,6 +2,11 @@ package nu.marginalia.control.node.svc;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
+import io.jooby.Context;
+import io.jooby.Jooby;
+import io.jooby.MediaType;
+import io.jooby.StatusCode;
+import io.jooby.exception.StatusCodeException;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.control.RedirectControl;
 import nu.marginalia.control.Redirects;
@@ -10,7 +15,9 @@ import nu.marginalia.control.sys.model.EventLogEntry;
 import nu.marginalia.control.sys.svc.EventLogService;
 import nu.marginalia.control.sys.svc.HeartbeatService;
 import nu.marginalia.executor.client.ExecutorClient;
+import nu.marginalia.executor.storage.FileStorageFile;
 import nu.marginalia.nodecfg.NodeConfigurationService;
+import nu.marginalia.executor.model.ActorRunState;
 import nu.marginalia.nodecfg.model.NodeConfiguration;
 import nu.marginalia.nodecfg.model.NodeProfile;
 import nu.marginalia.service.ServiceId;
@@ -19,12 +26,12 @@ import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -42,6 +49,16 @@ public class ControlNodeService {
     private final ControlCrawlDataService crawlDataService;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    private ControlRendererFactory.Renderer nodeListRenderer;
+    private ControlRendererFactory.Renderer overviewRenderer;
+    private ControlRendererFactory.Renderer actionsRenderer;
+    private ControlRendererFactory.Renderer actorsRenderer;
+    private ControlRendererFactory.Renderer storageConfRenderer;
+    private ControlRendererFactory.Renderer storageListRenderer;
+    private ControlRendererFactory.Renderer storageDetailsRenderer;
+    private ControlRendererFactory.Renderer storageCrawlParquetDetailsRenderer;
+    private ControlRendererFactory.Renderer configRenderer;
 
     @Inject
     public ControlNodeService(
@@ -68,110 +85,84 @@ public class ControlNodeService {
         this.crawlDataService = crawlDataService;
     }
 
-    public void register() throws IOException {
-        var nodeListRenderer = rendererFactory.renderer("control/node/nodes-list");
-        var overviewRenderer = rendererFactory.renderer("control/node/node-overview");
-        var actionsRenderer = rendererFactory.renderer("control/node/node-actions");
-        var actorsRenderer = rendererFactory.renderer("control/node/node-actors");
-        var storageConfRenderer = rendererFactory.renderer("control/node/node-storage-conf");
-        var storageListRenderer = rendererFactory.renderer("control/node/node-storage-list");
-        var storageDetailsRenderer = rendererFactory.renderer("control/node/node-storage-details");
-        var storageCrawlParquetDetails = rendererFactory.renderer("control/node/node-storage-crawl-parquet-details");
-        var configRenderer = rendererFactory.renderer("control/node/node-config");
+    public void register(Jooby jooby) throws IOException {
+        this.nodeListRenderer = rendererFactory.renderer("control/node/nodes-list");
+        this.overviewRenderer = rendererFactory.renderer("control/node/node-overview");
+        this.actionsRenderer = rendererFactory.renderer("control/node/node-actions");
+        this.actorsRenderer = rendererFactory.renderer("control/node/node-actors");
+        this.storageConfRenderer = rendererFactory.renderer("control/node/node-storage-conf");
+        this.storageListRenderer = rendererFactory.renderer("control/node/node-storage-list");
+        this.storageDetailsRenderer = rendererFactory.renderer("control/node/node-storage-details");
+        this.storageCrawlParquetDetailsRenderer = rendererFactory.renderer("control/node/node-storage-crawl-parquet-details");
+        this.configRenderer = rendererFactory.renderer("control/node/node-config");
 
-
-        Spark.get("/nodes", this::nodeListModel, nodeListRenderer::render);
-        Spark.get("/nodes/:id", this::nodeOverviewModel, overviewRenderer::render);
-        Spark.get("/nodes/:id/", this::nodeOverviewModel, overviewRenderer::render);
-        Spark.get("/nodes/:id/actors", this::nodeActorsModel, actorsRenderer::render);
-        Spark.get("/nodes/:id/actions", this::nodeActionsModel, actionsRenderer::render);
-        Spark.get("/nodes/:id/storage/", this::nodeStorageConfModel, storageConfRenderer::render);
-        Spark.get("/nodes/:id/storage/conf", this::nodeStorageConfModel, storageConfRenderer::render);
-        Spark.get("/nodes/:id/storage/details", this::nodeStorageDetailsModel, storageDetailsRenderer::render);
-
-        Spark.get("/nodes/:id/storage/crawl-parquet-info", crawlDataService::crawlParquetInfo, storageCrawlParquetDetails::render);
-
-        Spark.post("/nodes/:id/process/:processBase/stop", this::stopProcess,
-                redirectControl.renderRedirectAcknowledgement("Stopping", "../..")
-        );
-
-        Spark.get("/nodes/:id/storage/:view", this::nodeStorageListModel, storageListRenderer::render);
-
-        Spark.get("/nodes/:id/configuration", this::nodeConfigModel, configRenderer::render);
-        Spark.post("/nodes/:id/configuration", this::updateConfigModel, configRenderer::render);
-
-        Spark.post("/nodes/:id/storage/reset-state/:fid", this::resetState,
-                redirectControl.renderRedirectAcknowledgement("Restoring", "..")
-        );
-        Spark.post("/nodes/:id/fsms/:fsm/start", this::startFsm);
-        Spark.post("/nodes/:id/fsms/:fsm/stop", this::stopFsm);
+        jooby.get("/nodes", this::nodeListModel);
+        jooby.get("/nodes/{id}", this::nodeOverviewModel);
+        jooby.get("/nodes/{id}/", this::nodeOverviewModel);
+        jooby.get("/nodes/{id}/actors", this::nodeActorsModel);
+        jooby.get("/nodes/{id}/actions", this::nodeActionsModel);
+        jooby.get("/nodes/{id}/storage/", this::nodeStorageConfModel);
+        jooby.get("/nodes/{id}/storage/conf", this::nodeStorageConfModel);
+        jooby.get("/nodes/{id}/storage/details", this::nodeStorageDetailsModel);
+        jooby.get("/nodes/{id}/storage/crawl-parquet-info", this::handleCrawlParquetInfo);
+        jooby.post("/nodes/{id}/process/{processBase}/stop", this::stopProcess);
+        jooby.get("/nodes/{id}/storage/{view}", this::nodeStorageListModel);
+        jooby.get("/nodes/{id}/configuration", this::handleGetConfiguration);
+        jooby.post("/nodes/{id}/configuration", this::updateConfigModel);
+        jooby.post("/nodes/{id}/storage/reset-state/{fid}", this::resetState);
+        jooby.post("/nodes/{id}/fsms/{fsm}/start", this::startFsm);
+        jooby.post("/nodes/{id}/fsms/{fsm}/stop", this::stopFsm);
     }
 
-    private Object resetState(Request request, Response response) throws SQLException {
-        fileStorageService.setFileStorageState(FileStorageId.parse(request.params("fid")), FileStorageState.UNSET);
-        return "";
-    }
-
-    public Object startFsm(Request req, Response rsp) throws Exception {
-        executorClient.startFsm(Integer.parseInt(req.params("id")), req.params("fsm").toUpperCase());
-
-        return redirectToOverview(req);
-    }
-
-    public Object stopFsm(Request req, Response rsp) throws Exception {
-        executorClient.stopFsm(Integer.parseInt(req.params("id")), req.params("fsm").toUpperCase());
-
-        return redirectToOverview(req);
-    }
-
-    private Object nodeListModel(Request request, Response response) throws SQLException {
-        var configs = nodeConfigurationService.getAll();
-
+    private String nodeListModel(Context ctx) throws Exception {
+        List<NodeConfiguration> configs = nodeConfigurationService.getAll();
         int nextId = configs.stream().mapToInt(NodeConfiguration::node).map(i -> i+1).max().orElse(1);
 
-        return Map.of(
+        ctx.setResponseType(MediaType.html);
+        return nodeListRenderer.render(Map.of(
                 "nodes", nodeConfigurationService.getAll(),
-                "nextNodeId", nextId);
+                "nextNodeId", nextId));
     }
 
-    private Object stopProcess(Request request, Response response) {
-        int nodeId = Integer.parseInt(request.params("id"));
-        String processBase = request.params("processBase");
+    private String nodeOverviewModel(Context ctx) throws Exception {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
+        NodeConfiguration config = nodeConfigurationService.get(nodeId);
 
-        executorClient.stopProcess(nodeId, processBase);
+        List<ActorRunState> actors = executorClient.getActorStates(nodeId).states()
+                .stream().filter(actor -> !actor.state().equals("MONITOR"))
+                .toList();
 
-        return "";
+        ctx.setResponseType(MediaType.html);
+        return overviewRenderer.render(Map.of(
+                "node", nodeConfigurationService.get(nodeId),
+                "status", getStatus(config),
+                "events", getEvents(nodeId),
+                "processes", heartbeatService.getProcessHeartbeatsForNode(nodeId),
+                "jobs", heartbeatService.getTaskHeartbeatsForNode(nodeId),
+                "actors", actors,
+                "tab", Map.of("overview", true)
+        ));
     }
 
-    public String redirectToOverview(int nodeId) {
-        try {
-            return new Redirects.HtmlRedirect("/nodes/"+nodeId).render(null);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+    private String nodeActorsModel(Context ctx) throws Exception {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
 
-    public String redirectToOverview(Request request) {
-        return redirectToOverview(Integer.parseInt(request.params("id")));
-    }
-
-    private Object nodeActorsModel(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-
-        return Map.of(
+        ctx.setResponseType(MediaType.html);
+        return actorsRenderer.render(Map.of(
                 "tab", Map.of("actors", true),
                 "node", nodeConfigurationService.get(nodeId),
                 "actors", executorClient.getActorStates(nodeId).states()
-        );
+        ));
     }
 
-    private Object nodeActionsModel(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
+    private String nodeActionsModel(Context ctx) throws Exception {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
 
-        return Map.of(
+        ctx.setResponseType(MediaType.html);
+        return actionsRenderer.render(Map.of(
                 "tab", Map.of("actions", true),
                 "node", nodeConfigurationService.get(nodeId),
-                "view", Map.of(request.queryParams("view"), true),
+                "view", Map.of(ctx.query("view").value(""), true),
                 "uploadDirContents", executorClient.listSideloadDir(nodeId),
                 "allBackups",
                         fileStorageService.getEachFileStorage(nodeId, FileStorageType.BACKUP),
@@ -179,45 +170,25 @@ public class ControlNodeService {
                         fileStorageService.getEachFileStorage(nodeId, FileStorageType.CRAWL_DATA),
                 "allProcessedData",
                         fileStorageService.getEachFileStorage(nodeId, FileStorageType.PROCESSED_DATA)
-        );
+        ));
     }
 
-    private Object nodeStorageConfModel(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
+    private String nodeStorageConfModel(Context ctx) throws Exception {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
 
-        return Map.of(
+        ctx.setResponseType(MediaType.html);
+        return storageConfRenderer.render(Map.of(
                 "tab", Map.of("storage", true),
                 "view", Map.of("conf", true),
                 "node", nodeConfigurationService.get(nodeId),
                 "storagebase", getStorageBaseList(nodeId)
-        );
+        ));
     }
 
-
-    private Object nodeStorageListModel(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-        String view = request.params("view");
-
-        FileStorageType type = switch(view) {
-            case "backup" -> FileStorageType.BACKUP;
-            case "crawl" -> FileStorageType.CRAWL_DATA;
-            case "processed" -> FileStorageType.PROCESSED_DATA;
-            case "exports" -> FileStorageType.EXPORT;
-            default -> throw new IllegalArgumentException(view);
-        };
-
-        return Map.of(
-                "tab", Map.of("storage", true),
-                "view", Map.of(view, true),
-                "node", nodeConfigurationService.get(nodeId),
-                "storage", makeFileStorageBaseWithStorage(getFileStorageIds(type, nodeId))
-        );
-    }
-
-    private Object nodeStorageDetailsModel(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-        var fsid = FileStorageId.parse(request.queryParams("fid"));
-        var storage = getFileStorageWithRelatedEntries(nodeId, fsid);
+    private String nodeStorageDetailsModel(Context ctx) throws Exception {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
+        FileStorageId fsid = FileStorageId.parse(ctx.query("fid").valueOrNull());
+        FileStorageWithRelatedEntries storage = getFileStorageWithRelatedEntries(nodeId, fsid);
 
         String view = switch(storage.type()) {
             case BACKUP -> "backup";
@@ -228,7 +199,7 @@ public class ControlNodeService {
             default -> throw new IllegalStateException(storage.type().toString());
         };
 
-        var ret = new HashMap<>();
+        HashMap<String, Object> ret = new HashMap<>();
 
         ret.put("tab", Map.of("storage", true));
         ret.put("view", Map.of(view, true));
@@ -236,53 +207,75 @@ public class ControlNodeService {
         ret.put("storage", storage);
 
         if (storage.type() == FileStorageType.CRAWL_DATA) {
-            var cdFiles = crawlDataService.getCrawlDataFiles(fsid,
-                    request.queryParams("filterDomain"),
-                    request.queryParams("afterDomain")
+            ControlCrawlDataService.CrawlDataFileList cdFiles = crawlDataService.getCrawlDataFiles(fsid,
+                    ctx.query("filterDomain").valueOrNull(),
+                    ctx.query("afterDomain").valueOrNull()
             );
             ret.put("crawlDataFiles", cdFiles);
         }
 
-        return ret;
-
+        ctx.setResponseType(MediaType.html);
+        return storageDetailsRenderer.render(ret);
     }
 
+    private String handleCrawlParquetInfo(Context ctx) throws Exception {
+        ctx.setResponseType(MediaType.html);
+        return storageCrawlParquetDetailsRenderer.render(crawlDataService.crawlParquetInfo(ctx));
+    }
 
-    private Object nodeConfigModel(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
+    private String stopProcess(Context ctx) throws Exception {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
+        String processBase = ctx.path("processBase").value();
 
-        Map<String, Path> storage = new HashMap<>();
+        executorClient.stopProcess(nodeId, processBase);
 
-        for (var baseType : List.of(FileStorageBaseType.CURRENT, FileStorageBaseType.WORK, FileStorageBaseType.BACKUP, FileStorageBaseType.STORAGE)) {
-            Optional.ofNullable(fileStorageService.getStorageBase(baseType, nodeId))
-                    .map(FileStorageBase::asPath)
-                    .ifPresent(path -> storage.put(baseType.toString().toLowerCase(), path));
-        }
+        ctx.setResponseType(MediaType.html);
+        return redirectControl.justRender("Stopping", "../..");
+    }
 
-        return Map.of(
-                "tab", Map.of("config", true),
+    private String nodeStorageListModel(Context ctx) throws Exception {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
+        String view = ctx.path("view").value();
+
+        FileStorageType type = switch(view) {
+            case "backup" -> FileStorageType.BACKUP;
+            case "crawl" -> FileStorageType.CRAWL_DATA;
+            case "processed" -> FileStorageType.PROCESSED_DATA;
+            case "exports" -> FileStorageType.EXPORT;
+            default -> throw new IllegalArgumentException(view);
+        };
+
+        ctx.setResponseType(MediaType.html);
+        return storageListRenderer.render(Map.of(
+                "tab", Map.of("storage", true),
+                "view", Map.of(view, true),
                 "node", nodeConfigurationService.get(nodeId),
-                "config", Objects.requireNonNull(nodeConfigurationService.get(nodeId), "Failed to fetch configuration"),
-                "storage", storage);
+                "storage", makeFileStorageBaseWithStorage(getFileStorageIds(type, nodeId))
+        ));
     }
 
-    private Object updateConfigModel(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-        String act = request.queryParams("act");
+    private String handleGetConfiguration(Context ctx) throws Exception {
+        ctx.setResponseType(MediaType.html);
+        return configRenderer.render(nodeConfigModel(ctx));
+    }
+
+    private String updateConfigModel(Context ctx) throws Exception {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
+        String act = ctx.query("act").valueOrNull();
 
         if ("config".equals(act)) {
-            var oldConfig = nodeConfigurationService.get(nodeId);
+            NodeConfiguration oldConfig = nodeConfigurationService.get(nodeId);
 
-            var newConfig = new NodeConfiguration(
+            NodeConfiguration newConfig = new NodeConfiguration(
                     nodeId,
-                    request.queryParams("description"),
-                    "on".equalsIgnoreCase(request.queryParams("acceptQueries")),
-                    "on".equalsIgnoreCase(request.queryParams("autoClean")),
-                    "on".equalsIgnoreCase(request.queryParams("includeInPrecession")),
-                    "on".equalsIgnoreCase(request.queryParams("keepWarcs")),
-                    "on".equalsIgnoreCase(request.queryParams("autoAssignDomains")),
-                    NodeProfile.valueOf(request.queryParams("profile")),
-                    "on".equalsIgnoreCase(request.queryParams("disabled"))
+                    ctx.form("description").valueOrNull(),
+                    "on".equalsIgnoreCase(ctx.form("acceptQueries").valueOrNull()),
+                    "on".equalsIgnoreCase(ctx.form("autoClean").valueOrNull()),
+                    "on".equalsIgnoreCase(ctx.form("includeInPrecession").valueOrNull()),
+                    "on".equalsIgnoreCase(ctx.form("keepWarcs").valueOrNull()),
+                    "on".equalsIgnoreCase(ctx.form("autoAssignDomains").valueOrNull()),
+                    NodeProfile.valueOf(ctx.form("profile").valueOrNull()),
+                    "on".equalsIgnoreCase(ctx.form("disabled").valueOrNull())
             );
 
             nodeConfigurationService.save(newConfig);
@@ -299,36 +292,57 @@ public class ControlNodeService {
             throw new UnsupportedOperationException();
         }
         else {
-            Spark.halt(400);
+            throw new StatusCodeException(StatusCode.BAD_REQUEST);
         }
 
-        return nodeConfigModel(request, response);
+        ctx.setResponseType(MediaType.html);
+        return configRenderer.render(nodeConfigModel(ctx));
     }
 
-    private Object nodeOverviewModel(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-        var config = nodeConfigurationService.get(nodeId);
+    private String resetState(Context ctx) throws Exception {
+        fileStorageService.setFileStorageState(FileStorageId.parse(ctx.path("fid").value()), FileStorageState.UNSET);
 
-        var actors = executorClient.getActorStates(nodeId).states()
-                .stream().filter(actor -> !actor.state().equals("MONITOR"))
-                .toList();
+        ctx.setResponseType(MediaType.html);
+        return redirectControl.justRender("Restoring", "..");
+    }
+
+    private Object startFsm(Context ctx) throws Exception {
+        executorClient.startFsm(Integer.parseInt(ctx.path("id").value()), ctx.path("fsm").value().toUpperCase());
+
+        ctx.setResponseType(MediaType.html);
+        return new Redirects.HtmlRedirect("/nodes/" + Integer.parseInt(ctx.path("id").value())).render(null);
+    }
+
+    private Object stopFsm(Context ctx) throws Exception {
+        executorClient.stopFsm(Integer.parseInt(ctx.path("id").value()), ctx.path("fsm").value().toUpperCase());
+
+        ctx.setResponseType(MediaType.html);
+        return new Redirects.HtmlRedirect("/nodes/" + Integer.parseInt(ctx.path("id").value())).render(null);
+    }
+
+    private Object nodeConfigModel(Context ctx) throws SQLException {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
+
+        Map<String, Path> storage = new HashMap<>();
+
+        for (FileStorageBaseType baseType : List.of(FileStorageBaseType.CURRENT, FileStorageBaseType.WORK, FileStorageBaseType.BACKUP, FileStorageBaseType.STORAGE)) {
+            Optional.ofNullable(fileStorageService.getStorageBase(baseType, nodeId))
+                    .map(FileStorageBase::asPath)
+                    .ifPresent(path -> storage.put(baseType.toString().toLowerCase(), path));
+        }
 
         return Map.of(
+                "tab", Map.of("config", true),
                 "node", nodeConfigurationService.get(nodeId),
-                "status", getStatus(config),
-                "events", getEvents(nodeId),
-                "processes", heartbeatService.getProcessHeartbeatsForNode(nodeId),
-                "jobs", heartbeatService.getTaskHeartbeatsForNode(nodeId),
-                "actors", actors,
-                "tab", Map.of("overview", true)
-                );
+                "config", Objects.requireNonNull(nodeConfigurationService.get(nodeId), "Failed to fetch configuration"),
+                "storage", storage);
     }
 
     private Object getStorageBaseList(int nodeId) throws SQLException {
         List<FileStorageBase> bases = new ArrayList<>();
 
-        for (var type : FileStorageBaseType.values()) {
-            var base = fileStorageService.getStorageBase(type, nodeId);
+        for (FileStorageBaseType type : FileStorageBaseType.values()) {
+            FileStorageBase base = fileStorageService.getStorageBase(type, nodeId);
             bases.add(Objects.requireNonNullElseGet(base,
                     () -> new FileStorageBase(new FileStorageBaseId(-1), type, -1, "MISSING", "MISSING"))
             );
@@ -340,7 +354,7 @@ public class ControlNodeService {
     private List<EventLogEntry> getEvents(int nodeId) {
         List<String> services = List.of(ServiceId.Index.serviceName +":"+nodeId);
         List<EventLogEntry> events = new ArrayList<>(20);
-        for (var service :services) {
+        for (String service : services) {
             events.addAll(eventLogService.getLastEntriesForService(service, Long.MAX_VALUE, 10));
         }
         events.sort(Comparator.comparing(EventLogEntry::id).reversed());
@@ -365,8 +379,8 @@ public class ControlNodeService {
     private List<FileStorageId> getFileStorageIds(FileStorageType type, int node) throws SQLException {
         List<FileStorageId> storageIds = new ArrayList<>();
 
-        try (var conn = dataSource.getConnection();
-             var storageByIdStmt = conn.prepareStatement("""
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement storageByIdStmt = conn.prepareStatement("""
                 SELECT FILE_STORAGE.ID
                 FROM FILE_STORAGE
                 INNER JOIN FILE_STORAGE_BASE
@@ -377,7 +391,7 @@ public class ControlNodeService {
         {
             storageByIdStmt.setString(1, type.name());
             storageByIdStmt.setInt(2, node);
-            var rs = storageByIdStmt.executeQuery();
+            ResultSet rs = storageByIdStmt.executeQuery();
             while (rs.next()) {
                 storageIds.add(new FileStorageId(rs.getLong("ID")));
             }
@@ -390,17 +404,17 @@ public class ControlNodeService {
         Map<FileStorageBaseId, FileStorageBase> fileStorageBaseByBaseId = new HashMap<>();
         Map<FileStorageBaseId, List<FileStorageWithActions>> fileStorageByBaseId = new HashMap<>();
 
-        for (var id : storageIds) {
-            var storage = fileStorageService.getStorage(id);
+        for (FileStorageId id : storageIds) {
+            FileStorage storage = fileStorageService.getStorage(id);
             fileStorageBaseByBaseId.computeIfAbsent(storage.base().id(), k -> storage.base());
             fileStorageByBaseId.computeIfAbsent(storage.base().id(), k -> new ArrayList<>()).add(new FileStorageWithActions(storage));
         }
 
         List<FileStorageBaseWithStorage> result = new ArrayList<>();
 
-        for (var baseId : fileStorageBaseByBaseId.keySet()) {
-            var base = fileStorageBaseByBaseId.get(baseId);
-            var items = fileStorageByBaseId.get(baseId);
+        for (FileStorageBaseId baseId : fileStorageBaseByBaseId.keySet()) {
+            FileStorageBase base = fileStorageBaseByBaseId.get(baseId);
+            List<FileStorageWithActions> items = fileStorageByBaseId.get(baseId);
 
             // Sort by timestamp, then by relPath
             // this ensures that the newest file is listed last
@@ -420,12 +434,12 @@ public class ControlNodeService {
             int node,
             FileStorageId fileId
     ) throws SQLException {
-        var storage = fileStorageService.getStorage(fileId);
-        var related = getRelatedEntries(fileId);
+        FileStorage storage = fileStorageService.getStorage(fileId);
+        List<FileStorage> related = getRelatedEntries(fileId);
 
         List<FileStorageFileModel> files = new ArrayList<>();
 
-        for (var execFile : executorClient.listFileStorage(node, fileId).files()) {
+        for (FileStorageFile execFile : executorClient.listFileStorage(node, fileId).files()) {
             files.add(new FileStorageFileModel(
                     execFile.name(),
                     execFile.modTime(),
@@ -448,8 +462,8 @@ public class ControlNodeService {
 
     private List<FileStorage> getRelatedEntries(FileStorageId id) {
         List<FileStorage> ret = new ArrayList<>();
-        try (var conn = dataSource.getConnection();
-             var relatedIds = conn.prepareStatement("""
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement relatedIds = conn.prepareStatement("""
                      (SELECT SOURCE_ID AS ID FROM FILE_STORAGE_RELATION WHERE TARGET_ID = ?)
                      UNION
                      (SELECT TARGET_ID AS ID FROM FILE_STORAGE_RELATION WHERE SOURCE_ID = ?)
@@ -458,7 +472,7 @@ public class ControlNodeService {
 
             relatedIds.setLong(1, id.id());
             relatedIds.setLong(2, id.id());
-            var rs = relatedIds.executeQuery();
+            ResultSet rs = relatedIds.executeQuery();
             while (rs.next()) {
                 ret.add(fileStorageService.getStorage(new FileStorageId(rs.getLong("ID"))));
             }

@@ -4,12 +4,12 @@ import com.google.inject.Inject;
 import nu.marginalia.browse.model.BrowseResultSet;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
+import io.jooby.Context;
 import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.svc.SearchBrowseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Response;
 
 import java.io.IOException;
 import java.util.Map;
@@ -34,7 +34,7 @@ public class BrowseCommand implements SearchCommandInterface {
     }
 
     @Override
-    public Optional<Object> process(Response response, SearchParameters parameters) {
+    public Optional<Object> process(SearchParameters parameters, Context context) {
         if (!queryPatternPredicate.test(parameters.query())) {
             return Optional.empty();
         }
