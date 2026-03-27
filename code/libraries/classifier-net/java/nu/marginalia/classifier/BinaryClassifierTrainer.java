@@ -155,6 +155,7 @@ public class BinaryClassifierTrainer {
 
                 }
 
+                // Suggest new terms that would disambiguate ambiguous terms
                 System.out.println("Maybe add:" + termsScored.entrySet().stream().sorted(Map.Entry.<String, Double>comparingByValue()).limit(15).map(Map.Entry::getKey).collect(Collectors.joining(", ")));
             }
         }
