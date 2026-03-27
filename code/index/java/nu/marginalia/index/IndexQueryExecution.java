@@ -239,8 +239,12 @@ public class IndexQueryExecution {
 
         @Override
         public void cleanUp() {
-            buffer.dispose();
-            indexLock.unlock();
+            try {
+                buffer.dispose();
+            }
+            finally {
+                indexLock.unlock();
+            }
         }
     }
 
@@ -468,12 +472,15 @@ public class IndexQueryExecution {
 
         @Override
         public void cleanUp() {
-            // Add our results to the shared pool of results
-            synchronized (resultHeap) {
-                resultHeap.addAll(localResults);
+            try {
+                // Add our results to the shared pool of results
+                synchronized (resultHeap) {
+                    resultHeap.addAll(localResults);
+                }
             }
-
-            indexLock.unlock();
+            finally {
+                indexLock.unlock();
+            }
         }
     }
 
