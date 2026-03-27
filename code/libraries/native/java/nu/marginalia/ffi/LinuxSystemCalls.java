@@ -97,8 +97,8 @@ public class LinuxSystemCalls {
     }
 
     public static int openDirect(Path filename) {
-        try {
-            MemorySegment filenameCStr = Arena.global().allocateFrom(filename.toString());
+        try (var arena = Arena.ofConfined()) {
+            MemorySegment filenameCStr = arena.allocateFrom(filename.toString());
             return (Integer) instance.openDirect.invoke(filenameCStr);
         } catch (Throwable t) {
             throw new RuntimeException("Failed to invoke native function", t);
@@ -106,8 +106,8 @@ public class LinuxSystemCalls {
     }
 
     public static int openBuffered(Path filename) {
-        try {
-            MemorySegment filenameCStr = Arena.global().allocateFrom(filename.toString());
+        try (var arena = Arena.ofConfined()) {
+            MemorySegment filenameCStr = arena.allocateFrom(filename.toString());
             return (Integer) instance.openBuffered.invoke(filenameCStr);
         } catch (Throwable t) {
             throw new RuntimeException("Failed to invoke native function", t);
