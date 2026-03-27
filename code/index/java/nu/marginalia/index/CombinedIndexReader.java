@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.CheckReturnValue;
+import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -316,9 +317,26 @@ public class CombinedIndexReader {
     public void close() {
         closeLock().lock();
 
-        forwardIndexReader.close();
-        reverseIndexFullReader.close();
-        reverseIndexPriorityReader.close();
+        try {
+            forwardIndexReader.close();
+        }
+        catch (Throwable t) {
+            logger.error("Failed to close forward index reader", t);
+        }
+
+        try {
+            reverseIndexFullReader.close();
+        }
+        catch (Throwable t) {
+            logger.error("Failed to close full reverse index reader", t);
+        }
+
+        try {
+            reverseIndexPriorityReader.close();
+        }
+        catch (Throwable t) {
+            logger.error("Failed to close prio reverse index reader", t);
+        }
     }
 
     /** Returns true if index data is available */
