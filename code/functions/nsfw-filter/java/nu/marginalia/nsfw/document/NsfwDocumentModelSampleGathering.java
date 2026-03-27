@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -25,28 +24,26 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.sql.*;
 import java.util.*;
-import java.util.zip.GZIPOutputStream;
 
 public class NsfwDocumentModelSampleGathering {
 
     private final Gson gson = GsonFactory.get();
+    private static BufferedReader stdinReader = new BufferedReader(new InputStreamReader(System.in));
 
-    private static String prompt(BufferedReader reader, String message) throws IOException {
-        System.out.print(message);
-        System.out.flush();
-        return reader.readLine();
-    }
-
+    /** Tasks for growing the set of sample data,
+     * by either using the search engine's a API,
+     * or a document database file (found in `ldbr/documents.db`).
+     *
+     * Run via `./gradlew nsfwModelGrowSampleData` */
     public static void main() throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
-        String operation = prompt(reader, "Select an operation [db, query]: ");
+        String operation = readWithPrompt("Select an operation [db, query]: ");
 
         if (null == operation)
             return;
 
         if ("db".equals(operation)) {
-            String dbFile = prompt(reader, "Enter the path to a link db file: ");
+            String dbFile = readWithPrompt("Enter the path to a link db file: ");
 
             if (null == dbFile)
                 return;
@@ -60,13 +57,23 @@ public class NsfwDocumentModelSampleGathering {
             }
         }
         else if ("query".equals(operation)) {
-            String key = prompt(reader, "Input API key (or nothing to use public key, prone to rate limiting): ");
+            String key = readWithPrompt("Input API key (or nothing to use public key, prone to rate limiting): ");
             if (key == null)
                 return;
             if (key.isBlank()) key = "public";
 
             runMarginaliaSearchResultTraining(key);
         }
+    }
+
+    /** When running via gradle, even when capturing stdin,
+     * System.console isn't able to read input.
+     */
+    private static String readWithPrompt(String message) throws IOException {
+        System.out.print(message);
+        System.out.flush();
+
+        return stdinReader.readLine();
     }
 
     private static Path findDir(String frag) {
@@ -309,7 +316,7 @@ public class NsfwDocumentModelSampleGathering {
 }
 
 
-
+/** Self-hosted LLM classification oracle */
 class OllamaNsfwLabeler implements AutoCloseable {
 
     public static final String DEFAULT_MODEL = "qwen3:8b";

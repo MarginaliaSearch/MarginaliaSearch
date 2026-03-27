@@ -55,16 +55,17 @@ public class NsfwDocumentFilter {
         if (!isLoaded)
             return false;
 
+        final double prediction;
+
         if (model.inputActivationMode == BINARY) {
             int features[] = vocabulary.features(title, description);
 
             if (features.length == 0)
                 return false;
 
-            return model.predict(features) > activationThreshold;
+            prediction = model.predict(features);
         }
         else if (model.inputActivationMode == COUNTED) {
-
             Map.Entry<int[], int[]> countedFeatures = vocabulary.countedFeatures(title, description);
 
             int features[] = countedFeatures.getKey();
@@ -72,9 +73,13 @@ public class NsfwDocumentFilter {
             if (features.length == 0)
                 return false;
 
-            return model.predict(features, ClassifierSample.activationFromCount(countedFeatures.getValue())) > activationThreshold;
+            prediction = model.predict(features, ClassifierSample.activationFromCount(countedFeatures.getValue()));
         }
-        else throw new IllegalStateException("Unknown enum value " + model.inputActivationMode);
+        else {
+            throw new IllegalStateException("Unknown enum value " + model.inputActivationMode);
+        }
+
+        return prediction > activationThreshold;
     }
 
     public boolean isNsfw(List<DocumentSentence> sentences) {
@@ -93,9 +98,9 @@ public class NsfwDocumentFilter {
         if (features.length == 0)
             return false;
 
+        final double prediction = model.predict(features, ClassifierSample.activationFromCount(featuresAndCounts.getValue()));
 
-        return model.predict(features, ClassifierSample.activationFromCount(featuresAndCounts.getValue())) > activationThreshold;
+        return prediction > activationThreshold;
     }
-
 
 }

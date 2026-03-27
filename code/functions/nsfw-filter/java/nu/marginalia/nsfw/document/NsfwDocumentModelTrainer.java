@@ -9,6 +9,7 @@ import java.nio.file.Path;
 
 public class NsfwDocumentModelTrainer {
 
+    /** Run via `./gradlew trainNsfwModel` */
     public static void main(String... args) {
         Path trainingDataDir = Path.of("../../../run/training-data/nsfw/");
         Path outputDir = Path.of(args[0]);
@@ -26,7 +27,11 @@ public class NsfwDocumentModelTrainer {
     }
 
 
-    public static void trainModel(Path vocabularyFile, Path sampleDir, Path outputDir) throws IOException {
+    public static void trainModel(Path vocabularyFile,
+                                  Path sampleDir,
+                                  Path outputDir)
+            throws IOException
+    {
 
         ClassifierVocabulary vocabulary = new ClassifierVocabulary(vocabularyFile);
 
