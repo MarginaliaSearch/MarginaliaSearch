@@ -168,10 +168,12 @@ public class BinaryClassifierTrainer {
             }
         }
 
+        System.out.println("Before prune: " + samples.size());
+
         // Prune samples and raw sample data
         {
-            var samplesPruned = new ArrayList<>(samples);
-            var samplesRawPruned = new ArrayList<>(samplesRaw);
+            var samplesPruned = new ArrayList<ClassifierSample>(samples.size());
+            var samplesRawPruned = new ArrayList<String>(samplesRaw.size());
 
             for (int i = 0; i < samples.size(); i++) {
                 if (!toRemove.get(i)) {
@@ -185,6 +187,9 @@ public class BinaryClassifierTrainer {
             samples.addAll(samplesPruned);
             samplesRaw.addAll(samplesRawPruned);
         }
+
+        System.out.println("After prune: " + samples.size());
+
     }
 
     public static List<String> lines(Path file) throws IOException {
@@ -225,8 +230,13 @@ public class BinaryClassifierTrainer {
             }
         }
 
+        int nHidden = trainingSamples.size() / vocabulary.size();
+        System.out.println("Samples: " + trainingSamples.size());
+        System.out.println("Vocabulary: " + vocabulary.size());
+        System.out.println("Using hidden layer of size " + nHidden);
+
         BinaryClassifierModel model = BinaryClassifierModel.forTraining(
-                vocabulary.size(), 24,
+                vocabulary.size(), nHidden,
                 BinaryClassifierModel.InputActivationMode.BINARY
         );
 
