@@ -75,6 +75,13 @@ public class BinaryClassifierModel {
 
     public final InputActivationMode inputActivationMode;
 
+
+    /** M_HIDDEN length temp array to avoid GC churn during training */
+    private double tmp2M[];
+
+    /** M_HIDDEN length temp array to avoid GC churn during training */
+    private double tmp1M[];
+
     /* So to put it all together and make a prediction */
 
     public double predict(BitSet x) {
@@ -211,8 +218,8 @@ public class BinaryClassifierModel {
         for (int i = 0; i < epochs; i++) {
             double loss = trainingEpoch(samples, learningRate);
             if (i > 0 && (i % 100) == 0) {
-                learningRate *= 0.95;
-                System.out.printf("Epoch %d, loss %f: lr => %2.3f\n", i, loss / samples.size(), learningRate);
+                learningRate *= 0.98;
+                System.out.printf("Epoch %d, loss %f: lr => %2.4f\n", i, loss / samples.size(), learningRate);
             }
         }
     }
@@ -226,7 +233,10 @@ public class BinaryClassifierModel {
     public double trainSample(double y0, int[] x, double lr) {
 
         // Hidden layer preactivation
-        double[] z1 = Arrays.copyOf(b1, M_HIDDEN);
+        double[] z1 = tmp1M;
+
+        System.arraycopy(b1, 0, z1, 0, M_HIDDEN);
+
         for (int i = 0; i < M_HIDDEN; i++) {
             for (int xi : x) {
                 z1[i] += w1[i][xi];
@@ -234,7 +244,8 @@ public class BinaryClassifierModel {
         }
 
         // Hidden layer activation
-        double[] a = new double[M_HIDDEN];
+        double[] a = tmp2M;
+
         for (int i = 0; i < M_HIDDEN; i++) {
             a[i] = σ1.f(z1[i]);
         }
@@ -300,7 +311,9 @@ public class BinaryClassifierModel {
      */
     public double trainSample(double y0, int[] x, double[] x_act, double lr) {
 
-        double[] z1 = Arrays.copyOf(b1, M_HIDDEN);
+        double[] z1 = tmp1M;
+        System.arraycopy(b1, 0, z1, 0, M_HIDDEN);
+
         for (int i = 0; i < M_HIDDEN; i++) {
 
             for (int x_idx = 0; x_idx < x.length; x_idx++) {
@@ -311,7 +324,7 @@ public class BinaryClassifierModel {
             }
         }
 
-        double[] a = new double[M_HIDDEN];
+        double[] a = tmp2M;
         for (int i = 0; i < M_HIDDEN; i++) {
             a[i] = σ1.f(z1[i]);
         }
@@ -360,6 +373,9 @@ public class BinaryClassifierModel {
     {
         N_INPUTS = inputLayerSize;
         M_HIDDEN = hiddenLayerSize;
+
+        tmp1M = new double[M_HIDDEN];
+        tmp2M = new double[M_HIDDEN];
 
         b1 = new double[hiddenLayerSize];
         w1 = new double[hiddenLayerSize][];
