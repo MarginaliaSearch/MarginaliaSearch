@@ -77,7 +77,7 @@ public class ScrapeStopperInterceptor {
         if (tokenState == ScrapeStopper.TokenState.INVALID)
             sst = scrapeStopper.getToken(zone,
                     remoteIp,
-                    Duration.ofSeconds(3),
+                    Duration.ofSeconds(1),
                     Duration.ofMinutes(5),
                     ThreadLocalRandom.current().nextInt(10, 50));
 
