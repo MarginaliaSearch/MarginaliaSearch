@@ -113,6 +113,7 @@ public class BinaryClassifierTrainer {
             }
         }
 
+        BitSet toRemove = new BitSet(samples.size());
 
         // Prune negative labels from ambiguous cases
         for (var entry: featuresSamples.int2ObjectEntrySet()) {
@@ -121,7 +122,14 @@ public class BinaryClassifierTrainer {
 
             if (posCnt > 5 && negCnt > 5) {
                 System.out.printf("Trimming ambiguous case (%d vs %d): %s\n", posCnt, negCnt, Strings.join(entry.getValue(), ','));
-                samples.removeIf(sample -> sample.y0() < 0.5 && sample.hashCode() == entry.getIntKey());
+
+                for (int i = 0; i < samples.size(); i++) {
+                    var sample = samples.get(i);
+
+                    if (sample.y0() < 0.5 && sample.hashCode() == entry.getIntKey()) {
+                        toRemove.set(i);
+                    }
+                }
 
                 int featureHash = entry.getIntKey();
 
@@ -158,6 +166,24 @@ public class BinaryClassifierTrainer {
                 // Suggest new terms that would disambiguate ambiguous terms
                 System.out.println("Maybe add:" + termsScored.entrySet().stream().sorted(Map.Entry.<String, Double>comparingByValue()).limit(15).map(Map.Entry::getKey).collect(Collectors.joining(", ")));
             }
+        }
+
+        // Prune samples and raw sample data
+        {
+            var samplesPruned = new ArrayList<>(samples);
+            var samplesRawPruned = new ArrayList<>(samplesRaw);
+
+            for (int i = 0; i < samples.size(); i++) {
+                if (!toRemove.get(i)) {
+                    samplesPruned.add(samples.get(i));
+                    samplesRawPruned.add(samplesRaw.get(i));
+                }
+            }
+
+            samples.clear();
+            samplesRaw.clear();
+            samples.addAll(samplesPruned);
+            samplesRaw.addAll(samplesRawPruned);
         }
     }
 
