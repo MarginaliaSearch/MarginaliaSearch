@@ -36,7 +36,7 @@ public class NsfwDocumentModelTrainer {
         ClassifierVocabulary vocabulary = new ClassifierVocabulary(vocabularyFile);
 
         var trainer = new BinaryClassifierTrainer(vocabulary,
-                BinaryClassifierModel.InputActivationMode.COUNTED,
+                BinaryClassifierModel.InputActivationMode.BINARY,
                 new String[] { "__label__SAFE", "__label__NSFW" },
                 sampleDir
         );

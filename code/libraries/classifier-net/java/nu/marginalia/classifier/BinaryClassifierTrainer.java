@@ -201,7 +201,7 @@ public class BinaryClassifierTrainer {
 
         BinaryClassifierModel model = BinaryClassifierModel.forTraining(
                 vocabulary.size(), 24,
-                BinaryClassifierModel.InputActivationMode.COUNTED
+                BinaryClassifierModel.InputActivationMode.BINARY
         );
 
         model.train(trainingSamples, 2000, 0.01);
