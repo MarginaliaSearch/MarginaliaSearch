@@ -24,7 +24,7 @@ public class NsfwDocumentFilter {
     private final BinaryClassifierModel model;
     private final ClassifierVocabulary vocabulary;
 
-    private final double activationThreshold = 0.75;
+    private final double activationThreshold = 0.5;
 
     private final Logger logger = LoggerFactory.getLogger(NsfwDocumentFilter.class);
 
