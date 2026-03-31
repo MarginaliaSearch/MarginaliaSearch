@@ -61,6 +61,7 @@ dependencies {
 
 
     implementation libs.gson
+    implementation libs.slop
     implementation libs.prometheus
     implementation libs.notnull
     implementation libs.guava
