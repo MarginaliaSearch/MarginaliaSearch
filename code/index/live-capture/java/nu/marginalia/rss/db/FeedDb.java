@@ -24,6 +24,7 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Singleton
 public class FeedDb {
@@ -32,6 +33,8 @@ public class FeedDb {
     private static final String dbFileName = "rss-feeds.db";
 
     private final Path readerDbPath;
+
+    @Nullable
     private volatile FeedDbReader reader;
 
     private final boolean feedDbEnabled;
@@ -175,7 +178,8 @@ public class FeedDb {
             logger.info("Switching to new feed database from " + writer.getDbPath() + " to " + readerDbPath);
 
             writer.close();
-            reader.close();
+
+            Optional.ofNullable(reader).ifPresent(FeedDbReader::close);
 
             Files.move(writer.getDbPath(), readerDbPath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
 
