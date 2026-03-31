@@ -9,6 +9,7 @@ import io.prometheus.metrics.core.metrics.Histogram;
 import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.CompiledSearchFilterSpec;
 import nu.marginalia.api.searchquery.model.SearchFilterDefaults;
+import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.ProcessedQuery;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.functions.searchquery.searchfilter.SearchFilterStore;
@@ -193,6 +194,39 @@ public class QueryGRPCService
                         .searchSetIdentifier(set)
                         .build(),
                 rankingParameters);
+
+        IndexClient.AggregateQueryResponse response
+                = indexClient.executeQueries(query.indexQuery, pagination);
+
+        return new DetailedDirectResult(query,
+                Lists.transform(response.results(), QueryProtobufCodec::convertQueryResult),
+                response.totalResults());
+    }
+
+    public DetailedDirectResult executeApiQuery(
+            String originalQuery,
+            RpcQueryLimits limits,
+            String langIsoCode,
+            NsfwFilterTier nsfwTier,
+            QueryFilterSpec filterSpec,
+            IndexClient.Pagination pagination)
+    {
+        RpcQsQuery.Builder queryBuilder = RpcQsQuery.newBuilder()
+                .setQueryLimits(limits)
+                .setLangIsoCode(langIsoCode)
+                .setHumanQuery(originalQuery)
+                .setNsfwFilterTierValue(nsfwTier.getCodedValue());
+
+        filterSpec.configure(queryBuilder);
+
+        RpcQsQuery rpcQuery = queryBuilder.build();
+
+        Optional<ProcessedQuery> maybeQuery = createQuery(rpcQuery);
+        if (maybeQuery.isEmpty()) {
+            return new DetailedDirectResult(null, List.of(), 0);
+        }
+
+        ProcessedQuery query = maybeQuery.get();
 
         IndexClient.AggregateQueryResponse response
                 = indexClient.executeQueries(query.indexQuery, pagination);
