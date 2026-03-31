@@ -680,10 +680,13 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
 
         if (statusCode == 429) {
             // get the Retry-After header
-            String retryAfter = response.getFirstHeader("Retry-After").getValue();
-            if (retryAfter == null) {
+            Header header = response.getFirstHeader("Retry-After");
+
+            if (header == null) {
                 return TimeValue.ofSeconds(2);
             }
+
+            String retryAfter = header.getValue();
 
             int retryAfterTime = parseRetryAfterSeconds(retryAfter);
             if (retryAfterTime > 0) {
