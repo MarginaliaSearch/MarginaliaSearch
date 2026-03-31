@@ -42,16 +42,16 @@ public record SlopCrawlDataRecord(String domain,
                                   int requestTimeMs,
                                   String headers)
 {
-    private static final EnumColumn domainColumn = new EnumColumn("domain", StandardCharsets.UTF_8, StorageType.ZSTD);
-    private static final StringColumn urlColumn = new StringColumn("url", StandardCharsets.UTF_8, StorageType.ZSTD);
-    private static final StringColumn ipColumn = new StringColumn("ip", StandardCharsets.ISO_8859_1, StorageType.ZSTD);
-    private static final ByteColumn cookiesColumn = new ByteColumn("cookies");
-    private static final ShortColumn statusColumn = new ShortColumn("httpStatus");
-    private static final LongColumn timestampColumn = new LongColumn("timestamp");
-    private static final EnumColumn contentTypeColumn = new EnumColumn("contentType", StandardCharsets.UTF_8);
-    private static final ByteArrayColumn bodyColumn = new ByteArrayColumn("body", StorageType.ZSTD);
-    private static final ShortColumn requestTimeColumn = new ShortColumn("requestTimeMs");
-    private static final StringColumn headerColumn = new StringColumn("header", StandardCharsets.UTF_8, StorageType.ZSTD);
+    public static final EnumColumn domainColumn = new EnumColumn("domain", StandardCharsets.UTF_8, StorageType.ZSTD);
+    public static final StringColumn urlColumn = new StringColumn("url", StandardCharsets.UTF_8, StorageType.ZSTD);
+    public static final StringColumn ipColumn = new StringColumn("ip", StandardCharsets.ISO_8859_1, StorageType.ZSTD);
+    public static final ByteColumn cookiesColumn = new ByteColumn("cookies");
+    public static final ShortColumn statusColumn = new ShortColumn("httpStatus");
+    public static final LongColumn timestampColumn = new LongColumn("timestamp");
+    public static final EnumColumn contentTypeColumn = new EnumColumn("contentType", StandardCharsets.UTF_8);
+    public static final ByteArrayColumn bodyColumn = new ByteArrayColumn("body", StorageType.ZSTD);
+    public static final ShortColumn requestTimeColumn = new ShortColumn("requestTimeMs");
+    public static final StringColumn headerColumn = new StringColumn("header", StandardCharsets.UTF_8, StorageType.ZSTD);
 
     private static SlopCrawlDataRecord forDomainRedirect(String domain, Instant date, String redirectDomain) {
         return new SlopCrawlDataRecord(domain,

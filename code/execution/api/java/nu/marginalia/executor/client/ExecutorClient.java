@@ -18,6 +18,7 @@ import nu.marginalia.service.discovery.property.ServiceKey;
 import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageId;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -201,6 +202,31 @@ public class ExecutorClient {
         catch (URISyntaxException|MalformedURLException ex) {
             throw new RuntimeException("Failed to construct URL for path", ex);
         }
+    }
+
+    public RpcCrawlDataSampleRsp fetchCrawlDataSample(
+            int node,
+            FileStorageId fileStorageId,
+            String path,
+            @Nullable Integer after,
+            @Nullable String urlGlob,
+            @Nullable String contentType,
+            @Nullable Integer httpStatus
+    ) {
+        RpcCrawlDataSampleReq.Builder specBuilder = RpcCrawlDataSampleReq.newBuilder()
+                .setFileStorageId(fileStorageId.id())
+                .setPath(path);
+
+        if (after != null) specBuilder.setAfter(after);
+        else specBuilder.setAfter(0);
+
+        if (urlGlob != null) specBuilder.setUrlGlob(urlGlob);
+        if (contentType != null) specBuilder.setContentType(contentType);
+        if (httpStatus != null) specBuilder.setHttpStatus(httpStatus);
+
+        return channelPool.call(ExecutorApiBlockingStub::fetchCrawlDataSample)
+                .forNode(node)
+                .run(specBuilder.build());
     }
 
     public void restartExecutorService(int node) {

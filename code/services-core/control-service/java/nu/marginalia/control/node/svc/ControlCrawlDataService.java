@@ -18,10 +18,7 @@ import java.io.InputStreamReader;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
 
 /** Service for inspecting crawl data within the control service.
@@ -56,86 +53,51 @@ public class ControlCrawlDataService {
 
 
     public Object crawlParquetInfo(Request request, Response response) throws SQLException {
+
         int nodeId = Integer.parseInt(request.params("id"));
         var fsid = FileStorageId.parse(request.queryParams("fid"));
 
         String path = request.queryParams("path");
 
         int after = Integer.parseInt(request.queryParamOrDefault("page", "0"));
-        String urlGlob = request.queryParamOrDefault("urlGlob", "").replace("'", "''");
-        String selectedContentType = request.queryParamOrDefault("contentType", "ALL").replace("'", "''");
-        String selectedHttpStatus = request.queryParamOrDefault("httpStatus", "ALL").replace("'", "''");
+        String urlGlob = request.queryParamOrDefault("urlGlob", null);
+        String selectedContentType = request.queryParamOrDefault("contentType", "ALL");
+        String selectedHttpStatus = request.queryParamOrDefault("httpStatus", "ALL");
 
-        var url = executorClient.remoteFileURL(fileStorageService.getStorage(fsid), path).toString();
+        int effectiveStatusCode = selectedHttpStatus.equals("ALL") ? -1 : Integer.parseInt(selectedHttpStatus);
+
+        var rsp = executorClient.fetchCrawlDataSample(
+                nodeId,
+                fsid,
+                path,
+                after,
+                urlGlob,
+                selectedContentType.equals("ALL") ? null : selectedContentType,
+                effectiveStatusCode
+        );
 
         List<SummaryStatusCode> byStatusCode = new ArrayList<>();
         List<SummaryContentType> byContentType = new ArrayList<>();
         List<CrawlDataRecordSummary> records = new ArrayList<>();
 
-        // Fetch the data from the parquet file using DuckDB
-        String domain;
-        try (var conn = DriverManager.getConnection("jdbc:duckdb:");
-             var stmt = conn.createStatement()) {
-            ResultSet rs;
+        for (var ctStats: rsp.getByContentTypeList()) {
+            byContentType.add(new SummaryContentType(ctStats.getContentType(), ctStats.getCount(), Objects.equals(selectedContentType, ctStats.getContentType())));
+        }
 
-            // Summarize by status code
+        for (var statusStats: rsp.getByStatusCodeList()) {
+            byStatusCode.add(new SummaryStatusCode(statusStats.getStatusCode(), statusStats.getCount(), effectiveStatusCode == statusStats.getStatusCode()));
+        }
 
-            rs = stmt.executeQuery("SELECT domain FROM '%s' LIMIT 1".formatted(url));
-            domain = rs.next() ? rs.getString(1) : "NO DOMAIN";
-
-            rs = stmt.executeQuery("""
-                                       SELECT httpStatus, COUNT(*) as cnt FROM '%s'
-                                       GROUP BY httpStatus
-                                       ORDER BY httpStatus
-                                       """
-                    .formatted(url));
-            while (rs.next()) {
-                final boolean isCurrentFilter = selectedHttpStatus.equals(rs.getString("httpStatus"));
-                final int status = rs.getInt("httpStatus");
-                final int cnt = rs.getInt("cnt");
-
-                byStatusCode.add(new SummaryStatusCode(status, cnt, isCurrentFilter));
-            }
-
-            // Summarize by content type
-
-            rs = stmt.executeQuery("""
-                                        SELECT contentType, COUNT(*) as cnt
-                                        FROM '%s'
-                                        GROUP BY contentType
-                                        ORDER BY contentType
-                                        """
-                                    .formatted(url));
-            while (rs.next()) {
-                final boolean isCurrentFilter = selectedContentType.equals(rs.getString("contentType"));
-                final String contentType = rs.getString("contentType");
-                final int cnt = rs.getInt("cnt");
-
-                byContentType.add(new SummaryContentType(contentType, cnt, isCurrentFilter));
-            }
-
-            // Extract the document data
-
-            var query = "SELECT url, contentType, httpStatus, body != '' as bodied, etagHeader, lastModifiedHeader FROM '%s' WHERE 1=1".formatted(url);
-            if (!urlGlob.isBlank())
-                query += " AND url LIKE '%s'".formatted(urlGlob.replace('*', '%'));
-            if (!selectedContentType.equals("ALL"))
-                query += " AND contentType = '%s'".formatted(selectedContentType);
-            if (!selectedHttpStatus.equals("ALL"))
-                query += " AND httpStatus = '%s'".formatted(selectedHttpStatus);
-            query += " LIMIT 10 OFFSET %d".formatted(after);
-
-            rs = stmt.executeQuery(query);
-            while (rs.next()) {
-
-                records.add(new CrawlDataRecordSummary(
-                        rs.getString("url"),
-                        rs.getString("contentType"),
-                        rs.getInt("httpStatus"),
-                        rs.getBoolean("bodied"),
-                        rs.getString("etagHeader"),
-                        rs.getString("lastModifiedHeader")));
-            }
+        for (var record: rsp.getRecordsList()) {
+            records.add(
+                new CrawlDataRecordSummary(
+                    record.getUrl(),
+                    record.getContentType(),
+                    record.getHttpStatus(),
+                    record.getHasBody(),
+                    record.getEtag(),
+                    record.getLastModified())
+            );
         }
 
         Map<String, Object> ret = new HashMap<>();
@@ -146,7 +108,7 @@ public class ControlCrawlDataService {
         ret.put("node", nodeConfigurationService.get(nodeId));
         ret.put("storage", fileStorageService.getStorage(fsid));
         ret.put("path", path);
-        ret.put("domain", domain);
+        ret.put("domain", rsp.getDomain());
 
         ret.put("contentType", selectedContentType);
         ret.put("httpStatus", selectedHttpStatus);

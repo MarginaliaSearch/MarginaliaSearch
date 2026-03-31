@@ -1,8 +1,14 @@
 package nu.marginalia.execution;
 
+import com.google.common.base.Strings;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
 import io.grpc.Status;
+import io.grpc.StatusException;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
+import io.jooby.annotation.Header;
+import io.netty.handler.codec.HeadersUtils;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.actor.ActorApi;
 import nu.marginalia.actor.ExecutorActor;
@@ -13,20 +19,31 @@ import nu.marginalia.actor.task.RestoreBackupActor;
 import nu.marginalia.actor.task.TriggerAdjacencyCalculationActor;
 import nu.marginalia.actor.task.UpdateNsfwFiltersActor;
 import nu.marginalia.functions.execution.api.*;
+import nu.marginalia.model.crawldata.SerializableCrawlData;
+import nu.marginalia.ping.fetcher.response.Headers;
 import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.service.server.DiscoverableService;
+import nu.marginalia.slop.SlopCrawlDataRecord;
+import nu.marginalia.slop.SlopTable;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.net.http.HttpHeaders;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static io.grpc.stub.ClientCalls.futureUnaryCall;
 
 public class ExecutorGrpcService
         extends ExecutorApiGrpc.ExecutorApiImplBase
@@ -279,5 +296,136 @@ public class ExecutorGrpcService
             logger.error("Failed to update nsfw filters", e);
             responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
+    }
+
+    @Override
+    public void fetchCrawlDataSample(RpcCrawlDataSampleReq request,
+                                     StreamObserver<RpcCrawlDataSampleRsp> responseObserver)
+    {
+        Map<String, Integer> countByContentType = new HashMap<>();
+        Map<Integer, Integer> countByStatusCode = new HashMap<>();
+        List<RpcCrawlDataSampleRecord> records = new ArrayList<>();
+
+        System.out.println(request);
+
+        var rspBuilder = RpcCrawlDataSampleRsp.newBuilder();
+
+        try {
+            Path slopDataPath = fileStorageService.getStorage(FileStorageId.of(request.getFileStorageId()))
+                    .asPath().resolve(request.getPath());
+
+            try (SlopTable slopTable = new SlopTable(slopDataPath)) {
+                var domainReader = SlopCrawlDataRecord.domainColumn.open(slopTable);
+                if (domainReader.hasRemaining()) {
+                    rspBuilder.setDomain(domainReader.get());
+                }
+            }
+
+            try (SlopTable slopTable = new SlopTable(slopDataPath)) {
+                var contentTypeReader = SlopCrawlDataRecord.contentTypeColumn.open(slopTable);
+                var statusCodeReader = SlopCrawlDataRecord.statusColumn.open(slopTable);
+
+                while (contentTypeReader.hasRemaining()) {
+                    countByContentType.merge(contentTypeReader.get(), 1, Integer::sum);
+                    countByStatusCode.merge((int) statusCodeReader.get(), 1, Integer::sum);
+                }
+            }
+
+            countByContentType.forEach((code, cnt) -> {
+                rspBuilder.addByContentType(RpcCrawlDataSamplesByContentType.newBuilder().setContentType(code).setCount(cnt));
+            });
+
+            countByStatusCode.forEach((code, cnt) -> {
+                rspBuilder.addByStatusCode(RpcCrawlDataSamplesByStatusCode.newBuilder().setStatusCode(code).setCount(cnt));
+            });
+
+            try (SlopTable slopTable = new SlopTable(slopDataPath)) {
+                var urlReader = SlopCrawlDataRecord.urlColumn.open(slopTable);
+                var bodyReader = SlopCrawlDataRecord.bodyColumn.open(slopTable);
+                var headerReader = SlopCrawlDataRecord.headerColumn.open(slopTable);
+                var contentTypeReader = SlopCrawlDataRecord.contentTypeColumn.open(slopTable);
+                var statusCodeReader = SlopCrawlDataRecord.statusColumn.open(slopTable);
+
+
+                int toSkip = request.getAfter();
+                int toFetch = 10;
+
+                while (contentTypeReader.hasRemaining()) {
+                    String url = urlReader.get();
+                    String contentType = contentTypeReader.get();
+                    int statusCode = statusCodeReader.get();
+
+                    if (!Strings.isNullOrEmpty(request.getUrlGlob()) && !matchesGlob(request.getUrlGlob(), url))
+                        continue;
+                    if (!Strings.isNullOrEmpty(request.getContentType()) && !contentType.equalsIgnoreCase(request.getContentType()))
+                        continue;
+                    if (request.getHttpStatus() > 0 && statusCode != request.getHttpStatus())
+                        continue;
+
+                    if (toSkip > 0) {
+                        toSkip--;
+                        continue;
+                    }
+
+                    // Bring the other readers into alignment
+                    bodyReader.prealign(urlReader);
+                    headerReader.prealign(urlReader);
+
+                    boolean hasBody = bodyReader.get().length > 0;
+
+                    Map<String, String> headers = Arrays.stream(StringUtils.split(headerReader.get(), "\n"))
+                                    .map(s -> StringUtils.split(s, ":"))
+                                    .filter(parts -> parts.length == 2)
+                                    .collect(Collectors.toMap(parts -> parts[0].trim(), parts -> parts[1].trim(), (a,b)->a));
+
+                    rspBuilder.addRecords(RpcCrawlDataSampleRecord.newBuilder()
+                            .setContentType(contentType)
+                            .setHttpStatus(statusCode)
+                            .setHasBody(hasBody)
+                            .setUrl(url)
+                            .setEtag(headers.getOrDefault("ETag", ""))
+                            .setLastModified(headers.getOrDefault("Last-Modified", ""))
+                            .build()
+                    );
+
+                    if (--toFetch < 0)
+                        break;
+                }
+
+                slopTable.alignAll(contentTypeReader);
+            }
+
+            System.out.println(rspBuilder);
+
+            responseObserver.onNext(rspBuilder.build());
+            responseObserver.onCompleted();
+        }
+        catch (IOException | SQLException ex) {
+            logger.error("Error fetching crawl data", ex);
+            responseObserver.onError(Status.INTERNAL.withCause(ex).asRuntimeException());
+        }
+    }
+
+    private boolean matchesGlob(String pattern, String input) {
+        if (!pattern.contains("*")) return pattern.equals(input);
+
+        String[] parts = StringUtils.splitPreserveAllTokens(pattern, "*");
+        int pos = 0;
+
+        for (int i = 0; i < parts.length; i++) {
+            String part = parts[i];
+            if (i == 0) {
+                if (!input.startsWith(part)) return false;
+                pos = part.length();
+            } else if (i == parts.length - 1) {
+                if (!input.endsWith(part)) return false;
+            } else {
+                int idx = input.indexOf(part, pos);
+                if (idx < 0) return false;
+                pos = idx + part.length();
+            }
+        }
+
+        return true;
     }
 }

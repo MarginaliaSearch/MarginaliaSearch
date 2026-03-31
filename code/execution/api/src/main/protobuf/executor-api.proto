@@ -21,6 +21,8 @@ service ExecutorApi {
   rpc updateNsfwFilters(RpcUpdateNsfwFilters) returns (Empty) {}
 
   rpc restartExecutorService(Empty) returns (Empty) {}
+
+  rpc fetchCrawlDataSample(RpcCrawlDataSampleReq) returns (RpcCrawlDataSampleRsp) {}
 }
 
 service ExecutorCrawlApi {
@@ -145,4 +147,41 @@ message RpcFileStorageEntry {
   string name = 1;
   int64 size = 2;
   string lastModifiedTime = 3;
+}
+
+
+message RpcCrawlDataSampleReq {
+  int64 fileStorageId = 1;
+  string path = 2;
+
+  int32 after = 3;
+  string urlGlob = 4;
+  string contentType = 5;
+  int32 httpStatus = 6;
+}
+
+message RpcCrawlDataSampleRsp {
+  repeated RpcCrawlDataSampleRecord records = 1;
+  repeated RpcCrawlDataSamplesByStatusCode byStatusCode = 2;
+  repeated RpcCrawlDataSamplesByContentType byContentType = 3;
+  string domain = 4;
+}
+
+message RpcCrawlDataSampleRecord {
+  string url = 1;
+  string contentType = 2;
+  int32 httpStatus = 3;
+  bool hasBody = 4;
+  string etag = 5;
+  string lastModified = 6;
+}
+
+message RpcCrawlDataSamplesByStatusCode {
+  int32 statusCode = 1;
+  int32 count = 2;
+}
+
+message RpcCrawlDataSamplesByContentType {
+  string contentType = 1;
+  int32 count = 2;
 }
