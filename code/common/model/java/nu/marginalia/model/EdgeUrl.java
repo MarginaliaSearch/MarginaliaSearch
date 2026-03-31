@@ -166,8 +166,7 @@ public class EdgeUrl {
                     && Objects.equals(e.path, path)
                     && Objects.equals(e.param, param);
         }
-
-        return true;
+        return false;
     }
 
     public boolean equalsExactly(Object other) {
@@ -181,7 +180,7 @@ public class EdgeUrl {
                     && Objects.equals(e.param, param);
         }
 
-        return true;
+        return false;
     }
 
     public int hashCode() {
