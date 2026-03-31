@@ -417,7 +417,7 @@ class EdgeUriFactory {
             char c = url.charAt(idx++);
             if (c == '?') break;
             if (c == '/') continue;
-            if (c == '#') return true;
+            if (c == '#') return false;
             if (!isUrlSafe(c)) return false;
         }
 
@@ -428,7 +428,7 @@ class EdgeUriFactory {
             char c = url.charAt(idx++);
             if (c == '&') continue;
             if (c == '=') continue;
-            if (c == '#') return true;
+            if (c == '#') return false;
             if (!isUrlSafe(c)) return false;
         }
 
@@ -437,7 +437,7 @@ class EdgeUriFactory {
 
 
     private static boolean isAsciiAlphabetic(int c) {
-        return (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
     }
 
     private static boolean isHexDigit(int c) {
