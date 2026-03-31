@@ -10,7 +10,6 @@ import nu.marginalia.api.linkgraph.AggregateLinkGraphClient;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.geoip.GeoIpDictionary;
 import nu.marginalia.model.EdgeDomain;
-import org.apache.logging.log4j.core.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,72 +48,79 @@ public class DomainInformationService {
             return Optional.empty();
         }
 
-
-        var builder = RpcDomainInfoResponse.newBuilder();
         try (var connection = dataSource.getConnection();
-             var stmt = connection.createStatement()
+             var stmt = connection.prepareStatement("""
+                SELECT
+                    d.IP, d.NODE_AFFINITY, d.DOMAIN_NAME, d.STATE, IFNULL(d.RANK, 1) AS RANK,
+                    EXISTS(SELECT 1 FROM CRAWL_QUEUE cq WHERE cq.DOMAIN_NAME = d.DOMAIN_NAME) AS IN_CRAWL_QUEUE,
+                    dm.ID AS DM_ID, dm.KNOWN_URLS, dm.GOOD_URLS, dm.VISITED_URLS,
+                    dai.DOMAIN_ID AS DAI_DOMAIN_ID,
+                    dai.SERVER_AVAILABLE, dai.HTTP_SCHEMA,
+                    COALESCE(dai.HTTP_RESPONSE_TIME_MS, -1) AS HTTP_RESPONSE_TIME_MS,
+                    dai.ERROR_CLASSIFICATION, dai.ERROR_MESSAGE,
+                    dai.TS_LAST_PING, dai.TS_LAST_AVAILABLE, dai.TS_LAST_ERROR,
+                    dai.BACKOFF_CONSECUTIVE_FAILURES,
+                    dsi.DOMAIN_ID AS DSI_DOMAIN_ID,
+                    dsi.HTTP_VERSION, dsi.HTTP_COMPRESSION,
+                    dsi.HEADER_SERVER, dsi.HEADER_X_POWERED_BY,
+                    dsi.SSL_CERT_SUBJECT, dsi.SSL_CERT_SAN,
+                    dsi.SSL_PROTOCOL, dsi.SSL_CIPHER_SUITE, dsi.SSL_KEY_EXCHANGE,
+                    dsi.SSL_CERT_WILDCARD, dsi.SSL_CERT_NOT_BEFORE, dsi.SSL_CERT_NOT_AFTER,
+                    dsi.SSL_CHAIN_VALID, dsi.SSL_DATE_VALID, dsi.SSL_HOST_VALID
+                FROM EC_DOMAIN d
+                LEFT JOIN DOMAIN_METADATA dm ON dm.ID = d.ID
+                LEFT JOIN DOMAIN_AVAILABILITY_INFORMATION dai ON dai.DOMAIN_ID = d.ID
+                LEFT JOIN DOMAIN_SECURITY_INFORMATION dsi ON dsi.DOMAIN_ID = d.ID
+                WHERE d.ID = ?
+            """)
         ) {
-            boolean inCrawlQueue;
-            int outboundLinks = 0;
-            int pagesVisited = 0;
+            stmt.setInt(1, domainId);
+            ResultSet rs = stmt.executeQuery();
 
-            ResultSet rs;
-
-            rs = stmt.executeQuery("SELECT IP, NODE_AFFINITY, DOMAIN_NAME, STATE, IFNULL(RANK, 1) AS RANK\n       FROM EC_DOMAIN WHERE ID=" + domainId + "\n   ");
-            if (rs.next()) {
-                String ip = rs.getString("IP");
-
-                builder.setIp(Objects.requireNonNullElse(ip, ""));
-
-                geoIpDictionary.getAsnInfo(ip).ifPresent(asnInfo -> {
-                    builder.setAsn(asnInfo.asn());
-                    builder.setAsnOrg(asnInfo.org());
-                    builder.setAsnCountry(asnInfo.country());
-                });
-                builder.setIpCountry(geoIpDictionary.getCountry(ip));
-
-                builder.setNodeAffinity(rs.getInt("NODE_AFFINITY"));
-                builder.setDomain(rs.getString("DOMAIN_NAME"));
-                builder.setState(rs.getString("STATE"));
-                builder.setRanking(Math.round(100.0*(1.0-rs.getDouble("RANK"))));
+            if (!rs.next()) {
+                return Optional.empty();
             }
-            rs = stmt.executeQuery("SELECT 1 FROM CRAWL_QUEUE\nINNER JOIN EC_DOMAIN ON CRAWL_QUEUE.DOMAIN_NAME = EC_DOMAIN.DOMAIN_NAME\nWHERE EC_DOMAIN.ID=" + domainId + "\n   ");
-            inCrawlQueue = rs.next();
+
+            var builder = RpcDomainInfoResponse.newBuilder();
+
+            // EC_DOMAIN fields
+            String ip = rs.getString("IP");
+            builder.setIp(Objects.requireNonNullElse(ip, ""));
+
+            geoIpDictionary.getAsnInfo(ip).ifPresent(asnInfo -> {
+                builder.setAsn(asnInfo.asn());
+                builder.setAsnOrg(asnInfo.org());
+                builder.setAsnCountry(asnInfo.country());
+            });
+            builder.setIpCountry(geoIpDictionary.getCountry(ip));
+
+            builder.setNodeAffinity(rs.getInt("NODE_AFFINITY"));
+            builder.setDomain(rs.getString("DOMAIN_NAME"));
+            builder.setState(rs.getString("STATE"));
+            builder.setRanking(Math.round(100.0 * (1.0 - rs.getDouble("RANK"))));
+
+            boolean inCrawlQueue = rs.getBoolean("IN_CRAWL_QUEUE");
             builder.setInCrawlQueue(inCrawlQueue);
 
             builder.setIncomingLinks(linkGraphClient.countLinksToDomain(domainId));
             builder.setOutboundLinks(linkGraphClient.countLinksFromDomain(domainId));
 
-            rs = stmt.executeQuery("SELECT KNOWN_URLS, GOOD_URLS, VISITED_URLS FROM DOMAIN_METADATA WHERE ID=" + domainId + "\n   ");
-            if (rs.next()) {
+            // DOMAIN_METADATA (LEFT JOIN -- null if no matching row)
+            int pagesVisited = 0;
+            if (rs.getObject("DM_ID") != null) {
                 pagesVisited = rs.getInt("VISITED_URLS");
 
                 builder.setPagesKnown(rs.getInt("KNOWN_URLS"));
                 builder.setPagesIndexed(rs.getInt("GOOD_URLS"));
-                builder.setPagesFetched(rs.getInt("VISITED_URLS"));
+                builder.setPagesFetched(pagesVisited);
             }
 
-            rs = stmt.executeQuery("""
-                SELECT SERVER_AVAILABLE,
-                       HTTP_SCHEMA,
-                       COALESCE(HTTP_RESPONSE_TIME_MS, -1) 
-                            AS HTTP_RESPONSE_TIME_MS,
-                       ERROR_CLASSIFICATION,
-                       ERROR_MESSAGE,
-                       TS_LAST_PING,
-                       TS_LAST_AVAILABLE,
-                       TS_LAST_ERROR,
-                       BACKOFF_CONSECUTIVE_FAILURES
-                FROM DOMAIN_AVAILABILITY_INFORMATION
-                WHERE DOMAIN_ID=
-                """ + domainId);
-
-            if (rs.next()) {
+            // DOMAIN_AVAILABILITY_INFORMATION (LEFT JOIN -- null if no matching row)
+            if (rs.getObject("DAI_DOMAIN_ID") != null) {
                 var pingBuilder = RpcDomainInfoPingData.newBuilder()
                         .setResponseTimeMs(rs.getInt("HTTP_RESPONSE_TIME_MS"))
                         .setServerAvailable(rs.getBoolean("SERVER_AVAILABLE"))
                         .setConsecutiveFailures(rs.getInt("BACKOFF_CONSECUTIVE_FAILURES"));
-
 
                 Optional.ofNullable(rs.getString("HTTP_SCHEMA")).ifPresent(pingBuilder::setHttpSchema);
                 Optional.ofNullable(rs.getString("ERROR_CLASSIFICATION")).ifPresent(pingBuilder::setErrorClassification);
@@ -133,27 +139,8 @@ public class DomainInformationService {
                 builder.setPingData(pingBuilder);
             }
 
-            rs = stmt.executeQuery("""
-                SELECT 
-                    HTTP_VERSION, 
-                    HTTP_COMPRESSION,
-                    HEADER_SERVER, 
-                    HEADER_X_POWERED_BY,
-                    SSL_CERT_SUBJECT, 
-                    SSL_CERT_SAN, 
-                    SSL_PROTOCOL, 
-                    SSL_CIPHER_SUITE, 
-                    SSL_KEY_EXCHANGE, 
-                    SSL_CERT_WILDCARD,
-                    SSL_CERT_NOT_BEFORE,
-                    SSL_CERT_NOT_AFTER, 
-                    SSL_CHAIN_VALID, 
-                    SSL_DATE_VALID, 
-                    SSL_HOST_VALID
-                FROM DOMAIN_SECURITY_INFORMATION
-                WHERE DOMAIN_ID=
-                """ + domainId);
-            if (rs.next()) {
+            // DOMAIN_SECURITY_INFORMATION (LEFT JOIN -- null if no matching row)
+            if (rs.getObject("DSI_DOMAIN_ID") != null) {
                 var secBuilder = RpcDomainInfoSecurityData.newBuilder();
                 secBuilder.setHttpCompression(rs.getBoolean("HTTP_COMPRESSION"));
                 secBuilder.setSslCertWildcard(rs.getBoolean("SSL_CERT_WILDCARD"));
@@ -180,7 +167,7 @@ public class DomainInformationService {
                 builder.setSecurityData(secBuilder);
             }
 
-            builder.setSuggestForCrawling((pagesVisited == 0 && outboundLinks == 0 && !inCrawlQueue));
+            builder.setSuggestForCrawling(pagesVisited == 0 && !inCrawlQueue);
 
             return Optional.of(builder.build());
         }
