@@ -142,6 +142,7 @@ public class PolarClient {
 
         HttpRequest req = HttpRequest.newBuilder(uri)
                 .header("Authorization", "bearer " + accessToken)
+                .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body))
                 .timeout(Duration.ofSeconds(5))
                 .build();
@@ -348,6 +349,7 @@ public class PolarClient {
 
         HttpRequest req = HttpRequest.newBuilder(uri)
                 .header("Authorization", "bearer " + accessToken)
+                .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(request)))
                 .timeout(Duration.ofSeconds(5))
                 .build();
