@@ -15,7 +15,10 @@ public class StaticResources {
 
     public void serveStatic(String domain, String path, Request req, Response rsp) {
         try {
-            if (path.startsWith("..") || domain.startsWith("..")) {
+            if (path.startsWith("..") || path.contains("/../")) {
+                Spark.halt(403);
+            }
+            if (domain.startsWith("..") || domain.contains("/../")) {
                 Spark.halt(403);
             }
 
