@@ -107,6 +107,15 @@ public class LanguageConfiguration {
                 throw new IllegalStateException("languages-default.xml resource not found in classpath");
 
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
+            try {
+                factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", false);
+                factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+                factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+            } catch (ParserConfigurationException e) {
+                throw new RuntimeException(e);
+            }
+
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document doc = builder.parse(languagesXmlStream);
 

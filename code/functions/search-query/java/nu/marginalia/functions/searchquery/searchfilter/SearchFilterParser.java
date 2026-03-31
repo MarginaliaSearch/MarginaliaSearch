@@ -38,7 +38,13 @@ public class SearchFilterParser {
     }
 
     public SearchFilterParser() {
-
+        try {
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+            factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        } catch (ParserConfigurationException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public String renderToXml(SearchFilterSpec spec) {

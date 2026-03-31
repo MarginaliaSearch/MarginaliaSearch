@@ -43,6 +43,14 @@ public class DomSampleClassifier {
     public DomSampleClassifier(InputStream specificationXmlData) throws ParserConfigurationException, IOException, SAXException {
         Objects.requireNonNull(specificationXmlData, "specificationXmlData is null");
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
+        try {
+            factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+            factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        } catch (ParserConfigurationException e) {
+            throw new RuntimeException(e);
+        }
+
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document doc = builder.parse(specificationXmlData);
 
