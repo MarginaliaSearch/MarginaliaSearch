@@ -129,8 +129,12 @@ public class FeedDbReader implements AutoCloseable {
     }
 
     @Override
-    public void close() throws SQLException {
-        connection.close();
+    public void close() {
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            logger.error("Failed to close connection", e);
+        }
     }
 
 
