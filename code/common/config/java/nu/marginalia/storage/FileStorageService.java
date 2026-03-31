@@ -533,7 +533,7 @@ public class FileStorageService {
                 INNER JOIN FILE_STORAGE_BASE ON BASE_ID=FILE_STORAGE_BASE.ID
                 SET FILE_STORAGE.STATE = ''
                 WHERE FILE_STORAGE.TYPE = ?
-                AND FILE_STORAGE.TYPE = 'ACTIVE'
+                AND FILE_STORAGE.STATE = 'ACTIVE'
                 AND FILE_STORAGE_BASE.NODE=?
                 """)) {
             flagStmt.setString(1, type.name());
