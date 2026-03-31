@@ -63,9 +63,7 @@ public interface UnicodeNormalization {
 
             StringBuilder sb = new StringBuilder(s.length() + 10);
 
-            int numCp = s.codePointCount(0, s.length());
-
-            for (int i = 0; i < numCp;) {
+            for (int i = 0; i < s.length();) {
                 int c = s.codePointAt(i);
                 i+=Character.charCount(c);
 

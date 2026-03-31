@@ -100,7 +100,7 @@ public class AnchorTagsImpl implements AnchorTagsSource {
                 while (rs.next()) {
                     // Change the domain name in the URL to the alias domain
                     String url = rs.getString("url");
-                    url = aliasDomain + url.substring(url.indexOf('/'));
+                    url = aliasDomain.get() + url.substring(url.indexOf('/'));
 
                     links.add(new LinkWithText(url, rs.getString("text"), rs.getInt("cnt")));
                 }

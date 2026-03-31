@@ -138,6 +138,7 @@ public class AtagExporter implements ExporterIf {
 
             return true;
         }
+
         private boolean isEligible(EdgeUrl url, EdgeUrl baseUrl, String linkText) {
             if (!"http".equals(url.proto) && !"https".equals(url.proto))
                 return false;
@@ -158,7 +159,7 @@ public class AtagExporter implements ExporterIf {
 
             // Deduplicate by hash;  we've already checked that the strings are ASCII printable so we don't
             // need to be concerned about using the fast ASCII hash
-            if (hashes.add(hash.hashLowerBytes(linkText) ^ hash.hashLowerBytes(urlString))) {
+            if (!hashes.add(hash.hashLowerBytes(linkText) ^ hash.hashLowerBytes(urlString))) {
                 return false;
             }
 

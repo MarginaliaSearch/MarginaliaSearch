@@ -17,8 +17,6 @@ public class SentencePreCleaner {
 
             if (s.isBlank()) continue;
 
-            sentenceCount++;
-
             if (sentenceCount++ > SentenceExtractor.MAX_SENTENCE_COUNT) {
                 break;
             }

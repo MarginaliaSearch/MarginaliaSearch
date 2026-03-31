@@ -118,7 +118,7 @@ public class DocumentKeywordsBuilder {
             if (sizeCmp != 0) return sizeCmp;
 
             long meta1 = meta.getLong(k1) & 0xFF;
-            long meta2 = meta.getLong(k2 & 0xFF);
+            long meta2 = meta.getLong(k2) & 0xFF;
 
             return Integer.compare(Long.bitCount(meta2), Long.bitCount(meta1));
         }

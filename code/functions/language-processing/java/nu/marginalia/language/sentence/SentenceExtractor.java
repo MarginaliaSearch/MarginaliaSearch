@@ -45,7 +45,7 @@ public class SentenceExtractor {
      * that might otherwise use an undue amount of processing power. 250 words is about 10X longer than
      * this comment. */
     static final int MAX_SENTENCE_LENGTH = 250;
-    static final int MAX_SENTENCE_COUNT = 1000;
+    static final int MAX_SENTENCE_COUNT = 500;
 
     @Inject
     public SentenceExtractor(LanguageConfiguration languageConfiguration, LanguageModels models)
@@ -306,7 +306,7 @@ public class SentenceExtractor {
                     stemmed[i] = tokensLc[i]; // we don't stem non-language words
                 }
 
-                ret.add(new DocumentSentence(separators, tokensLc, posTags, stemmed, htmlTags, isAllCaps, isCapitalized, includeInStemming));
+                ret.add(new DocumentSentence(separators, tokensLc, posTags, stemmed, htmlTags, isCapitalized, isAllCaps, includeInStemming));
             }
 
         }

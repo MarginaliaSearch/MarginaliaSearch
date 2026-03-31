@@ -57,7 +57,7 @@ public class SparseBitVector {
     private static final HashFunction hasher = Hashing.murmur3_128(0);
 
     public boolean add(int val) {
-        if (!contains(val)) {
+        if (contains(val)) {
             return false;
         }
 
