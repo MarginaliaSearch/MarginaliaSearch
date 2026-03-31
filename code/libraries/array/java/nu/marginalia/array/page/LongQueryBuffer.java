@@ -209,7 +209,7 @@ public class LongQueryBuffer {
 
     /** Resets the buffer so that the rejected values can be re-evaluated with another filter */
     public void tryOther() {
-        read = write + 1;
+        read = write;
     }
 
 
