@@ -70,7 +70,10 @@ public class ScreenshotService {
                 response.status(200);
                 response.header("Cache-control", "public,max-age=3600");
 
-                IOUtils.copy(rsp.getBlob(2).getBinaryStream(), response.raw().getOutputStream());
+                try (var is = rsp.getBlob(2).getBinaryStream()) {
+                    IOUtils.copy(is, response.raw().getOutputStream());
+                }
+
                 return "";
             }
         }
