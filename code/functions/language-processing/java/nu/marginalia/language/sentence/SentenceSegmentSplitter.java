@@ -77,7 +77,7 @@ public class SentenceSegmentSplitter {
             if (noiseCharacterMatcher.matchesAllOf(parts[i]))
                 continue;
 
-            seps.set(ret.size(), separators.get(i));
+            seps.set(ret.size(), separators.get(i) != 0);
             ret.add(parts[i]);
         }
 
@@ -103,7 +103,9 @@ public class SentenceSegmentSplitter {
 
         if (ret.size() > maxLength) {
             ret.subList(maxLength, ret.size()).clear();
-            seps = seps.get(0, maxLength);
+        }
+        if (seps.size() > ret.size()) {
+            seps = seps.get(0, ret.size());
         }
 
         return new SeparatedSentence(
