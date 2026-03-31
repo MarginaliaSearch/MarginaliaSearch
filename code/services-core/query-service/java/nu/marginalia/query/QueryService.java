@@ -3,7 +3,6 @@ package nu.marginalia.query;
 import com.google.inject.Inject;
 import nu.marginalia.functions.searchquery.QueryGRPCService;
 import nu.marginalia.linkgraph.AggregateLinkGraphService;
-import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.service.server.SparkService;
 import org.slf4j.Logger;
@@ -21,7 +20,8 @@ public class QueryService extends SparkService {
     public QueryService(BaseServiceParams params,
                         AggregateLinkGraphService domainLinksService,
                         QueryGRPCService queryGRPCService,
-                        QueryBasicInterface queryBasicInterface)
+                        QueryDebugInterface queryDebugInterface,
+                        QueryWebApi queryWebApi)
             throws Exception
     {
         super(params,
@@ -29,10 +29,10 @@ public class QueryService extends SparkService {
                 List.of(queryGRPCService, domainLinksService));
 
 
-        Spark.get("/search", queryBasicInterface::handleBasic);
+        Spark.get("/search", queryWebApi::handleApiSearch);
 
         if (!Boolean.getBoolean("noQdebug")) {
-            Spark.get("/qdebug", queryBasicInterface::handleAdvanced);
+            Spark.get("/qdebug", queryDebugInterface::handleAdvanced);
         }
 
         Spark.exception(Exception.class, (e, request, response) -> {
