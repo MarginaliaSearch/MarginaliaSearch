@@ -87,8 +87,9 @@ public class AbortedProcessService {
                 .flatMap(s -> allNodeIds.stream().map(i -> "'" + s + ":" + i + "'"))
                 .collect(Collectors.joining(",", "(", ")"));
 
-        try (var conn = dataSource.getConnection()) {
-            var stmt = conn.prepareStatement("SELECT ID, RECIPIENT_INBOX, CREATED_TIME, UPDATED_TIME, PAYLOAD FROM MESSAGE_QUEUE\nWHERE STATE = 'DEAD'\nAND RECIPIENT_INBOX IN " + inboxes + "\n"); // SQL injection safe, string is not user input
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("SELECT ID, RECIPIENT_INBOX, CREATED_TIME, UPDATED_TIME, PAYLOAD FROM MESSAGE_QUEUE\nWHERE STATE = 'DEAD'\nAND RECIPIENT_INBOX IN " + inboxes + "\n"); // SQL injection safe, string is not user input
+        ) {
             var rs = stmt.executeQuery();
 
             List<AbortedProcess> abortedProcesses = new ArrayList<>();
