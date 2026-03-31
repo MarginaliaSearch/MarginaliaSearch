@@ -69,6 +69,7 @@ dependencies {
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
+    testImplementation libs.bundles.curator
     testImplementation libs.commons.lang3
     testImplementation project(':code:libraries:array')
 

@@ -10,15 +10,18 @@ import nu.marginalia.index.searchset.SearchSetsService;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeat;
+import nu.marginalia.service.NodeConfigurationWatcher;
 import nu.marginalia.service.ServiceId;
 import nu.marginalia.service.control.FakeServiceHeartbeat;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.control.ServiceHeartbeat;
+import nu.marginalia.service.discovery.ZkServiceRegistry;
 import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageBase;
 import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.test.TestUtil;
+import org.apache.curator.framework.CuratorFramework;
 import org.mockito.Mockito;
 
 import java.io.IOException;
@@ -71,6 +74,8 @@ public class IndexQueryServiceIntegrationTestModule extends AbstractModule {
 
             bind(ServiceHeartbeat.class).toInstance(new FakeServiceHeartbeat());
             bind(ProcessHeartbeat.class).toInstance(new FakeProcessHeartbeat());
+            bind(ZkServiceRegistry.class).toInstance(Mockito.mock(ZkServiceRegistry.class));
+            bind(NodeConfigurationWatcher.class).toInstance(Mockito.mock(NodeConfigurationWatcher.class));
 
             SearchSetsService setsServiceMock = Mockito.mock(SearchSetsService.class);
             when(setsServiceMock.getSearchSetByName("")).thenReturn(new SearchSetAny());

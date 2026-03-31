@@ -242,7 +242,7 @@ public class DocumentSpan {
             if (value >= 0) {
                 return true;
             }
-            else if (current >= 0 && current < end) {
+            else if (current >= 0 && current + 1 < end) {
                 value = ++current;
                 return true;
             }

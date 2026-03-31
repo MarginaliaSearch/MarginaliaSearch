@@ -146,6 +146,8 @@ public class PrioDocIdsTransformer implements LongArrayTransformations.LongIOTra
 
         readChannel.position(startL * 8);
 
+        long prev = 0;
+
         while (toBeRead > 0) {
             readBuffer.clear();
             readBuffer.limit(Math.min(readBuffer.capacity(), toBeRead));
@@ -155,12 +157,16 @@ public class PrioDocIdsTransformer implements LongArrayTransformations.LongIOTra
             if (readBuffer.limit() == 0)
                 continue;
 
-            int count = 1;
-            long prev = readBuffer.getLong();
+            int count = 0;
+
+            if (distinctEntries == 0) {
+                count ++;
+                prev = readBuffer.getLong();
+            }
+
             long current;
 
             while (readBuffer.hasRemaining()) {
-
                 if ((current = readBuffer.getLong()) != prev)
                     count++;
                 prev = current;

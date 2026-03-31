@@ -68,7 +68,7 @@ public class CompiledQueryAggregates {
         long orResult = 0;
 
         for (IntList path: query.paths) {
-            int andResult = ~0;
+            long andResult = ~0L;
 
             for (int i = 0; i < path.size(); i++) {
 
@@ -91,7 +91,7 @@ public class CompiledQueryAggregates {
         long orResult = 0;
 
         for (IntList path: query.paths) {
-            int andResult = ~0;
+            long andResult = ~0L;
 
             for (int i = 0; i < path.size(); i++) {
 
