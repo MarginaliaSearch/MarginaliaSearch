@@ -92,6 +92,8 @@ public class FeedDbWriter implements AutoCloseable {
     public void close() throws SQLException {
         if (!closed) {
             insertFeedStmt.close();
+            insertErrorStmt.close();
+            insertEtagStmt.close();
             connection.close();
             closed = true;
         }
