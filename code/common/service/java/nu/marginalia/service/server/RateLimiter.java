@@ -47,7 +47,7 @@ public class RateLimiter {
     }
 
     public boolean hasMoreTokens() {
-        return bucket.getAvailableTokens() <= 0;
+        return bucket.getAvailableTokens() > 0;
     }
 
     public int availableCapacity() {
