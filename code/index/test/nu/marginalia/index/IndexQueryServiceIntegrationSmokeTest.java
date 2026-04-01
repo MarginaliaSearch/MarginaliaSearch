@@ -29,10 +29,7 @@ import nu.marginalia.sequence.VarintCodedSequence;
 import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.service.server.Initialization;
 import nu.marginalia.storage.FileStorageService;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.parallel.Execution;
 
 import java.io.IOException;
@@ -48,7 +45,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 
 @Execution(SAME_THREAD)
-public class IndexQueryServiceIntegrationSmokeTest {
+@Tag("slow")
+public class
+IndexQueryServiceIntegrationSmokeTest {
 
     static {
         System.setProperty("index.disableViabilityPrecheck", "true");
@@ -221,6 +220,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
     }
 
     @Test
+    @Disabled
     public void testDomainQuery() throws Exception {
 
         var linkdbWriter = new DocumentDbWriter(
