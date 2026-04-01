@@ -7,6 +7,8 @@ import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.searchset.RankingSearchSet;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.BufferedOutputStream;
@@ -18,6 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.zip.GZIPOutputStream;
 
+@Tag("flakey")
 public class SmallAdjacency {
 
     private static Path domainDataPath = Paths.get("/home/vlofgren/Exports/Links/domains.export.tsv");
@@ -84,6 +87,7 @@ public class SmallAdjacency {
 
     }
 
+    @Disabled
     @Test
     public void test() throws IOException {
         System.out.println(TestGraphSourceForLinkData.isAvailable());
