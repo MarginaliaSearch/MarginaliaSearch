@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class BufferPool implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(BufferPool.class);
@@ -26,8 +27,8 @@ public class BufferPool implements AutoCloseable {
     private final int pageSizeBytes;
     private PoolLru poolLru;
 
-    private final AtomicInteger diskReadCount = new AtomicInteger();
-    private final AtomicInteger cacheReadCount = new AtomicInteger();
+    private final AtomicLong diskReadCount = new AtomicLong();
+    private final AtomicLong cacheReadCount = new AtomicLong();
 
     private volatile boolean running = true;
 
@@ -80,8 +81,8 @@ public class BufferPool implements AutoCloseable {
                     break;
                 }
 
-                int diskRead = diskReadCount.get();
-                int cacheRead = cacheReadCount.get();
+                long diskRead = diskReadCount.get();
+                long cacheRead = cacheReadCount.get();
                 int heldCount = 0;
                 for (var page : pages) {
                     if (page.isHeld()) {
