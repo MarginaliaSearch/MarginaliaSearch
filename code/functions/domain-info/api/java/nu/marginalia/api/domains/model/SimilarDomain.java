@@ -64,9 +64,9 @@ public record SimilarDomain(EdgeUrl url,
 
         public String getDescription() {
             return switch (this) {
-                case BACKWARD -> "Backward Link";
-                case FOWARD -> "Forward Link";
-                case BIDIRECTIONAL -> "Mutual Link";
+                case BACKWARD -> "Inbound Link";
+                case FOWARD -> "Outbound Link";
+                case BIDIRECTIONAL -> "Mutual Connectivity";
                 case NONE -> "No Link";
             };
         }
