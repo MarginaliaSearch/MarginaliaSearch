@@ -19,6 +19,7 @@
 @template.part.head(title = parameters.query() + " - Marginalia Search" )
 
 <body class="min-h-screen bg-bgblue dark:bg-gray-900 dark:text-white font-sans " >
+<a class="sr-only" href="skipnav">Skip To Content</a>
 @template.part.navbar(navbar = navbar)
 
 <div>
@@ -37,6 +38,8 @@
         </div>
     </div>
 </header>
+
+<div id="skipnav"></div>
 
 <div class="max-w-[1400px] mx-auto flex gap-6">
     <!-- Sidebar -->

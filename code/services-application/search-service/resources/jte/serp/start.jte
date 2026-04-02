@@ -17,6 +17,8 @@
 
 <body class="min-h-screen bg-bgblue dark:bg-gray-900 dark:text-white font-sans " >
 
+<a class="sr-only" href="skipnav">Skip To Content</a>
+
 @template.part.navbar(navbar = navbar)
 
 <header class="border-b border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-md">
@@ -29,6 +31,8 @@
         </div>
     </div>
 </header>
+
+<div id="skipnav"></div>
 
 @if (model.news().isEmpty())
 <div class="max-w-7xl mx-auto flex flex-col space-y-4 fill-w">

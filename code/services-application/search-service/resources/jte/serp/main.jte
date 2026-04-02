@@ -18,6 +18,7 @@
 @template.part.head(title = results.getQuery() + " - Marginalia Search" )
 
 <body class="min-h-screen bg-bgblue dark:bg-gray-900 dark:text-white font-sans " >
+<a class="sr-only" href="skipnav">Skip To Content</a>
 @template.part.navbar(navbar = navbar)
 
 <header class="border-b border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-md">
@@ -51,6 +52,8 @@
     <!-- Sidebar -->
     @template.serp.part.sidebar(filters = results.getFilters())
     @template.serp.part.language-menu(languageDefinitions = languageDefinitions, parameters = results.getParams())
+
+    <div id="skipnav"></div>
 
     <!-- Main content -->
     <main class="flex-1 py-4 p-2 sm:p-4 max-w-3xl space-y-4">
