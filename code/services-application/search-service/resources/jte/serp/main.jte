@@ -56,7 +56,7 @@
     <div id="skipnav"></div>
 
     <!-- Main content -->
-    <main class="flex-1 py-4 p-2 sm:p-4 max-w-3xl space-y-4">
+    <main class="py-4 p-2 sm:p-4 space-y-4 flex-grow">
 
         @if ("custom".equals(results.getProfile()))
             <div class="border dark:border-gray-600 rounded flex space-x-4 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-100 text-sm p-4 items-center">
