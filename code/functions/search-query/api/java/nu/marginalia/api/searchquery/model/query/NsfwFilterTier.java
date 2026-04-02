@@ -3,7 +3,7 @@ package nu.marginalia.api.searchquery.model.query;
 public enum NsfwFilterTier {
     OFF(0),
     DANGER(1),
-    PORN_AND_GAMBLING(2);
+    PORN(2);
 
     private final int codedValue; // same as ordinal() for now, but can be changed later if needed
 

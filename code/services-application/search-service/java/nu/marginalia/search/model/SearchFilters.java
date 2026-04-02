@@ -13,6 +13,7 @@ public class SearchFilters {
     public final ReduceAdtechOption reduceAdtechOption;
     public final ShowRecentOption showRecentOption;
     public final SearchTitleOption searchTitleOption;
+    public final SearchNsfwOption searchNsfwOption;
 
     public final List<List<Filter>> filterGroups;
 
@@ -47,7 +48,8 @@ public class SearchFilters {
                 searchTitleOption,
                 showRecentOption,
                 removeJsOption,
-                reduceAdtechOption
+                reduceAdtechOption,
+                searchNsfwOption
                 );
     }
 
@@ -58,6 +60,7 @@ public class SearchFilters {
                 SearchRecentParameter.DEFAULT,
                 SearchTitleParameter.DEFAULT,
                 SearchAdtechParameter.DEFAULT,
+                SearchNsfwParameter.NO_FILTER,
                 "en",
                 "GET",
                 null,
@@ -72,6 +75,7 @@ public class SearchFilters {
         reduceAdtechOption = new ReduceAdtechOption(parameters);
         showRecentOption = new ShowRecentOption(parameters);
         searchTitleOption = new SearchTitleOption(parameters);
+        searchNsfwOption = new SearchNsfwOption(parameters);
 
 
         currentFilter = parameters.profile().filterId;
@@ -252,6 +256,46 @@ public class SearchFilters {
             };
 
             this.url = parameters.withTitle(toggledValue).renderUrl();
+        }
+    }
+
+    public class SearchNsfwOption implements SearchOption {
+        private final SearchNsfwParameter value;
+        public String icon = "fa-girl";
+
+        public final String url;
+
+        public String value() {
+            return this.value.value;
+        }
+
+        public String id() {
+            return getClass().getSimpleName();
+        }
+        public String icon() {
+            return icon;
+        }
+        public String getUrl() {
+            return url;
+        }
+
+        public boolean isSet() {
+            return value.equals(SearchNsfwParameter.DO_FILTER);
+        }
+
+        public String name() {
+            return "Reduce NSFW";
+        }
+
+        public SearchNsfwOption(SearchParameters parameters) {
+            this.value = parameters.nsfw();
+
+            var toggledValue = switch (parameters.nsfw()) {
+                case DO_FILTER -> SearchNsfwParameter.NO_FILTER;
+                default -> SearchNsfwParameter.DO_FILTER;
+            };
+
+            this.url = parameters.withNsfw(toggledValue).renderUrl();
         }
     }
 
