@@ -48,7 +48,7 @@
 
 <div class="max-w-[1400px] mx-auto flex gap-6">
     <!-- Sidebar -->
-    @template.serp.part.sidebar(filters = filters)
+    @template.serp.part.sidebar-left(filters = filters)
     @template.serp.part.language-menu(languageDefinitions = languageDefinitions, parameters = parameters)
     <!-- Main content -->
     <main class="flex-1 py-4 p-2 sm:p-4 max-w-3xl space-y-4">
@@ -79,6 +79,7 @@
             @endif
         </div>
     </main>
+    @template.serp.part.sidebar-right(filters = filters)
 </div>
 
 </div>

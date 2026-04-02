@@ -48,9 +48,9 @@
     </div>
 </header>
 
-<div class="max-w-[1400px] mx-auto flex gap-6">
+<div class="max-w-[1400px] mx-auto flex">
     <!-- Sidebar -->
-    @template.serp.part.sidebar(filters = results.getFilters())
+    @template.serp.part.sidebar-left(filters = results.getFilters())
     @template.serp.part.language-menu(languageDefinitions = languageDefinitions, parameters = results.getParams())
 
     <div id="skipnav"></div>
@@ -112,6 +112,8 @@
             </div>
         @endif
     </main>
+
+    @template.serp.part.sidebar-right(filters = results.getFilters())
 </div>
 
 @template.serp.part.footerHowto()
