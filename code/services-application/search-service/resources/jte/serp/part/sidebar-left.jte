@@ -3,7 +3,7 @@
 
 @param SearchFilters filters
 
-<aside class="md:w-48 py-4 shrink-0 hidden md:block finepointer:block">
+<aside class="md:w-48 py-4 shrink-0  lg:mx-4 hidden md:block finepointer:block">
     <div class="space-y-6 sticky top-4">
         <div class="bg-white dark:bg-gray-800 p-2 border dark:border-gray-600 border-gray-300">
             <h2 class="font-medium mb-3 flex items-center font-serif hidden md:block">
