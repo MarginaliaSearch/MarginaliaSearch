@@ -15,9 +15,9 @@
                         <label class="flex items-center">
                             <button title="${filter.displayName}" onclick="document.location='$unsafe{filter.url}'" class="flex-1 py-2 pl-2 rounded flex space-x-2 dark:has-[:checked]:bg-gray-950 has-[:checked]:bg-gray-300 has-[:checked]:text-slate-900 dark:has-[:checked]:text-slate-100 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 dark:border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
                                 @if (filter.current)
-                                    <input tabindex="-1" type="checkbox" checked class="sr-only" aria-checked="true" />
+                                    <input tabindex="-1" type="checkbox" checked class="hidden" aria-checked="true" />
                                 @else
-                                    <input tabindex="-1" type="checkbox" class="sr-only" aria-checked="false" />
+                                    <input tabindex="-1" type="checkbox" class="hidden" aria-checked="false" />
                                 @endif
 
 
@@ -40,9 +40,9 @@
                     <label class="flex items-center">
                             <button title="${option.name()}" onclick="document.location='$unsafe{option.getUrl()}'" class="flex-1 py-2 pl-2 rounded flex space-x-2 dark:has-[:checked]:bg-gray-950 has-[:checked]:bg-gray-300 has-[:checked]:text-slate-900 dark:has-[:checked]:text-slate-100 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 dark:border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
                                 @if (option.isSet())
-                                    <input tabindex="-1" type="checkbox" checked class="sr-only" aria-checked="true" />
+                                    <input tabindex="-1" type="checkbox" checked class="hidden" aria-checked="true" />
                                 @else
-                                    <input tabindex="-1" type="checkbox" class="sr-only" aria-checked="false" />
+                                    <input tabindex="-1" type="checkbox" class="hidden" aria-checked="false" />
                                 @endif
 
 

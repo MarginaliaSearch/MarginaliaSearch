@@ -16,9 +16,9 @@
                     <label class="flex items-center">
                         <button onclick="document.location='$unsafe{filter.url}'" class="flex-1 p-2 rounded flex flex-col place-items-center has-[:checked]:bg-gray-100 has-[:checked]:text-slate-900 dark:has-[:checked]:bg-gray-800 dark:has-[:checked]:text-slate-100 hover:bg-gray-50 dark:hover:bg-gray-800 text-margeblue dark:text-slate-200 outline-1 active:outline border border-gray-700">
                             @if (filter.current)
-                                <input type="checkbox" checked class="sr-only" aria-checked="true" />
+                                <input type="checkbox" checked class="hidden" tabindex="-1" aria-checked="true" />
                             @else
-                                <input type="checkbox" class="sr-only" aria-checked="false" />
+                                <input type="checkbox" class="hidden" tabindex="-1" aria-checked="false" />
                             @endif
                             <i class="fas ${filter.icon} text-xl"></i>
                             <a tabindex="-1" href="$unsafe{filter.url}" class="text-sm" href="#">${filter.displayName}</a>
@@ -35,9 +35,9 @@
                 <label class="flex items-center">
                     <button onclick="document.location='$unsafe{option.getUrl()}'" class="flex-1 p-2 rounded flex flex-col place-items-center has-[:checked]:bg-gray-100 has-[:checked]:text-slate-900 dark:has-[:checked]:bg-gray-800 dark:has-[:checked]:text-slate-100 hover:bg-gray-50 dark:hover:bg-gray-800 text-margeblue dark:text-slate-200 outline-1 active:outline border border-gray-700">
                         @if (option.isSet())
-                            <input type="checkbox" checked class="sr-only" aria-checked="true" />
+                            <input type="checkbox" checked class="hidden" tabindex="-1" aria-checked="true" />
                         @else
-                            <input type="checkbox" class="sr-only" aria-checked="false" />
+                            <input type="checkbox" class="hidden" tabindex="-1" aria-checked="false" />
                         @endif
                         <i class="fas ${option.icon()} text-xl"></i>
                         <a tabindex="-1" href="$unsafe{option.getUrl()}" class="text-sm" href="#">${option.name()}</a>

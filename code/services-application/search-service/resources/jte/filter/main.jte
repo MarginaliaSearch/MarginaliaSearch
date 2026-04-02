@@ -858,7 +858,7 @@
             <div class="flex gap-2 flex-col mx-5">
                 @for (DomainRankingSetsService.DomainRankingSet set : searchSets.stream().sorted(Comparator.comparing(set -> !set.name().equals("NONE"))).toList())
                 <label for="search-set-${set.name()}" role="button" class="flex-1 py-2 pl-2 rounded flex space-x-2 dark:has-[:checked]:bg-gray-950 has-[:checked]:bg-gray-300 has-[:checked]:text-slate-900 dark:has-[:checked]:text-slate-100 hover:bg-gray-50 dark:hover:bg-gray-950 bg-white dark:bg-gray-900 border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
-                    <input value="old" type="radio" id="search-set-${set.name()}" data-value="${set.name()}" name="search-set" class="sr-only" checked="${set.name().equalsIgnoreCase(filter.searchSetIdentifier())}">
+                    <input value="old" type="radio" id="search-set-${set.name()}" data-value="${set.name()}" name="search-set" class="hidden" checked="${set.name().equalsIgnoreCase(filter.searchSetIdentifier())}">
                     ${set.name()}
                 </label>
                 @endfor

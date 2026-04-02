@@ -18,9 +18,9 @@
             <li>
                 <a href="${parameters.withLanguage(languageDefinition.isoCode()).renderUrl()}" class="flex-1 p-2 my-1 rounded flex flex-col place-items-center has-[:checked]:bg-gray-100 has-[:checked]:text-slate-900 dark:has-[:checked]:bg-gray-800 dark:has-[:checked]:text-slate-100 hover:bg-gray-50 dark:hover:bg-gray-800 text-margeblue dark:text-slate-200 outline-1 active:outline border border-gray-700">
                     @if (Objects.equals(parameters.languageIsoCode(), languageDefinition.isoCode()))
-                        <input type="checkbox" checked class="sr-only" aria-checked="true" />
+                        <input type="checkbox" checked class="hidden" aria-checked="true" />
                     @else
-                        <input type="checkbox" class="sr-only" aria-checked="false" />
+                        <input type="checkbox" class="hidden" aria-checked="false" />
                     @endif
                     ${languageDefinition.displayName()}
                 </a>

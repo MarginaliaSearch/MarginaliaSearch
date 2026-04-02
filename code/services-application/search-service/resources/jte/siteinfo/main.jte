@@ -63,7 +63,7 @@
         || model instanceof SearchSiteInfoService.DomainAvailabilityEvents
         || model instanceof SearchSiteInfoService.SecurityChangeEvents
         || model instanceof SearchSiteInfoService.TrafficSample)
-                    <input type="checkbox" class="sr-only hidden " checked readonly />
+                    <input type="checkbox" class="hidden" tabindex="-1" checked readonly />
                     @else
                         <span></span>
                     @endif
@@ -77,7 +77,7 @@
             <div class="has-[:checked]:bg-slate-200 dark:has-[:checked]:bg-slate-800 py-1 px-2">
                 <a href="?view=docs&sst=${model.sst()}" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 dark:text-white  text-xs sm:text-sm hover:text-gray-900 dark:hover:text-gray-200">
                     @if (model instanceof SearchSiteInfoService.Docs)
-                        <input type="checkbox" class="sr-only hidden absolute" checked readonly />
+                        <input type="checkbox" class="hidden absolute" tabindex="-1" checked readonly />
                     @else
                         <span></span>
                     @endif
@@ -92,7 +92,7 @@
             <div class="has-[:checked]:bg-slate-200 dark:has-[:checked]:bg-slate-800 py-1 px-2">
                 <a href="?view=links&sst=${model.sst()}" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 dark:text-white  text-xs sm:text-sm hover:text-gray-900 dark:hover:text-gray-200">
                     @if (model instanceof SearchSiteInfoService.Backlinks)
-                        <input type="checkbox" class="sr-only hidden absolute" checked readonly />
+                        <input type="checkbox" class="hidden absolute" tabindex="-1" checked readonly />
                     @else
                         <span></span>
                     @endif
@@ -107,7 +107,7 @@
             <div class="has-[:checked]:bg-slate-200 dark:has-[:checked]:bg-slate-800 py-1 px-2">
                 <a href="?view=report&sst=${model.sst()}" class="text-sm whitespace-nowrap place-items-baseline space-x-1 text-red-800 dark:text-red-200  text-xs sm:text-sm hover:text-red-600 dark:hover:text-red-300">
                     @if (model instanceof SearchSiteInfoService.ReportDomain)
-                        <input type="checkbox" class="sr-only hidden absolute" checked readonly />
+                        <input type="checkbox" class="hidden absolute" tabindex="-1" checked readonly />
                     @else
                         <span></span>
                     @endif
@@ -129,7 +129,7 @@
             <div class="has-[:checked]:bg-slate-200 dark:has-[:checked]:bg-slate-800 py-1 px-2">
                 <a href="?view=info&sst=${model.sst()}" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 dark:text-white text-xs sm:text-sm hover:text-gray-900 dark:hover:text-gray-200">
                     @if (model instanceof SearchSiteInfoService.SiteInfoWithContext)
-                        <input type="checkbox" class="sr-only hidden absolute" checked readonly />
+                        <input type="checkbox" class="hidden absolute" tabindex="-1" checked readonly />
                     @else
                         <span></span>
                     @endif
@@ -142,7 +142,7 @@
         <div class="has-[:checked]:bg-slate-200 dark:has-[:checked]:bg-slate-800 py-1 px-2">
             <a href="?view=availability&sst=${model.sst()}" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 dark:text-white text-xs sm:text-sm hover:text-gray-900 dark:hover:text-gray-200">
                 @if (model instanceof SearchSiteInfoService.DomainAvailabilityEvents)
-                    <input type="checkbox" class="sr-only hidden absolute" checked readonly />
+                    <input type="checkbox" class="hidden absolute" tabindex="-1" checked readonly />
                 @else
                     <span></span>
                 @endif
@@ -154,7 +154,7 @@
         <div class="has-[:checked]:bg-slate-200 dark:has-[:checked]:bg-slate-800 py-1 px-2">
             <a href="?view=secevents&sst=${model.sst()}" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 dark:text-white text-xs sm:text-sm hover:text-gray-900 dark:hover:text-gray-200">
                 @if (model instanceof SearchSiteInfoService.SecurityChangeEvents)
-                    <input type="checkbox" class="sr-only hidden absolute" checked readonly />
+                    <input type="checkbox" class="hidden absolute" tabindex="-1" checked readonly />
                 @else
                     <span></span>
                 @endif
@@ -166,7 +166,7 @@
         <div class="has-[:checked]:bg-slate-200 dark:has-[:checked]:bg-slate-800 py-1 px-2">
             <a href="?view=traffic&sst=${model.sst()}" class="whitespace-nowrap place-items-baseline space-x-1 text-gray-700 dark:text-white text-xs sm:text-sm hover:text-gray-900 dark:hover:text-gray-200">
                 @if (model instanceof SearchSiteInfoService.TrafficSample)
-                    <input type="checkbox" class="sr-only hidden absolute" checked readonly />
+                    <input type="checkbox" class="hidden absolute" tabindex="-1" checked readonly />
                 @else
                     <span></span>
                 @endif
