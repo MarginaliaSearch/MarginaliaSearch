@@ -7,7 +7,7 @@
 
 <!DOCTYPE html>
 <html lang="en">
-
+<a class="sr-only" href="skipnav">Skip To Content</a>
 @template.part.head(title = "Explore - Marginalia Search")
 
 <body class="min-h-screen bg-bgblue dark:bg-gray-900 dark:text-white font-sans ">
@@ -21,6 +21,8 @@
         </div>
     </div>
 </header>
+
+<div id="skipnav"></div>
 
 <div class="max-w-[1400px] mx-auto flex flex-col gap-1 place-items-center">
     <div class="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 dark:text-gray-100 my-4 p-3 rounded overflow-hidden flex flex-col space-y-4">

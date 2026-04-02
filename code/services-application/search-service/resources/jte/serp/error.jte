@@ -10,7 +10,7 @@
 @template.part.head(title = "Marginalia Search - Error")
 
 <body class="min-h-screen bg-bgblue dark:bg-gray-900 dark:text-white font-sans " >
-
+<a class="sr-only" href="skipnav">Skip To Content</a>
 @template.part.navbar(navbar = navbar)
 
 <header class="border-b border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-md">
@@ -22,6 +22,7 @@
     </div>
 </header>
 
+<div id="skipnav"></div>
 <div class="max-w-[1400px] mx-auto flex gap-6">
 
     <!-- Main content -->

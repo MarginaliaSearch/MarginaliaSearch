@@ -11,6 +11,7 @@
 
 <body class="min-h-screen bg-bgblue dark:bg-gray-900 dark:text-white font-sans " >
 
+<a class="sr-only" href="skipnav">Skip To Content</a>
 @template.part.navbar(navbar = navbar)
 
 <header class="border-b border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-md">
@@ -55,6 +56,7 @@
             @endif
         </div>
     </div>
+
     <div class="mx-auto md:px-4 border dark:border-gray-600 bg-slate-50 dark:bg-gray-600">
         <div class="flex md:space-x-2 max-w-[1000px] mx-auto">
             <div class="has-[:checked]:bg-slate-200 dark:has-[:checked]:bg-slate-800 py-1 px-2">
@@ -182,6 +184,8 @@
     </div>
     @endif
 </header>
+
+<div id="skipnav"></div>
 
 <div class="max-w-[1000px] mx-auto flex gap-1 flex-col md:flex-row place-items-center md:place-items-start">
 

@@ -14,7 +14,10 @@
 
 <body class="min-h-screen bg-bgblue dark:bg-gray-900 dark:text-white font-sans " >
 
+<a class="sr-only" href="skipnav">Skip To Content</a>
 @template.part.navbar(navbar = navbar)
+
+<div id="skipnav"></div>
 
 <header class="border-b border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-md">
     <div class="max-w-[1400px] mx-auto p-2 md:p-4">
