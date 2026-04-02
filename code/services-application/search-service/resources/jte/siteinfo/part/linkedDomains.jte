@@ -11,8 +11,6 @@
     <div class="bg-white dark:bg-gray-800 shadow-sm rounded overflow-hidden border border-gray-300 dark:border-gray-600">
         <div class="px-4 py-2 bg-margeblue text-white border-b border-gray-200 dark:border-gray-600 flex place-items-baseline">
             <h2 class="text-md">${title}</h2>
-            <div class="grow"></div>
-            <button class="hide-filter-button fas fa-close"></button>
         </div>
 
         <div class="overflow-x-auto overflow-hidden">
