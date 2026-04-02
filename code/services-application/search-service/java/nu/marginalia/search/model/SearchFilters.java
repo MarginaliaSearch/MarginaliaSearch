@@ -261,7 +261,7 @@ public class SearchFilters {
 
     public class SearchNsfwOption implements SearchOption {
         private final SearchNsfwParameter value;
-        public String icon = "fa-girl";
+        public String icon = "fa-face-kiss";
 
         public final String url;
 
