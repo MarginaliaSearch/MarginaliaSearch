@@ -43,9 +43,7 @@
                     <a href="/site/${result.displayDomain()}" title="Show website information"><i class="fas fa-info"></i></a>
                     <a href="/explore/${result.displayDomain()}" title="Show results similar to this website"><i class="fas fa-shuffle"></i></a>
                 </div>
-                <a href="${result.url().toString()}">
-                    <img loading="lazy" class="p-2" width="800" height="600" src="/screenshot/${result.domainId()}" alt="Screenshot of ${result.displayDomain()}" />
-                </a>
+                <a href="${result.url().toString()}" class="focus:ring-blue-500 block focus:hue-rotate-90"><img loading="lazy" width="800" height="600" src="/screenshot/${result.domainId()}" alt="Screenshot of ${result.displayDomain()}"/></a>
             </div>
         @endfor
     </div>
