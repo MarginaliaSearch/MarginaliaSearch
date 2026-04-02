@@ -21,7 +21,7 @@
 <div class="border dark:border-gray-600 border-gray-300 rounded bg-white dark:bg-gray-800 dark:text-white flex flex-col overflow-hidden mx-4">
     <div class="flex space-x-2 flex-row place-items-baseline bg-margeblue text-white p-2  text-md">
         <span class="fas fa-globe"></span>
-        <a href="/site/${group.domain().toString()}">${group.domain().toString()}</a>
+        <a class="underline" href="/site/${group.domain().toString()}">${group.domain().toString()}</a>
         <span class="grow"></span>
         <a rel="nofollow noopener external" href="${group.domain().toRootUrlHttps().toString()}" class="fa-solid fa-arrow-up-right-from-square" ></a>
     </div>
@@ -32,7 +32,7 @@
             $unsafe{details.displayDescription()}
         </div>
         <div class="p-2 text-sm border-b dark:border-gray-600 pb-6">
-            <a rel="external noopener nofollow" href="${details.url.toString()}" class="mx-3 text-liteblue dark:text-blue-200 flex space-x-2 place-items-baseline hyphens-auto">
+            <a rel="external noopener nofollow" href="${details.url.toString()}" class="underline mx-3 text-liteblue dark:text-blue-200 flex space-x-2 place-items-baseline hyphens-auto">
                 <i class="fa fa-link"></i>
                 <span class="grow break-all">$unsafe{details.displayUrl()}</span>
             </a>

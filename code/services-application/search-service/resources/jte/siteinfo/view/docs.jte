@@ -26,7 +26,7 @@
                 <a href="${details.url.toString()}" rel="noopener noreferrer">$unsafe{details.displayTitle()}</a>
             </h2>
             <div class="text-sm mt-1 text-slate-800">
-                <a class="text-liteblue dark:text-blue-200 underline  break-all" href="${details.url.toString()}"
+                <a class="text-liteblue dark:text-blue-200 underline break-all" href="${details.url.toString()}"
                    rel="noopener noreferrer" tabindex="-1">$unsafe{details.displayUrl()}</a>
             </div>
         </div>
