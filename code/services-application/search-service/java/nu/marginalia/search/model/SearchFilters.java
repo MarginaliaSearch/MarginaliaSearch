@@ -121,7 +121,7 @@ public class SearchFilters {
         }
 
         public String name() {
-            return "Remove Javascript";
+            return "Remove JS";
         }
 
         public RemoveJsOption(SearchParameters parameters) {
