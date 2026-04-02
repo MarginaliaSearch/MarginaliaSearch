@@ -11,7 +11,7 @@
 
                         <a href="${item.url()}" class="has-[:checked]:underline py-2 px-2 hover:text-slate-200">
                             @if (item.active())
-                                <input type="checkbox" checked readonly class="sr-only" />
+                                <input type="checkbox" checked readonly class="sr-only" tabindex="-1" />
                             @endif
                             ${item.name()}
                         </a>
@@ -21,7 +21,7 @@
                     @for (var item : navbar.second().entries())
                         <a href="${item.url()}" class="has-[:checked]:underline  py-2 px-2 hover:text-slate-200">
                             @if (item.active())
-                                <input type="checkbox" checked readonly class="sr-only" />
+                                <input type="checkbox" checked readonly class="sr-only" tabindex="-1" />
                             @endif
                             ${item.name()}
                         </a>
