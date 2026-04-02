@@ -105,7 +105,7 @@
             </div>
             <div class="grow"></div>
             <div class="has-[:checked]:bg-slate-200 dark:has-[:checked]:bg-slate-800 py-1 px-2">
-                <a href="?view=report&sst=${model.sst()}" class="text-sm whitespace-nowrap place-items-baseline space-x-1 text-red-800 dark:text-red-200  text-xs sm:text-sm hover:text-red-600 dark:hover:text-red-300">
+                <a href="?view=report&sst=${model.sst()}" class="text-sm whitespace-nowrap place-items-baseline space-x-1 text-red-800 dark:text-red-100  text-xs sm:text-sm hover:text-red-600 dark:hover:text-red-200">
                     @if (model instanceof SearchSiteInfoService.ReportDomain)
                         <input type="checkbox" class="hidden absolute" tabindex="-1" checked readonly />
                     @else
