@@ -171,7 +171,7 @@
                 @for (DbDomainQueries.DomainWithNode sibling : siteInfo.siblingDomains())
                     <tr>
                         <td class="px-3 py-6 md:py-3 whitespace-nowrap">
-                            <a class="text-liteblue dark:text-blue-200" href="/site/${sibling.domain().toString()}?sst=${siteInfo.sst()}">${sibling.domain().toString()}</a>
+                            <a class="text-liteblue dark:text-blue-200 underline" href="/site/${sibling.domain().toString()}?sst=${siteInfo.sst()}">${sibling.domain().toString()}</a>
 
                             @if (!sibling.isIndexed())
                                 <i class="ml-1 fa-regular fa-question-circle text-gray-400 dark:text-gray-600 text-xs" title="Not indexed"></i>
