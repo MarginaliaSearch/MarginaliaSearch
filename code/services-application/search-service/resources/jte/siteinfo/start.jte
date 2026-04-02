@@ -7,7 +7,7 @@
 <!DOCTYPE html>
 <html lang="en">
 
-@template.part.head(title = "Marginalia Search - Site Viewer")
+@template.part.head(title = "Site Viewer - Marginalia Search")
 
 <body class="min-h-screen bg-bgblue dark:bg-gray-900 dark:text-white font-sans " >
 
