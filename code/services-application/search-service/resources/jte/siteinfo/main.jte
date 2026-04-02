@@ -16,9 +16,9 @@
 <header class="border-b border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-md">
     <div class="max-w-[1400px] mx-auto p-4">
         <div class="flex place-items-baseline space-x-2">
-            <span class="text-gray-900 dark:text-white break-none text-sm sm:text-md font-mono rounded-sm block p-2.5">
+            <h1 class="text-gray-900 dark:text-white break-none text-sm sm:text-md font-mono rounded-sm block p-2.5">
                 ${model.domain()}
-            </span>
+            </h1>
             <span class="grow"></span>
             @if (model instanceof SearchSiteInfoService.SiteInfoWithContext siteInfo)
                 @if (siteInfo.domainInformation().getPagesIndexed() > 0)

@@ -18,7 +18,7 @@
     <div class="flex border border-gray-300  dark:border-gray-600 rounded bg-white dark:bg-gray-800 flex-col space-y-4 pb-4 overflow-hidden md:max-w-lg" >
         <div class="flex place-items-center space-x-2 p-2 text-md border-b dark:border-gray-600 bg-margeblue text-white">
             <img src="/site/${siteInfo.domain()}/favicon" style="width: 16px; height: 16px; vertical-align: center">
-            <span>${siteInfo.domain()}</span>
+            <h2>${siteInfo.domain()}</h2>
             <div class="grow">
             </div>
             <a href="https://web.archive.org/web/*/${siteInfo.domain()}"
@@ -38,7 +38,7 @@
         @if (siteInfo.hasFeed())
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
                 <i class="fas fa-rss text-orange-500"></i>
-                <span class="grow">Feed</span>
+                <h2 class="grow">Feed</h2>
 
                 <form method="post" action="/site/${siteInfo.domain()}/subscribe">
                 @if (siteInfo.isSubscribed())
@@ -73,7 +73,7 @@
 
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
                 <i class="fas fa-magnifying-glass"></i>
-                <span>Sample</span>
+                <h2>Sample</h2>
             </div>
 
             <dl class="mx-3 text-gray-800 dark:text-white">
@@ -90,7 +90,7 @@
         @if (siteInfo.domainInformation().getUnknownDomain())
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
                 <i class="fa-regular fa-circle-question"></i>
-                <span>Unknown Domain</span>
+                <h2>Unknown Domain</h2>
             </div>
 
             <div class="mx-5 flex flex-col space-y-2">
@@ -107,7 +107,7 @@
         @if (siteInfo.domainInformation().getBlacklisted())
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
                 <i class="fas fa-ban"></i>
-                <span>Blacklisted</span>
+                <h2>Blacklisted</h2>
             </div>
             <div class="mx-5 flex flex-col space-y-2">
                 <p>This website is <em>blacklisted</em>. This excludes it from crawling and indexing.</p>
@@ -158,7 +158,7 @@
         @if (!siteInfo.siblingDomains().isEmpty())
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
                 <i class="fas fa-globe"></i>
-                <span>Related Subdomains</span>
+                <h2>Related Subdomains</h2>
             </div>
 
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600 mx-4">
@@ -187,7 +187,7 @@
         @if (siteInfo.isKnown())
             <div class="mx-3 flex place-items-baseline space-x-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
                 <i class="fas fa-chart-simple"></i>
-                <span>Crawl Statistics</span>
+                <h2>Crawl Statistics</h2>
             </div>
 
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mx-6 sm:mx-8">
