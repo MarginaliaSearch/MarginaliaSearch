@@ -20,10 +20,10 @@
 @for (GroupedUrlDetails group : backlinks.results())
 <div class="border dark:border-gray-600 border-gray-300 rounded bg-white dark:bg-gray-800 dark:text-white flex flex-col overflow-hidden mx-4">
     <div class="flex space-x-2 flex-row place-items-baseline bg-margeblue text-white p-2  text-md">
-        <span class="fas fa-globe"></span>
-        <a class="underline" href="/site/${group.domain().toString()}">${group.domain().toString()}</a>
+        <span class="fas fa-globe sr-hidden"></span>
+        <a class="underline" href="/site/${group.domain().toString()}" title="Website Information">${group.domain().toString()}</a>
         <span class="grow"></span>
-        <a rel="nofollow noopener external" href="${group.domain().toRootUrlHttps().toString()}" class="fa-solid fa-arrow-up-right-from-square" ></a>
+        <a rel="nofollow noopener external" title="Open Website" href="${group.domain().toRootUrlHttps().toString()}" class="fa-solid fa-arrow-up-right-from-square" ></a>
     </div>
     
     @for (UrlDetails details : group.urlDetails())
