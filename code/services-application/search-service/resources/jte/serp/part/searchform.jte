@@ -50,6 +50,7 @@
     @if (filters.reduceAdtechOption.isSet()) <input type="hidden" name="adtech" value="${filters.reduceAdtechOption.value()}"> @endif
     @if (filters.searchTitleOption.isSet()) <input type="hidden" name="searchTitle" value="${filters.searchTitleOption.value()}"> @endif
     @if (filters.showRecentOption.isSet()) <input type="hidden" name="recent" value="${filters.showRecentOption.value()}"> @endif
+    @if (filters.searchNsfwOption.isSet()) <input type="hidden" name="nsfw" value="${filters.searchNsfwOption.value()}"> @endif
     @if (languageIsoCode != null && !"en".equalsIgnoreCase(languageIsoCode)) <input type="hidden" name="lang" value="${languageIsoCode}"> @endif
     @if (isCustom && "GET".equalsIgnoreCase(requestMethod))
         <input type="hidden" name="page" value="${page}">

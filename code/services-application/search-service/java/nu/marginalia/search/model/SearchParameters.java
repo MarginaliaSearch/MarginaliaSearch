@@ -8,8 +8,6 @@ import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.QueryStrategy;
 import nu.marginalia.model.EdgeDomain;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -22,6 +20,7 @@ public record SearchParameters(WebsiteUrl url,
                                SearchRecentParameter recent,
                                SearchTitleParameter searchTitle,
                                SearchAdtechParameter adtech,
+                               SearchNsfwParameter nsfw,
                                String languageIsoCode,
                                String requestMethod,
                                @Nullable CompiledSearchFilterSpec filterSpec,
@@ -31,7 +30,10 @@ public record SearchParameters(WebsiteUrl url,
                                ) {
 
     public NsfwFilterTier filterTier() {
-        return NsfwFilterTier.DANGER;
+        return switch(nsfw) {
+            case DO_FILTER -> NsfwFilterTier.PORN;
+            case NO_FILTER -> NsfwFilterTier.DANGER;
+        };
     }
 
     public static SearchParameters defaultsForQuery(WebsiteUrl url, String query, int page) {
@@ -43,6 +45,7 @@ public record SearchParameters(WebsiteUrl url,
                 SearchRecentParameter.DEFAULT,
                 SearchTitleParameter.DEFAULT,
                 SearchAdtechParameter.DEFAULT,
+                SearchNsfwParameter.NO_FILTER,
                 "en",
                 "GET",
                 null,
@@ -64,37 +67,39 @@ public record SearchParameters(WebsiteUrl url,
     }
 
     public SearchParameters withProfile(SearchProfile profile) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, sst, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, nsfw, languageIsoCode, requestMethod, filterSpec, sst, true, page);
     }
 
     public SearchParameters withJs(SearchJsParameter js) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, sst, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, nsfw, languageIsoCode, requestMethod, filterSpec, sst, true, page);
     }
     public SearchParameters withAdtech(SearchAdtechParameter adtech) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, sst, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, nsfw, languageIsoCode, requestMethod, filterSpec, sst, true, page);
     }
 
     public SearchParameters withRecent(SearchRecentParameter recent) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, sst, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, nsfw, languageIsoCode, requestMethod, filterSpec, sst, true, page);
     }
 
     public SearchParameters withTitle(SearchTitleParameter title) {
-        return new SearchParameters(url, query, profile, js, recent, title, adtech, languageIsoCode, requestMethod, filterSpec, sst, true, page);
+        return new SearchParameters(url, query, profile, js, recent, title, adtech, nsfw, languageIsoCode, requestMethod, filterSpec, sst, true, page);
     }
-
+    public SearchParameters withNsfw(SearchNsfwParameter nsfw) {
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, nsfw, languageIsoCode, requestMethod, filterSpec, sst, true, page);
+    }
     public SearchParameters withLanguage(String languageIsoCode) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, sst, true, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, nsfw, languageIsoCode, requestMethod, filterSpec, sst, true, page);
     }
 
     public SearchParameters withPage(int page) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, sst, false, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, nsfw, languageIsoCode, requestMethod, filterSpec, sst, false, page);
     }
 
     public SearchParameters withQuery(String query) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec, sst, false, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, nsfw, languageIsoCode, requestMethod, filterSpec, sst, false, page);
     }
     public SearchParameters withSst(String sst) {
-        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, languageIsoCode, requestMethod, filterSpec,  sst, false, page);
+        return new SearchParameters(url, query, profile, js, recent, searchTitle, adtech, nsfw, languageIsoCode, requestMethod, filterSpec,  sst, false, page);
     }
 
     public String renderUrlWithoutSiteFocus() {
@@ -152,6 +157,9 @@ public record SearchParameters(WebsiteUrl url,
         }
         if (searchTitle != SearchTitleParameter.DEFAULT) {
             pathBuilder.append("&searchTitle=").append(URLEncoder.encode(searchTitle.value, StandardCharsets.UTF_8));
+        }
+        if (nsfw != SearchNsfwParameter.NO_FILTER) {
+            pathBuilder.append("&nsfw=").append(URLEncoder.encode(nsfw.value, StandardCharsets.UTF_8));
         }
         if (page != 1) {
             pathBuilder.append("&page=").append(page);

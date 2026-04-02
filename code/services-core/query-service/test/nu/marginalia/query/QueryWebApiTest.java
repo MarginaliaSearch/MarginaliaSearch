@@ -108,7 +108,7 @@ public class QueryWebApiTest {
                         .setResultsTotal(10)
                         .build(),
                 "en",
-                NsfwFilterTier.PORN_AND_GAMBLING,
+                NsfwFilterTier.PORN,
                 SearchFilterDefaults.SMALLWEB.asFilterSpec(),
                 new IndexClient.Pagination(1, 10)
         );
