@@ -85,11 +85,15 @@
             </div>
         @endif
 
-        <div class="space-y-4 sm:space-y-6">
-            <!-- Result items -->
-            @for(ClusteredUrlDetails details : results.results)
-                @template.serp.part.result(result = details, parameters = results.getParams(), domainSearch = results.hasFocusDomain())
-            @endfor
+        <div>
+            <h1 class="sr-only"> Results </h1>
+
+            <div class="space-y-4 sm:space-y-6">
+                <!-- Result items -->
+                @for(ClusteredUrlDetails details : results.results)
+                    @template.serp.part.result(result = details, parameters = results.getParams(), domainSearch = results.hasFocusDomain())
+                @endfor
+            </div>
         </div>
 
         <!-- Pagination -->
