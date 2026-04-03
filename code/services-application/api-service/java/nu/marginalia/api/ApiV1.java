@@ -2,10 +2,8 @@ package nu.marginalia.api;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
-import io.jooby.Context;
-import io.jooby.Jooby;
-import io.jooby.StatusCode;
-import io.jooby.Value;
+import io.jooby.*;
+import kotlin.internal.Exact;
 import nu.marginalia.api.model.ApiLicense;
 import nu.marginalia.api.model.ApiLicenseOptions;
 import nu.marginalia.api.model.ApiSearchResults;
@@ -22,7 +20,7 @@ import org.slf4j.MarkerFactory;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
-public class ApiV1 {
+public class ApiV1 implements Extension {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -44,7 +42,7 @@ public class ApiV1 {
         this.searchOperator = searchOperator;
     }
 
-    public void registerApi(Jooby jooby) {
+    public void install(Jooby jooby) {
         jooby.get("/api/v1/", ctx -> {
             ctx.sendRedirect(StatusCode.TEMPORARY_REDIRECT, "https://about.marginalia-search.com/article/api/");
             return ctx;

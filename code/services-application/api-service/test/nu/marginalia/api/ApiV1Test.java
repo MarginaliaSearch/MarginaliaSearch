@@ -72,7 +72,7 @@ public class ApiV1Test {
 
         jooby = new Jooby();
 
-        apiV1.registerApi(jooby);
+        jooby.install(apiV1);
 
         router = new MockRouter(jooby);
         router.setFullExecution(true);

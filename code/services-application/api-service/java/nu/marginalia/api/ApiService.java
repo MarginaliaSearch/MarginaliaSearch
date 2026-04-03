@@ -51,8 +51,8 @@ public class ApiService extends JoobyService {
 
         jooby.errorCode(ServiceNotAvailableException.class, StatusCode.BAD_GATEWAY);
 
-        apiV1.registerApi(jooby);
-        apiV2.registerApi(jooby);
+        jooby.install(apiV1);
+        jooby.install(apiV2);
     }
 
     @MqRequest(endpoint = "FLUSH_CACHES")

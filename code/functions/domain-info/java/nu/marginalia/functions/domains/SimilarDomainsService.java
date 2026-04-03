@@ -240,7 +240,7 @@ public class SimilarDomainsService {
     public List<RpcSimilarDomain> getSimilarDomains(int domainId, int count) {
         int domainIdx = domainIdToIdx.get(domainId);
 
-        if (domainNeighbors.length >= domainIdx) {
+        if (domainNeighbors.length < domainIdx) {
             return List.of();
         }
 

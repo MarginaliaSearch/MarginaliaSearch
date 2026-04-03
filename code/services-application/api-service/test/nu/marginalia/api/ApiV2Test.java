@@ -44,6 +44,7 @@ public class ApiV2Test {
     static MockRouter router;
     static TestGrpcChannelPoolFactory testGrpcChannelPoolFactory;
     static QueryApiMock queryApiMock = new QueryApiMock();
+    static DomainInfoApiMock domainInfoApiMock = new DomainInfoApiMock();
 
     @BeforeAll
     public static void setup() throws SQLException, TimeoutException, IOException, InterruptedException {
@@ -63,7 +64,7 @@ public class ApiV2Test {
                     """);
         }
 
-        testGrpcChannelPoolFactory = new TestGrpcChannelPoolFactory(List.of(queryApiMock));
+        testGrpcChannelPoolFactory = new TestGrpcChannelPoolFactory(List.of(queryApiMock, domainInfoApiMock));
 
         ApiV2 apiV2 = Guice.createInjector(new AbstractModule() {
             @Override
@@ -77,7 +78,7 @@ public class ApiV2Test {
 
         jooby = new Jooby();
 
-        apiV2.registerApi(jooby);
+        jooby.install(apiV2);
 
         router = new MockRouter(jooby);
         router.setFullExecution(true);
@@ -226,6 +227,102 @@ public class ApiV2Test {
         });
     }
 
+
+    @Test
+    public void testSiteInfo__known_domain() throws SQLException {
+        // Insert a domain into the database so the lookup succeeds
+        try (var conn = dataSource.getConnection(); var stmt = conn.createStatement()) {
+            stmt.executeUpdate("INSERT IGNORE INTO EC_DOMAIN(DOMAIN_NAME, DOMAIN_TOP) VALUES ('example.com', 'example.com')");
+        }
+
+        MockContext context = new MockContext();
+        context.setRequestHeader("API-Key", "test");
+        context.setRequestPath("/api/v2/site/example.com");
+
+        router.get("/api/v2/site/example.com", context, rsp -> {
+            System.out.println(rsp.getStatusCode());
+            System.out.println(rsp.value());
+            Assertions.assertEquals(StatusCode.OK, rsp.getStatusCode());
+
+            String body = rsp.value().toString();
+            Assertions.assertTrue(body.contains("\"domain\":\"example.com\""));
+            Assertions.assertTrue(body.contains("\"state\":\"ACTIVE\""));
+            Assertions.assertTrue(body.contains("\"serverAvailable\":true"));
+            Assertions.assertTrue(body.contains("\"sslVersion\":\"TLSv1.3\""));
+        });
+    }
+
+    @Test
+    public void testSiteInfo__unknown_domain() {
+        MockContext context = new MockContext();
+        context.setRequestHeader("API-Key", "test");
+
+        router.get("/api/v2/site/nonexistent.example.com", context, rsp -> {
+            System.out.println(rsp.getStatusCode());
+            Assertions.assertEquals(StatusCode.NOT_FOUND, rsp.getStatusCode());
+        });
+    }
+
+    @Test
+    public void testSiteInfo__no_api_key() {
+        MockContext context = new MockContext();
+
+        router.get("/api/v2/site/example.com", context, rsp -> {
+            Assertions.assertEquals(StatusCode.BAD_REQUEST, rsp.getStatusCode());
+        });
+    }
+
+    @Test
+    public void testSimilarDomains() throws SQLException {
+        try (var conn = dataSource.getConnection(); var stmt = conn.createStatement()) {
+            stmt.executeUpdate("INSERT IGNORE INTO EC_DOMAIN(DOMAIN_NAME, DOMAIN_TOP) VALUES ('example.com', 'example.com')");
+        }
+
+        MockContext context = new MockContext();
+        context.setRequestHeader("API-Key", "test");
+
+        router.get("/api/v2/site/example.com/similar", context, rsp -> {
+            System.out.println(rsp.getStatusCode());
+            System.out.println(rsp.value());
+            Assertions.assertEquals(StatusCode.OK, rsp.getStatusCode());
+
+            String body = rsp.value().toString();
+            Assertions.assertTrue(body.contains("\"domain\":\"example.com\""));
+            Assertions.assertTrue(body.contains("\"similar-site.org\""));
+            Assertions.assertTrue(body.contains("\"BIDIRECTIONAL\""));
+        });
+    }
+
+    @Test
+    public void testLinkingDomains() throws SQLException {
+        try (var conn = dataSource.getConnection(); var stmt = conn.createStatement()) {
+            stmt.executeUpdate("INSERT IGNORE INTO EC_DOMAIN(DOMAIN_NAME, DOMAIN_TOP) VALUES ('example.com', 'example.com')");
+        }
+
+        MockContext context = new MockContext();
+        context.setRequestHeader("API-Key", "test");
+
+        router.get("/api/v2/site/example.com/linking", context, rsp -> {
+            System.out.println(rsp.getStatusCode());
+            System.out.println(rsp.value());
+            Assertions.assertEquals(StatusCode.OK, rsp.getStatusCode());
+
+            String body = rsp.value().toString();
+            Assertions.assertTrue(body.contains("\"domain\":\"example.com\""));
+            Assertions.assertTrue(body.contains("\"linking-site.net\""));
+            Assertions.assertTrue(body.contains("\"BACKWARD\""));
+        });
+    }
+
+    @Test
+    public void testSimilarDomains__unknown_domain() {
+        MockContext context = new MockContext();
+        context.setRequestHeader("API-Key", "test");
+
+        router.get("/api/v2/site/nonexistent.example.com/similar", context, rsp -> {
+            Assertions.assertEquals(StatusCode.NOT_FOUND, rsp.getStatusCode());
+        });
+    }
 
     @Test
     public void testFilters__update() {

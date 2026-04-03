@@ -3,10 +3,12 @@ package nu.marginalia.api;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import io.jooby.*;
-import nu.marginalia.api.model.ApiLicense;
-import nu.marginalia.api.model.ApiLicenseOptions;
-import nu.marginalia.api.model.ApiSearchResults;
-import nu.marginalia.api.model.DailyLimitState;
+import nu.marginalia.api.domains.DomainInfoClient;
+import nu.marginalia.api.domains.RpcDomainInfoPingData;
+import nu.marginalia.api.domains.RpcDomainInfoResponse;
+import nu.marginalia.api.domains.RpcDomainInfoSecurityData;
+import nu.marginalia.api.domains.model.SimilarDomain;
+import nu.marginalia.api.model.*;
 import nu.marginalia.api.searchquery.QueryClient;
 import nu.marginalia.api.searchquery.QueryFilterSpec;
 import nu.marginalia.api.searchquery.model.SearchFilterDefaults;
@@ -15,8 +17,9 @@ import nu.marginalia.api.svc.FiltersService;
 import nu.marginalia.api.svc.LicenseService;
 import nu.marginalia.api.svc.RateLimiterService;
 import nu.marginalia.api.svc.ResponseCache;
+import nu.marginalia.db.DbDomainQueries;
+import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.service.client.ServiceNotAvailableException;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -26,9 +29,18 @@ import org.slf4j.MarkerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class ApiV2 {
+public class ApiV2 implements Extension {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Marker apiUsageMarker = MarkerFactory.getMarker("APIUSAGE");
@@ -40,6 +52,8 @@ public class ApiV2 {
     private final ApiSearchOperator searchOperator;
     private final QueryClient queryClient;
     private final FiltersService filtersService;
+    private final DomainInfoClient domainInfoClient;
+    private final DbDomainQueries dbDomainQueries;
 
     @Inject
     public ApiV2(ResponseCache responseCache,
@@ -47,7 +61,9 @@ public class ApiV2 {
                  RateLimiterService rateLimiterService,
                  ApiSearchOperator searchOperator,
                  QueryClient queryClient,
-                 FiltersService filtersService)
+                 FiltersService filtersService,
+                 DomainInfoClient domainInfoClient,
+                 DbDomainQueries dbDomainQueries)
     {
         this.responseCache = responseCache;
         this.licenseService = licenseService;
@@ -55,9 +71,12 @@ public class ApiV2 {
         this.searchOperator = searchOperator;
         this.queryClient = queryClient;
         this.filtersService = filtersService;
+        this.domainInfoClient = domainInfoClient;
+        this.dbDomainQueries = dbDomainQueries;
     }
 
-    public void registerApi(Jooby jooby) {
+    @Override
+    public void install(Jooby jooby) {
         jooby.get("/api/v2/", ctx -> {
             ctx.sendRedirect(StatusCode.TEMPORARY_REDIRECT, "https://about.marginalia-search.com/article/api/");
             return ctx;
@@ -73,6 +92,10 @@ public class ApiV2 {
         jooby.get("/api/v2/filter/{id}", this::getFilter);
         jooby.post("/api/v2/filter/{id}", this::updateFilter);
         jooby.delete("/api/v2/filter/{id}", this::deleteFilter);
+
+        jooby.get("/api/v2/site/{domain}", this::siteInfo);
+        jooby.get("/api/v2/site/{domain}/similar", (ctx) -> relatedDomains(ctx, Relation.Similar));
+        jooby.get("/api/v2/site/{domain}/linking", (ctx) -> relatedDomains(ctx, Relation.Linked));
     }
 
     @NotNull
@@ -372,6 +395,155 @@ public class ApiV2 {
         ctx.setResponseHeader("API-Event-Type", limitState.name());
 
         return gson.toJson(results);
+    }
+
+    @NotNull
+    private Object siteInfo(Context ctx) {
+        Value apiKeyVal = ctx.header("API-Key");
+        if (apiKeyVal.isMissing()) {
+            ctx.setResponseCode(400);
+            return "Missing API-Key header";
+        }
+
+        ApiLicense license;
+        try {
+            license = licenseService.getLicense(apiKeyVal.value());
+        } catch (LicenseService.NoSuchKeyException | IOException ex) {
+            ctx.setResponseCode(StatusCode.UNAUTHORIZED);
+            return "";
+        }
+
+        if (!rateLimiterService.isAllowedQPM(license)) {
+            ApiMetrics.wmsa_api_timeout_count.labelValues(license.key()).inc();
+            ctx.setResponseCode(429);
+            return "QPM Limit Exceeded";
+        }
+
+        String domainName = ctx.path("domain").value();
+
+        int domainId;
+        try {
+            domainId = dbDomainQueries.getDomainId(new EdgeDomain(domainName));
+        } catch (NoSuchElementException ex) {
+            ctx.setResponseCode(StatusCode.NOT_FOUND);
+            return "Domain not known";
+        }
+
+        RpcDomainInfoResponse rpcResponse;
+        try {
+            rpcResponse = domainInfoClient.domainInformation(domainId)
+                    .get(500, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException ex) {
+            logger.error("Failed to fetch domain info for {}", domainName, ex);
+            ctx.setResponseCode(StatusCode.SERVER_ERROR_CODE);
+            return "Failed to fetch domain information";
+        }
+
+        ApiSiteInfoPing ping = null;
+        if (rpcResponse.hasPingData()) {
+            RpcDomainInfoPingData pd = rpcResponse.getPingData();
+            ping = new ApiSiteInfoPing(
+                    pd.getServerAvailable(),
+                    pd.getHttpSchema(),
+                    pd.getResponseTimeMs(),
+                    pd.getTsLast() > 0
+                            ? Instant.ofEpochMilli(pd.getTsLast())
+                                .atOffset(ZoneOffset.UTC)
+                                .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            : null,
+                    pd.getErrorDesc().isEmpty() ? null : pd.getErrorDesc()
+            );
+        }
+
+        ApiSiteInfoSecurity security = null;
+        if (rpcResponse.hasSecurityData()) {
+            RpcDomainInfoSecurityData sd = rpcResponse.getSecurityData();
+            security = new ApiSiteInfoSecurity(
+                    sd.getSslProtocol().isEmpty() ? null : sd.getSslProtocol(),
+                    sd.getHttpVersion().isEmpty() ? null : sd.getHttpVersion(),
+                    sd.getHttpCompression(),
+                    sd.getSslCertSubject().isEmpty() ? null : sd.getSslCertSubject()
+            );
+        }
+
+        ApiSiteInfo result = new ApiSiteInfo(
+                rpcResponse.getDomain(),
+                rpcResponse.getState(),
+                rpcResponse.getBlacklisted(),
+                ping,
+                security
+        );
+
+        ctx.setResponseType("application/json");
+        return gson.toJson(result);
+    }
+
+    enum Relation {
+        Linked,
+        Similar
+    };
+
+    @NotNull
+    private Object relatedDomains(Context ctx, Relation relation) {
+        Value apiKeyVal = ctx.header("API-Key");
+        if (apiKeyVal.isMissing()) {
+            ctx.setResponseCode(400);
+            return "Missing API-Key header";
+        }
+
+        ApiLicense license;
+        try {
+            license = licenseService.getLicense(apiKeyVal.value());
+        } catch (LicenseService.NoSuchKeyException | IOException ex) {
+            ctx.setResponseCode(StatusCode.UNAUTHORIZED);
+            return "";
+        }
+
+        if (!rateLimiterService.isAllowedQPM(license)) {
+            ApiMetrics.wmsa_api_timeout_count.labelValues(license.key()).inc();
+            ctx.setResponseCode(429);
+            return "QPM Limit Exceeded";
+        }
+
+        String domainName = ctx.path("domain").value();
+        int count = Math.clamp(ctx.query("count").intValue(25), 1, 100);
+
+        int domainId;
+        try {
+            domainId = dbDomainQueries.getDomainId(new EdgeDomain(domainName));
+        } catch (NoSuchElementException ex) {
+            ctx.setResponseCode(StatusCode.NOT_FOUND);
+            return "Domain not known";
+        }
+
+        List<ApiSimilarDomain> results;
+        try {
+            Future<List<SimilarDomain>> future = switch(relation) {
+                case Similar -> domainInfoClient.similarDomains(domainId, count);
+                case Linked -> domainInfoClient.linkedDomains(domainId, count);
+            };
+
+            List<SimilarDomain> domains = future.get(500, TimeUnit.MILLISECONDS);
+
+            results = new ArrayList<>(domains.size());
+            for (SimilarDomain sd : domains) {
+                results.add(new ApiSimilarDomain(
+                        sd.url().domain.toString(),
+                        sd.relatedness(),
+                        sd.rank(),
+                        sd.linkType().name(),
+                        sd.indexed(),
+                        sd.active()
+                ));
+            }
+        } catch (InterruptedException | ExecutionException | TimeoutException ex) {
+            logger.error("Failed to fetch related domains for {}", domainName, ex);
+            ctx.setResponseCode(StatusCode.SERVER_ERROR_CODE);
+            return "Failed to fetch related domains";
+        }
+
+        ctx.setResponseType("application/json");
+        return gson.toJson(new ApiSimilarDomains(domainName, results));
     }
 
     private ApiSearchResults doSearch(ApiLicense license, String query, Context context) {
