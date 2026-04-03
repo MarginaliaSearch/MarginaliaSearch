@@ -53,14 +53,14 @@
                         </td>
                         <td>
                             {{#if linkType.isLinked}}
-                                <span title="{{linkType.description}}"><a href="/crosstalk/?domains={{domain}},{{url.domain}}">{{{linkType}}}</a></span>
+                                <span title="{{linkType.description}}"><a href="/crosstalk/?domains={{domain}},{{url.domain}}?sst={{sst}}">{{{linkType}}}</a></span>
                             {{/if}}
                         </td>
                         <td>
                             <span title="{{rank}}%">{{{rankSymbols}}}</span>
                         </td>
                         <td>
-                            <a href="/site/{{url.domain}}?view=similar" rel="external noopener nofollow">{{url.domain}}</a></td>
+                            <a href="/site/{{url.domain}}?view=similar&sst={{sst}}" rel="external noopener nofollow">{{url.domain}}</a></td>
                         <td>
                             <progress value="{{relatedness}}" max="100.0">{{relatedness}}</progress><br>
                         </td>
@@ -99,14 +99,14 @@
                         </td>
                         <td>
                             {{#if linkType.isLinked}}
-                                <span title="{{linkType.description}}"><a href="/crosstalk/?domains={{domain}},{{url.domain}}">{{{linkType}}}</a></span>
+                                <span title="{{linkType.description}}"><a href="/crosstalk/?domains={{domain}},{{url.domain}}?sst={{sst}}">{{{linkType}}}</a></span>
                             {{/if}}
                         </td>
                         <td>
                             <span title="{{rank}}%">{{{rankSymbols}}}</span>
                         </td>
                         <td>
-                            <a href="/site/{{url.domain}}?view=similar" rel="external noopener nofollow">{{url.domain}}</a></td>
+                            <a href="/site/{{url.domain}}?view=similar&sst={{sst}}" rel="external noopener nofollow">{{url.domain}}</a></td>
                         <td>
                             <progress value="{{relatedness}}" max="100.0">{{relatedness}}</progress><br>
 
