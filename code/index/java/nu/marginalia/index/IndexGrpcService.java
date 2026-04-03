@@ -10,6 +10,9 @@ import nu.marginalia.api.searchquery.IndexApiGrpc;
 import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
 import nu.marginalia.api.searchquery.RpcIndexQuery;
 import nu.marginalia.api.searchquery.RpcIndexQueryResponse;
+import nu.marginalia.api.searchquery.RpcUrlInfo;
+import nu.marginalia.api.searchquery.RpcUrlInfoRequest;
+import nu.marginalia.api.searchquery.RpcUrlInfoResponse;
 import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.results.IndexResultRankingService;
 import nu.marginalia.index.searchset.SearchSet;
@@ -152,6 +155,29 @@ public class IndexGrpcService
         }
         catch (Exception ex) {
             logger.error("Error in handling request", ex);
+            responseObserver.onError(Status.INTERNAL.withCause(ex).asRuntimeException());
+        }
+    }
+
+    public void getUrlDetails(RpcUrlInfoRequest request,
+                              StreamObserver<RpcUrlInfoResponse> responseObserver) {
+        try {
+            var details = documentDbReader.getUrlDetailsByUrl(request.getUrlsList());
+
+            RpcUrlInfoResponse.Builder response = RpcUrlInfoResponse.newBuilder();
+            for (var detail : details) {
+                response.addUrls(RpcUrlInfo.newBuilder()
+                        .setUrl(detail.url().toString())
+                        .setTitle(detail.title())
+                        .setDescription(detail.description())
+                        .build());
+            }
+
+            responseObserver.onNext(response.build());
+            responseObserver.onCompleted();
+        }
+        catch (Exception ex) {
+            logger.error("Error in handling getUrlDetails request", ex);
             responseObserver.onError(Status.INTERNAL.withCause(ex).asRuntimeException());
         }
     }

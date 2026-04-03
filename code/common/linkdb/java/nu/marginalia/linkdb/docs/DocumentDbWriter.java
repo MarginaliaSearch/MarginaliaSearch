@@ -1,6 +1,8 @@
 package nu.marginalia.linkdb.docs;
 
 import nu.marginalia.linkdb.model.DocdbUrlDetail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -15,6 +17,7 @@ import java.util.List;
  * */
 public class DocumentDbWriter {
 
+    private static final Logger log = LoggerFactory.getLogger(DocumentDbWriter.class);
     private final Connection connection;
 
     public DocumentDbWriter(Path outputFile) throws SQLException {
@@ -29,6 +32,8 @@ public class DocumentDbWriter {
 
             // Disable synchronous writing as this is a one-off operation with no recovery
             stmt.execute("PRAGMA synchronous = OFF");
+            stmt.execute("PRAGMA journal_mode = OFF");
+            stmt.execute("PRAGMA cache_size = -1048576");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -79,6 +84,11 @@ public class DocumentDbWriter {
     }
 
     public void close() throws SQLException {
-        connection.close();
+        try (connection;
+             var stmt = connection.createStatement()) {
+            log.info("Creating index");
+            stmt.execute("CREATE INDEX IF NOT EXISTS DOCUMENT_URL ON DOCUMENT(URL)");
+            log.info("Index created");
+        }
     }
 }

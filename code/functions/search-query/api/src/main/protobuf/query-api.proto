@@ -10,6 +10,7 @@ service QueryApi {
 }
 service IndexApi {
   rpc query(RpcIndexQuery) returns (RpcIndexQueryResponse) {}
+  rpc getUrlDetails(RpcUrlInfoRequest) returns (RpcUrlInfoResponse) {}
 }
 
 message Empty {}
@@ -262,4 +263,21 @@ message RpcPhrases {
     MANDATORY = 1;
     FULL = 2;
   };
+}
+
+/* Request to look up title and description for a list of URLs */
+message RpcUrlInfoRequest {
+  repeated string urls = 1;
+}
+
+/* Response containing title and description for each URL found in the link database */
+message RpcUrlInfoResponse {
+  repeated RpcUrlInfo urls = 1;
+}
+
+/* Title and description for a single URL */
+message RpcUrlInfo {
+  string url = 1;
+  string title = 2;
+  string description = 3;
 }
