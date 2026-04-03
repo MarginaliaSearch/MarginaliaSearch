@@ -75,10 +75,7 @@ public class ScrapeStopperInterceptor {
         }
 
         if (tokenState == ScrapeStopper.TokenState.INVALID)
-            sst = scrapeStopper.getToken(zone,
-                    remoteIp,
-                    Duration.ofMinutes(5),
-                    ThreadLocalRandom.current().nextInt(10, 50));
+            sst = scrapeStopper.getToken(zone, remoteIp, Duration.ofMinutes(5));
 
         response.header("Cache-Control", "no-store");
 

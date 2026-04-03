@@ -39,13 +39,16 @@ public class ScrapeStopper {
 
     public String getToken(String zone,
                            String remoteIp,
-                           Duration validDuration,
-                           int uses) {
+                           Duration validDuration) {
 
-        Duration delay = getValidationRate(zone).getDelay();
+        ValidationRate validationRate = getValidationRate(zone);
+
+        Duration delay = validationRate.getDelay();
 
         Instant validAfter = Instant.now().plus(delay);
         Instant validUntil = validAfter.plus(validDuration);
+
+        int uses = 10 + (int) (40 * (1 - validationRate.getStrain()));
 
         Token token = new Token(zone, validAfter, validUntil, remoteIp, uses);
 
@@ -185,6 +188,7 @@ class ValidationRate {
     private final int maxSize;
 
     private double target;
+
     private volatile double delay;
     private double delayMin;
     private double delayMax;
@@ -228,6 +232,10 @@ class ValidationRate {
 
     public Duration getDelay() {
         return Duration.ofMillis((long)(1000*delay));
+    }
+
+    public double getStrain() {
+        return (delay - delayMin) / (delayMax - delayMin);
     }
 
 }
