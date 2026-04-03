@@ -13,9 +13,9 @@ import java.util.Optional;
 @Singleton
 public class ResponseCache {
     private final Cache<String, ApiSearchResults> cache = CacheBuilder.newBuilder()
-            .expireAfterWrite(Duration.ofSeconds(30))
-            .expireAfterAccess(Duration.ofSeconds(30))
-            .maximumSize(128)
+            .expireAfterWrite(Duration.ofMinutes(5))
+            .expireAfterAccess(Duration.ofMinutes(5))
+            .maximumSize(5000)
             .build();
 
     public Optional<ApiSearchResults> getResults(ApiLicense license, String queryString, String queryParams) {
