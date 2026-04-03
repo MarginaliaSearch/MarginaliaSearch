@@ -34,7 +34,6 @@ public class FeedsClient {
     private static final ExecutorService executorService = useLoom ? Executors.newVirtualThreadPerTaskExecutor() : Executors.newCachedThreadPool();
 
     private final GrpcSingleNodeChannelPool<FeedApiGrpc.FeedApiBlockingStub> channelPool;
-    private final MqOutbox updateFeedsOutbox;
 
     private final int realTimePartition;
     private final IndexClient indexClient;
@@ -50,12 +49,7 @@ public class FeedsClient {
         // The client is only interested in the primary node
         var key = ServiceKey.forGrpcApi(FeedApiGrpc.class, ServicePartition.any());
 
-        this.channelPool = factory.createSingle(key, FeedApiGrpc::newBlockingStub);
-        this.updateFeedsOutbox = new MqOutbox(mqPersistence,
-                "update-rss-feeds", 0,
-                serviceConfiguration.serviceName(), serviceConfiguration.node(),
-                UUID.randomUUID());
-
+        channelPool = factory.createSingle(key, FeedApiGrpc::newBlockingStub);
 
         realTimePartition = nodeConfigurationService.getAll().stream()
                 .filter(config -> config.profile() == NodeProfile.REALTIME)
@@ -91,13 +85,13 @@ public class FeedsClient {
 
         List<RpcFeedItem> newFeedItems = new ArrayList<>(oldFeedItems.size());
 
-        for (var item: rpcFeed.getItemsList()) {
-            var details = urlDetails.get(item.getUrl());
+        for (var oldItem: oldFeedItems) {
+            var details = urlDetails.get(oldItem.getUrl());
             if (details == null) {
-                newFeedItems.add(item);
+                newFeedItems.add(oldItem);
             }
             else {
-                newFeedItems.add(RpcFeedItem.newBuilder(item)
+                newFeedItems.add(RpcFeedItem.newBuilder(oldItem)
                         .setTitle(details.getTitle())
                         .setDescription(details.getDescription())
                         .build());
