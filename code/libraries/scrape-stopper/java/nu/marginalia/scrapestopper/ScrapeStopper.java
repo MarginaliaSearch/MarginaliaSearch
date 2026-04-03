@@ -4,10 +4,10 @@ import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -19,13 +19,16 @@ public class ScrapeStopper {
     private static final Logger logger = LoggerFactory.getLogger(ScrapeStopper.class);
 
     private final ConcurrentHashMap<String, Token> tokens = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ValidationRate> validationRatePerZone = new ConcurrentHashMap<>();
 
     public ScrapeStopper() {
         Thread.ofVirtual().start(() -> {
             try {
                 for (;;) {
                     Thread.sleep(Duration.ofMinutes(1));
+
                     tokens.values().removeIf(Token::isExpired);
+                    validationRatePerZone.values().forEach(ValidationRate::updateTarget);
                 }
             }
             catch (InterruptedException ex) {
@@ -36,14 +39,15 @@ public class ScrapeStopper {
 
     public String getToken(String zone,
                            String remoteIp,
-                           Duration delay,
                            Duration validDuration,
                            int uses) {
+
+        Duration delay = getValidationRate(zone).getDelay();
 
         Instant validAfter = Instant.now().plus(delay);
         Instant validUntil = validAfter.plus(validDuration);
 
-        Token token = new Token(validAfter, validUntil, remoteIp, uses);
+        Token token = new Token(zone, validAfter, validUntil, remoteIp, uses);
 
         return assignSst(zone, token);
     }
@@ -87,23 +91,32 @@ public class ScrapeStopper {
         INVALID
     };
 
-    public TokenState validateToken(String tokenId, String remoteIp) {
-        return Optional.ofNullable(tokenId)
-                .map(tokens::get)
-                .map(token -> token.validate(remoteIp, null))
-                .orElse(TokenState.INVALID);
+    public TokenState validateToken(String tokenId, String remoteIp, String context) {
+        if (null == tokenId)
+            return TokenState.INVALID;
+
+        Token token = tokens.get(tokenId);
+
+        if (null == token)
+            return TokenState.INVALID;
+
+        TokenState state = token.validate(remoteIp, context);
+        if (state == TokenState.VALIDATED) {
+            getValidationRate(token.zone).register();
+        }
+        return state;
     }
 
-    public TokenState validateToken(String tokenId, String remoteIp, String context) {
-        return Optional.ofNullable(tokenId)
-                .map(tokens::get)
-                .map(token -> token.validate(remoteIp, context))
-                .orElse(TokenState.INVALID);
+    private ValidationRate getValidationRate(String zone) {
+        return validationRatePerZone.computeIfAbsent(zone, z -> new ValidationRate(100));
     }
+
 }
 
 
 class Token {
+    public final String zone;
+
     private final Instant validAfter;
     private final Instant validUntil;
     private final String remoteIp;
@@ -112,11 +125,13 @@ class Token {
     private volatile Instant lastValidation;
     private volatile String lastContext;
 
-    Token(Instant validAfter,
-                  Instant validUntil,
-                  String remoteIp,
-                  int uses)
+    Token(String zone,
+          Instant validAfter,
+          Instant validUntil,
+          String remoteIp,
+          int uses)
     {
+        this.zone = zone;
         this.validAfter = validAfter;
         this.validUntil = validUntil;
         this.remoteIp = remoteIp;
@@ -164,4 +179,55 @@ class Token {
     public boolean isExpired() {
         return Instant.now().isAfter(validAfter) && remainingUses.getAcquire() <= 0;
     }
+}
+
+class ValidationRate {
+    private final int maxSize;
+
+    private double target;
+    private volatile double delay;
+    private double delayMin;
+    private double delayMax;
+
+    private final LinkedList<Instant> validations = new LinkedList<>();
+
+    public ValidationRate(int maxSize) {
+        this.maxSize = maxSize;
+
+        this.target = 2.0;
+        this.delay = 1.;
+        this.delayMin = 1.0;
+        this.delayMax = 5.;
+    }
+
+    public synchronized void register() {
+        validations.addLast(Instant.now());
+
+        if (validations.size() > maxSize) {
+            validations.removeFirst();
+        }
+    }
+
+    public synchronized void updateTarget() {
+        if (validations.size() < maxSize/2) {
+            return;
+        }
+
+        long millisBetween = Duration.between(validations.getFirst(), validations.getLast()).toMillis();
+
+        double secs = millisBetween / 1000.;
+        double interval = secs / (validations.size()-1);
+
+        // Delay and target rate accidentally is of the same order of magnitude [1...5]
+        // which makes this a bit easier
+
+        double delta = target - interval;
+
+        delay = Math.clamp(delay + delta, delayMin, delayMax);
+    }
+
+    public Duration getDelay() {
+        return Duration.ofMillis((long)(1000*delay));
+    }
+
 }
