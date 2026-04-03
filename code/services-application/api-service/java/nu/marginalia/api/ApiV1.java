@@ -3,7 +3,6 @@ package nu.marginalia.api;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import io.jooby.*;
-import kotlin.internal.Exact;
 import nu.marginalia.api.model.ApiLicense;
 import nu.marginalia.api.model.ApiLicenseOptions;
 import nu.marginalia.api.model.ApiSearchResults;
