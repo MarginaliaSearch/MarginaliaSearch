@@ -1,6 +1,7 @@
 package nu.marginalia.rss.svc;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.opencsv.CSVReader;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.contenttype.ContentType;
@@ -61,6 +62,7 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.zip.GZIPInputStream;
 
+@Singleton
 public class FeedFetcherService {
     private static final int MAX_FEED_ITEMS = 10;
     private static final Logger logger = LoggerFactory.getLogger(FeedFetcherService.class);
