@@ -5,7 +5,7 @@
 
 <aside class="peer-checked:md:w-64 py-4 lg:mx-4 shrink-0 hidden md:block finepointer:block">
     <input id="toggle-settings" name="toggle-settings" tabindex="-1" type="checkbox" aria-checked="true" class="peer hidden" />
-    <label title="Toggle Advanced Settings" for="toggle-settings" class="lg:hidden peer-checked:hidden bg-white dark:bg-gray-800 flex-1 py-2 pl-2 rounded flex space-x-2 dark:peer-has-[:checked]:bg-gray-950 peer-has-[:checked]:bg-gray-300 peer-has-[:checked]:text-slate-900 dark:peer-has-[:checked]:text-slate-100 hover:bg-gray-50 dark:hover:bg-gray-950 dark:border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
+    <label title="Toggle Search Settings" for="toggle-settings" class="lg:hidden peer-checked:hidden bg-white dark:bg-gray-800 flex-1 py-2 pl-2 rounded flex space-x-2 dark:peer-has-[:checked]:bg-gray-950 peer-has-[:checked]:bg-gray-300 peer-has-[:checked]:text-slate-900 dark:peer-has-[:checked]:text-slate-100 hover:bg-gray-50 dark:hover:bg-gray-950 dark:border dark:border-gray-600 text-margeblue dark:text-slate-200 outline-1 active:outline">
         <i class="fas fa-cog mr-3"></i>
     </label>
 
@@ -14,7 +14,7 @@
 
             <h2 class="font-medium mb-3 flex items-center font-serif hidden md:block gap-1">
                 <i class="fas fa-cog text-sm mr-2"></i>
-                Advanced Settings
+                Search Settings
             </h2>
             <div class="space-y-2">
                 @for (SearchFilters.SearchOption option : filters.searchOptions())
