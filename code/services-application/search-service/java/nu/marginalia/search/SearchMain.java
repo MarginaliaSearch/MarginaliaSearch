@@ -5,7 +5,6 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import io.jooby.ExecutionMode;
 import io.jooby.Jooby;
-import nu.marginalia.nsfw.NsfwFilterModule;
 import nu.marginalia.service.MainClass;
 import nu.marginalia.service.ServiceId;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
@@ -29,7 +28,6 @@ public class SearchMain extends MainClass {
 
         Injector injector = Guice.createInjector(
                 new SearchModule(),
-                new NsfwFilterModule(),
                 new ServiceConfigurationModule(ServiceId.Search),
                 new ServiceDiscoveryModule(),
                 new DatabaseModule(false)

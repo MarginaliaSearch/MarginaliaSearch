@@ -20,8 +20,6 @@ dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:config')
     implementation project(':code:common:service')
-    implementation project(':code:index:api')
-    implementation project(':code:functions:search-query:api')
     implementation project(':code:libraries:message-queue')
 
     implementation libs.bundles.slf4j

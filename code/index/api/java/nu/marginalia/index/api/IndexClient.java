@@ -22,15 +22,16 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Singleton
 public class IndexClient {
     private static final Logger logger = LoggerFactory.getLogger(IndexClient.class);
-    private final Map<Integer, GrpcSingleNodeChannelPool<IndexApiGrpc.IndexApiFutureStub>> channelPools;
+    private final List<GrpcSingleNodeChannelPool<IndexApiGrpc.IndexApiFutureStub>> channelPools;
     private final DomainBlacklistImpl blacklist;
     private final NsfwDomainFilter nsfwDomainFilter;
     private final NsfwDocumentFilter nsfwDocumentFilter;
@@ -53,10 +54,10 @@ public class IndexClient {
                        NodeConfigurationWatcherIf nodeConfigurationWatcher
                        ) {
         this.nsfwDocumentFilter = nsfwDocumentFilter;
-        channelPools = new HashMap<>();
+        channelPools = new ArrayList<>();
 
         for (int node: nodeConfigurationWatcher.getQueryNodes()) {
-            channelPools.put(node, channelPoolFactory.createSingle(ServiceKey.forGrpcApi(IndexApiGrpc.class, ServicePartition.partition(node)), IndexApiGrpc::newFutureStub));
+            channelPools.add(channelPoolFactory.createSingle(ServiceKey.forGrpcApi(IndexApiGrpc.class, ServicePartition.partition(node)), IndexApiGrpc::newFutureStub));
         }
 
         this.blacklist = blacklist;
@@ -90,7 +91,7 @@ public class IndexClient {
         List<Map.Entry<GrpcSingleNodeChannelPool.ConnectionHolder, ListenableFuture<RpcIndexQueryResponse>>> futures
                 = new ArrayList<>(channelPools.size());
 
-        for (var pool: channelPools.values()) {
+        for (var pool: channelPools) {
             GrpcSingleNodeChannelPool.ConnectionHolder holder = null;
             ManagedChannel channel = null;
 
@@ -172,38 +173,6 @@ public class IndexClient {
         else ret = List.of();
 
         return new AggregateQueryResponse(ret, pagination.page(), totalNumResults);
-    }
-
-    /** Look up title and description for the given URLs on the specified index node. */
-    public Map<String, RpcUrlInfo> getUrlDetails(int node, List<String> urls) {
-        var pool = channelPools.get(node);
-        if (pool == null) {
-            return Map.of();
-        }
-
-        RpcUrlInfoRequest request = RpcUrlInfoRequest.newBuilder()
-                .addAllUrls(urls)
-                .build();
-
-        for (var holder : pool.getConnectionHolders()) {
-            if (holder.hasErrorSince(Duration.ofSeconds(5)))
-                continue;
-
-            ManagedChannel channel = holder.get();
-            if (channel == null)
-                continue;
-
-            try {
-                RpcUrlInfoResponse response = IndexApiGrpc.newBlockingStub(channel)
-                        .getUrlDetails(request);
-                return response.getUrlsList().stream().collect(Collectors.toMap(RpcUrlInfo::getUrl, Function.identity(), (a,b)->a));
-            }
-            catch (Exception ex) {
-                logger.error("Error fetching URL details from node {}", node, ex);
-            }
-        }
-
-        return Map.of();
     }
 
     static String[] tierNames = {
