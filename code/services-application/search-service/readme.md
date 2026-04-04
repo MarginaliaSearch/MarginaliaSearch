@@ -28,7 +28,7 @@ and static resources.
 * [SearchService](java/nu/marginalia/search/SearchService.java) receives requests and delegates to the 
 appropriate services.
 
-* [CommandEvaluator](java/nu/marginalia/search/command/CommandEvaluator.java) interprets a user query and acts
+* [CommandEvaluator](java/nu/marginalia/search/svc/SearchQueryService.java) interprets a user query and acts
 upon it, dealing with special operations like `browse:` or `site:`.
 
 * [SearchQueryIndexService](java/nu/marginalia/search/svc/SearchQueryIndexService.java) passes a parsed search query to the index service, and

@@ -54,7 +54,9 @@ The service should also be given a canonical name in the `ServiceId` enum.
 
 ## Central Classes
 
-* [MainClass](java/nu/marginalia/service/MainClass.java) bootstraps all executables
+* [JoobyMainClass](java/nu/marginalia/service/JoobyMainClass.java) bootstraps all new executables
+* [SparkMainClass](java/nu/marginalia/service/JoobyMainClass.java) bootstraps all legacy executables
+
 * [Service](java/nu/marginalia/service/server/Service.java) base class for all services.
 
 ---

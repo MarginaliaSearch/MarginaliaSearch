@@ -10,8 +10,9 @@ These libraries may not depend on features, services, processes, models, etc.
 * The [array](array/) library is for memory mapping large memory-areas, which Java has
 bad support for. It's designed to be able to easily replaced when *Java's Foreign Function And Memory API* is released.
 * The [btree](btree/) library offers a static BTree implementation based on the array library.
-* [language-processing](language-processing/) contains primitives for sentence extraction and POS-tagging.
+* The [skiplist](skiplist/) library offers a static skiplist implementation.
 * The [message-queue](message-queue/) library.
+
 ## Micro libraries
 
 * [easy-lsh](easy-lsh/) is a simple locality-sensitive hash for document deduplication

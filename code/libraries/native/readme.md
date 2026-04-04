@@ -11,7 +11,7 @@ TBW
 The helpers are only built on Linux, and if they are absent, Java substitutes should be used instead.  
 
 Library loading and access is available through the
-[NativeAlgos](java/nu/marginalia/NativeAlgos.java) class.
+[NativeAlgos](java/nu/marginalia/ffi/NativeAlgos.java) class.
 
 Note that the C++ helpers are compiled with march=native by default, so they are not portable 
 between different CPU architectures.

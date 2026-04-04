@@ -3,8 +3,7 @@
 The index journal contains a list of entries with keywords and keyword metadata per document. 
 
 This journal is written by [processes/loading-process](../../processes/loading-process) and read 
-when constructing the [forward](../index-forward) and [reverse](../index-reverse) 
-indices. 
+when constructing the forward and reverse indices. 
 
 The journal uses the [Slop library](https://github.com/MarginaliaSearch/SlopData) to store data
 in a columnar fashion. 

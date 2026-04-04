@@ -16,7 +16,7 @@ other tools.
 ## Robots Rules
 
 A significant part of the crawler is dealing with `robots.txt` and similar, rate limiting headers; especially when these
-are not served in a standard way (which is very common).  [RFC9390](https://www.rfc-editor.org/rfc/rfc9309.html) as well as Google's [Robots.txt Specifications](https://developers.google.com/search/docs/advanced/robots/robots_txt) are good references.
+are not served in a standard way (which is very common).  [RFC9309](https://www.rfc-editor.org/rfc/rfc9309.html) as well as Google's [Robots.txt Specifications](https://developers.google.com/search/docs/advanced/robots/robots_txt) are good references.
 
 ## Re-crawling
 

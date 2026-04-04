@@ -71,7 +71,7 @@ Full index:
 Prio index:
 * [PrioPreindex](java/nu/marginalia/index/reverse/construction/prio/PrioPreindex.java) intermediate reverse index state.
 * [PrioIndexConstructor](java/nu/marginalia/index/reverse/construction/prio/PrioIndexConstructor.java) constructs the index.
-* [PrioIndexReader](java/nu/marginalia/index/reverse/PrioReverseIndexReader.java) interrogates the index.
+* [PrioReverseIndexReader](java/nu/marginalia/index/reverse/PrioReverseIndexReader.java) interrogates the index.
 
 # Forward Index
 

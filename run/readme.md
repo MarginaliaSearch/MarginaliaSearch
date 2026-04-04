@@ -11,7 +11,7 @@ platforms, but for lack of suitable hardware, this can not be guaranteed.
 **Docker** - It is a bit of a pain to install, but if you follow
 [this guide](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository) you're on the right track for ubuntu-like systems.
 
-**JDK 24** - The code uses Java 24 preview features. 
+**JDK 25** - The code uses Java 24 preview features. 
 
 **liburing** - The index uses `io_uring` and this is needed to access it.
 

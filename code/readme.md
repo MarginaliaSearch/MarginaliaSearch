@@ -62,7 +62,6 @@ the index service, which is controlled by the control service.
     * [crawling-process](processes/crawling-process)
     * [converting-process](processes/converting-process)
     * [loading-process](processes/loading-process)
-    * [index-constructor-process](processes/index-constructor-process)
 
 ### Features
 

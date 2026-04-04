@@ -7,9 +7,6 @@ Operational documentation is available at [🌎&nbsp;https://docs.marginalia.nu/
 
 ## Operations
 
-## How-To 
-* [Parquet How-To](parquet-howto.md) - Useful tips in working with Parquet files
-
 ## Set-up
 
 * [📁 ../run/](../run/) - Set-up instructions
