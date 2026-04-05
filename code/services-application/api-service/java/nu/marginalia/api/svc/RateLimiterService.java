@@ -21,6 +21,10 @@ public class RateLimiterService {
 
     private final ConcurrentHashMap<ApiLicense, RateLimiter> perMinuteLimiters = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<ApiLicense, RateLimiter> perDayLimiters = new ConcurrentHashMap<>();
+
+    private final ConcurrentHashMap<ApiLicense, RateLimiter> siteInfoPerMinuteLimiters = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<ApiLicense, RateLimiter> siteInfoPerDayLimiters = new ConcurrentHashMap<>();
+
     private final PolarClient polarClient;
 
 
@@ -30,6 +34,10 @@ public class RateLimiterService {
     private volatile ConcurrentHashMap<ApiLicense, Integer> reportingOveruse = new ConcurrentHashMap<>();
 
     private volatile ConcurrentHashMap<ApiLicense, Integer> use = new ConcurrentHashMap<>();
+
+    private volatile ConcurrentHashMap<ApiLicense, Integer> siteInfoOveruse = new ConcurrentHashMap<>();
+    private volatile ConcurrentHashMap<ApiLicense, Integer> reportingSiteInfoOveruse = new ConcurrentHashMap<>();
+    private volatile ConcurrentHashMap<ApiLicense, Integer> siteInfoUse = new ConcurrentHashMap<>();
 
     @Inject
     public RateLimiterService(PolarClient polarClient) {
@@ -51,36 +59,28 @@ public class RateLimiterService {
         reportingOveruse.putAll(overuse);
         overuse = new ConcurrentHashMap<>();
 
-        Set<ApiLicense> reportedKeys = new HashSet<>();
+        var currentSiteInfoUse = siteInfoUse;
+        siteInfoUse = new ConcurrentHashMap<>();
 
-        for (var key : currentUse.keySet()) {
-            if (!reportedKeys.add(key))
-                continue;
+        var currentSiteInfoOveruse = siteInfoOveruse;
+        reportingSiteInfoOveruse.putAll(siteInfoOveruse);
+        siteInfoOveruse = new ConcurrentHashMap<>();
 
-            int use = currentUse.getOrDefault(key, 0);
-            int overuse = currentOveruse.getOrDefault(key, 0);
+        Set<ApiLicense> allKeys = new HashSet<>();
+        allKeys.addAll(currentUse.keySet());
+        allKeys.addAll(currentOveruse.keySet());
+        allKeys.addAll(currentSiteInfoUse.keySet());
+        allKeys.addAll(currentSiteInfoOveruse.keySet());
 
-            polarClient.reportKeyUse(key.key(), snapshotTime, use, overuse);
+        for (ApiLicense key : allKeys) {
+            int queryUse = currentUse.getOrDefault(key, 0);
+            int queryOveruse = currentOveruse.getOrDefault(key, 0);
+            int siUse = currentSiteInfoUse.getOrDefault(key, 0);
+            int siOveruse = currentSiteInfoOveruse.getOrDefault(key, 0);
+
+            polarClient.reportKeyUse(key.key(), snapshotTime, queryUse, queryOveruse, siUse, siOveruse);
             reportingOveruse.remove(key);
-
-            try {
-                TimeUnit.SECONDS.sleep(1);
-            }
-            catch (InterruptedException ex) {
-                ex.printStackTrace();
-                return;
-            }
-        }
-
-        for (var key : currentOveruse.keySet()) {
-            if (!reportedKeys.add(key))
-                continue;
-
-            int use = currentUse.getOrDefault(key, 0);
-            int overuse = currentOveruse.getOrDefault(key, 0);
-
-            polarClient.reportKeyUse(key.key(), snapshotTime, use, overuse);
-            reportingOveruse.remove(key);
+            reportingSiteInfoOveruse.remove(key);
 
             try {
                 TimeUnit.SECONDS.sleep(1);
@@ -92,12 +92,12 @@ public class RateLimiterService {
         }
 
         reportingOveruse.clear();
-
+        reportingSiteInfoOveruse.clear();
     }
 
     /** Return an estimate of how much billable API overuse has been reported */
     public long estimatedTotalApiUseForPeriod(ApiLicense license) {
-        if (!license.hasOption(ApiLicenseOptions.ALLOW_DAILY_OVERUSE))
+        if (!license.hasOption(ApiLicenseOptions.ALLOW_QUERY_DAILY_OVERUSE))
             return 0;
 
         OptionalLong reportedOveruse = polarClient.getApiOveruseEstimate(license);
@@ -119,7 +119,7 @@ public class RateLimiterService {
 
     public boolean isAllowedQPD(ApiLicense license) {
 
-        if (license.hasOption(ApiLicenseOptions.ALLOW_DAILY_OVERUSE)) {
+        if (license.hasOption(ApiLicenseOptions.ALLOW_QUERY_DAILY_OVERUSE)) {
             return true;
         }
 
@@ -146,7 +146,7 @@ public class RateLimiterService {
 
         RateLimiter limiter = getDailyLimiter(license);
 
-        if (!license.hasOption(ApiLicenseOptions.ALLOW_DAILY_OVERUSE)) {
+        if (!license.hasOption(ApiLicenseOptions.ALLOW_QUERY_DAILY_OVERUSE)) {
 
             // If daily overuse is not allowed, we've already tested this rate limiter
             // before the query, and shouldn't repeat that as it would double count the queries,
@@ -164,6 +164,74 @@ public class RateLimiterService {
         }
     }
 
+    public boolean isAllowedSiteInfoQPM(ApiLicense license) {
+        int qpm = license.siteInfoRatePerMinute();
+
+        if (qpm <= 0)
+            return true;
+
+        return getSiteInfoMinuteLimiter(license).isAllowed();
+    }
+
+    public boolean isAllowedSiteInfoQPD(ApiLicense license) {
+        if (license.hasOption(ApiLicenseOptions.ALLOW_SITE_INFO_DAILY_OVERUSE)) {
+            return true;
+        }
+
+        int qpd = license.siteInfoRatePerDay();
+
+        if (qpd <= 0) {
+            return true;
+        }
+
+        return getSiteInfoDailyLimiter(license).isAllowed();
+    }
+
+    public DailyLimitState registerSuccessfulSiteInfoQuery(ApiLicense license) {
+        if (license.hasOption(ApiLicenseOptions.ADUIT_USAGE)) {
+            siteInfoUse.merge(license, 1, Integer::sum);
+        }
+
+        int qpd = license.siteInfoRatePerDay();
+
+        if (qpd <= 0)
+            return new DailyLimitState.UnderLimit(Integer.MAX_VALUE);
+
+        RateLimiter limiter = getSiteInfoDailyLimiter(license);
+
+        if (!license.hasOption(ApiLicenseOptions.ALLOW_SITE_INFO_DAILY_OVERUSE)) {
+            return new DailyLimitState.UnderLimit(limiter.availableCapacity());
+        }
+
+        if (limiter.isAllowed()) {
+            return new DailyLimitState.UnderLimit(limiter.availableCapacity());
+        }
+        else {
+            siteInfoOveruse.merge(license, 1, Integer::sum);
+            return new DailyLimitState.OverLimitCharge();
+        }
+    }
+
+    public int remainingSiteInfoDailyLimit(ApiLicense license) {
+        int qpd = license.siteInfoRatePerDay();
+        if (qpd <= 0)
+            return Integer.MAX_VALUE;
+
+        return getSiteInfoDailyLimiter(license).availableCapacity();
+    }
+
+    /** Return an estimate of how much billable site info overuse has been reported */
+    public long estimatedTotalSiteInfoUseForPeriod(ApiLicense license) {
+        if (!license.hasOption(ApiLicenseOptions.ALLOW_SITE_INFO_DAILY_OVERUSE))
+            return 0;
+
+        OptionalLong reportedOveruse = polarClient.getSiteInfoOveruseEstimate(license);
+
+        return reportedOveruse.orElse(0L)
+                + siteInfoOveruse.getOrDefault(license, 0)
+                + reportingSiteInfoOveruse.getOrDefault(license, 0);
+    }
+
     private RateLimiter getMinuteLimiter(ApiLicense license) {
         int qpm = license.ratePerMinute();
         return perMinuteLimiters.computeIfAbsent(license, (l) -> RateLimiter.queryPerMinuteLimiter(qpm));
@@ -172,6 +240,16 @@ public class RateLimiterService {
     private RateLimiter getDailyLimiter(ApiLicense license) {
         int qpd = license.ratePerDay();
         return perDayLimiters.computeIfAbsent(license, (l) -> RateLimiter.queryPerDayLimiter(qpd));
+    }
+
+    private RateLimiter getSiteInfoMinuteLimiter(ApiLicense license) {
+        int qpm = license.siteInfoRatePerMinute();
+        return siteInfoPerMinuteLimiters.computeIfAbsent(license, (l) -> RateLimiter.queryPerMinuteLimiter(qpm));
+    }
+
+    private RateLimiter getSiteInfoDailyLimiter(ApiLicense license) {
+        int qpd = license.siteInfoRatePerDay();
+        return siteInfoPerDayLimiters.computeIfAbsent(license, (l) -> RateLimiter.queryPerDayLimiter(qpd));
     }
 
 
@@ -189,6 +267,7 @@ public class RateLimiterService {
 
     public void clear() {
         perMinuteLimiters.clear();
+        siteInfoPerMinuteLimiters.clear();
     }
 
     public int size() {

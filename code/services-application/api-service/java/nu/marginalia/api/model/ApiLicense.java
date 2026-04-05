@@ -9,6 +9,8 @@ public record ApiLicense(
         String name,
         int ratePerMinute,
         int ratePerDay,
+        int siteInfoRatePerMinute,
+        int siteInfoRatePerDay,
         EnumSet<ApiLicenseOptions> options
 ) {
 
