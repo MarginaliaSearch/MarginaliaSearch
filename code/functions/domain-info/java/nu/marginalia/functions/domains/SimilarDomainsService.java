@@ -321,7 +321,7 @@ public class SimilarDomainsService {
 
         // Remove domains that are not very similar if there is no mutual link
         if (domainResult.getLinkType() == RpcSimilarDomain.LINK_TYPE.NONE
-         && domainResult.getRelatedness() <= 15)
+         && domainResult.getRelatedness() <= 25)
             return true;
 
         return false;
