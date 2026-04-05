@@ -151,7 +151,10 @@ public class PrioDocIdsTransformer implements LongArrayTransformations.LongIOTra
         while (toBeRead > 0) {
             readBuffer.clear();
             readBuffer.limit(Math.min(readBuffer.capacity(), toBeRead));
-            toBeRead -= readChannel.read(readBuffer);
+            int rb = readChannel.read(readBuffer);
+            if (rb < 0) throw new IllegalStateException("Unexpected end of file");
+
+            toBeRead -= rb;
             readBuffer.flip();
 
             if (readBuffer.limit() == 0)
