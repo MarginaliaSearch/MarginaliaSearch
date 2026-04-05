@@ -5,6 +5,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import nu.marginalia.linkdb.docs.DocumentDbWriter;
+import nu.marginalia.linkgraph.io.DomainLinksWriter;
 import nu.marginalia.loading.documents.DocumentLoaderService;
 import nu.marginalia.loading.documents.KeywordLoaderService;
 import nu.marginalia.loading.domains.DomainIdRegistry;
@@ -25,6 +26,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 
 import static nu.marginalia.mqapi.ProcessInboxNames.LOADER_INBOX;
 
@@ -34,6 +36,7 @@ public class LoaderMain extends ProcessMainClass {
     private final ProcessHeartbeatImpl heartbeat;
     private final FileStorageService fileStorageService;
     private final DocumentDbWriter documentDbWriter;
+    private final DomainLinksWriter domainLinksWriter;
     private final DomainLoaderService domainService;
     private final DomainLinksLoaderService linksService;
     private final KeywordLoaderService keywordLoaderService;
@@ -68,6 +71,7 @@ public class LoaderMain extends ProcessMainClass {
                       MessageQueueFactory messageQueueFactory,
                       FileStorageService fileStorageService,
                       DocumentDbWriter documentDbWriter,
+                      DomainLinksWriter domainLinksWriter,
                       DomainLoaderService domainService,
                       DomainLinksLoaderService linksService,
                       KeywordLoaderService keywordLoaderService,
@@ -81,6 +85,7 @@ public class LoaderMain extends ProcessMainClass {
         this.heartbeat = heartbeat;
         this.fileStorageService = fileStorageService;
         this.documentDbWriter = documentDbWriter;
+        this.domainLinksWriter = domainLinksWriter;
         this.domainService = domainService;
         this.linksService = linksService;
         this.keywordLoaderService = keywordLoaderService;
@@ -101,12 +106,18 @@ public class LoaderMain extends ProcessMainClass {
 
         boolean executionOk;
         try (var pool = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism())) {
-            pool.submit(() -> keywordLoaderService.loadKeywords(domainIdRegistry, heartbeat, inputData));
-            pool.submit(() -> documentLoaderService.loadDocuments(domainIdRegistry, heartbeat, inputData));
-            pool.submit(() -> domainService.loadDomainMetadata(domainIdRegistry, heartbeat, inputData));
+            List<ForkJoinTask<?>> tasks = new ArrayList<>();
+
+            tasks.add(pool.submit(() -> keywordLoaderService.loadKeywords(domainIdRegistry, heartbeat, inputData)));
+            tasks.add(pool.submit(() -> documentLoaderService.loadDocuments(domainIdRegistry, heartbeat, inputData)));
+            tasks.add(pool.submit(() -> domainService.loadDomainMetadata(domainIdRegistry, heartbeat, inputData)));
 
             if (insertFoundDomains) {
-                pool.submit(() -> linksService.loadLinks(domainIdRegistry, heartbeat, inputData));
+                tasks.add(pool.submit(() -> linksService.loadLinks(domainIdRegistry, heartbeat, inputData)));
+            }
+
+            for (var task: tasks) {
+                task.get();
             }
 
             executionOk = true;
@@ -118,6 +129,7 @@ public class LoaderMain extends ProcessMainClass {
         finally {
             keywordLoaderService.close();
             documentDbWriter.close();
+            domainLinksWriter.close();
             heartbeat.shutDown();
         }
 

@@ -42,8 +42,6 @@ public class DocumentLoaderService {
         try (var taskHeartbeat = processHeartbeat.createAdHocTaskHeartbeat("DOCUMENTS");
              LinkdbLoader loader = new LinkdbLoader(domainIdRegistry)) {
 
-            int processed = 0;
-
             for (var pageRef : taskHeartbeat.wrap("LOAD", pageRefs)) {
                 try (var reader = new SlopDocumentRecord.MetadataReader(pageRef))
                 {

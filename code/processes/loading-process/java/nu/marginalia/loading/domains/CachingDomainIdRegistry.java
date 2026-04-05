@@ -21,7 +21,7 @@ public class CachingDomainIdRegistry implements DomainIdRegistry {
 
     @Override
     public void add(String domainName, int id) {
-        domainIds.put(domainName, id);
+        domainIds.put(domainName.toLowerCase(), id);
     }
 
 }

@@ -47,12 +47,11 @@ public class DomainLoaderService {
         DONE
     }
 
-    public boolean loadDomainMetadata(DomainIdRegistry domainIdRegistry, ProcessHeartbeat heartbeat, LoaderInputData inputData) {
-
+    public boolean loadDomainMetadata(DomainIdRegistry domainIdRegistry, ProcessHeartbeat heartbeat, LoaderInputData inputData)
+            throws IOException, SQLException
+    {
         try (var taskHeartbeat = heartbeat.createAdHocTaskHeartbeat("UPDATE-META");
              var updater = new DomainMetadataUpdater(dataSource, domainIdRegistry)) {
-
-            int processed = 0;
 
             Collection<SlopTable.Ref<SlopDomainRecord>> pages = inputData.listDomainPages();
             for (var page : taskHeartbeat.wrap("UPDATE-META", pages)) {
@@ -61,9 +60,6 @@ public class DomainLoaderService {
                     reader.forEach(updater::accept);
                 }
             }
-        }
-        catch (Exception ex) {
-            logger.error("Failed inserting metadata!", ex);
         }
 
         return true;
@@ -83,9 +79,6 @@ public class DomainLoaderService {
              var taskHeartbeat = heartbeat.createProcessTaskHeartbeat(Steps.class, "DOMAIN_IDS"))
         {
             taskHeartbeat.progress(Steps.PREP_DATA);
-
-            Collection<SlopTable.Ref<SlopDomainRecord>> domainPageRefs = inputData.listDomainPages();
-            Collection<SlopTable.Ref<SlopDomainLinkRecord>> domainLinkPageRefs = inputData.listDomainLinkPages();
 
             // Ensure that the domains we've just crawled are in the domain database to this node
             try (var inserter = new DomainInserter(conn, nodeId);
@@ -165,7 +158,7 @@ public class DomainLoaderService {
         public void acceptDomains(Set<String> knownDomains, SlopDomainRecord.DomainNameReader reader) throws IOException, SQLException {
             while (reader.hasMore()) {
                 String domainName = reader.next();
-                if (!knownDomains.add(domainName)) continue;
+                if (!knownDomains.add(domainName.toLowerCase())) continue;
 
                 accept(new EdgeDomain(domainName));
             }
@@ -174,7 +167,7 @@ public class DomainLoaderService {
         public void acceptDomains(Set<String> knownDomains, SlopDomainLinkRecord.DestReader reader) throws IOException, SQLException {
             while (reader.hasMore()) {
                 String domainName = reader.next();
-                if (!knownDomains.add(domainName)) continue;
+                if (!knownDomains.add(domainName.toLowerCase())) continue;
 
                 accept(new EdgeDomain(domainName));
             }

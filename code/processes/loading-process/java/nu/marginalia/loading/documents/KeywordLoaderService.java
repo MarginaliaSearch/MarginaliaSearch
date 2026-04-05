@@ -32,7 +32,6 @@ public class KeywordLoaderService {
         try (var task = heartbeat.createAdHocTaskHeartbeat("KEYWORDS")) {
 
             Collection<SlopTable.Ref<SlopDocumentRecord>> documentFiles = inputData.listDocumentFiles();
-            int processed = 0;
 
             for (SlopTable.Ref<SlopDocumentRecord> pageRef : task.wrap("LOAD", documentFiles)) {
                 try (var keywordsReader = new SlopDocumentRecord.KeywordsProjectionReader(pageRef)) {
