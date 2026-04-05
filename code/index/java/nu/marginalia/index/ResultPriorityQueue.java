@@ -22,7 +22,9 @@ public class ResultPriorityQueue implements Iterable<RankableDocument> {
     }
 
     public @NotNull Iterator<RankableDocument> iterator() {
-        return queue.iterator();
+        ArrayList<RankableDocument> results = new ArrayList<>(queue);
+        results.sort(Comparator.naturalOrder());
+        return results.iterator();
     }
 
     public void addAll(ResultPriorityQueue otherQueue) {
