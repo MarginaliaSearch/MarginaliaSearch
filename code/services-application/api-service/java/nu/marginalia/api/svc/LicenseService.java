@@ -65,8 +65,11 @@ public class LicenseService {
                 ApiLicenseOptions.SOURCE_POLAR
                 );
 
-        if (benefit.allowOveruse()) {
-            options.add(ApiLicenseOptions.ALLOW_DAILY_OVERUSE);
+        if (benefit.allowQueryOveruse()) {
+            options.add(ApiLicenseOptions.ALLOW_QUERY_DAILY_OVERUSE);
+        }
+        if (benefit.allowSiteInfoOveruse()) {
+            options.add(ApiLicenseOptions.ALLOW_SITE_INFO_DAILY_OVERUSE);
         }
 
         ApiLicense license = new ApiLicense(
@@ -75,6 +78,8 @@ public class LicenseService {
                 key,
                 benefit.ratePerMinMax(),
                 benefit.rateDaily(),
+                benefit.siteInfoRatePerMinMax(),
+                benefit.siteInfoRateDaily(),
                 options
         );
 
@@ -83,18 +88,23 @@ public class LicenseService {
 
     private ApiLicense getFromDb(String key) throws NoSuchKeyException {
         try (var conn = dataSource.getConnection();
-            var stmt = conn.prepareStatement("SELECT LICENSE,NAME,RATE FROM EC_API_KEY WHERE LICENSE_KEY=?")) {
+            var stmt = conn.prepareStatement("SELECT LICENSE,NAME,RATE,SITE_INFO_RATE FROM EC_API_KEY WHERE LICENSE_KEY=?")) {
 
             stmt.setString(1, key);
 
             var rsp = stmt.executeQuery();
 
             if (rsp.next()) {
+                int rate = rsp.getInt("RATE");
+                int siteInfoRate = rsp.getInt("SITE_INFO_RATE");
+
                 return new ApiLicense(key,
                         rsp.getString("LICENSE"),
                         rsp.getString("NAME"),
-                        rsp.getInt("RATE"),
-                        1_000, // default to 1K per day for now
+                        rate,
+                        2_000,
+                        siteInfoRate,
+                        5_000,
                         EnumSet.of(
                                 ApiLicenseOptions.ALLOW_V1_API,
                                 ApiLicenseOptions.SOURCE_INTERNAL

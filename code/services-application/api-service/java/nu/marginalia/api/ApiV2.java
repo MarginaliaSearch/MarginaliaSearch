@@ -304,7 +304,7 @@ public class ApiV2 implements Extension {
         // Voluntary over-billing protection via request header
         int limitBillableRequestsHeader = ctx.header("API-Limit-Billable-Requests").intValue(-1);
         if (limitBillableRequestsHeader >= 0
-            && license.hasOption(ApiLicenseOptions.ALLOW_DAILY_OVERUSE)
+            && license.hasOption(ApiLicenseOptions.ALLOW_QUERY_DAILY_OVERUSE)
             && !rateLimiterService.hasRemainingDailyLimit(license))
         {
 
@@ -385,7 +385,7 @@ public class ApiV2 implements Extension {
             logger.info(apiUsageMarker, "{} {} {}", license.key(), limitState, ctx.header("X-Forwarded-For"));
         }
 
-        if (license.hasOption(ApiLicenseOptions.ALLOW_DAILY_OVERUSE)) {
+        if (license.hasOption(ApiLicenseOptions.ALLOW_QUERY_DAILY_OVERUSE)) {
             long billableApiUsage = rateLimiterService.estimatedTotalApiUseForPeriod(license);
             ctx.setResponseHeader("API-Billable-Requests", billableApiUsage);
         }
@@ -413,10 +413,16 @@ public class ApiV2 implements Extension {
             return "";
         }
 
-        if (!rateLimiterService.isAllowedQPM(license)) {
+        if (!rateLimiterService.isAllowedSiteInfoQPM(license)) {
             ApiMetrics.wmsa_api_timeout_count.labelValues(license.key()).inc();
             ctx.setResponseCode(429);
-            return "QPM Limit Exceeded";
+            return "Site Info QPM Limit Exceeded";
+        }
+
+        if (!rateLimiterService.isAllowedSiteInfoQPD(license)) {
+            ApiMetrics.wmsa_api_timeout_count.labelValues(license.key()).inc();
+            ctx.setResponseCode(429);
+            return "Site Info Daily Limit Exceeded";
         }
 
         String domainName = ctx.path("domain").value();
@@ -466,6 +472,8 @@ public class ApiV2 implements Extension {
             );
         }
 
+        rateLimiterService.registerSuccessfulSiteInfoQuery(license);
+
         ApiSiteInfo result = new ApiSiteInfo(
                 rpcResponse.getDomain(),
                 rpcResponse.getState(),
@@ -499,10 +507,16 @@ public class ApiV2 implements Extension {
             return "";
         }
 
-        if (!rateLimiterService.isAllowedQPM(license)) {
+        if (!rateLimiterService.isAllowedSiteInfoQPM(license)) {
             ApiMetrics.wmsa_api_timeout_count.labelValues(license.key()).inc();
             ctx.setResponseCode(429);
-            return "QPM Limit Exceeded";
+            return "Site Info QPM Limit Exceeded";
+        }
+
+        if (!rateLimiterService.isAllowedSiteInfoQPD(license)) {
+            ApiMetrics.wmsa_api_timeout_count.labelValues(license.key()).inc();
+            ctx.setResponseCode(429);
+            return "Site Info Daily Limit Exceeded";
         }
 
         String domainName = ctx.path("domain").value();
@@ -541,6 +555,8 @@ public class ApiV2 implements Extension {
             ctx.setResponseCode(StatusCode.SERVER_ERROR_CODE);
             return "Failed to fetch related domains";
         }
+
+        rateLimiterService.registerSuccessfulSiteInfoQuery(license);
 
         ctx.setResponseType("application/json");
         return gson.toJson(new ApiSimilarDomains(domainName, results));

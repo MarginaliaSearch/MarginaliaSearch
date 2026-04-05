@@ -30,8 +30,8 @@ class RateLimiterServiceTest {
     @Test
     public void testNoLimit() {
 
-        var license = new ApiLicense("key", "Public Domain", "Steven", 0, 0,
-                EnumSet.of(ApiLicenseOptions.ALLOW_DAILY_OVERUSE, ApiLicenseOptions.ALLOW_V1_API));
+        var license = new ApiLicense("key", "Public Domain", "Steven", 0, 0, 0, 0,
+                EnumSet.of(ApiLicenseOptions.ALLOW_QUERY_DAILY_OVERUSE, ApiLicenseOptions.ALLOW_V1_API));
 
         for (int i = 0; i < 10000; i++) {
             assertTrue(rateLimiterService.isAllowedQPM(license));
@@ -44,8 +44,10 @@ class RateLimiterServiceTest {
     @Test
     public void testWithLimit() {
 
-        var license = new ApiLicense("key", "Public Domain", "Steven", 10, 0,  EnumSet.of(ApiLicenseOptions.ALLOW_DAILY_OVERUSE, ApiLicenseOptions.ALLOW_V1_API));
-        var otherLicense = new ApiLicense("key2", "Public Domain", "Bob", 10, 0,  EnumSet.of(ApiLicenseOptions.ALLOW_DAILY_OVERUSE, ApiLicenseOptions.ALLOW_V1_API));
+        var license = new ApiLicense("key", "Public Domain", "Steven", 10, 0, 30, 0,
+                EnumSet.of(ApiLicenseOptions.ALLOW_QUERY_DAILY_OVERUSE, ApiLicenseOptions.ALLOW_V1_API));
+        var otherLicense = new ApiLicense("key2", "Public Domain", "Bob", 10, 0, 30, 0,
+                EnumSet.of(ApiLicenseOptions.ALLOW_QUERY_DAILY_OVERUSE, ApiLicenseOptions.ALLOW_V1_API));
 
         for (int i = 0; i < 1000; i++) {
             if (i < 10) {
@@ -58,5 +60,34 @@ class RateLimiterServiceTest {
 
         assertTrue(rateLimiterService.isAllowedQPM(otherLicense));
         assertEquals(2, rateLimiterService.size());
+    }
+
+    @Test
+    public void testSiteInfoNoLimit() {
+        var license = new ApiLicense("key", "Public Domain", "Steven", 10, 0, 0, 0,
+                EnumSet.of(ApiLicenseOptions.ALLOW_QUERY_DAILY_OVERUSE, ApiLicenseOptions.ALLOW_V1_API));
+
+        for (int i = 0; i < 10000; i++) {
+            assertTrue(rateLimiterService.isAllowedSiteInfoQPM(license));
+        }
+    }
+
+    @Test
+    public void testSiteInfoWithLimit() {
+        var license = new ApiLicense("key", "Public Domain", "Steven", 10, 0, 20, 0,
+                EnumSet.of(ApiLicenseOptions.ALLOW_QUERY_DAILY_OVERUSE, ApiLicenseOptions.ALLOW_V1_API));
+
+        // Site info has its own bucket (20 QPM), separate from search (10 QPM)
+        for (int i = 0; i < 100; i++) {
+            if (i < 20) {
+                assertTrue(rateLimiterService.isAllowedSiteInfoQPM(license));
+            }
+            else {
+                assertFalse(rateLimiterService.isAllowedSiteInfoQPM(license));
+            }
+        }
+
+        // Search QPM should still be available since it uses a separate bucket
+        assertTrue(rateLimiterService.isAllowedQPM(license));
     }
 }

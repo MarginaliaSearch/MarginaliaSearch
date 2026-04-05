@@ -1,8 +1,6 @@
 package nu.marginalia.api;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Module;
-import jakarta.inject.Named;
 import nu.marginalia.api.polar.PolarBenefit;
 import nu.marginalia.api.polar.PolarBenefits;
 import nu.marginalia.api.polar.PolarClient;
@@ -28,15 +26,40 @@ public class PolarModule extends AbstractModule {
             Map<String, PolarBenefit> benefitsMap = new HashMap<>();
 
             addBenefit(benefitsMap, "api.polar.tierNcId",
-                    new PolarBenefit("CC-BY-NC-SA 4.0", 1_000, 15, false));
+                    PolarBenefit.builder("CC-BY-NC-SA 4.0")
+                            .queryRate(1_000, 15)
+                            .siteInfoRate(10_000, 30)
+                            .allowQueryOveruse(false)
+                            .allowSiteInfoOveruse(false)
+                            .build());
             addBenefit(benefitsMap, "api.polar.tierMeteredId",
-                    new PolarBenefit("UNRESTRICTED", 25, 15, true));
+                    PolarBenefit.builder("UNRESTRICTED")
+                            .queryRate(25, 15)
+                            .siteInfoRate(10_000, 30)
+                            .allowQueryOveruse(true)
+                            .allowSiteInfoOveruse(false)
+                            .build());
             addBenefit(benefitsMap, "api.polar.tier1Id",
-                    new PolarBenefit("UNRESTRICTED", 2_500, 15, true));
+                    PolarBenefit.builder("UNRESTRICTED")
+                            .queryRate(2_500, 15)
+                            .siteInfoRate(10_000, 30)
+                            .allowQueryOveruse(true)
+                            .allowSiteInfoOveruse(false)
+                            .build());
             addBenefit(benefitsMap, "api.polar.tier2Id",
-                    new PolarBenefit("UNRESTRICTED", 10_000, 30, true));
+                    PolarBenefit.builder("UNRESTRICTED")
+                            .queryRate(10_000, 30)
+                            .siteInfoRate(50_000, 60)
+                            .allowQueryOveruse(true)
+                            .allowSiteInfoOveruse(false)
+                            .build());
             addBenefit(benefitsMap, "api.polar.tier3Id",
-                    new PolarBenefit("UNRESTRICTED", 100_000, 60, true));
+                    PolarBenefit.builder("UNRESTRICTED")
+                            .queryRate(100_000, 60)
+                            .siteInfoRate(500_000, 120)
+                            .allowQueryOveruse(true)
+                            .allowSiteInfoOveruse(false)
+                            .build());
 
             bind(PolarBenefits.class).toInstance(new PolarBenefits(benefitsMap));
         }

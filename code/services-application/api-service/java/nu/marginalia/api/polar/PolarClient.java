@@ -34,10 +34,12 @@ public class PolarClient {
 
     private final boolean isAvilable;
     private final String overuseMeterId;
+    private final String siteInfoOveruseMeterId;
 
     private ConcurrentHashMap<String, PolarLicenseKey> licenses = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, PolarSubscription> subcriptions = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, Long> apiOveruseForPeriod = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Long> siteInfoOveruseForPeriod = new ConcurrentHashMap<>();
 
     private final Executor virtualExecutor = Executors.newVirtualThreadPerTaskExecutor();
     private final ScheduledFuture<?> revalidationJob;
@@ -59,6 +61,7 @@ public class PolarClient {
             this.client = null;
             this.isAvilable = false;
             this.overuseMeterId = null;
+            this.siteInfoOveruseMeterId = null;
             this.revalidationJob = null;
         }
         else {
@@ -69,13 +72,22 @@ public class PolarClient {
                     .build();
 
             var overuseMeterIdMaybe = fetchMeterId("API Daily Limit Excess");
+            var siteInfoOveruseMeterIdMaybe = fetchMeterId("API Site Info Excess");
             if (overuseMeterIdMaybe.isEmpty()) {
                 logger.error("Could not fetch daily API limit excess meter ID");
                 this.overuseMeterId = null;
+                this.siteInfoOveruseMeterId = null;
                 this.isAvilable = false;
+            }
+            else if (siteInfoOveruseMeterIdMaybe.isEmpty()) {
+                logger.warn("Could not fetch site info excess meter ID, site info billing disabled");
+                this.overuseMeterId = overuseMeterIdMaybe.get();
+                this.siteInfoOveruseMeterId = null;
+                this.isAvilable = true;
             }
             else {
                 this.overuseMeterId = overuseMeterIdMaybe.get();
+                this.siteInfoOveruseMeterId = siteInfoOveruseMeterIdMaybe.get();
                 this.isAvilable = true;
             }
 
@@ -311,9 +323,11 @@ public class PolarClient {
     /** Report API key usage to the Polar.SH API via events, then fetch the updated meter values
      * and insert into apiOveruseForPeriod so that we have a client side view of billable requests
      * */
-    public void reportKeyUse(String apiKey, Instant snapshotTime, int usage, int overusage) {
+    public void reportKeyUse(String apiKey, Instant snapshotTime,
+                             int usage, int overusage,
+                             int siteInfoUsage, int siteInfoOverusage) {
         if (!isAvilable) return;
-        if (usage == 0 && overusage == 0) return;
+        if (usage == 0 && overusage == 0 && siteInfoUsage == 0 && siteInfoOverusage == 0) return;
 
         PolarLicenseKey license = licenses.get(apiKey);
         if (license == null) {
@@ -332,17 +346,35 @@ public class PolarClient {
                 .atZone(ZoneId.systemDefault())
                 .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
 
+        List<Map<String, Object>> events = new ArrayList<>();
+
+        if (usage > 0 || overusage > 0) {
+            events.add(Map.of(
+                    "name", "api_query",
+                    "timestamp", ts,
+                    "customer_id", license.customerId(),
+                    "metadata",
+                        Map.of("api_query_use", usage,
+                                "api_query_excess", overusage)
+            ));
+        }
+
+        if (siteInfoUsage > 0 || siteInfoOverusage > 0) {
+            events.add(Map.of(
+                    "name", "api_site_info",
+                    "timestamp", ts,
+                    "customer_id", license.customerId(),
+                    "metadata",
+                        Map.of("api_site_info_use", siteInfoUsage,
+                                "api_site_info_excess", siteInfoOverusage)
+            ));
+        }
+
+        if (events.isEmpty()) return;
+
         Map<String, Object> request = Map.of(
                 "key", apiKey,
-                "events", List.of(
-                        Map.of(
-                                "name", "api_query",
-                                "timestamp", ts,
-                                "customer_id", license.customerId(),
-                                "metadata",
-                                    Map.of("api_query_use", usage,
-                                            "api_query_excess", overusage)
-                        ))
+                "events", events
         );
 
         URI uri = URI.create(baseUri + apiPath);
@@ -369,15 +401,32 @@ public class PolarClient {
         }
         else {
             logger.error("Failed to get API use meter reading, falling back to estimate");
-
-            // In case of an outage, we'll estimate that the changes went through until we can get
-            // a solid reading
             apiOveruseForPeriod.merge(apiKey, (long) overusage, Long::sum);
+        }
+
+        if (siteInfoOveruseMeterId != null) {
+            var siteInfoMeterUse = fetchMeterReading(siteInfoOveruseMeterId, subscription);
+            if (siteInfoMeterUse.isPresent()) {
+                siteInfoOveruseForPeriod.put(apiKey, siteInfoMeterUse.getAsLong());
+            }
+            else {
+                logger.error("Failed to get site info meter reading, falling back to estimate");
+                siteInfoOveruseForPeriod.merge(apiKey, (long) siteInfoOverusage, Long::sum);
+            }
         }
     }
 
     public OptionalLong getApiOveruseEstimate(ApiLicense license) {
         Long val = apiOveruseForPeriod.get(license.key());
+        if (val == null) {
+            return OptionalLong.empty();
+        } else {
+            return OptionalLong.of(val);
+        }
+    }
+
+    public OptionalLong getSiteInfoOveruseEstimate(ApiLicense license) {
+        Long val = siteInfoOveruseForPeriod.get(license.key());
         if (val == null) {
             return OptionalLong.empty();
         } else {

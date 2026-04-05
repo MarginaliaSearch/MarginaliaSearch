@@ -18,6 +18,8 @@ class ResponseCacheTest {
             "Steven",
             0,
             0,
+            0,
+            0,
             EnumSet.noneOf(ApiLicenseOptions.class)
     );
     ApiLicense licenseB = new ApiLicense(
@@ -26,6 +28,8 @@ class ResponseCacheTest {
             "Jeff",
             0,
             15,
+            0,
+            0,
             EnumSet.noneOf(ApiLicenseOptions.class)
     );
 
