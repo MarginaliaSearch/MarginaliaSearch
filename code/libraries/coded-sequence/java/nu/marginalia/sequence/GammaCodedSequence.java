@@ -63,14 +63,9 @@ public class GammaCodedSequence implements Iterable<Integer>, CodedSequence {
     /** Return the raw bytes of the sequence. */
     @Override
     public byte[] bytes() {
-        if (raw.hasArray()) {
-            return raw.array();
-        }
-        else {
-            byte[] bytes = new byte[raw.capacity()];
-            raw.get(0, bytes, 0, bytes.length);
-            return bytes;
-        }
+        byte[] bytes = new byte[raw.capacity()];
+        raw.get(0, bytes, 0, bytes.length);
+        return bytes;
     }
 
     @Override

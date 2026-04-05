@@ -177,7 +177,7 @@ public class VarintCodedSequence implements CodedSequence {
 
     @Override
     public int bufferSize() {
-        return raw.capacity();
+        return startLimit - startPos;
     }
 
     @Override

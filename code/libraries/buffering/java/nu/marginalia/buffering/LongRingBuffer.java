@@ -23,7 +23,7 @@ public class LongRingBuffer {
         for (int iter = 0;;iter++) {
             while ((rp = readPos.get()) != writePos.get()) {
                 var ret = items[rp];
-                readPos.lazySet((rp + 1) & mask);
+                readPos.set((rp + 1) & mask);
                 return ret;
             }
             if (iter > 1000)
@@ -43,7 +43,7 @@ public class LongRingBuffer {
         }
 
         if (batchSize > 0) {
-            readPos.lazySet((rp + batchSize) & mask);
+            readPos.set((rp + batchSize) & mask);
         }
 
         return batchSize;
