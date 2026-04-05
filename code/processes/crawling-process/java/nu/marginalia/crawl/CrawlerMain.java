@@ -87,7 +87,7 @@ public class CrawlerMain extends ProcessMainClass {
 
     private static final double URL_GROWTH_FACTOR = Double.parseDouble(System.getProperty("crawler.crawlSetGrowthFactor", "1.25"));
     private static final int MIN_URLS_PER_DOMAIN = Integer.getInteger("crawler.minUrlsPerDomain", 100);
-    private static final int MID_URLS_PER_DOMAIN = Integer.getInteger("crawler.minUrlsPerDomain", 2_000);
+    private static final int MID_URLS_PER_DOMAIN = Integer.getInteger("crawler.midUrlsPerDomain", 2_000);
     private static final int MAX_URLS_PER_DOMAIN = Integer.getInteger("crawler.maxUrlsPerDomain", 10_000);
 
 
