@@ -64,30 +64,39 @@ public class LongArrayFactory {
 
     public static LongArray mmapForReadingConfined(Path filename) throws IOException  {
         if (useUnsafe)
-            return UnsafeLongArray.fromMmapReadOnly(Arena.ofConfined(), filename, 0, Files.size(filename) / 8);
+            return UnsafeLongArray.fromMmapReadOnly(Arena.ofConfined(), filename, 0, fileSizeLongs(filename));
         else
-            return SegmentLongArray.fromMmapReadOnly(Arena.ofConfined(), filename, 0, Files.size(filename) / 8);
+            return SegmentLongArray.fromMmapReadOnly(Arena.ofConfined(), filename, 0, fileSizeLongs(filename));
     }
 
     public static LongArray mmapForReadingShared(Path filename) throws IOException  {
         if (useUnsafe)
-            return UnsafeLongArray.fromMmapReadOnly(Arena.ofShared(), filename, 0, Files.size(filename) / 8);
+            return UnsafeLongArray.fromMmapReadOnly(Arena.ofShared(), filename, 0, fileSizeLongs(filename));
         else
-            return SegmentLongArray.fromMmapReadOnly(Arena.ofShared(), filename, 0, Files.size(filename) / 8);
+            return SegmentLongArray.fromMmapReadOnly(Arena.ofShared(), filename, 0, fileSizeLongs(filename));
     }
 
     public static LongArray mmapForModifyingConfined(Path filename) throws IOException  {
         if (useUnsafe)
-            return UnsafeLongArray.fromMmapReadWrite(Arena.ofConfined(), filename, 0, Files.size(filename));
+            return UnsafeLongArray.fromMmapReadWrite(Arena.ofConfined(), filename, 0, fileSizeLongs(filename));
         else
-            return SegmentLongArray.fromMmapReadWrite(Arena.ofConfined(), filename, 0, Files.size(filename));
+            return SegmentLongArray.fromMmapReadWrite(Arena.ofConfined(), filename, 0, fileSizeLongs(filename));
     }
 
     public static LongArray mmapForModifyingShared(Path filename) throws IOException  {
         if (useUnsafe)
-            return UnsafeLongArray.fromMmapReadWrite(Arena.ofShared(), filename, 0, Files.size(filename) / 8);
+            return UnsafeLongArray.fromMmapReadWrite(Arena.ofShared(), filename, 0, fileSizeLongs(filename));
         else
-            return SegmentLongArray.fromMmapReadWrite(Arena.ofShared(), filename, 0, Files.size(filename) / 8);
+            return SegmentLongArray.fromMmapReadWrite(Arena.ofShared(), filename, 0, fileSizeLongs(filename));
+    }
+
+    private static long fileSizeLongs(Path filename) throws IOException {
+        final long fileSizeBytes = Files.size(filename);
+
+        if (0 != (fileSizeBytes & 7L))
+            throw new IOException("File " + fileSizeBytes + " is not a multiple-of-8 length");
+
+        return fileSizeBytes / 8;
     }
 
     public static LongArray mmapForWritingConfined(Path filename, long size) throws IOException  {
