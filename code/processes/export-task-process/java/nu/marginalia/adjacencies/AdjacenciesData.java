@@ -71,7 +71,7 @@ public class AdjacenciesData {
                     dToSMap.put(e.getKey(), val);
                 });
 
-        logger.info("All adjacency dat loaded");
+        logger.info("All adjacency data loaded");
     }
 
     private boolean isEligible(RoaringBitmap value) {
