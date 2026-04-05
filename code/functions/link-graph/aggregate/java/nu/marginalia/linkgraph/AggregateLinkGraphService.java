@@ -3,7 +3,7 @@ package nu.marginalia.linkgraph;
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;
 import nu.marginalia.api.linkgraph.*;
-import nu.marginalia.api.linkgraph.LinkGraphApiGrpc.LinkGraphApiBlockingStub;
+import nu.marginalia.api.linkgraph.PartitionLinkGraphApiGrpc.PartitionLinkGraphApiBlockingStub;
 import nu.marginalia.service.server.DiscoverableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,10 +11,11 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 /** This class is responsible for aggregating the link graph data from the partitioned link graph
- * services.
+ * services.  It exposes its own gRPC service (AggregateLinkGraphApi) distinct from the per-partition
+ * LinkGraphApi to avoid ambiguous service discovery.
  */
 public class AggregateLinkGraphService
-        extends LinkGraphApiGrpc.LinkGraphApiImplBase
+        extends AggregateLinkGraphApiGrpc.AggregateLinkGraphApiImplBase
         implements DiscoverableService
 {
     private static final Logger logger = LoggerFactory.getLogger(AggregateLinkGraphService.class);
@@ -29,7 +30,7 @@ public class AggregateLinkGraphService
     public void getAllLinks(Empty request,
                             StreamObserver<RpcDomainIdPairs> responseObserver) {
 
-        client.getChannelPool().call(LinkGraphApiBlockingStub::getAllLinks)
+        client.getChannelPool().call(PartitionLinkGraphApiBlockingStub::getAllLinks)
                 .run(Empty.getDefaultInstance())
                 .forEach(iter -> iter.forEachRemaining(responseObserver::onNext));
 
@@ -41,7 +42,7 @@ public class AggregateLinkGraphService
                                    StreamObserver<RpcDomainIdList> responseObserver) {
         var rspBuilder = RpcDomainIdList.newBuilder();
 
-        client.getChannelPool().call(LinkGraphApiBlockingStub::getLinksFromDomain)
+        client.getChannelPool().call(PartitionLinkGraphApiBlockingStub::getLinksFromDomain)
                 .run(request)
                 .stream()
                 .map(RpcDomainIdList::getDomainIdList)
@@ -58,7 +59,7 @@ public class AggregateLinkGraphService
         var rspBuilder = RpcDomainIdList.newBuilder();
 
 
-        client.getChannelPool().call(LinkGraphApiBlockingStub::getLinksToDomain)
+        client.getChannelPool().call(PartitionLinkGraphApiBlockingStub::getLinksToDomain)
                 .run(request)
                 .stream()
                 .map(RpcDomainIdList::getDomainIdList)
@@ -72,7 +73,7 @@ public class AggregateLinkGraphService
     @Override
     public void countLinksFromDomain(RpcDomainId request,
                                      StreamObserver<RpcDomainIdCount> responseObserver) {
-        int sum = client.getChannelPool().call(LinkGraphApiBlockingStub::countLinksFromDomain)
+        int sum = client.getChannelPool().call(PartitionLinkGraphApiBlockingStub::countLinksFromDomain)
                 .run(request)
                 .stream()
                 .mapToInt(RpcDomainIdCount::getIdCount)
@@ -88,7 +89,7 @@ public class AggregateLinkGraphService
     public void countLinksToDomain(RpcDomainId request,
                                    StreamObserver<RpcDomainIdCount> responseObserver) {
 
-        int sum = client.getChannelPool().call(LinkGraphApiBlockingStub::countLinksToDomain)
+        int sum = client.getChannelPool().call(PartitionLinkGraphApiBlockingStub::countLinksToDomain)
                 .run(request)
                 .stream()
                 .mapToInt(RpcDomainIdCount::getIdCount)

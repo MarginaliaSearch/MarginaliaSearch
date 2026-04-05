@@ -4,7 +4,19 @@ package nu.marginalia.api.linkgraph;
 option java_package="nu.marginalia.api.linkgraph";
 option java_multiple_files=true;
 
-service LinkGraphApi {
+/** Aggregate API that fans out queries to partition APIs,
+    to get around network topology constraints
+*/
+service AggregateLinkGraphApi {
+  rpc getAllLinks(Empty) returns (stream RpcDomainIdPairs) {}
+  rpc getLinksFromDomain(RpcDomainId) returns (RpcDomainIdList) {}
+  rpc getLinksToDomain(RpcDomainId) returns (RpcDomainIdList) {}
+  rpc countLinksFromDomain(RpcDomainId) returns (RpcDomainIdCount) {}
+  rpc countLinksToDomain(RpcDomainId) returns (RpcDomainIdCount) {}
+}
+
+/** Per-partition service that does the actual work */
+service PartitionLinkGraphApi {
   rpc getAllLinks(Empty) returns (stream RpcDomainIdPairs) {}
   rpc getLinksFromDomain(RpcDomainId) returns (RpcDomainIdList) {}
   rpc getLinksToDomain(RpcDomainId) returns (RpcDomainIdList) {}

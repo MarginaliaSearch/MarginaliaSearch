@@ -10,7 +10,7 @@ import nu.marginalia.service.server.DiscoverableService;
  * AggregateLinkGraphClient.
  */
 public class PartitionLinkGraphService
-        extends LinkGraphApiGrpc.LinkGraphApiImplBase
+        extends PartitionLinkGraphApiGrpc.PartitionLinkGraphApiImplBase
         implements DiscoverableService
 {
     private final DomainLinks domainLinks;

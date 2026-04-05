@@ -13,16 +13,16 @@ import org.slf4j.LoggerFactory;
 public class PartitionLinkGraphClient {
     private static final Logger logger = LoggerFactory.getLogger(PartitionLinkGraphClient.class);
 
-    private final GrpcMultiNodeChannelPool<LinkGraphApiGrpc.LinkGraphApiBlockingStub> channelPool;
+    private final GrpcMultiNodeChannelPool<PartitionLinkGraphApiGrpc.PartitionLinkGraphApiBlockingStub> channelPool;
 
     @Inject
     public PartitionLinkGraphClient(GrpcChannelPoolFactory factory) {
         this.channelPool = factory.createMulti(
-                ServiceKey.forGrpcApi(LinkGraphApiGrpc.class, ServicePartition.multi()),
-                LinkGraphApiGrpc::newBlockingStub);
+                ServiceKey.forGrpcApi(PartitionLinkGraphApiGrpc.class, ServicePartition.multi()),
+                PartitionLinkGraphApiGrpc::newBlockingStub);
     }
 
-    public GrpcMultiNodeChannelPool<LinkGraphApiGrpc.LinkGraphApiBlockingStub> getChannelPool() {
+    public GrpcMultiNodeChannelPool<PartitionLinkGraphApiGrpc.PartitionLinkGraphApiBlockingStub> getChannelPool() {
         return channelPool;
     }
 
