@@ -9,34 +9,38 @@ import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
 import nu.marginalia.domsample.DomSampleService;
+import nu.marginalia.schedule.ActorScheduleRow;
+import nu.marginalia.schedule.ActorScheduleService;
 
 import java.time.Duration;
 import java.time.Instant;
 
 @Singleton
 public class DomSampleActor extends RecordActorPrototype {
-    private static final ActorTimeslot.ActorSchedule schedule = ActorTimeslot.DOM_SAMPLE_SLOT;
 
     private final DomSampleService domSampleService;
+    private final ActorScheduleService scheduleService;
 
     public record Initial() implements ActorStep {}
 
     @Resume(behavior= ActorResumeBehavior.RETRY)
     public record Wait(String startTs, String endTs) implements ActorStep {
-        public Wait() {
-            ActorTimeslot slot = schedule.nextTimeslot();
-
-            this(slot.start().toString(), slot.end().toString());
+        public Wait(ActorTimeslot timeslot) {
+            this(timeslot.start().toString(), timeslot.end().toString());
         }
     }
     @Resume(behavior=ActorResumeBehavior.RESTART)
     public record Run(String endTs) implements ActorStep {}
 
+    private ActorTimeslot nextTimeslot() {
+        return new ActorTimeslot.ActorSchedule(scheduleService.getWindow(ActorScheduleRow.Window.DOM_SAMPLE)).nextTimeslot();
+    }
+
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
         return switch(self) {
             case Initial() -> {
-                yield new Wait();
+                yield new Wait(nextTimeslot());
             }
 
             case Wait(String startTs, String endTs) -> {
@@ -52,7 +56,7 @@ public class DomSampleActor extends RecordActorPrototype {
             case Run(String endTs) -> {
                 Instant endTime = Instant.parse(endTs);
                 if (endTime.isBefore(Instant.now()))
-                    yield new Wait();
+                    yield new Wait(nextTimeslot());
 
                 if (!domSampleService.isRunning())
                     domSampleService.start();
@@ -60,7 +64,7 @@ public class DomSampleActor extends RecordActorPrototype {
                 try {
                     while (Instant.now().isBefore(endTime)) {
                         if (!domSampleService.isRunning()) {
-                            yield new Wait();
+                            yield new Wait(nextTimeslot());
                         }
                         Thread.sleep(Duration.ofSeconds(15));
                     }
@@ -69,7 +73,7 @@ public class DomSampleActor extends RecordActorPrototype {
                     domSampleService.stop();
                 }
 
-                yield new Wait();
+                yield new Wait(nextTimeslot());
             }
             case End() -> {
                 if (domSampleService.isRunning())
@@ -86,10 +90,11 @@ public class DomSampleActor extends RecordActorPrototype {
     }
 
     @Inject
-    public DomSampleActor(Gson gson, DomSampleService domSampleService, ActorProcessWatcher processWatcher)
+    public DomSampleActor(Gson gson, DomSampleService domSampleService, ActorScheduleService scheduleService)
     {
         super(gson);
         this.domSampleService = domSampleService;
+        this.scheduleService = scheduleService;
     }
 
 }

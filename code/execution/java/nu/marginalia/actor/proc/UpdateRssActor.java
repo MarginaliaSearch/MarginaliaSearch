@@ -11,6 +11,8 @@ import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.nodecfg.model.NodeProfile;
 import nu.marginalia.rss.svc.FeedFetcherService;
 import nu.marginalia.rss.svc.FeedFetcherService.UpdateMode;
+import nu.marginalia.schedule.ActorScheduleRow;
+import nu.marginalia.schedule.ActorScheduleService;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,19 +27,21 @@ public class UpdateRssActor extends RecordActorPrototype {
 
     private final NodeConfigurationService nodeConfigurationService;
     private final FeedFetcherService feedFetcherService;
-
-    private final ActorTimeslot.ActorSchedule schedule = ActorTimeslot.RSS_FEEDS_SLOT;
+    private final ActorScheduleService scheduleService;
 
     private final int nodeId;
 
     @Inject
     public UpdateRssActor(Gson gson,
-                          ServiceConfiguration serviceConfiguration, FeedFetcherService feedFetcherService,
-                          NodeConfigurationService nodeConfigurationService) {
+                          ServiceConfiguration serviceConfiguration,
+                          FeedFetcherService feedFetcherService,
+                          NodeConfigurationService nodeConfigurationService,
+                          ActorScheduleService scheduleService) {
         super(gson);
         this.feedFetcherService = feedFetcherService;
         this.nodeId = serviceConfiguration.node();
         this.nodeConfigurationService = nodeConfigurationService;
+        this.scheduleService = scheduleService;
     }
 
     public record Initial() implements ActorStep {}
@@ -58,6 +62,10 @@ public class UpdateRssActor extends RecordActorPrototype {
     @Resume(behavior=ActorResumeBehavior.RETRY)
     public record Update(UpdateMode mode) implements ActorStep {}
 
+    private ActorTimeslot nextTimeslot() {
+        return new ActorTimeslot.ActorSchedule(scheduleService.getTrigger(ActorScheduleRow.Trigger.RSS_FEEDS)).nextTimeslot();
+    }
+
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
         return switch (self) {
@@ -66,7 +74,7 @@ public class UpdateRssActor extends RecordActorPrototype {
                     yield new Error("Invalid node profile for RSS update");
                 }
                 else {
-                    yield new Wait(schedule.nextTimeslot());
+                    yield new Wait(nextTimeslot());
                 }
             }
 
@@ -94,7 +102,7 @@ public class UpdateRssActor extends RecordActorPrototype {
                     TimeUnit.SECONDS.sleep(15);
                 }
 
-                yield new Wait(schedule.nextTimeslot());
+                yield new Wait(nextTimeslot());
             }
             case End() -> {
                 if (feedFetcherService.isRunning()) {

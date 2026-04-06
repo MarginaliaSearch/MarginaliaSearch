@@ -8,36 +8,39 @@ import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
-import nu.marginalia.domsample.DomSampleService;
 import nu.marginalia.livecapture.LiveCaptureGrpcService;
+import nu.marginalia.schedule.ActorScheduleRow;
+import nu.marginalia.schedule.ActorScheduleService;
 
 import java.time.Duration;
 import java.time.Instant;
 
 @Singleton
 public class ScreenshotActor extends RecordActorPrototype {
-    private static final ActorTimeslot.ActorSchedule schedule = ActorTimeslot.SCREENGRAB_SLOT_SAMPLE_SLOT;
 
     private final LiveCaptureGrpcService liveCaptureService;
+    private final ActorScheduleService scheduleService;
 
     public record Initial() implements ActorStep {}
 
     @Resume(behavior= ActorResumeBehavior.RETRY)
     public record Wait(String startTs, String endTs) implements ActorStep {
-        public Wait() {
-            ActorTimeslot slot = schedule.nextTimeslot();
-
-            this(slot.start().toString(), slot.end().toString());
+        public Wait(ActorTimeslot timeslot) {
+            this(timeslot.start().toString(), timeslot.end().toString());
         }
     }
     @Resume(behavior=ActorResumeBehavior.RESTART)
     public record Run(String endTs) implements ActorStep {}
 
+    private ActorTimeslot nextTimeslot() {
+        return new ActorTimeslot.ActorSchedule(scheduleService.getWindow(ActorScheduleRow.Window.SCREENGRAB)).nextTimeslot();
+    }
+
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
         return switch(self) {
             case Initial() -> {
-                yield new Wait();
+                yield new Wait(nextTimeslot());
             }
 
             case Wait(String startTs, String endTs) -> {
@@ -53,14 +56,14 @@ public class ScreenshotActor extends RecordActorPrototype {
             case Run(String endTs) -> {
                 Instant endTime = Instant.parse(endTs);
                 if (endTime.isBefore(Instant.now()))
-                    yield new Wait();
+                    yield new Wait(nextTimeslot());
 
                 liveCaptureService.setAllowed(true);
 
                 try {
                     while (Instant.now().isBefore(endTime)) {
                         if (!liveCaptureService.isAllowed()) {
-                            yield new Wait();
+                            yield new Wait(nextTimeslot());
                         }
                         Thread.sleep(Duration.ofSeconds(15));
                     }
@@ -69,7 +72,7 @@ public class ScreenshotActor extends RecordActorPrototype {
                     liveCaptureService.setAllowed(false);
                 }
 
-                yield new Wait();
+                yield new Wait(nextTimeslot());
             }
             case End() -> {
                 liveCaptureService.setAllowed(false);
@@ -82,14 +85,15 @@ public class ScreenshotActor extends RecordActorPrototype {
 
     @Override
     public String describe() {
-        return "Run DOM sample service";
+        return "Run screenshot capture service";
     }
 
     @Inject
-    public ScreenshotActor(Gson gson, LiveCaptureGrpcService liveCaptureService, ActorProcessWatcher processWatcher)
+    public ScreenshotActor(Gson gson, LiveCaptureGrpcService liveCaptureService, ActorScheduleService scheduleService)
     {
         super(gson);
         this.liveCaptureService = liveCaptureService;
+        this.scheduleService = scheduleService;
     }
 
 }

@@ -15,6 +15,8 @@ import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.mqapi.ProcessInboxNames;
 import nu.marginalia.mqapi.ping.PingRequest;
 import nu.marginalia.process.ProcessSpawnerService;
+import nu.marginalia.schedule.ActorScheduleRow;
+import nu.marginalia.schedule.ActorScheduleService;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,16 +36,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Singleton
 public class PingMonitorActor extends RecordActorPrototype {
 
-    private static final ActorTimeslot.ActorSchedule schedule = ActorTimeslot.DOMAIN_PING_SLOT;
-
     private final MqPersistence persistence;
     private final ProcessSpawnerService processSpawnerService;
+    private final ActorScheduleService scheduleService;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-
-    // We schedule the Ping job to run between 3-9 AM UTC,
-    // which is a time slot which about as close to a global
-    // off hour as there exists.
 
     public static final int MAX_ATTEMPTS = 3;
     private final String inboxName;
@@ -59,20 +56,22 @@ public class PingMonitorActor extends RecordActorPrototype {
     public record Run(int attempts) implements ActorStep {}
     @Resume(behavior = ActorResumeBehavior.RETRY)
     public record Wait(String startTs, String endTs) implements ActorStep {
-        public Wait() {
-            ActorTimeslot timeslot = schedule.nextTimeslot();
-
+        public Wait(ActorTimeslot timeslot) {
             this(timeslot.start().toString(), timeslot.end().toString());
         }
     }
     @Terminal
     public record Aborted() implements ActorStep {}
 
+    private ActorTimeslot nextTimeslot() {
+        return new ActorTimeslot.ActorSchedule(scheduleService.getWindow(ActorScheduleRow.Window.DOMAIN_PING)).nextTimeslot();
+    }
+
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
         return switch (self) {
             case Initial i -> {
-                yield new Wait();
+                yield new Wait(nextTimeslot());
             }
             case Monitor(int errorAttempts) -> {
                 for (;;) {
@@ -126,7 +125,7 @@ public class PingMonitorActor extends RecordActorPrototype {
                     yield new Aborted();
                 }
 
-                yield new Wait();
+                yield new Wait(nextTimeslot());
             }
             case Wait(String startTs, String endTs) -> {
                 var start = Instant.parse(startTs);
@@ -152,14 +151,16 @@ public class PingMonitorActor extends RecordActorPrototype {
 
     @Inject
     public PingMonitorActor(Gson gson,
-                                       ServiceConfiguration configuration,
-                                       MqPersistence persistence,
-                                       ProcessSpawnerService processSpawnerService) throws SQLException {
+                            ServiceConfiguration configuration,
+                            MqPersistence persistence,
+                            ProcessSpawnerService processSpawnerService,
+                            ActorScheduleService scheduleService) throws SQLException {
         super(gson);
         this.gson = gson;
         this.node = configuration.node();
         this.persistence = persistence;
         this.processSpawnerService = processSpawnerService;
+        this.scheduleService = scheduleService;
         this.inboxName = ProcessInboxNames.PING_INBOX + ":" + node;
         this.processId = ProcessSpawnerService.ProcessId.PING;
     }

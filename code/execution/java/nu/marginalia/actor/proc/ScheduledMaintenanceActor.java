@@ -14,6 +14,8 @@ import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.nodecfg.model.NodeProfile;
+import nu.marginalia.schedule.ActorScheduleRow;
+import nu.marginalia.schedule.ActorScheduleService;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.storage.FileStorageService;
@@ -38,8 +40,8 @@ public class ScheduledMaintenanceActor extends RecordActorPrototype {
 
     private final MqPersistence persistence;
     private final ServiceEventLog eventLog;
+    private final ActorScheduleService scheduleService;
 
-    private final ActorTimeslot.ActorSchedule schedule = ActorTimeslot.MAINTENANCE_SLOT;
     private final int nodeId;
 
 
@@ -49,13 +51,16 @@ public class ScheduledMaintenanceActor extends RecordActorPrototype {
                                      ServiceConfiguration serviceConfiguration,
                                      ExecutorActorStateMachines executorStateMachines,
                                      FileStorageService fileStorageService,
-                                     NodeConfigurationService nodeConfigurationService, ServiceEventLog eventLog) throws SQLException {
+                                     NodeConfigurationService nodeConfigurationService,
+                                     ActorScheduleService scheduleService,
+                                     ServiceEventLog eventLog) throws SQLException {
         super(gson);
         this.persistence = persistence;
         this.nodeId = serviceConfiguration.node();
         this.executorStateMachines = executorStateMachines;
         this.fileStorageService = fileStorageService;
         this.nodeConfigurationService = nodeConfigurationService;
+        this.scheduleService = scheduleService;
         this.eventLog = eventLog;
     }
 
@@ -82,6 +87,10 @@ public class ScheduledMaintenanceActor extends RecordActorPrototype {
     @Resume(behavior=ActorResumeBehavior.RESTART)
     public record Task_FetchRSSFeeds() implements ActorStep {}
 
+    private ActorTimeslot nextTimeslot() {
+        return new ActorTimeslot.ActorSchedule(scheduleService.getTrigger(ActorScheduleRow.Trigger.MAINTENANCE)).nextTimeslot();
+    }
+
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
         var nodeConfiguration = nodeConfigurationService.get(nodeId);
@@ -95,7 +104,7 @@ public class ScheduledMaintenanceActor extends RecordActorPrototype {
                     yield new End();
                 }
 
-                yield new Wait(schedule.nextTimeslot());
+                yield new Wait(nextTimeslot());
             }
 
             case Wait(String startTs, String endTs) -> {
@@ -109,14 +118,14 @@ public class ScheduledMaintenanceActor extends RecordActorPrototype {
                         case 13, 25 -> new Task_FetchRSSFeeds();
                         case 1 -> new Task_CleanOldExports();
                         case 2 -> new Task_CleanOldBackups();
-                        default -> new Wait(schedule.nextTimeslot());
+                        default -> new Wait(nextTimeslot());
                 };
             }
 
             case Task_CleanOldExports() -> {
                 if (!nodeConfiguration.autoClean()) {
                     eventLog.logEvent("MAIN-TASK-SKIPPED", taskName);
-                    yield new Wait(schedule.nextTimeslot());
+                    yield new Wait(nextTimeslot());
                 }
 
                 LocalDateTime cutoff = LocalDateTime.now().minusMonths(3);
@@ -129,13 +138,13 @@ public class ScheduledMaintenanceActor extends RecordActorPrototype {
                 }
 
                 eventLog.logEvent("MAINT-TASK-OK", taskName);
-                yield new Wait(schedule.nextTimeslot());
+                yield new Wait(nextTimeslot());
             }
 
             case Task_CleanOldBackups() -> {
                 if (!nodeConfiguration.autoClean()) {
                     eventLog.logEvent("MAIN-TASK-SKIPPED", taskName);
-                    yield new Wait(schedule.nextTimeslot());
+                    yield new Wait(nextTimeslot());
                 }
 
                 LocalDateTime cutoff = LocalDateTime.now().minusMonths(3);
@@ -149,18 +158,18 @@ public class ScheduledMaintenanceActor extends RecordActorPrototype {
 
                 eventLog.logEvent("MAINT-TASK-OK", taskName);
 
-                yield new Wait(schedule.nextTimeslot());
+                yield new Wait(nextTimeslot());
             }
             case Task_FetchRSSFeeds() -> {
                 if (!executorStateMachines.get(ExecutorActor.CRAWL).getState().isFinal()) {
                     eventLog.logEvent("MAIN-TASK-SKIPPED", taskName);
-                    yield new Wait(schedule.nextTimeslot());
+                    yield new Wait(nextTimeslot());
                 }
 
                 Optional<FileStorageId> storageId = fileStorageService.getOnlyActiveFileStorage(FileStorageType.CRAWL_DATA);
                 if (storageId.isEmpty()) {
                     eventLog.logEvent("MAIN-TASK-SKIPPED", taskName);
-                    yield new Wait(schedule.nextTimeslot());
+                    yield new Wait(nextTimeslot());
                 }
 
                 long msgId = createTrackingTokenMsg(taskName, nodeId, Duration.ofHours(3));
@@ -168,7 +177,7 @@ public class ScheduledMaintenanceActor extends RecordActorPrototype {
                         new ExportFeedsActor.Export(msgId, storageId.get())
                 );
 
-                yield new Wait(schedule.nextTimeslot());
+                yield new Wait(nextTimeslot());
             }
             case WaitMsg(long msgId) -> {
                 var msg = persistence.waitForMessageTerminalState(msgId, Duration.ofSeconds(15), Duration.ofHours(24));
@@ -178,7 +187,7 @@ public class ScheduledMaintenanceActor extends RecordActorPrototype {
                 else {
                     eventLog.logEvent("MAINT-TASK-OK", msg.function());
                 }
-                yield new Wait(schedule.nextTimeslot());
+                yield new Wait(nextTimeslot());
             }
             case End() -> {
                 yield new End(); // will not loop, terminal state

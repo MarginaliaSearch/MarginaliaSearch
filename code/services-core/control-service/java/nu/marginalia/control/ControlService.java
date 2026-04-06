@@ -55,6 +55,7 @@ public class ControlService extends SparkService {
                           DataSetsService dataSetsService,
                           ControlNodeService controlNodeService,
                           ControlDomainRankingSetsService controlDomainRankingSetsService,
+                          ScheduleService scheduleService,
                           ControlActorService controlActorService,
                           AbortedProcessService abortedProcessService,
                           DomainsManagementService domainsManagementService,
@@ -73,6 +74,7 @@ public class ControlService extends SparkService {
         sysActionsService.register();
         dataSetsService.register();
         controlDomainRankingSetsService.register();
+        scheduleService.register();
         abortedProcessService.register();
 
         // node

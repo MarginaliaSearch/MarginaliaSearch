@@ -12,6 +12,8 @@ import nu.marginalia.actor.state.Resume;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.nodecfg.model.NodeProfile;
+import nu.marginalia.schedule.ActorScheduleRow;
+import nu.marginalia.schedule.ActorScheduleService;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.jsoup.Jsoup;
@@ -38,10 +40,9 @@ import java.util.Set;
 public class ScrapeFeedsActor extends RecordActorPrototype {
     private static final Logger logger = LoggerFactory.getLogger(ScrapeFeedsActor.class);
 
-    private final Duration pollInterval = Duration.ofHours(6);
-
     private final ServiceEventLog eventLog;
     private final NodeConfigurationService nodeConfigurationService;
+    private final ActorScheduleService scheduleService;
     private final HikariDataSource dataSource;
     private final int nodeId;
 
@@ -102,7 +103,8 @@ public class ScrapeFeedsActor extends RecordActorPrototype {
                     }
                 }
 
-                yield new Wait(LocalDateTime.now().plus(pollInterval).toString());
+                ActorScheduleRow.IntervalSchedule row = scheduleService.getInterval(ActorScheduleRow.Interval.SCRAPE_FEEDS);
+                yield new Wait(LocalDateTime.now().plus(Duration.ofHours(row.intervalHours())).toString());
             }
             default -> new Error();
         };
@@ -185,11 +187,13 @@ public class ScrapeFeedsActor extends RecordActorPrototype {
                             ServiceEventLog eventLog,
                             ServiceConfiguration configuration,
                             NodeConfigurationService nodeConfigurationService,
+                            ActorScheduleService scheduleService,
                             HikariDataSource dataSource)
     {
         super(gson);
         this.eventLog = eventLog;
         this.nodeConfigurationService = nodeConfigurationService;
+        this.scheduleService = scheduleService;
         this.dataSource = dataSource;
         this.nodeId = configuration.node();
     }

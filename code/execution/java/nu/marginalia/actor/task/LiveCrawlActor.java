@@ -12,6 +12,8 @@ import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
 import nu.marginalia.api.feeds.FeedsClient;
+import nu.marginalia.schedule.ActorScheduleRow;
+import nu.marginalia.schedule.ActorScheduleService;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.mq.MqMessageState;
@@ -37,13 +39,12 @@ import java.util.Objects;
 
 @Singleton
 public class LiveCrawlActor extends RecordActorPrototype {
-    private static final ActorTimeslot.ActorSchedule schedule = ActorTimeslot.LIVE_CRAWLER_SLOT;
 
-    // STATES
     private final ActorProcessWatcher processWatcher;
     private final MqOutbox mqLiveCrawlerOutbox;
     private final ExecutorActorStateMachines executorActorStateMachines;
     private final FeedFetcherService feedFetcherService;
+    private final ActorScheduleService scheduleService;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final LanguageConfiguration languageConfiguration;
     private final FileStorageService fileStorageService;
@@ -51,10 +52,8 @@ public class LiveCrawlActor extends RecordActorPrototype {
     public record Initial() implements ActorStep {}
     @Resume(behavior = ActorResumeBehavior.RETRY)
     public record Monitor(String checkTimeTs, String feedsHash) implements ActorStep {
-        public Monitor(String feedsHash) {
-            ActorTimeslot slot = schedule.nextTimeslot();
-
-            this(slot.start().toString(), feedsHash);
+        public Monitor(ActorTimeslot timeslot, String feedsHash) {
+            this(timeslot.start().toString(), feedsHash);
         }
     }
     @Resume(behavior = ActorResumeBehavior.RESTART)
@@ -62,11 +61,15 @@ public class LiveCrawlActor extends RecordActorPrototype {
         public LiveCrawl(String feedsHash) { this(feedsHash, -1); }
     }
 
+    private ActorTimeslot nextTimeslot() {
+        return new ActorTimeslot.ActorSchedule(scheduleService.getTrigger(ActorScheduleRow.Trigger.LIVE_CRAWLER)).nextTimeslot();
+    }
+
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
         return switch (self) {
             case Initial() -> {
-                yield new Monitor(feedFetcherService.getFeedDataHash());
+                yield new Monitor(nextTimeslot(), feedFetcherService.getFeedDataHash());
             }
             case Monitor(String checkTimeTs, String oldHash) -> {
                 Instant checkTime = Instant.parse(checkTimeTs);
@@ -79,7 +82,7 @@ public class LiveCrawlActor extends RecordActorPrototype {
                     yield new LiveCrawl(newHash);
                 }
                 else {
-                    yield new Monitor(oldHash);
+                    yield new Monitor(nextTimeslot(), oldHash);
                 }
             }
             case LiveCrawl(String feedsHash, long msgId) when msgId < 0 -> {
@@ -112,7 +115,7 @@ public class LiveCrawlActor extends RecordActorPrototype {
                 // Build the index
                 executorActorStateMachines.initFrom(ExecutorActor.CONVERT_AND_LOAD, new ConvertAndLoadActor.Rerank());
 
-                yield new Monitor(feedsHash);
+                yield new Monitor(nextTimeslot(), feedsHash);
             }
             default -> new Error("Unknown state");
         };
@@ -128,13 +131,17 @@ public class LiveCrawlActor extends RecordActorPrototype {
                           ProcessOutboxes processOutboxes,
                           FeedFetcherService feedFetcherService,
                           Gson gson,
-                          ExecutorActorStateMachines executorActorStateMachines, LanguageConfiguration languageConfiguration, FileStorageService fileStorageService)
+                          ExecutorActorStateMachines executorActorStateMachines,
+                          ActorScheduleService scheduleService,
+                          LanguageConfiguration languageConfiguration,
+                          FileStorageService fileStorageService)
     {
         super(gson);
         this.processWatcher = processWatcher;
         this.mqLiveCrawlerOutbox = processOutboxes.getLiveCrawlerOutbox();
         this.executorActorStateMachines = executorActorStateMachines;
         this.feedFetcherService = feedFetcherService;
+        this.scheduleService = scheduleService;
         this.languageConfiguration = languageConfiguration;
         this.fileStorageService = fileStorageService;
     }

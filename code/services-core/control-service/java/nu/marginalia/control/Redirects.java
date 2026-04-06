@@ -10,6 +10,7 @@ public class Redirects {
     public static final HtmlRedirect redirectToComplaints = new HtmlRedirect("/complaints");
     public static final HtmlRedirect redirectToRankingDataSets = new HtmlRedirect("/domain-ranking-sets");
     public static final HtmlRedirect redirectToMessageQueue = new HtmlRedirect("/message-queue");
+    public static final HtmlRedirect redirectToSchedules = new HtmlRedirect("/schedules");
 
     public static class HtmlRedirect implements ResponseTransformer {
         private final String html;

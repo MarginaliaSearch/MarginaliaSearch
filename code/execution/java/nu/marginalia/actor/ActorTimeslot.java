@@ -1,5 +1,7 @@
 package nu.marginalia.actor;
 
+import nu.marginalia.schedule.ActorScheduleRow;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -11,16 +13,6 @@ public record ActorTimeslot(Instant start, Duration duration) {
             throw new IllegalArgumentException("Invalid duration " + duration);
     }
 
-    // Runs on the REALTIME node
-    public static ActorSchedule LIVE_CRAWLER_SLOT = new ActorSchedule(0, 0 /* 3 */);
-    public static ActorSchedule DOMAIN_PING_SLOT = new ActorSchedule(3, 9);
-    public static ActorSchedule RSS_FEEDS_SLOT = new ActorSchedule(12, 12 /* 15 */);
-    public static ActorSchedule DOM_SAMPLE_SLOT = new ActorSchedule(16, 20);
-    public static ActorSchedule SCREENGRAB_SLOT_SAMPLE_SLOT = new ActorSchedule(20, 0);
-
-    // Runs on BATCH, MIXED nodes
-    public static ActorSchedule MAINTENANCE_SLOT = new ActorSchedule(2, 2 /* usually pretty quick */);
-
     public Instant end() {
         return start.plus(duration);
     }
@@ -28,8 +20,20 @@ public record ActorTimeslot(Instant start, Duration duration) {
     public record ActorSchedule(int startHoursUtc, int endHoursUtc) {
 
         public ActorSchedule {
-            if (startHoursUtc < 0 || startHoursUtc >= 24) throw new IllegalArgumentException("startHoursUtc must be within [0,24)");
-            if (endHoursUtc < 0 || endHoursUtc >= 24) throw new IllegalArgumentException("endHoursUtc must be within [0,24)");
+            if (startHoursUtc < 0 || startHoursUtc > 24) throw new IllegalArgumentException("startHoursUtc must be within [0,24]");
+            if (endHoursUtc < 0 || endHoursUtc > 24) throw new IllegalArgumentException("endHoursUtc must be within [0,24]");
+
+            // translate 24 to 0
+            startHoursUtc %= 24;
+            endHoursUtc %= 24;
+        }
+
+        public ActorSchedule(ActorScheduleRow.WindowSchedule window) {
+            this(window.startHoursUtc(), window.endHoursUtc());
+        }
+
+        public ActorSchedule(ActorScheduleRow.TriggerSchedule trigger) {
+            this(trigger.triggerHourUtc(), trigger.triggerHourUtc());
         }
 
         public ActorTimeslot nextTimeslot() {

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>Control Service: Actor Schedules</title>
+    {{> control/partials/head-includes }}
+</head>
+<body>
+{{> control/partials/nav}}
+<div class="container">
+    <h1 class="my-3">Actor Schedules</h1>
+    <div class="border my-3 p-3 bg-light">
+        Configure when scheduled actors run.
+        Changes take effect on the actor's next scheduling cycle. To apply immediately,
+        restart the actor from the node's Actors page.
+    </div>
+
+    <h2 class="my-3">Window Schedules</h2>
+    <p>These actors run continuously during a UTC hour window each day.
+       The actor is active for the entire window and sleeps until the next day.</p>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Schedule</th>
+                <th>Description</th>
+                <th>Start (UTC)</th>
+                <th>End (UTC)</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each windowSchedules}}
+            <tr>
+                <td><strong>{{scheduleName}}</strong></td>
+                <td>{{description}}</td>
+                <td colspan="2">
+                    <form method="post" action="/schedules" class="d-flex align-items-center gap-2">
+                        <input type="hidden" name="scheduleName" value="{{scheduleName}}"/>
+                        <input type="hidden" name="type" value="window"/>
+                        <input type="number" class="form-control form-control-sm" style="width:5em"
+                               name="startHour" value="{{startHoursUtc}}" min="0" max="24"/>
+                        <span>to</span>
+                        <input type="number" class="form-control form-control-sm" style="width:5em"
+                               name="endHour" value="{{endHoursUtc}}" min="0" max="24"/>
+                </td>
+                <td>
+                        <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                    </form>
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+
+    <h2 class="my-3">Trigger Schedules</h2>
+    <p>These actors trigger at a specific UTC hour and run until their work is done.
+       The run time is determined by the task itself, not the schedule.</p>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Schedule</th>
+                <th>Description</th>
+                <th>Trigger Hour (UTC)</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each triggerSchedules}}
+            <tr>
+                <td><strong>{{scheduleName}}</strong></td>
+                <td>{{description}}</td>
+                <td>
+                    <form method="post" action="/schedules" class="d-flex align-items-center gap-2">
+                        <input type="hidden" name="scheduleName" value="{{scheduleName}}"/>
+                        <input type="hidden" name="type" value="trigger"/>
+                        <input type="number" class="form-control form-control-sm" style="width:5em"
+                               name="triggerHour" value="{{triggerHourUtc}}" min="0" max="24"/>
+                </td>
+                <td>
+                        <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                    </form>
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+
+    <h2 class="my-3">Interval Schedules</h2>
+    <p>These actors repeat on a fixed cycle regardless of time of day.</p>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Schedule</th>
+                <th>Description</th>
+                <th>Interval</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each intervalSchedules}}
+            <tr>
+                <td><strong>{{scheduleName}}</strong></td>
+                <td>{{description}}</td>
+                <td>
+                    <form method="post" action="/schedules" class="d-flex align-items-center gap-2">
+                        <input type="hidden" name="scheduleName" value="{{scheduleName}}"/>
+                        <input type="hidden" name="type" value="interval"/>
+                        <span>Every</span>
+                        <input type="number" class="form-control form-control-sm" style="width:5em"
+                               name="intervalHours" value="{{intervalHours}}" min="1" max="168"/>
+                        <span>hours</span>
+                </td>
+                <td>
+                        <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                    </form>
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+</div>
+</body>
+{{> control/partials/foot-includes }}
+</html>
