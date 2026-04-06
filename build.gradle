@@ -50,6 +50,15 @@ subprojects.forEach {it ->
 ext {
     jvmVersion = 25
     dockerImageBase='container-registry.oracle.com/graalvm/jdk:25'
+
+    // If you're e.g. using arch, which is on JDK 26 (or whatever is latest), please use these instead:
+
+//    jvmVersion = 26
+//    dockerImageBase='amazoncorretto:26.0.0'
+
+    // (this is usually not a problem you have with Java, which is absurdly backward- and forward-compatible,
+    //  but gradle is certainly one of the build systems of all time)
+
     dockerImageTag='latest'
     dockerImageRegistry='marginalia'
     jibVersion = '3.4.5'
