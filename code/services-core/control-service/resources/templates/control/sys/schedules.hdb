@@ -15,7 +15,7 @@
     </div>
 
     <h2 class="my-3">Window Schedules</h2>
-    <p>These actors run continuously during a UTC hour window each day.
+    <p>These actors run continuously during a time window each day.
        The actor is active for the entire window and sleeps until the next day.</p>
     <table class="table">
         <thead>
@@ -52,7 +52,7 @@
     </table>
 
     <h2 class="my-3">Trigger Schedules</h2>
-    <p>These actors trigger at a specific UTC hour and run until their work is done.
+    <p>These actors trigger at a specific hour and run until their work is done.
        The run time is determined by the task itself, not the schedule.</p>
     <table class="table">
         <thead>
