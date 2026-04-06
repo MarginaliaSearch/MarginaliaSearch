@@ -504,6 +504,13 @@ public class IndexResultRankingService {
                     int mixedCnts = fullGroupIntersections.size() - totalFullCnts;
                     score += (float) (weights_full[HtmlTag.BODY.ordinal()] * fullGroup.size * (1 + Math.log(1 + Math.pow(mixedCnts, attenuation[HtmlTag.BODY.ordinal()]))));
                 }
+
+                // Bonus when the full query aligns with the beginning or end of a title
+                int titleBoundaryMatches = spans.getSpan(HtmlTag.TITLE)
+                        .countRangeMatchesAtBoundary(fullGroupIntersections, fullGroup.size);
+                if (titleBoundaryMatches > 0) {
+                    score += 1.5f * titleBoundaryMatches;
+                }
             }
 
             /**

@@ -183,6 +183,40 @@ public class DocumentSpan {
         return ret;
     }
 
+    public int countRangeMatchesAtBoundary(IntList positions, int len) {
+        if (null == startsEnds || startsEnds.size() < 2 || positions.isEmpty()) {
+            return 0;
+        }
+
+        int sei = 0;
+        int ret = 0;
+
+        int start = startsEnds.getInt(sei++);
+        int end = startsEnds.getInt(sei++);
+
+        for (int pi = 0; pi < positions.size();) {
+            int position = positions.getInt(pi);
+            if (position >= start && position + len <= end) {
+                if (position == start || position + len == end) {
+                    ret++;
+                }
+                pi++;
+            }
+            else if (position < end) {
+                pi++;
+            }
+            else if (sei + 2 <= startsEnds.size()) {
+                start = startsEnds.getInt(sei++);
+                end = startsEnds.getInt(sei++);
+            }
+            else {
+                break;
+            }
+        }
+
+        return ret;
+    }
+
     /** Returns an iterator over each position between the start and end positions of each span in the document of this type */
     public IntIterator iterator() {
         if (null == startsEnds) {
