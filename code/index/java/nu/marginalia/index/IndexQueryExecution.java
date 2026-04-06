@@ -391,7 +391,7 @@ public class IndexQueryExecution {
                     if (WordFlags.UrlPath.isPresent((byte) value))
                         continue;
 
-                    if ((value & 0xFF) == 0)
+                    if ((value & 0xFF) != 0)
                         thisMask &= value;
                 }
 

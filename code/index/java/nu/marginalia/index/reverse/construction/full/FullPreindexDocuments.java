@@ -26,7 +26,6 @@ import java.util.List;
 public class FullPreindexDocuments {
     public final LongArray documents;
 
-    private static PositionsFileConstructor positionsFileConstructor;
     public static final int RECORD_SIZE_LONGS = 3;
     private static final Logger logger = LoggerFactory.getLogger(FullPreindexDocuments.class);
 
@@ -44,8 +43,6 @@ public class FullPreindexDocuments {
             DocIdRewriter docIdRewriter,
             PositionsFileConstructor positionsFileConstructor,
             FullPreindexWordSegments segments) throws IOException {
-        FullPreindexDocuments.positionsFileConstructor = positionsFileConstructor;
-
 
         long fileSizeLongs = RECORD_SIZE_LONGS * segments.totalSize();
 
