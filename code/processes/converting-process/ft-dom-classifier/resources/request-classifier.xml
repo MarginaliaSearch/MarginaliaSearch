@@ -33,6 +33,7 @@
     <!-- Full domain classifications TRACKING -->
     <classifier target="domain" rule="tracking">stats.g.doubleclick.net</classifier>
     <classifier target="domain" rule="tracking">insight.adsrvr.org</classifier>
+    <classifier target="domain" rule="tracking">analytics.tiktok.com</classifier>
 
     <classifier target="domain" rule="tracking">pixel.wp.com</classifier>
     <classifier target="domain" rule="tracking">connect.facebook.net</classifier>
@@ -79,6 +80,7 @@
     <classifier target="top" rule="tracking">demdex.net</classifier>
     <classifier target="top" rule="tracking">omtrdc.net</classifier>
     <classifier target="top" rule="tracking">ggpht.com</classifier>
+    <classifier target="top" rule="tracking">bazaarvoice.com</classifier>
 
     <classifier target="top" rule="tracking">doubleclick.net</classifier>
     <classifier target="top" rule="tracking">google.com</classifier>
