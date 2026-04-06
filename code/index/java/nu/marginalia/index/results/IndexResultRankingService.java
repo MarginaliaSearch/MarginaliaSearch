@@ -684,7 +684,7 @@ public class IndexResultRankingService {
         if (value < 0)
             value = 0;
 
-        return Math.sqrt((1.0 + 500. + 10 * penalty) / (1.0 + value));
+        return Math.sqrt((1.0 + 500. + 20 * penalty) / (1.0 + value));
     }
 
 }
