@@ -108,12 +108,13 @@ public class DomSampleService {
 
         try (var conn = mariadbDataSource.getConnection();
             var stmt = conn.prepareStatement("""
-                SELECT DOMAIN_NAME, HTTP_SCHEMA
+                SELECT DOMAIN_NAME, 
+                COALESCE(HTTP_SCHEMA, 'HTTPS') AS HTTP_SCHEMA
                 FROM EC_DOMAIN
-                INNER JOIN DOMAIN_AVAILABILITY_INFORMATION
-                ON EC_DOMAIN.ID=DOMAIN_ID
+                LEFT JOIN DOMAIN_AVAILABILITY_INFORMATION
+                    ON EC_DOMAIN.ID=DOMAIN_ID
                 WHERE NODE_AFFINITY>0
-                AND BACKOFF_CONSECUTIVE_FAILURES<15
+                AND COALESCE(BACKOFF_CONSECUTIVE_FAILURES, 0)<15
                 """)
         ) {
             var rs = stmt.executeQuery();
