@@ -134,6 +134,7 @@ public class HttpClientProvider implements Provider<HttpClient> {
         return HttpClients.custom()
                 .setConnectionManager(connectionManager)
                 .setRetryStrategy(new RetryStrategy())
+                .disableContentCompression()
                 .setKeepAliveStrategy(new ConnectionKeepAliveStrategy() {
                     // Default keep-alive duration is 3 minutes, but this is too long for us,
                     // as we are either going to re-use it fairly quickly or close it for a long time.

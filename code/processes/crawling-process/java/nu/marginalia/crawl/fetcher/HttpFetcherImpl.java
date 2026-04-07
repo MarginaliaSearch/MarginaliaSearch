@@ -253,7 +253,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
 
             try {
                 var result = SendLock.wrapSend(client, request, response -> {
-                    EntityUtils.consume(response.getEntity());
+                    EntityUtils.consumeQuietly(response.getEntity());
 
                     return switch (response.getCode()) {
                         case 200 -> new DomainProbeResult.Ok(url);
@@ -339,7 +339,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
 
             return SendLock.wrapSend(client, head, (rsp) -> {
                 cookies.updateCookieStore(rsp);
-                EntityUtils.consume(rsp.getEntity());
+                EntityUtils.consumeQuietly(rsp.getEntity());
                 int statusCode = rsp.getCode();
 
                 // Handle redirects
@@ -595,7 +595,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                     };
                 }
                 finally {
-                    EntityUtils.consume(response.getEntity());
+                    EntityUtils.consumeQuietly(response.getEntity());
                 }
             });
         }

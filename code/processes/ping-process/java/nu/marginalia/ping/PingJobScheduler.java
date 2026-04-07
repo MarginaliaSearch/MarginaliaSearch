@@ -93,7 +93,7 @@ public class PingJobScheduler {
             }
 
             try {
-                Thread.sleep(Duration.ofSeconds(1));
+                Thread.sleep(Duration.ofMinutes(1));
             }
             catch (InterruptedException ex) {
                 break;

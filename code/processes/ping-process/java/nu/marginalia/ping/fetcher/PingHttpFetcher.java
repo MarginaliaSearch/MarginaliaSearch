@@ -9,6 +9,8 @@ import org.apache.commons.io.input.BOMInputStream;
 import org.apache.hc.client5.http.HttpHostConnectException;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpHead;
+import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
 import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
@@ -40,8 +42,10 @@ public class PingHttpFetcher {
 
     public PingRequestResponse fetchUrl(String url, Method method, String etag, String lastModified) {
 
-
-        HttpGet request = new HttpGet(URI.create(url));
+        HttpUriRequestBase request = switch (method) {
+            case HEAD -> new HttpHead(URI.create(url));
+            case GET -> new HttpGet(URI.create(url));
+        };
 
         request.addHeader("User-Agent", userAgent.uaString());
         request.addHeader("Accept-Encoding", "gzip");
@@ -74,9 +78,8 @@ public class PingHttpFetcher {
                         return new ProtocolError("GET request returned no content");
                     }
 
-
-                    if (entity != null) {
-                        consumeData(entity.getContent(), request, Duration.of(30, ChronoUnit.SECONDS));
+                    if (entity != null && request instanceof HttpGet getRequest) {
+                        consumeData(entity.getContent(), getRequest, Duration.of(30, ChronoUnit.SECONDS));
                     }
 
                     Duration responseTime = Duration.between(start, Instant.now());
@@ -89,7 +92,7 @@ public class PingHttpFetcher {
                             context.getSSLSession()
                     );
                 } finally {
-                    EntityUtils.consume(entity);
+                    EntityUtils.consumeQuietly(entity);
                 }
             });
         } catch (SocketTimeoutException ex) {
