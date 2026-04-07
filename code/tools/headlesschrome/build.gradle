@@ -2,7 +2,7 @@ plugins {
     id 'base'
 }
 
-def imageName = 'marginalia-browserless'
+def imageName = 'marginalia-headless'
 def imageTag = project.hasProperty('imageTag') ? project.getProperty('imageTag') : 'latest'
 
 tasks.register('docker', Exec) {

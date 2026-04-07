@@ -27,7 +27,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 @Tag("slow")
 public class BrowserlessClientTest {
     // Run gradle docker if this image is not available
-    static GenericContainer<?> container = new GenericContainer<>(DockerImageName.parse("marginalia-browserless"))
+    static GenericContainer<?> container = new GenericContainer<>(DockerImageName.parse("marginalia-headless"))
             .withEnv(Map.of("TOKEN", "BROWSERLESS_TOKEN"))
             .withImagePullPolicy(PullPolicy.defaultPolicy())
             .withNetworkMode("bridge")
