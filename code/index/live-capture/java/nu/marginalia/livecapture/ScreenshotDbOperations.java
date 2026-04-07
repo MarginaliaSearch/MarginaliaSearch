@@ -49,6 +49,8 @@ public class ScreenshotDbOperations {
         if (domainId <= 0) // Invalid domain ID
             return false;
 
+        // Query finds domains that *aren't* eligible
+        // (i.e. recently captured)
         try (var stmt = conn.prepareStatement("""
                 SELECT 1 FROM DATA_DOMAIN_HISTORY
                 INNER JOIN WMSA_prod.EC_DOMAIN ON DATA_DOMAIN_HISTORY.DOMAIN_NAME = EC_DOMAIN.DOMAIN_NAME
@@ -59,6 +61,7 @@ public class ScreenshotDbOperations {
             stmt.setInt(1, domainId);
 
             try (var rs = stmt.executeQuery()) {
+                // We invert the query here
                 return !rs.next();
             }
         } catch (SQLException e) {
