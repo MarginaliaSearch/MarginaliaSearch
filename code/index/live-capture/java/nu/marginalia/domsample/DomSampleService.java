@@ -43,8 +43,8 @@ public class DomSampleService {
     @Inject
     public DomSampleService(DomSampleDb db,
                             HikariDataSource mariadbDataSource,
-                            @Named("browserless-uri") String browserlessAddress,
-                            @Named("browserless-sample-threads") int sampleThreads,
+                            @Named("headless-uri") String browserlessAddress,
+                            @Named("headless-sample-threads") int sampleThreads,
                             ServiceHeartbeat serviceHeartbeat,
                             LiveCaptureConfig liveCaptureConfig,
                             DomainCoordinator domainCoordinator)

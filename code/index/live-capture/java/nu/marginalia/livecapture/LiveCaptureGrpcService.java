@@ -51,8 +51,8 @@ public class LiveCaptureGrpcService
 
     @Inject
     public LiveCaptureGrpcService(HikariDataSource dataSource,
-                                  @Named("browserless-uri") String browserlessAddress,
-                                  @Named("browserless-agent-threads") int threads,
+                                  @Named("headless-uri") String browserlessAddress,
+                                  @Named("headless-agent-threads") int threads,
                                   DomainCoordinator domainCoordinator,
                                   LiveCaptureConfig liveCaptureConfig
                                   ) throws URISyntaxException {

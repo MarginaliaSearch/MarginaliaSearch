@@ -22,7 +22,7 @@ import java.util.Optional;
 public class BrowserlessClient implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(BrowserlessClient.class);
-    private static final String BROWSERLESS_TOKEN = System.getProperty("live-capture.browserless-token", "BROWSERLESS_TOKEN");
+    private static final String BROWSERLESS_TOKEN = System.getProperty("live-capture.headless-token", "BROWSERLESS_TOKEN");
 
     private final HttpClient httpClient = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_1_1)

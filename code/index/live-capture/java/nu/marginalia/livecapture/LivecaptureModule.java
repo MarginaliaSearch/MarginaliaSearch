@@ -6,13 +6,13 @@ import com.google.inject.name.Names;
 public class LivecaptureModule extends AbstractModule {
     public void configure() {
         bind(String.class)
-                .annotatedWith(Names.named("browserless-uri"))
-                .toInstance(System.getProperty("live-capture.browserless-uri", ""));
+                .annotatedWith(Names.named("headless-uri"))
+                .toInstance(System.getProperty("live-capture.headless-uri", ""));
         bind(Integer.class)
-                .annotatedWith(Names.named("browserless-agent-threads"))
-                .toInstance(Integer.parseInt(System.getProperty("live-capture.browserless-agent-threads", "4")));
+                .annotatedWith(Names.named("headless-agent-threads"))
+                .toInstance(Integer.parseInt(System.getProperty("live-capture.headless-agent-threads", "4")));
         bind(Integer.class)
-                .annotatedWith(Names.named("browserless-sample-threads"))
-                .toInstance(Integer.parseInt(System.getProperty("live-capture.browserless-sample-threads", "4")));
+                .annotatedWith(Names.named("headless-sample-threads"))
+                .toInstance(Integer.parseInt(System.getProperty("live-capture.headless-sample-threads", "4")));
     }
 }

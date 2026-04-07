@@ -4,7 +4,7 @@ DOM sampling, RSS feed capture, and similar.
 It uses the local browserless API to capture data (except for RSS).  
 
 To use this module, you must have a browserless docker container running on machine, and
-then set the `live-capture.browserless-uri` system property to the
+then set the `live-capture.headless-uri` system property to the
 address of the browserless container (e.g `http://my-container:3000/`).
 
 When disabled, the subsystem will acknowledge the request, but will not

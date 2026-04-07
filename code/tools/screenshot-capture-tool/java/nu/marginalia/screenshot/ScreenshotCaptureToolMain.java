@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 public class ScreenshotCaptureToolMain {
 
     private static final Logger logger = LoggerFactory.getLogger(ScreenshotCaptureToolMain.class);
-    private static final String BROWSERLESS_TOKEN = System.getenv("live-capture.browserless-token");
+    private static final String BROWSERLESS_TOKEN = System.getenv("live-capture.headless-token");
     public static void main(String[] args) {
         DatabaseModule databaseModule = new DatabaseModule(false);
         var ds = databaseModule.provideConnection();

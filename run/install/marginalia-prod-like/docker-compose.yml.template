@@ -119,6 +119,28 @@ services:
     - "traefik.enable=true"
     - "traefik.http.routers.control-service.rule=PathPrefix(`/`)"
     - "traefik.http.routers.control-service.entrypoints=control"
+#  Headless browser for DOM sampling, screenshots etc.
+#
+#
+#  headless:
+#    image: "marginalia-headless"
+#    container_name: "headless"
+#    healthcheck:
+#      test: ["CMD", "sh", "-c", "[ $(( $(date +%s) - $(stat -c %Y /proc/1/exe) )) -lt 86400 ]"]
+#      interval: 15m
+#      retries: 1
+#    env_file:
+#    - "env/headless.env"
+#
+#   To use, update `env/headless.env` and add a line like
+#
+#   TOKEN=my-secret-password
+#
+#   and then update `conf/properties/system.properties` and add
+#
+#    live-capture.headless-uri=http://headless:3000/
+#    live-capture.headless-token=my-secret-password
+#    live-capture.headless-sample-threads=4
   mariadb:
     image: "mariadb:lts"
     container_name: "mariadb"
