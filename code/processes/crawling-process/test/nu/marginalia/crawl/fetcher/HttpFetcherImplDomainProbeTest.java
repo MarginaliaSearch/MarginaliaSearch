@@ -84,7 +84,7 @@ class HttpFetcherImplDomainProbeTest {
     @Test
     public void testProbeDomainError() throws URISyntaxException {
         var result = fetcher.probeDomain(new EdgeUrl("https://invalid.example.com/"));
-        Assertions.assertEquals(new HttpFetcher.DomainProbeResult.Error(CrawlerDomainStatus.ERROR, "Error during domain probe"), result);
+        Assertions.assertEquals(new HttpFetcher.DomainProbeResult.Error(CrawlerDomainStatus.ERROR, "UnknownHostException during domain probe"), result);
     }
 
     @Test

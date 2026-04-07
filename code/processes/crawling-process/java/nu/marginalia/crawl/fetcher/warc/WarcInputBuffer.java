@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.zip.GZIPInputStream;
 
 import static nu.marginalia.crawl.fetcher.warc.ErrorBuffer.suppressContentEncoding;
 
@@ -61,13 +62,20 @@ public abstract class WarcInputBuffer implements AutoCloseable {
         InputStream is = null;
         try {
             is = entity.getContent();
+
+            boolean isGzipEncoded = isContentEncodingGzip(response);
+            if (isGzipEncoded) {
+                is = new GZIPInputStream(is);
+            }
+
             long length = entity.getContentLength();
 
-            if (length > 0 && length < 8192) {
+            if (!isGzipEncoded && length > 0 && length < 8192) {
                 // If the content is small and not compressed, we can just read it into memory
                 return new MemoryBuffer(response.getHeaders(), request, timeLimit, is, (int) length);
             } else {
-                // Otherwise, we unpack it into a file and read it from there
+                // For compressed responses we always use a file buffer since the
+                // Content-Length reflects the compressed size, not the decompressed size
                 return new FileBuffer(response.getHeaders(), request, timeLimit, is);
             }
         }
@@ -93,6 +101,7 @@ public abstract class WarcInputBuffer implements AutoCloseable {
                 }
             }
             catch (IOException e) {
+                request.abort();
                 // Ignore the exception
             }
             finally {
@@ -151,6 +160,11 @@ public abstract class WarcInputBuffer implements AutoCloseable {
             }
         }
 
+    }
+
+    private static boolean isContentEncodingGzip(ClassicHttpResponse response) {
+        Header header = response.getFirstHeader("Content-Encoding");
+        return header != null && "gzip".equalsIgnoreCase(header.getValue());
     }
 
     /** Takes a Content-Range header and checks if it is complete.

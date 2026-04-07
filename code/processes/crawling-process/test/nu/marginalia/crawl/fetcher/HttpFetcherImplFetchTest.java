@@ -177,8 +177,10 @@ class HttpFetcherImplFetchTest {
 
 
     @Test
-    public void testFoo() {
-        fetcher.fetchSitemapUrls("https://www.marginalia.nu/sitemap.xml", new CrawlDelayTimer(100));
+    public void testFetchSitemap() {
+        List<EdgeUrl> urls = fetcher.fetchSitemapUrls("https://www.marginalia.nu/sitemap.xml", new CrawlDelayTimer(100));
+
+        Assertions.assertFalse(urls.isEmpty(), "Sitemap should contain URLs");
     }
 
     @Test

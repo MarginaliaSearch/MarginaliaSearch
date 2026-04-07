@@ -35,6 +35,7 @@ class HttpFetcherTest {
             var result = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu"), recorder, new DomainCookies(), new CrawlDelayTimer(100), ContentTags.empty(), HttpFetcher.ProbeType.FULL);
             if (DocumentBodyExtractor.asString(result) instanceof DocumentBodyResult.Ok bodyOk) {
                 System.out.println(bodyOk.contentType());
+                System.out.println(bodyOk.body());
             }
         }
     }

@@ -51,6 +51,8 @@ import org.slf4j.MarkerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.zip.GZIPInputStream;
 import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
 import java.net.URISyntaxException;
@@ -168,6 +170,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                     }
                 })
                 .disableRedirectHandling()
+                .disableContentCompression()
                 .setDefaultRequestConfig(defaultRequestConfig)
                 .build();
     }
@@ -557,8 +560,16 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                         return new SitemapResult.SitemapError();
                     }
 
+                    InputStream entityStream = response.getEntity().getContent();
+
+                    Header contentEncoding = response.getFirstHeader("Content-Encoding");
+                    if (contentEncoding != null && "gzip".equalsIgnoreCase(contentEncoding.getValue())) {
+                        entityStream = new GZIPInputStream(entityStream);
+                    }
+
                     Document parsedSitemap = Jsoup.parse(
-                            EntityUtils.toString(response.getEntity()),
+                            entityStream,
+                            null,
                             sitemapUrl.toString(),
                             Parser.xmlParser()
                     );
