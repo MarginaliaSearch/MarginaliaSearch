@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOError;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -37,9 +38,11 @@ public class NsfwDocumentFilter {
         BinaryClassifierModel model = null;
 
         try {
-            voacbulary = new ClassifierVocabulary(modelPath.resolve("vocabulary.txt"));
-            model = BinaryClassifierModel.fromSerialized(modelPath);
-            isLoaded = true;
+            if (Files.isDirectory(modelPath)) {
+                voacbulary = new ClassifierVocabulary(modelPath.resolve("vocabulary.txt"));
+                model = BinaryClassifierModel.fromSerialized(modelPath);
+                isLoaded = true;
+            }
         }
         catch (IOException ex) {
             logger.info("Failed to load NSFW model", ex);
