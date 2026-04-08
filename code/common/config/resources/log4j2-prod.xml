@@ -115,7 +115,7 @@
             <AppenderRef ref="ConsoleFatal"/>
             <AppenderRef ref="ProcessConsole"/>
             <AppenderRef ref="LogToFileService"/>
-            <AppenderRef ref="LogToFileConverer"/>
+            <AppenderRef ref="LogToFileConverter"/>
             <AppenderRef ref="LogToFileCrawler"/>
             <AppenderRef ref="LogToFileApiUsage"/>
         </Root>
