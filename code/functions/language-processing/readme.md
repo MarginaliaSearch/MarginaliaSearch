@@ -16,7 +16,7 @@ The XML files are gramatically self-documenting via the DTD, but to help make se
  Setting              | Values                                     | Remark
 ----------------------|--------------------------------------------|-------
  unicodeNormalization | minimal e-accents,german,maximal-latin | [UnicodeNormalization.java](java/nu/marginalia/language/encoding/UnicodeNormalization.java) 
- stemmer | porter, snowball + variant, none |  [Stemmer.java](java/nu/marginalia/language/stemmer/Stemmer.java)
+ stemmer | porter, snowball + variant, none |  [Stemmer.java](java/nu/marginalia/language/stemming/Stemmer.java)
  keywordHash | asciish, utf8 |  [KeywordHasher.java](java/nu/marginalia/language/keywords/KeywordHasher.java)
  sentenceDetector | none, opennlp |  -
  rdrTagger | (provide references) | Point to files used for POS-tagging from [rdrpostagger](https://github.com/datquocnguyen/rdrpostagger) repository
