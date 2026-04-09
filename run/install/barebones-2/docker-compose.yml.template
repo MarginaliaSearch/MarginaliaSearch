@@ -101,12 +101,11 @@ services:
 #  headless:
 #    image: "marginalia-headless"
 #    container_name: "headless"
-#    healthcheck:
-#      test: ["CMD", "sh", "-c", "[ $(( $(date +%s) - $(stat -c %Y /proc/1/exe) )) -lt 86400 ]"]
-#      interval: 15m
-#      retries: 1
+#    restart: always
 #    env_file:
 #    - "env/headless.env"
+#    expose:
+#    - 8080
 #
 #   To use, update `env/headless.env` and add a line like
 #
@@ -114,7 +113,7 @@ services:
 #
 #   and then update `conf/properties/system.properties` and add
 #
-#    live-capture.headless-uri=http://headless:3000/
+#    live-capture.headless-uri=http://headless:8080/
 #    live-capture.headless-token=my-secret-password
 #    live-capture.headless-sample-threads=4
   mariadb:

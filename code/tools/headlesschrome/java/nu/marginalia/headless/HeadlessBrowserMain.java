@@ -19,6 +19,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 
 public class HeadlessBrowserMain extends Jooby {
     private static final Gson gson = GsonFactory.get();
@@ -26,7 +28,11 @@ public class HeadlessBrowserMain extends Jooby {
 
     private ChromeDriverManager driverManager;
 
-    private static final String TOKEN = System.getenv("TOKEN");
+    private static final String TOKEN = Objects.requireNonNullElseGet(
+            System.getenv("TOKEN"),
+            () -> UUID.randomUUID().toString()
+    );
+
     private static boolean SOFT_KILL = System.getenv("SOFT_KILL") != null;
 
     private volatile boolean killRequested = false;
