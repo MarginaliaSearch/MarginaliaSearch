@@ -8,13 +8,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -22,7 +19,7 @@ import java.util.Optional;
 public class HeadlessClient implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(HeadlessClient.class);
-    private static final String BROWSERLESS_TOKEN = System.getProperty("live-capture.headless-token", "HEADLESS_TOKEN");
+    private static final String HEADLESS_TOKEN = System.getProperty("live-capture.headless-token", "HEADLESS_TOKEN");
 
     private final HttpClient httpClient = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_1_1)
@@ -47,7 +44,8 @@ public class HeadlessClient implements AutoCloseable {
         );
 
         var request = HttpRequest.newBuilder()
-                .uri(headlessURI.resolve("/dom-sample?token="+BROWSERLESS_TOKEN))
+                .uri(headlessURI.resolve("/dom-sample"))
+                .header("Authorization", HEADLESS_TOKEN)
                 .method("POST", HttpRequest.BodyPublishers.ofString(
                         gson.toJson(requestData)
                 ))
@@ -72,7 +70,8 @@ public class HeadlessClient implements AutoCloseable {
         );
 
         var request = HttpRequest.newBuilder()
-                .uri(headlessURI.resolve("/screenshot?token="+BROWSERLESS_TOKEN))
+                .uri(headlessURI.resolve("/screenshot"))
+                .header("Authorization", HEADLESS_TOKEN)
                 .method("POST", HttpRequest.BodyPublishers.ofString(
                         gson.toJson(requestData)
                 ))
@@ -87,7 +86,6 @@ public class HeadlessClient implements AutoCloseable {
         }
 
         return rsp.body();
-
     }
 
     @Override
