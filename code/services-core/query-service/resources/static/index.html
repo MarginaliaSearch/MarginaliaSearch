@@ -89,6 +89,15 @@ r = requests.get('http://localhost:8080/search?query=test',
     headers={'Accept': 'application/json'})
 print(json.dumps(r.json(), indent=4))</code>
         </dd>
+    </dl>
     <p>Remember to URL-encode the query!</p>
+
+<h2>Site Info</h2>
+
+<p>The <code>/site/[domain-name]</code> and<code>/site/[domain-name]/availability</code> endpoints are also available for
+    querying the state of a domain in the index.  They will return 404 if the domain is not present in the database.
+    Availability data requires running the Ping service.
+</p>
+</div>
 </body>
 </html>

@@ -2,6 +2,7 @@ package nu.marginalia.query;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.api.searchquery.QueryFilterSpec;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.model.SearchFilterDefaults;
@@ -18,11 +19,11 @@ import spark.Request;
 import spark.Response;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static java.lang.Integer.parseInt;
 import static java.util.Objects.requireNonNullElse;
@@ -30,15 +31,111 @@ import static java.util.Objects.requireNonNullElse;
 public class QueryWebApi {
     private final Gson gson = GsonFactory.get();
     private final QueryGRPCService queryGRPCService;
+    private final HikariDataSource dataSource;
     private final MustacheRenderer<Object> searchRenderer;
 
     @Inject
     public QueryWebApi(QueryGRPCService queryGRPCService,
+                       HikariDataSource dataSource,
                        RendererFactory rendererFactory) throws IOException
     {
         this.queryGRPCService = queryGRPCService;
+        this.dataSource = dataSource;
         this.searchRenderer = rendererFactory.renderer("search");
     }
+
+    public Object handleDomainInfo(Request request, Response response) throws SQLException {
+        String domainName = request.splat()[0];
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("""
+                SELECT 
+                    ID,
+                    STATE,
+                    NODE_AFFINITY
+                FROM EC_DOMAIN
+                WHERE DOMAIN_NAME = ?
+                """))
+        {
+            stmt.setString(1, domainName);
+            var rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                Map<String, Object> result = new HashMap<>();
+
+                List<Map.Entry<String, Object>> entries = new ArrayList<>();
+
+                Optional.ofNullable(rs.getObject("ID", Integer.class)).ifPresent(val -> result.put("ID", val));
+                Optional.ofNullable(rs.getObject("STATE", String.class)).ifPresent(val -> result.put("STATE", val));
+                Optional.ofNullable(rs.getObject("NODE_AFFINITY", String.class)).ifPresent(val -> result.put("NODE_AFFINITY", val));
+
+                response.type("application/json");
+                return gson.toJson(result);
+            }
+        }
+
+        response.status(404);
+        return "Unknown domain";
+    }
+
+    public Object handleDomainAvailability(Request request, Response response) throws SQLException {
+        String domainName = request.splat()[0];
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("""
+                SELECT 
+                    SERVER_AVAILABLE,
+                    SERVER_IP,
+                    SERVER_IP_ASN,
+                    
+                    HTTP_SCHEMA,
+                    HTTP_ETAG,
+                    HTTP_LAST_MODIFIED,
+                    HTTP_STATUS,
+                    HTTP_LOCATION,
+                    HTTP_RESPONSE_TIME_MS,
+                    
+                    ERROR_CLASSIFICATION,
+                    ERROR_MESSAGE,
+                    
+                    TS_LAST_PING,
+                    TS_LAST_AVAILABLE,
+                    TS_LAST_ERROR
+                FROM DOMAIN_AVAILABILITY_INFORMATION
+                INNER JOIN EC_DOMAIN
+                ON EC_DOMAIN.ID = DOMAIN_AVAILABILITY_INFORMATION.DOMAIN_ID
+                WHERE DOMAIN_NAME = ?
+                """))
+        {
+            stmt.setString(1, domainName);
+            var rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                Map<String, Object> result = new HashMap<>();
+
+                List<Map.Entry<String, Object>> entries = new ArrayList<>();
+                Optional.ofNullable(rs.getBoolean("SERVER_AVAILABLE")).ifPresent(val -> result.put("SERVER_AVAILABLE", val));
+                Optional.ofNullable(rs.getBytes("SERVER_IP"))
+                        .map(bytes -> IntStream.range(0, bytes.length).map(i -> (int) Byte.toUnsignedInt(bytes[i])).mapToObj(Integer::toString).collect(Collectors.joining(".")))
+                        .ifPresent(val -> result.put("SERVER_IP", val));
+                Optional.ofNullable(rs.getObject("SERVER_IP_ASN", Integer.class)).ifPresent(val -> result.put("SERVER_IP_ASN", val));
+                Optional.ofNullable(rs.getObject("HTTP_SCHEMA", String.class)).ifPresent(val -> result.put("HTTP_SCHEMA", val));
+                Optional.ofNullable(rs.getObject("HTTP_ETAG", String.class)).ifPresent(val -> result.put("HTTP_ETAG", val));
+                Optional.ofNullable(rs.getObject("HTTP_LAST_MODIFIED", String.class)).ifPresent(val -> result.put("HTTP_LAST_MODIFIED", val));
+                Optional.ofNullable(rs.getObject("HTTP_STATUS", Integer.class)).ifPresent(val -> result.put("HTTP_STATUS", val));
+                Optional.ofNullable(rs.getObject("HTTP_LOCATION", String.class)).ifPresent(val -> result.put("HTTP_LOCATION", val));
+                Optional.ofNullable(rs.getObject("HTTP_RESPONSE_TIME_MS", Integer.class)).ifPresent(val -> result.put("HTTP_RESPONSE_TIME_MS", val));
+                Optional.ofNullable(rs.getTimestamp("TS_LAST_PING")).map(Timestamp::toInstant).ifPresent(val -> result.put("TS_LAST_PING", val));
+                Optional.ofNullable(rs.getTimestamp("TS_LAST_AVAILABLE")).map(Timestamp::toInstant).ifPresent(val -> result.put("TS_LAST_AVAILABLE", val));
+                Optional.ofNullable(rs.getTimestamp("TS_LAST_ERROR")).map(Timestamp::toInstant).ifPresent(val -> result.put("TS_LAST_ERROR", val));
+
+                response.type("application/json");
+                return gson.toJson(result);
+            }
+        }
+
+        response.status(404);
+        return "Unknown domain";
+    }
+
 
     public Object handleApiSearch(Request request, Response response) {
         // Support both 'query' and 'q' parameter names

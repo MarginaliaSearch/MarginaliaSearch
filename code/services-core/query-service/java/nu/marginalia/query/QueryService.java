@@ -30,6 +30,8 @@ public class QueryService extends SparkService {
 
 
         Spark.get("/search", queryWebApi::handleApiSearch);
+        Spark.get("/site/*/availability", queryWebApi::handleDomainAvailability);
+        Spark.get("/site/*", queryWebApi::handleDomainInfo);
 
         if (!Boolean.getBoolean("noQdebug")) {
             Spark.get("/qdebug", queryDebugInterface::handleAdvanced);
