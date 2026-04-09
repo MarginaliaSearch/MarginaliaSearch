@@ -30,7 +30,7 @@ public class HeadlessClientTest {
     static GenericContainer<?> container = new GenericContainer<>(DockerImageName.parse("marginalia-headless"))
             .withEnv(Map.of(
                     "TOKEN", "HEADLESS_TOKEN",
-                    "SOFT_KILL", "1"
+                    "ALLOW_LOCAL_REQUESTS", "1"
                     ))
             .withImagePullPolicy(PullPolicy.defaultPolicy())
             .withNetworkMode("bridge")

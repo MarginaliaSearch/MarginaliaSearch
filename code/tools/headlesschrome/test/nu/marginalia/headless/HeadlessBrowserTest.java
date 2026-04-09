@@ -22,6 +22,8 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -71,6 +73,29 @@ public class HeadlessBrowserTest {
         }
     }
 
+    @Test
+    public void testDomSample_BadUrl() throws IOException, InterruptedException {
+        try (var client = HttpClient.newHttpClient()) {
+            List<String> badUrls = List.of(
+                    "ftp://www.marginalia.nu/",
+                    "https://www.marginalia.nu:8080/",
+                    "https://localhost/"
+            );
+
+            for (String badUrl : badUrls) {
+                var rsp = client.send(
+                        HttpRequest.newBuilder(forPath("/dom-sample"))
+                                .header("Authorization", "HEADLESS_TOKEN")
+                                .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(Map.of("url", badUrl))
+                                )).build(),
+                        HttpResponse.BodyHandlers.discarding()
+                );
+
+                assertEquals(StatusCode.BAD_REQUEST_CODE, rsp.statusCode());
+            }
+        }
+    }
+
 
     @Test
     public void testScreenshot() throws IOException, InterruptedException {
@@ -104,6 +129,29 @@ public class HeadlessBrowserTest {
             );
 
             assertEquals(StatusCode.UNAUTHORIZED_CODE, rsp.statusCode());
+        }
+    }
+
+    @Test
+    public void testScreenshot_BadUrl() throws IOException, InterruptedException {
+        try (var client = HttpClient.newHttpClient()) {
+            List<String> badUrls = List.of(
+                    "ftp://www.marginalia.nu/",
+                    "https://www.marginalia.nu:8080/",
+                    "https://localhost/"
+            );
+
+            for (String badUrl : badUrls) {
+                var rsp = client.send(
+                        HttpRequest.newBuilder(forPath("/screenshot"))
+                                .header("Authorization", "HEADLESS_TOKEN")
+                                .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(Map.of("url", badUrl))
+                                )).build(),
+                        HttpResponse.BodyHandlers.discarding()
+                );
+
+                assertEquals(StatusCode.BAD_REQUEST_CODE, rsp.statusCode());
+            }
         }
     }
 
