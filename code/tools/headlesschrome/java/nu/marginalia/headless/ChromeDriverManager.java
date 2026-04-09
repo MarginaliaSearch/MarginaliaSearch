@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -16,14 +17,14 @@ public class ChromeDriverManager {
     private static final String CHROME_PATH = "/usr/bin/chromium";
     private static final Logger logger = LoggerFactory.getLogger(ChromeDriverManager.class);
 
-    private ChromeOptions vanillaOptions;
+    private ChromeOptions screenshotOptions;
     private ChromeOptions extensionOptions;
 
-    private final ArrayBlockingQueue<DriverHolder> vanillaDriverHolders;
+    private final ArrayBlockingQueue<DriverHolder> screenshotDriverHolders;
     private final ArrayBlockingQueue<DriverHolder> extensionDriverHolders;
 
     public ChromeDriverManager(int queueSize) {
-        vanillaDriverHolders = new ArrayBlockingQueue<>(queueSize);
+        screenshotDriverHolders = new ArrayBlockingQueue<>(queueSize);
         extensionDriverHolders = new ArrayBlockingQueue<>(queueSize);
 
         var baseOptions = new ChromeOptions();
@@ -36,23 +37,37 @@ public class ChromeDriverManager {
                 "--user-agent=" + WmsaHome.getUserAgent().uaString()
         );
 
-        vanillaOptions = new ChromeOptions().merge(baseOptions).addArguments("--window-size=1024,768");
+        screenshotOptions = new ChromeOptions().merge(baseOptions).addArguments("--window-size=1024,768");
         extensionOptions = new ChromeOptions().merge(baseOptions).addArguments("--load-extension=/dom-export");
 
         for (int i = 0; i < 4; i++) {
-            vanillaDriverHolders.add(new DriverHolder(new ChromeDriver(vanillaOptions), vanillaDriverHolders));
-            extensionDriverHolders.add(new DriverHolder(new ChromeDriver(extensionOptions), extensionDriverHolders));
+            screenshotDriverHolders.add(new DriverHolder(createScreenshotDriver(), screenshotDriverHolders));
+            extensionDriverHolders.add(new DriverHolder(createExtensionDriver(), extensionDriverHolders));
         }
     }
 
-    public DriverHolder getVanillaDriver(Duration timeout) throws InterruptedException {
-        var holder = vanillaDriverHolders.poll(timeout.toMillis(), TimeUnit.MILLISECONDS);
+    private ChromeDriver createScreenshotDriver() {
+        var driver = new ChromeDriver(screenshotOptions);
+        driver.executeCdpCommand("Emulation.setDeviceMetricsOverride",
+                Map.of("width", 1024, "height", 768,
+                        "deviceScaleFactor", 1., "mobile", false));
+        driver.executeCdpCommand("Emulation.setScrollbarsHidden",
+                Map.of("hidden", true));
+        return driver;
+    }
+
+    private ChromeDriver createExtensionDriver() {
+        return new ChromeDriver(extensionOptions);
+    }
+
+    public DriverHolder getScreenshotDriver(Duration timeout) throws InterruptedException {
+        var holder = screenshotDriverHolders.poll(timeout.toMillis(), TimeUnit.MILLISECONDS);
         if (holder.isDead()) {
             try {
                 holder.driver.quit();
             }
             catch (Exception ex) {}
-            holder = new DriverHolder(new ChromeDriver(vanillaOptions), vanillaDriverHolders);
+            holder = new DriverHolder(createScreenshotDriver(), screenshotDriverHolders);
         }
         return holder;
     }
@@ -66,7 +81,7 @@ public class ChromeDriverManager {
                 holder.driver.quit();
             }
             catch (Exception ex) {}
-            holder = new DriverHolder(new ChromeDriver(extensionOptions), extensionDriverHolders);
+            holder = new DriverHolder(createExtensionDriver(), extensionDriverHolders);
         }
         return holder;
     }
