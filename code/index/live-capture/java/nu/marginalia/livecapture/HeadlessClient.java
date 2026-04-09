@@ -88,6 +88,18 @@ public class HeadlessClient implements AutoCloseable {
         return rsp.body();
     }
 
+    public void requestKill()
+            throws IOException, InterruptedException
+    {
+        var request = HttpRequest.newBuilder()
+                .uri(headlessURI.resolve("/kill"))
+                .header("Authorization", HEADLESS_TOKEN)
+                .method("POST", HttpRequest.BodyPublishers.noBody())
+                .build();
+
+        var rsp = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+    }
+
     @Override
     public void close() {
         httpClient.shutdownNow();

@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
@@ -98,6 +99,13 @@ public class DomSampleService {
             thread.join();
         }
         threads.clear();
+    }
+
+    public void kill() throws IOException, InterruptedException {
+        if (headlessURI == null) return;
+        try (var client = new HeadlessClient(headlessURI)) {
+            client.requestKill();
+        }
     }
 
 

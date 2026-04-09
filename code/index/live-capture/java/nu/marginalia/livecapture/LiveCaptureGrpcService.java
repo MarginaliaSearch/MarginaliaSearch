@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Connection;
@@ -80,6 +81,14 @@ public class LiveCaptureGrpcService
     public boolean isAllowed() {
         return this.screengrabAllowed;
     }
+
+    public void kill() throws IOException, InterruptedException {
+        if (headlessURI == null) return;
+        try (var client = new HeadlessClient(headlessURI)) {
+            client.requestKill();
+        }
+    }
+
 
     public void requestScreengrab(nu.marginalia.api.livecapture.RpcDomainId request,
                                   StreamObserver<Empty> responseObserver)

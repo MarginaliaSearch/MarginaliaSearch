@@ -27,6 +27,8 @@ public class HeadlessBrowserMain extends Jooby {
 
     private static final String TOKEN = System.getenv("TOKEN");
 
+    private volatile boolean killRequested = false;
+
     static void main(String[] args) {
         Jooby.runApp(args, HeadlessBrowserMain::new);
     }
@@ -39,18 +41,37 @@ public class HeadlessBrowserMain extends Jooby {
         setServerOptions(options);
 
         get("/health", this::health);
+        post("/kill", this::kill);
         post("/screenshot", this::screenshot);
         post("/dom-sample", this::domSample);
     }
 
-    public String health(Context context) {
+    private Object kill(Context ctx) {
+        if (!TOKEN.equals(ctx.header("Authorization").valueOrNull())) {
+            ctx.setResponseCode(StatusCode.UNAUTHORIZED_CODE);
+            return "";
+        }
 
-        context.setResponseCode(StatusCode.OK_CODE);
-        context.setResponseType("application/json");
+        logger.info("Termination requested");
 
-        return gson.toJson(Map.of(
-                "status", "ok"
-        ));
+        killRequested = true;
+        return "x_x";
+    }
+
+    public String health(Context ctx) {
+
+        if (killRequested) {
+            ctx.setResponseCode(StatusCode.SERVICE_UNAVAILABLE_CODE);
+            return "Awaiting termination by docker";
+        }
+        else {
+            ctx.setResponseCode(StatusCode.OK_CODE);
+            ctx.setResponseType("application/json");
+
+            return gson.toJson(Map.of(
+                    "status", "ok"
+            ));
+        }
     }
 
     public Object screenshot(Context ctx) throws InterruptedException {

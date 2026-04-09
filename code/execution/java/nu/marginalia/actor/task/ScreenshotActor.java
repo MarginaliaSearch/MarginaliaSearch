@@ -29,8 +29,12 @@ public class ScreenshotActor extends RecordActorPrototype {
             this(timeslot.start().toString(), timeslot.end().toString());
         }
     }
+
     @Resume(behavior=ActorResumeBehavior.RESTART)
     public record Run(String endTs) implements ActorStep {}
+
+    @Resume(behavior= ActorResumeBehavior.RETRY)
+    public record Terminate() implements ActorStep {}
 
     private ActorTimeslot nextTimeslot() {
         return new ActorTimeslot.ActorSchedule(scheduleService.getWindow(ActorScheduleRow.Window.SCREENGRAB)).nextTimeslot();
@@ -69,13 +73,19 @@ public class ScreenshotActor extends RecordActorPrototype {
                     }
                 }
                 finally {
-                    liveCaptureService.setAllowed(false);
+                    yield new Terminate();
                 }
-
+            }
+            case Terminate() -> {
+                liveCaptureService.setAllowed(false);
+                liveCaptureService.kill();
                 yield new Wait(nextTimeslot());
             }
             case End() -> {
-                liveCaptureService.setAllowed(false);
+                if (liveCaptureService.isAllowed()) {
+                    liveCaptureService.setAllowed(false);
+                    liveCaptureService.kill();
+                }
 
                 yield new End(); // will not run, terminal state
             }

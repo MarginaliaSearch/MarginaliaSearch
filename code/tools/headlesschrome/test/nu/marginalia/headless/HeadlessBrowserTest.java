@@ -25,6 +25,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public class HeadlessBrowserTest {
     private static final Gson gson = GsonFactory.get();
@@ -61,6 +62,34 @@ public class HeadlessBrowserTest {
             );
 
             assertEquals(200, rsp.statusCode());
+            System.out.println(rsp.body());
+        }
+    }
+
+    @Test
+    public void testKill() throws IOException, InterruptedException {
+        try (var client = HttpClient.newHttpClient()) {
+            var rsp = client.send(
+                    HttpRequest.newBuilder(forPath("/health")).GET().build(),
+                    HttpResponse.BodyHandlers.ofString()
+            );
+            assertEquals(200, rsp.statusCode());
+            System.out.println(rsp.body());
+
+            rsp = client.send(
+                    HttpRequest.newBuilder(forPath("/kill")).POST(HttpRequest.BodyPublishers.noBody())
+                            .setHeader("Authorization", "HEADLESS_TOKEN")
+                            .build(),
+                    HttpResponse.BodyHandlers.ofString()
+            );
+            assertEquals(200, rsp.statusCode());
+            System.out.println(rsp.body());
+
+            rsp = client.send(
+                    HttpRequest.newBuilder(forPath("/health")).GET().build(),
+                    HttpResponse.BodyHandlers.ofString()
+            );
+            assertNotEquals(200, rsp.statusCode());
             System.out.println(rsp.body());
         }
     }
