@@ -73,6 +73,7 @@ services:
 #  headless:
 #    image: "marginalia-headless"
 #    container_name: "headless"
+#    restart: always
 #    healthcheck:
 #      test: ["CMD", "sh", "-c", "[ $(( $(date +%s) - $(stat -c %Y /proc/1/exe) )) -lt 86400 ]"]
 #      interval: 15m
