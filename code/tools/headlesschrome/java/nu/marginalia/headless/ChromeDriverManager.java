@@ -32,6 +32,7 @@ public class ChromeDriverManager {
     private final ArrayBlockingQueue<DriverHolder> screenshotDriverHolders;
     private final ArrayBlockingQueue<DriverHolder> extensionDriverHolders;
 
+    private AtomicInteger userDirCtr = new AtomicInteger();
 
     public ChromeDriverManager(int queueSize) throws IOException {
         if (Files.isDirectory(CHROME_DATA_DIR)) {
@@ -61,17 +62,23 @@ public class ChromeDriverManager {
         extensionOptions = new ChromeOptions().merge(baseOptions).addArguments("--load-extension=/dom-export");
 
         for (int i = 0; i < 4; i++) {
-            screenshotDriverHolders.add(new DriverHolder(createScreenshotDriver(), screenshotDriverHolders));
-            extensionDriverHolders.add(new DriverHolder(createExtensionDriver(), extensionDriverHolders));
+            Path userDir = createUserDir();
+            screenshotDriverHolders.add(new DriverHolder(createScreenshotDriver(userDir), screenshotDriverHolders, userDir));
+
+            extensionDriverHolders.add(new DriverHolder(createExtensionDriver(userDir), extensionDriverHolders, userDir));
         }
     }
 
-    private ChromeDriver createScreenshotDriver() {
+    private Path createUserDir() {
+        return CHROME_DATA_DIR.resolve("user-"+userDirCtr.incrementAndGet());
+    }
+
+    private ChromeDriver createScreenshotDriver(Path userDir) {
         var options = new ChromeOptions().merge(screenshotOptions);
 
         // https://chromium.googlesource.com/chromium/src/+/HEAD/docs/user_data_dir.md#Command-Line
 
-        options.addArguments("--user-data-dir=" + CHROME_DATA_DIR.resolve(UUID.randomUUID().toString()));
+        options.addArguments("--user-data-dir=" + userDir);
 
         var driver = new ChromeDriver(options);
         driver.executeCdpCommand("Emulation.setDeviceMetricsOverride",
@@ -82,10 +89,10 @@ public class ChromeDriverManager {
         return driver;
     }
 
-    private ChromeDriver createExtensionDriver() {
+    private ChromeDriver createExtensionDriver(Path userDir) {
         var options = new ChromeOptions().merge(extensionOptions);
 
-        options.addArguments("--user-data-dir=" + CHROME_DATA_DIR.resolve(UUID.randomUUID().toString()));
+        options.addArguments("--user-data-dir=" + userDir);
         return new ChromeDriver(options);
     }
 
@@ -93,11 +100,12 @@ public class ChromeDriverManager {
         var holder = screenshotDriverHolders.poll(timeout.toMillis(), TimeUnit.MILLISECONDS);
         if (holder.isDead()) {
             try {
-                // TODO: Would be nice to be able to clean up the tmp dir here
                 holder.driver.quit();
+                FileUtils.deleteDirectory(holder.userDir.toFile());
             }
             catch (Exception ex) {}
-            holder = new DriverHolder(createScreenshotDriver(), screenshotDriverHolders);
+            Path userDir = createUserDir();
+            holder = new DriverHolder(createScreenshotDriver(userDir), screenshotDriverHolders, userDir);
         }
         return holder;
     }
@@ -108,11 +116,13 @@ public class ChromeDriverManager {
         var holder = extensionDriverHolders.poll(timeout.toMillis(), TimeUnit.MILLISECONDS);
         if (holder.isDead()) {
             try {
-                // TODO: Would be nice to be able to clean up the tmp dir here
                 holder.driver.quit();
+                FileUtils.deleteDirectory(holder.userDir.toFile());
             }
             catch (Exception ex) {}
-            holder = new DriverHolder(createExtensionDriver(), extensionDriverHolders);
+
+            Path userDir = createUserDir();
+            holder = new DriverHolder(createExtensionDriver(userDir), extensionDriverHolders, userDir);
         }
         return holder;
     }
@@ -131,12 +141,16 @@ public class ChromeDriverManager {
     public class DriverHolder implements AutoCloseable {
         private final ChromeDriver driver;
         private final ArrayBlockingQueue<DriverHolder> queue;
+        private final Path userDir;
         private AtomicInteger uses = new AtomicInteger(0);
         private AtomicBoolean dead = new AtomicBoolean(false);
 
-        DriverHolder(ChromeDriver driver, ArrayBlockingQueue<DriverHolder> queue) {
+        DriverHolder(ChromeDriver driver,
+                     ArrayBlockingQueue<DriverHolder> queue,
+                     Path userDir) {
             this.driver = driver;
             this.queue = queue;
+            this.userDir = userDir;
         }
 
         public ChromeDriver get() {
