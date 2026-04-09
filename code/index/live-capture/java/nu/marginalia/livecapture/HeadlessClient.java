@@ -29,13 +29,13 @@ public class HeadlessClient implements AutoCloseable {
             .connectTimeout(Duration.ofSeconds(30))
             .build();
 
-    private final URI browserlessURI;
+    private final URI headlessURI;
     private final Gson gson = GsonFactory.get();
 
     private final String userAgent = WmsaHome.getUserAgent().uaString();
 
-    public HeadlessClient(URI browserlessURI) {
-        this.browserlessURI = browserlessURI;
+    public HeadlessClient(URI headlessURI) {
+        this.headlessURI = headlessURI;
     }
 
     /** Fetches content with a marginalia hack extension loaded that decorates the DOM with attributes for
@@ -47,7 +47,7 @@ public class HeadlessClient implements AutoCloseable {
         );
 
         var request = HttpRequest.newBuilder()
-                .uri(browserlessURI.resolve("/dom-sample?token="+BROWSERLESS_TOKEN))
+                .uri(headlessURI.resolve("/dom-sample?token="+BROWSERLESS_TOKEN))
                 .method("POST", HttpRequest.BodyPublishers.ofString(
                         gson.toJson(requestData)
                 ))
@@ -72,7 +72,7 @@ public class HeadlessClient implements AutoCloseable {
         );
 
         var request = HttpRequest.newBuilder()
-                .uri(browserlessURI.resolve("/screenshot?token="+BROWSERLESS_TOKEN))
+                .uri(headlessURI.resolve("/screenshot?token="+BROWSERLESS_TOKEN))
                 .method("POST", HttpRequest.BodyPublishers.ofString(
                         gson.toJson(requestData)
                 ))

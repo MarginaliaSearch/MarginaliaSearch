@@ -31,7 +31,7 @@ public class DomSampleService {
     private final int sampleThreads;
     private final ServiceHeartbeat serviceHeartbeat;
     private final DomainCoordinator domainCoordinator;
-    private final URI browserlessURI;
+    private final URI headlessURI;
 
     private static final Logger logger = LoggerFactory.getLogger(DomSampleService.class);
     private final ArrayBlockingQueue<EdgeDomain> samplingQueue = new ArrayBlockingQueue<>(4);
@@ -43,7 +43,7 @@ public class DomSampleService {
     @Inject
     public DomSampleService(DomSampleDb db,
                             HikariDataSource mariadbDataSource,
-                            @Named("headless-uri") String browserlessAddress,
+                            @Named("headless-uri") String headlessAddress,
                             @Named("headless-sample-threads") int sampleThreads,
                             ServiceHeartbeat serviceHeartbeat,
                             LiveCaptureConfig liveCaptureConfig,
@@ -56,19 +56,19 @@ public class DomSampleService {
         this.serviceHeartbeat = serviceHeartbeat;
         this.domainCoordinator = domainCoordinator;
 
-        if (StringUtils.isEmpty(browserlessAddress) || !liveCaptureConfig.isEnabled()) {
+        if (StringUtils.isEmpty(headlessAddress) || !liveCaptureConfig.isEnabled()) {
             logger.warn("Live capture service will not run");
-            browserlessURI = null;
+            headlessURI = null;
         }
         else {
-            browserlessURI = new URI(browserlessAddress);
+            headlessURI = new URI(headlessAddress);
 
         }
     }
 
     public void start() {
-        if (browserlessURI == null) {
-            logger.warn("DomSampleService is not enabled due to missing browserless URI or multi-node configuration");
+        if (headlessURI == null) {
+            logger.warn("DomSampleService is not enabled due to missing headless URI or multi-node configuration");
             return;
         }
 
@@ -139,7 +139,7 @@ public class DomSampleService {
 
     private void mainThread() {
 
-        try (var client = new HeadlessClient(browserlessURI)) {
+        try (var client = new HeadlessClient(headlessURI)) {
 
             while (!Thread.interrupted() && running) {
 
@@ -179,7 +179,7 @@ public class DomSampleService {
     }
 
     private void samplingThread() {
-        try (var client = new HeadlessClient(browserlessURI)) {
+        try (var client = new HeadlessClient(headlessURI)) {
             while (!Thread.currentThread().isInterrupted() && running) {
                 try {
                     EdgeDomain domain = samplingQueue.poll(15, TimeUnit.SECONDS);
