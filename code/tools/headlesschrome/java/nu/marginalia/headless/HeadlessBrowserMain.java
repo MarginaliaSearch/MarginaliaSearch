@@ -14,6 +14,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
@@ -23,9 +24,10 @@ public class HeadlessBrowserMain extends Jooby {
     private static final Gson gson = GsonFactory.get();
     private static final Logger logger = LoggerFactory.getLogger(HeadlessBrowserMain.class);
 
-    private ChromeDriverManager driverManager = new ChromeDriverManager(4);
+    private ChromeDriverManager driverManager;
 
     private static final String TOKEN = System.getenv("TOKEN");
+    private static boolean SOFT_KILL = System.getenv("SOFT_KILL") != null;
 
     private volatile boolean killRequested = false;
 
@@ -34,6 +36,14 @@ public class HeadlessBrowserMain extends Jooby {
     }
 
     public HeadlessBrowserMain() {
+        try {
+            driverManager = new ChromeDriverManager(4);
+        }
+        catch (IOException ex) {
+            logger.error("Failed to initialize ChromeDriverManager", ex);
+            throw new RuntimeException(ex);
+        }
+
         var options = new ServerOptions();
         options.setCompressionLevel(1);
         options.setWorkerThreads(Math.min(4, options.getWorkerThreads()));
@@ -47,6 +57,19 @@ public class HeadlessBrowserMain extends Jooby {
     }
 
     private Object kill(Context ctx) {
+
+        if (!SOFT_KILL) {
+            Thread.ofVirtual().start(() -> {
+                try {
+                    Thread.sleep(Duration.ofSeconds(5));
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
+                System.exit(255);
+            });
+        }
+
         if (!TOKEN.equals(ctx.header("Authorization").valueOrNull())) {
             ctx.setResponseCode(StatusCode.UNAUTHORIZED_CODE);
             return "";
@@ -62,7 +85,7 @@ public class HeadlessBrowserMain extends Jooby {
 
         if (killRequested) {
             ctx.setResponseCode(StatusCode.SERVICE_UNAVAILABLE_CODE);
-            return "Awaiting termination by docker";
+            return "Awaiting termination";
         }
         else {
             ctx.setResponseCode(StatusCode.OK_CODE);

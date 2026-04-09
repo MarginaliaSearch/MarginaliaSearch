@@ -28,7 +28,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 public class HeadlessClientTest {
     // Run gradle docker if this image is not available
     static GenericContainer<?> container = new GenericContainer<>(DockerImageName.parse("marginalia-headless"))
-            .withEnv(Map.of("TOKEN", "HEADLESS_TOKEN"))
+            .withEnv(Map.of(
+                    "TOKEN", "HEADLESS_TOKEN",
+                    "SOFT_KILL", "1"
+                    ))
             .withImagePullPolicy(PullPolicy.defaultPolicy())
             .withNetworkMode("bridge")
             .withLogConsumer(frame -> {

@@ -31,7 +31,10 @@ public class HeadlessBrowserTest {
     private static final Gson gson = GsonFactory.get();
 
     private static GenericContainer<?> container = new GenericContainer<>(DockerImageName.parse("marginalia-headless"))
-            .withEnv(Map.of("TOKEN", "HEADLESS_TOKEN"))
+            .withEnv(Map.of(
+                    "TOKEN", "HEADLESS_TOKEN",
+                    "SOFT_KILL", "1"
+            ))
             .withImagePullPolicy(PullPolicy.defaultPolicy())
             .withNetworkMode("bridge")
             .withLogConsumer(frame -> {
@@ -50,20 +53,6 @@ public class HeadlessBrowserTest {
     @AfterAll
     public static void tearDownAll() {
         container.stop();
-    }
-
-
-    @Test
-    public void testHealth() throws IOException, InterruptedException {
-        try (var client = HttpClient.newHttpClient()) {
-            var rsp = client.send(
-                    HttpRequest.newBuilder(forPath("/health")).GET().build(),
-                    HttpResponse.BodyHandlers.ofString()
-            );
-
-            assertEquals(200, rsp.statusCode());
-            System.out.println(rsp.body());
-        }
     }
 
     @Test

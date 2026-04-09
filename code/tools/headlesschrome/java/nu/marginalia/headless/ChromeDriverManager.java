@@ -1,13 +1,18 @@
 package nu.marginalia.headless;
 
 import nu.marginalia.WmsaHome;
+import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -15,6 +20,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ChromeDriverManager {
     private static final String CHROME_PATH = "/usr/bin/chromium";
+    private final Path CHROME_DATA_DIR = Path.of("/tmp/chrome-data/");
+
     private static final Logger logger = LoggerFactory.getLogger(ChromeDriverManager.class);
 
     private ChromeOptions screenshotOptions;
@@ -23,7 +30,18 @@ public class ChromeDriverManager {
     private final ArrayBlockingQueue<DriverHolder> screenshotDriverHolders;
     private final ArrayBlockingQueue<DriverHolder> extensionDriverHolders;
 
-    public ChromeDriverManager(int queueSize) {
+
+    public ChromeDriverManager(int queueSize) throws IOException {
+        if (Files.isDirectory(CHROME_DATA_DIR)) {
+            for (Path p : Files.list(CHROME_DATA_DIR).filter(Files::isDirectory).toList()) {
+                logger.info("Cleaning {}", p);
+                FileUtils.deleteDirectory(p.toFile());
+            }
+        }
+        else {
+            Files.createDirectory(CHROME_DATA_DIR);
+        }
+
         screenshotDriverHolders = new ArrayBlockingQueue<>(queueSize);
         extensionDriverHolders = new ArrayBlockingQueue<>(queueSize);
 
@@ -47,7 +65,13 @@ public class ChromeDriverManager {
     }
 
     private ChromeDriver createScreenshotDriver() {
-        var driver = new ChromeDriver(screenshotOptions);
+        var options = new ChromeOptions().merge(screenshotOptions);
+
+        // https://chromium.googlesource.com/chromium/src/+/HEAD/docs/user_data_dir.md#Command-Line
+
+        options.addArguments("--user-data-dir=" + CHROME_DATA_DIR.resolve(UUID.randomUUID().toString()));
+
+        var driver = new ChromeDriver(options);
         driver.executeCdpCommand("Emulation.setDeviceMetricsOverride",
                 Map.of("width", 1024, "height", 768,
                         "deviceScaleFactor", 1., "mobile", false));
@@ -57,13 +81,17 @@ public class ChromeDriverManager {
     }
 
     private ChromeDriver createExtensionDriver() {
-        return new ChromeDriver(extensionOptions);
+        var options = new ChromeOptions().merge(extensionOptions);
+
+        options.addArguments("--user-data-dir=" + CHROME_DATA_DIR.resolve(UUID.randomUUID().toString()));
+        return new ChromeDriver(options);
     }
 
     public DriverHolder getScreenshotDriver(Duration timeout) throws InterruptedException {
         var holder = screenshotDriverHolders.poll(timeout.toMillis(), TimeUnit.MILLISECONDS);
         if (holder.isDead()) {
             try {
+                // TODO: Would be nice to be able to clean up the tmp dir here
                 holder.driver.quit();
             }
             catch (Exception ex) {}
@@ -78,6 +106,7 @@ public class ChromeDriverManager {
         var holder = extensionDriverHolders.poll(timeout.toMillis(), TimeUnit.MILLISECONDS);
         if (holder.isDead()) {
             try {
+                // TODO: Would be nice to be able to clean up the tmp dir here
                 holder.driver.quit();
             }
             catch (Exception ex) {}
