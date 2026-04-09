@@ -220,8 +220,8 @@ dependencyResolutionManagement {
             library('junit.jupiter.engine','org.junit.jupiter','junit-jupiter-engine').version('5.8.2')
             library('mockito','org.mockito','mockito-junit-jupiter').version('4.5.1')
 
-            library('selenium.chrome','org.seleniumhq.selenium','selenium-chrome-driver').version('4.8.3')
-            library('selenium.java','org.seleniumhq.selenium','selenium-java').version('4.8.3')
+            library('selenium.chrome','org.seleniumhq.selenium','selenium-chrome-driver').version('4.33.0')
+            library('selenium.java','org.seleniumhq.selenium','selenium-java').version('4.33.0')
 
             library('handlebars','com.github.jknack','handlebars').version('4.3.1')
             library('handlebars.markdown','com.github.jknack','handlebars-markdown').version('4.2.1')
