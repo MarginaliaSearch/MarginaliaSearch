@@ -8,6 +8,7 @@ COPY --from=jre-base /usr/lib/jvm/java-26-amazon-corretto /opt/java
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends chromium chromium-driver
 RUN apt-get install -y --no-install-recommends curl
+RUN apt-get install -y --no-install-recommends fonts-liberation fonts-noto fonts-noto-cjk
 
 HEALTHCHECK --start-period=10s --interval=30s --timeout=5s --retries=3 CMD curl -f http://localhost:8080/health || exit 1
 
