@@ -130,8 +130,8 @@ services:
 #    restart: always
 #    env_file:
 #    - "env/headless.env"
-#    expose:
-#    - 8080
+#    networks:
+#    - wmsa
 #
 #   To use, update `env/headless.env` and add a line like
 #
