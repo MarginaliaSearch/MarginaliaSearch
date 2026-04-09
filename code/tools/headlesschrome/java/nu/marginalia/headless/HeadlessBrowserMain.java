@@ -151,7 +151,6 @@ public class HeadlessBrowserMain extends Jooby {
                     .until(ExpectedConditions.presenceOfElementLocated(
                             By.id("marginaliahack")));
 
-            // FIXME: What if it's not?
             ctx.setResponseType("text/html; charset=utf-8");
 
             return driver.getPageSource().getBytes(StandardCharsets.UTF_8);
