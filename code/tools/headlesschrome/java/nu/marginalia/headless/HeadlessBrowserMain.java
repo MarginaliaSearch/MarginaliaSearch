@@ -5,6 +5,8 @@ import io.jooby.Context;
 import io.jooby.Jooby;
 import io.jooby.ServerOptions;
 import io.jooby.StatusCode;
+import io.jooby.exception.StatusCodeException;
+import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.gson.GsonFactory;
 import org.openqa.selenium.By;
 import org.openqa.selenium.OutputType;
@@ -15,6 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
@@ -34,6 +38,7 @@ public class HeadlessBrowserMain extends Jooby {
     );
 
     private static boolean SOFT_KILL = System.getenv("SOFT_KILL") != null;
+    private static boolean ALLOW_LOCAL_REQUESTS = System.getenv("ALLOW_LOCAL_REQUESTS") != null;
 
     private volatile boolean killRequested = false;
 
@@ -112,12 +117,15 @@ public class HeadlessBrowserMain extends Jooby {
             ctx.setResponseCode(StatusCode.SERVICE_UNAVAILABLE_CODE);
             return "";
         }
+
         if (!TOKEN.equals(ctx.header("Authorization").valueOrNull())) {
             ctx.setResponseCode(StatusCode.UNAUTHORIZED_CODE);
             return "";
         }
 
         ScreenshotRequest request = gson.fromJson(ctx.body().value(StandardCharsets.UTF_8), ScreenshotRequest.class);
+
+        validateUrl(request.url);
 
         logger.info("Fetching screenshot {}", request.url);
 
@@ -139,12 +147,15 @@ public class HeadlessBrowserMain extends Jooby {
             ctx.setResponseCode(StatusCode.SERVICE_UNAVAILABLE_CODE);
             return "";
         }
+
         if (!TOKEN.equals(ctx.header("Authorization").valueOrNull())) {
             ctx.setResponseCode(StatusCode.UNAUTHORIZED_CODE);
             return "";
         }
 
         DomSampleRequest request = gson.fromJson(ctx.body().value(StandardCharsets.UTF_8), DomSampleRequest.class);
+
+        validateUrl(request.url);
 
         logger.info("Fetching DOM sample {}", request.url);
 
@@ -198,5 +209,31 @@ public class HeadlessBrowserMain extends Jooby {
     record ScreenshotRequest(String url) {}
     record DomSampleRequest(String url) {}
 
+    private static void validateUrl(String url) throws StatusCodeException {
+        var parsedUrl = EdgeUrl.parse(url).orElseThrow(() -> new StatusCodeException(StatusCode.BAD_REQUEST));
+
+        if (!("http".equalsIgnoreCase(parsedUrl.proto) || "https".equalsIgnoreCase(parsedUrl.proto)))
+            throw new StatusCodeException(StatusCode.BAD_REQUEST, "Illegal schema in URL");
+
+        if (!ALLOW_LOCAL_REQUESTS && parsedUrl.port != null)
+            throw new StatusCodeException(StatusCode.BAD_REQUEST, "Port not permitted in URL");
+
+        try {
+            InetAddress address = InetAddress.getByName(parsedUrl.domain.toString());
+
+            if (address.isAnyLocalAddress()
+                || address.isLinkLocalAddress()
+                || address.isLoopbackAddress()
+                || address.isSiteLocalAddress())
+            {
+                if (!ALLOW_LOCAL_REQUESTS) {
+                    throw new StatusCodeException(StatusCode.BAD_REQUEST, "URL resolves to local address");
+                }
+            }
+        }
+        catch (UnknownHostException ex) {
+            throw new StatusCodeException(StatusCode.NOT_FOUND, "No such host");
+        }
+    }
 
 }
