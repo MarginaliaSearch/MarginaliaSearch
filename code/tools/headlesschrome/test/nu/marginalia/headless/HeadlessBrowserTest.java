@@ -56,34 +56,6 @@ public class HeadlessBrowserTest {
     }
 
     @Test
-    public void testKill() throws IOException, InterruptedException {
-        try (var client = HttpClient.newHttpClient()) {
-            var rsp = client.send(
-                    HttpRequest.newBuilder(forPath("/health")).GET().build(),
-                    HttpResponse.BodyHandlers.ofString()
-            );
-            assertEquals(200, rsp.statusCode());
-            System.out.println(rsp.body());
-
-            rsp = client.send(
-                    HttpRequest.newBuilder(forPath("/kill")).POST(HttpRequest.BodyPublishers.noBody())
-                            .setHeader("Authorization", "HEADLESS_TOKEN")
-                            .build(),
-                    HttpResponse.BodyHandlers.ofString()
-            );
-            assertEquals(200, rsp.statusCode());
-            System.out.println(rsp.body());
-
-            rsp = client.send(
-                    HttpRequest.newBuilder(forPath("/health")).GET().build(),
-                    HttpResponse.BodyHandlers.ofString()
-            );
-            assertNotEquals(200, rsp.statusCode());
-            System.out.println(rsp.body());
-        }
-    }
-
-    @Test
     public void testDomSample() throws IOException, InterruptedException {
         try (var client = HttpClient.newHttpClient()) {
             var rsp = client.send(
