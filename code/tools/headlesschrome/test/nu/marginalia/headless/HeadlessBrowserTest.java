@@ -2,6 +2,7 @@ package nu.marginalia.headless;
 
 
 import com.google.gson.Gson;
+import io.jooby.StatusCode;
 import nu.marginalia.model.gson.GsonFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -66,7 +67,7 @@ public class HeadlessBrowserTest {
     public void testDomSample() throws IOException, InterruptedException {
         try (var client = HttpClient.newHttpClient()) {
             var rsp = client.send(
-                    HttpRequest.newBuilder(forPath("/dom-sample")).POST(HttpRequest.BodyPublishers.ofString(
+                    HttpRequest.newBuilder(forPath("/dom-sample?token=HEADLESS_TOKEN")).POST(HttpRequest.BodyPublishers.ofString(
                             gson.toJson(Map.of("url", "https://www.marginalia.nu/"))
                     )).build(),
                     HttpResponse.BodyHandlers.ofString()
@@ -82,7 +83,7 @@ public class HeadlessBrowserTest {
     public void testScreenshot() throws IOException, InterruptedException {
         try (var client = HttpClient.newHttpClient()) {
             var rsp = client.send(
-                    HttpRequest.newBuilder(forPath("/screenshot")).POST(HttpRequest.BodyPublishers.ofString(
+                    HttpRequest.newBuilder(forPath("/screenshot?token=HEADLESS_TOKEN")).POST(HttpRequest.BodyPublishers.ofString(
                             gson.toJson(Map.of("url", "https://www.marginalia.nu/"))
                     )).build(),
                     HttpResponse.BodyHandlers.ofByteArray()
@@ -92,6 +93,35 @@ public class HeadlessBrowserTest {
             byte[] bytes = rsp.body();
             assertEquals("PNG", new String(bytes, 1, 3, StandardCharsets.US_ASCII));
             Files.write(Files.createTempFile("screenshot", ".png"), bytes, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+        }
+    }
+
+
+    @Test
+    public void testDomSample_Unauthorized() throws IOException, InterruptedException {
+        try (var client = HttpClient.newHttpClient()) {
+            var rsp = client.send(
+                    HttpRequest.newBuilder(forPath("/dom-sample")).POST(
+                            HttpRequest.BodyPublishers.ofString(gson.toJson(Map.of("url", "https://www.marginalia.nu/")))).build(),
+                    HttpResponse.BodyHandlers.discarding()
+            );
+
+            assertEquals(StatusCode.UNAUTHORIZED_CODE, rsp.statusCode());
+        }
+    }
+
+    @Test
+    public void testScreenshot_Unauthorized() throws IOException, InterruptedException {
+        try (var client = HttpClient.newHttpClient()) {
+            var rsp = client.send(
+                    HttpRequest.newBuilder(forPath("/screenshot")).POST(
+                            HttpRequest.BodyPublishers.ofString(
+                                gson.toJson(Map.of("url", "https://www.marginalia.nu/"))
+                    )).build(),
+                    HttpResponse.BodyHandlers.discarding()
+            );
+
+            assertEquals(StatusCode.UNAUTHORIZED_CODE, rsp.statusCode());
         }
     }
 

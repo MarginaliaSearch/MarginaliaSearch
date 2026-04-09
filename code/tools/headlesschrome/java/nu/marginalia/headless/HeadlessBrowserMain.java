@@ -25,19 +25,17 @@ public class HeadlessBrowserMain extends Jooby {
 
     private ChromeDriverManager driverManager = new ChromeDriverManager(4);
 
+    private static final String TOKEN = System.getenv("TOKEN");
+
     static void main(String[] args) {
         Jooby.runApp(args, HeadlessBrowserMain::new);
     }
 
     public HeadlessBrowserMain() {
         var options = new ServerOptions();
-        options.setHost("0.0.0.0");
-        options.setPort(8080);
         options.setCompressionLevel(1);
-
         options.setWorkerThreads(Math.min(4, options.getWorkerThreads()));
         options.setIoThreads(Math.min(4, options.getIoThreads()));
-
         setServerOptions(options);
 
         get("/health", this::health);
@@ -56,6 +54,10 @@ public class HeadlessBrowserMain extends Jooby {
     }
 
     public Object screenshot(Context ctx) throws InterruptedException {
+        if (!TOKEN.equals(ctx.query("token").valueOrNull())) {
+            ctx.setResponseCode(StatusCode.UNAUTHORIZED_CODE);
+            return "";
+        }
 
         ScreenshotRequest request = gson.fromJson(ctx.body().value(StandardCharsets.UTF_8), ScreenshotRequest.class);
 
@@ -75,6 +77,11 @@ public class HeadlessBrowserMain extends Jooby {
     }
 
     public Object domSample(Context ctx) throws InterruptedException {
+        if (!TOKEN.equals(ctx.query("token").valueOrNull())) {
+            ctx.setResponseCode(StatusCode.UNAUTHORIZED_CODE);
+            return "";
+        }
+
         DomSampleRequest request = gson.fromJson(ctx.body().value(StandardCharsets.UTF_8), DomSampleRequest.class);
 
         logger.info("Fetching DOM sample {}", request.url);
