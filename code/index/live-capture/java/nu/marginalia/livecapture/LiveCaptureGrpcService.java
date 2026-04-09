@@ -9,8 +9,6 @@ import nu.marginalia.api.livecapture.LiveCaptureApiGrpc;
 import nu.marginalia.config.LiveCaptureConfig;
 import nu.marginalia.coordination.DomainCoordinator;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.nodecfg.NodeConfigurationService;
-import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.service.server.DiscoverableService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -114,7 +112,7 @@ public class LiveCaptureGrpcService
 
         @Override
         public void run() {
-            try (BrowserlessClient client = new BrowserlessClient(browserlessURI)) {
+            try (HeadlessClient client = new HeadlessClient(browserlessURI)) {
                 while (true) {
                     if (screengrabAllowed) {
                         capture(client, requestedScreenshots.take());
@@ -131,7 +129,7 @@ public class LiveCaptureGrpcService
             }
         }
 
-        private void capture(BrowserlessClient client, ScheduledScreenshot scheduledScreenshot) {
+        private void capture(HeadlessClient client, ScheduledScreenshot scheduledScreenshot) {
             // Only one agent should capture a screenshot for a domain, so we skip if another agent has claimed it
             if (domainIdsClaimed.put(scheduledScreenshot.domainId(), Boolean.TRUE) != null) {
                 return;
@@ -185,13 +183,11 @@ public class LiveCaptureGrpcService
             return true;
         }
 
-        private void grab(BrowserlessClient client, Connection conn, EdgeDomain domain) {
+        private void grab(HeadlessClient client, Connection conn, EdgeDomain domain) {
             try (var lock = domainCoordinator.lockDomain(domain)) {
                 logger.info("Capturing {}", domain);
 
-                byte[] pngBytes = client.screenshot(domain.toRootUrlHttps().toString(),
-                        BrowserlessClient.GotoOptions.defaultValues(),
-                        BrowserlessClient.ScreenshotOptions.defaultValues());
+                byte[] pngBytes = client.screenshot(domain.toRootUrlHttps().toString());
                 if (pngBytes.length > 0) {
                     ScreenshotDbOperations.uploadScreenshot(conn, domain, pngBytes);
                 }

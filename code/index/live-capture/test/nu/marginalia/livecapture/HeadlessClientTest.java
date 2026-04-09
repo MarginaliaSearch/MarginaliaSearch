@@ -25,16 +25,16 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
 @Testcontainers
 @Tag("slow")
-public class BrowserlessClientTest {
+public class HeadlessClientTest {
     // Run gradle docker if this image is not available
     static GenericContainer<?> container = new GenericContainer<>(DockerImageName.parse("marginalia-headless"))
-            .withEnv(Map.of("TOKEN", "BROWSERLESS_TOKEN"))
+            .withEnv(Map.of("TOKEN", "HEADLESS_TOKEN"))
             .withImagePullPolicy(PullPolicy.defaultPolicy())
             .withNetworkMode("bridge")
             .withLogConsumer(frame -> {
                 System.out.print(frame.getUtf8String());
             })
-            .withExposedPorts(3000);
+            .withExposedPorts(8080);
 
     static WireMockServer wireMockServer =
             new WireMockServer(WireMockConfiguration.wireMockConfig()
@@ -42,38 +42,28 @@ public class BrowserlessClientTest {
 
     static String localIp;
 
-    static URI browserlessURI;
-    static URI browserlessWssURI;
+    static URI headlessURI;
 
     @BeforeAll
     public static void setup() throws IOException {
         container.start();
 
-        browserlessURI = URI.create(String.format("http://%s:%d/",
+        headlessURI = URI.create(String.format("http://%s:%d/",
                 container.getHost(),
-                container.getMappedPort(3000))
+                container.getMappedPort(8080))
         );
-
-        browserlessWssURI = URI.create(String.format("ws://%s:%d/?token=BROWSERLESS_TOKEN",
-                container.getHost(),
-                container.getMappedPort(3000))
-        );
-
 
         wireMockServer.start();
         wireMockServer.stubFor(get("/").willReturn(aResponse().withStatus(200).withBody("Ok")));
 
         localIp = ServiceConfigurationModule.getLocalNetworkIP();
-
     }
 
     @Tag("flaky")
     @Test
     public void testInspectContentUA__Flaky() throws Exception {
-        try (var client = new BrowserlessClient(browserlessURI)) {
-            client.content("http://" + localIp + ":18089/",
-                    BrowserlessClient.GotoOptions.defaultValues()
-            );
+        try (var client = new HeadlessClient(headlessURI)) {
+            client.domSample("http://" + localIp + ":18089/");
         }
 
         wireMockServer.verify(getRequestedFor(urlEqualTo("/")).withHeader("User-Agent", equalTo(WmsaHome.getUserAgent().uaString())));
@@ -82,32 +72,20 @@ public class BrowserlessClientTest {
     @Tag("flaky")
     @Test
     public void testInspectScreenshotUA__Flaky() throws Exception {
-        try (var client = new BrowserlessClient(browserlessURI)) {
-            client.screenshot("http://" + localIp + ":18089/",
-                    BrowserlessClient.GotoOptions.defaultValues(),
-                    BrowserlessClient.ScreenshotOptions.defaultValues()
-            );
+        try (var client = new HeadlessClient(headlessURI)) {
+            client.screenshot("http://" + localIp + ":18089/");
         }
 
         wireMockServer.verify(getRequestedFor(urlEqualTo("/")).withHeader("User-Agent", equalTo(WmsaHome.getUserAgent().uaString())));
     }
 
     @Test
-    public void testContent() throws Exception {
-        try (var client = new BrowserlessClient(browserlessURI)) {
-            var content = client.content("https://www.marginalia.nu/", BrowserlessClient.GotoOptions.defaultValues()).orElseThrow();
+    public void testDomSample() throws Exception {
 
-            Assertions.assertFalse(content.isBlank(), "Content should not be empty");
-        }
-    }
-
-    @Test
-    public void testAnnotatedContent() throws Exception {
-
-        try (var client = new BrowserlessClient(browserlessURI);
+        try (var client = new HeadlessClient(headlessURI);
              DomSampleDb dbop = new DomSampleDb(Path.of("/tmp/dom-sample.db"))
         ) {
-            var content = client.annotatedContent("https://marginalia.nu/", BrowserlessClient.GotoOptions.defaultValues()).orElseThrow();
+            var content = client.domSample("https://marginalia.nu/").orElseThrow();
             dbop.saveSample("marginalia.nu", "https://marginalia.nu/", content);
             System.out.println(content);
             Assertions.assertFalse(content.isBlank(), "Content should not be empty");
@@ -127,10 +105,8 @@ public class BrowserlessClientTest {
 
     @Test
     public void testScreenshot() throws Exception {
-        try (var client = new BrowserlessClient(browserlessURI)) {
-            var screenshot = client.screenshot("https://www.marginalia.nu/",
-                    BrowserlessClient.GotoOptions.defaultValues(),
-                    BrowserlessClient.ScreenshotOptions.defaultValues());
+        try (var client = new HeadlessClient(headlessURI)) {
+            var screenshot = client.screenshot("https://www.marginalia.nu/");
 
             Assertions.assertNotNull(screenshot, "Screenshot should not be null");
         }
