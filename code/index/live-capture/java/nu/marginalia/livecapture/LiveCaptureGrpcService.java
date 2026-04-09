@@ -31,7 +31,7 @@ public class LiveCaptureGrpcService
 
     private static final Logger logger = LoggerFactory.getLogger(LiveCaptureGrpcService.class);
 
-    private final URI browserlessURI;
+    private final URI headlessURI;
     private final boolean serviceEnabled;
     private final LinkedBlockingQueue<ScheduledScreenshot> requestedScreenshots = new LinkedBlockingQueue<>(128);
     private final HikariDataSource dataSource;
@@ -49,7 +49,7 @@ public class LiveCaptureGrpcService
 
     @Inject
     public LiveCaptureGrpcService(HikariDataSource dataSource,
-                                  @Named("headless-uri") String browserlessAddress,
+                                  @Named("headless-uri") String headlessAddress,
                                   @Named("headless-agent-threads") int threads,
                                   DomainCoordinator domainCoordinator,
                                   LiveCaptureConfig liveCaptureConfig
@@ -57,14 +57,14 @@ public class LiveCaptureGrpcService
         this.dataSource = dataSource;
         this.domainCoordinator = domainCoordinator;
 
-        if (StringUtils.isEmpty(browserlessAddress) || !liveCaptureConfig.isEnabled()) {
+        if (StringUtils.isEmpty(headlessAddress) || !liveCaptureConfig.isEnabled()) {
             logger.warn("Live capture service will not run");
             serviceEnabled = false;
-            browserlessURI = null; // satisfy final
+            headlessURI = null; // satisfy final
             screengrabAllowed = false;
         }
         else {
-            browserlessURI = new URI(browserlessAddress);
+            headlessURI = new URI(headlessAddress);
             serviceEnabled = true;
             screengrabAllowed = false;
 
@@ -112,7 +112,7 @@ public class LiveCaptureGrpcService
 
         @Override
         public void run() {
-            try (HeadlessClient client = new HeadlessClient(browserlessURI)) {
+            try (HeadlessClient client = new HeadlessClient(headlessURI)) {
                 while (true) {
                     if (screengrabAllowed) {
                         capture(client, requestedScreenshots.take());

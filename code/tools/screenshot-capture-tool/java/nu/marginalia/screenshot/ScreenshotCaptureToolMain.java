@@ -107,7 +107,7 @@ public class ScreenshotCaptureToolMain {
             );
 
             var request = HttpRequest.newBuilder()
-                    .uri(new URI("http://browserless:3000/screenshot?token=" + BROWSERLESS_TOKEN))
+                    .uri(new URI("http://headless:3000/screenshot?token=" + BROWSERLESS_TOKEN))
                     .method("POST", HttpRequest.BodyPublishers.ofString(
                             gson.toJson(requestData)
                     ))
