@@ -38,7 +38,7 @@ public class HeadlessBrowserMain extends Jooby {
     private volatile boolean killRequested = false;
 
     static void main(String[] args) {
-        Jooby.runApp(args, HeadlessBrowserMain::new);
+        Jooby.runApp(new String[] { "application.env=prod" }, HeadlessBrowserMain::new);
     }
 
     public HeadlessBrowserMain() {
