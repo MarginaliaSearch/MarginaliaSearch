@@ -1,13 +1,54 @@
 plugins {
-    id 'base'
+    id 'java'
+    id 'application'
+    id 'com.gradleup.shadow'
+    id 'jvm-test-suite'
 }
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
+    }
+}
+
+application {
+    mainClass = 'nu.marginalia.headless.HeadlessBrowserMain'
+    applicationName = 'headlesschrome'
+}
+
+tasks.distZip.enabled = false
+apply from: "$rootProject.projectDir/srcsets.gradle"
+tasks.shadowJar.enabled = true
 
 def imageName = 'marginalia-headless'
 def imageTag = project.hasProperty('imageTag') ? project.getProperty('imageTag') : 'latest'
 
+dependencies {
+    implementation project(':code:common:config')
+    implementation project(':code:common:model')
+    implementation libs.notnull
+
+    implementation libs.bundles.slf4j
+    implementation libs.bundles.jooby
+    implementation libs.bundles.selenium
+
+    implementation libs.guava
+    implementation libs.gson
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+
+    testImplementation platform('org.testcontainers:testcontainers-bom:1.21.4')
+    testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
+}
+
+
 tasks.register('docker', Exec) {
     group = 'Docker'
     description = 'Builds a Docker image using the Dockerfile in project root'
+
+    dependsOn 'shadowJar'
 
     workingDir = projectDir
 
@@ -42,4 +83,8 @@ tasks.register('prepareExtension', Copy) {
 // Make the docker task depend on prepareExtension
 tasks.named('docker').configure {
     dependsOn 'prepareExtension'
+}
+
+tasks.named('test').configure {
+    dependsOn('docker')
 }
