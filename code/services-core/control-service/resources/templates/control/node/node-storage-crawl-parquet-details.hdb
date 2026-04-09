@@ -19,7 +19,7 @@
     <div class="container">
         {{>control/partials/storage-types}}
 
-        <h1>Crawl Parquet Info</h1>
+        <h1>Crawl Info</h1>
 
         <h2>Summary</h2>
         <table class="table">
@@ -28,7 +28,7 @@
             </tr>
             <td>{{domain}}</td>
             <td>
-                <a class="btn btn-primary" href="/nodes/{{node.id}}/storage/{{storage.id}}/transfer?path={{{path}}}">Download Parquet</a>
+                <a class="btn btn-primary" href="/nodes/{{node.id}}/storage/{{storage.id}}/transfer?path={{{path}}}">Download Crawl Data</a>
             </td>
             <td>
                 <form method="post" action="/nodes/{{node.id}}/actions/recrawl-single-domain" onsubmit="return confirm('Confirm recrawl of {{domain}}')">
