@@ -6,7 +6,7 @@ import jakarta.inject.Named;
 import nu.marginalia.config.LiveCaptureConfig;
 import nu.marginalia.coordination.DomainCoordinator;
 import nu.marginalia.domsample.db.DomSampleDb;
-import nu.marginalia.livecapture.BrowserlessClient;
+import nu.marginalia.livecapture.HeadlessClient;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.service.control.ServiceHeartbeat;
 import org.apache.commons.lang3.StringUtils;
@@ -139,7 +139,7 @@ public class DomSampleService {
 
     private void mainThread() {
 
-        try (var client = new BrowserlessClient(browserlessURI)) {
+        try (var client = new HeadlessClient(browserlessURI)) {
 
             while (!Thread.interrupted() && running) {
 
@@ -179,7 +179,7 @@ public class DomSampleService {
     }
 
     private void samplingThread() {
-        try (var client = new BrowserlessClient(browserlessURI)) {
+        try (var client = new HeadlessClient(browserlessURI)) {
             while (!Thread.currentThread().isInterrupted() && running) {
                 try {
                     EdgeDomain domain = samplingQueue.poll(15, TimeUnit.SECONDS);
@@ -203,7 +203,7 @@ public class DomSampleService {
         }
     }
 
-    private void updateDomain(BrowserlessClient client, String domain) throws InterruptedException {
+    private void updateDomain(HeadlessClient client, String domain) throws InterruptedException {
 
         String rootUrl;
 
@@ -215,7 +215,7 @@ public class DomSampleService {
         }
 
         try {
-            var content = client.annotatedContent(rootUrl, new BrowserlessClient.GotoOptions("load", Duration.ofSeconds(10).toMillis()));
+            var content = client.domSample(rootUrl);
 
             if (content.isPresent()) {
                 db.saveSample(domain, rootUrl, content.get());

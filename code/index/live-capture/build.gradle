@@ -72,3 +72,5 @@ dependencies {
     testImplementation project(':code:libraries:test-helpers')
 
 }
+
+tasks.test.dependsOn(':code:tools:headlesschrome:docker')
