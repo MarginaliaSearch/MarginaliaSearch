@@ -12,6 +12,8 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.images.PullPolicy;
 import org.testcontainers.utility.DockerImageName;
 
+import javax.imageio.ImageIO;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -92,7 +94,10 @@ public class HeadlessBrowserTest {
             assertEquals(200, rsp.statusCode());
             byte[] bytes = rsp.body();
             assertEquals("PNG", new String(bytes, 1, 3, StandardCharsets.US_ASCII));
-            Files.write(Files.createTempFile("screenshot", ".png"), bytes, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+
+            var image = ImageIO.read(new ByteArrayInputStream(bytes));
+            assertEquals(1024, image.getWidth());
+            assertEquals(768, image.getHeight());
         }
     }
 

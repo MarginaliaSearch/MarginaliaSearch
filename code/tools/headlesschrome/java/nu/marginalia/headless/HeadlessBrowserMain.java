@@ -63,7 +63,7 @@ public class HeadlessBrowserMain extends Jooby {
 
         logger.info("Fetching screenshot {}", request.url);
 
-        try (var driverHolder = driverManager.getVanillaDriver(Duration.ofSeconds(15))){
+        try (var driverHolder = driverManager.getScreenshotDriver(Duration.ofSeconds(15))) {
             ChromeDriver driver = driverHolder.get();
 
             driver.get(request.url());
