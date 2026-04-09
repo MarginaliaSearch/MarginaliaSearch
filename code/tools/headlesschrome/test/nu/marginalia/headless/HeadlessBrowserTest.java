@@ -69,8 +69,9 @@ public class HeadlessBrowserTest {
     public void testDomSample() throws IOException, InterruptedException {
         try (var client = HttpClient.newHttpClient()) {
             var rsp = client.send(
-                    HttpRequest.newBuilder(forPath("/dom-sample?token=HEADLESS_TOKEN")).POST(HttpRequest.BodyPublishers.ofString(
-                            gson.toJson(Map.of("url", "https://www.marginalia.nu/"))
+                    HttpRequest.newBuilder(forPath("/dom-sample"))
+                            .header("Authorization", "HEADLESS_TOKEN")
+                            .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(Map.of("url", "https://www.marginalia.nu/"))
                     )).build(),
                     HttpResponse.BodyHandlers.ofString()
             );
@@ -85,8 +86,9 @@ public class HeadlessBrowserTest {
     public void testScreenshot() throws IOException, InterruptedException {
         try (var client = HttpClient.newHttpClient()) {
             var rsp = client.send(
-                    HttpRequest.newBuilder(forPath("/screenshot?token=HEADLESS_TOKEN")).POST(HttpRequest.BodyPublishers.ofString(
-                            gson.toJson(Map.of("url", "https://www.marginalia.nu/"))
+                    HttpRequest.newBuilder(forPath("/screenshot"))
+                            .header("Authorization", "HEADLESS_TOKEN")
+                            .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(Map.of("url", "https://www.marginalia.nu/"))
                     )).build(),
                     HttpResponse.BodyHandlers.ofByteArray()
             );

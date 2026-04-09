@@ -54,7 +54,7 @@ public class HeadlessBrowserMain extends Jooby {
     }
 
     public Object screenshot(Context ctx) throws InterruptedException {
-        if (!TOKEN.equals(ctx.query("token").valueOrNull())) {
+        if (!TOKEN.equals(ctx.header("Authorization").valueOrNull())) {
             ctx.setResponseCode(StatusCode.UNAUTHORIZED_CODE);
             return "";
         }
@@ -77,7 +77,7 @@ public class HeadlessBrowserMain extends Jooby {
     }
 
     public Object domSample(Context ctx) throws InterruptedException {
-        if (!TOKEN.equals(ctx.query("token").valueOrNull())) {
+        if (!TOKEN.equals(ctx.header("Authorization").valueOrNull())) {
             ctx.setResponseCode(StatusCode.UNAUTHORIZED_CODE);
             return "";
         }
