@@ -54,6 +54,10 @@ public class HeadlessBrowserMain extends Jooby {
         post("/kill", this::kill);
         post("/screenshot", this::screenshot);
         post("/dom-sample", this::domSample);
+
+        Runtime.getRuntime().addShutdownHook(Thread.ofPlatform().unstarted(() -> {
+            driverManager.close();
+        }));
     }
 
     private Object kill(Context ctx) {
@@ -98,6 +102,10 @@ public class HeadlessBrowserMain extends Jooby {
     }
 
     public Object screenshot(Context ctx) throws InterruptedException {
+        if (killRequested) {
+            ctx.setResponseCode(StatusCode.SERVICE_UNAVAILABLE_CODE);
+            return "";
+        }
         if (!TOKEN.equals(ctx.header("Authorization").valueOrNull())) {
             ctx.setResponseCode(StatusCode.UNAUTHORIZED_CODE);
             return "";
@@ -121,6 +129,10 @@ public class HeadlessBrowserMain extends Jooby {
     }
 
     public Object domSample(Context ctx) throws InterruptedException {
+        if (killRequested) {
+            ctx.setResponseCode(StatusCode.SERVICE_UNAVAILABLE_CODE);
+            return "";
+        }
         if (!TOKEN.equals(ctx.header("Authorization").valueOrNull())) {
             ctx.setResponseCode(StatusCode.UNAUTHORIZED_CODE);
             return "";

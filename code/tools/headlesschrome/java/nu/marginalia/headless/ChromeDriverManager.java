@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -113,6 +115,17 @@ public class ChromeDriverManager {
             holder = new DriverHolder(createExtensionDriver(), extensionDriverHolders);
         }
         return holder;
+    }
+
+    public void close() {
+        List<DriverHolder> holderList = new ArrayList<>();
+
+        extensionDriverHolders.drainTo(holderList);
+        screenshotDriverHolders.drainTo(holderList);
+
+        holderList.forEach(holder -> {
+            holder.driver.quit();
+        });
     }
 
     public class DriverHolder implements AutoCloseable {
