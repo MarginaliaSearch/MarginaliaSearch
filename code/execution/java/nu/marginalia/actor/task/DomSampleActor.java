@@ -31,7 +31,8 @@ public class DomSampleActor extends RecordActorPrototype {
     }
     @Resume(behavior=ActorResumeBehavior.RESTART)
     public record Run(String endTs) implements ActorStep {}
-
+    @Resume(behavior= ActorResumeBehavior.RETRY)
+    public record Terminate() implements ActorStep {}
     private ActorTimeslot nextTimeslot() {
         return new ActorTimeslot.ActorSchedule(scheduleService.getWindow(ActorScheduleRow.Window.DOM_SAMPLE)).nextTimeslot();
     }
@@ -70,14 +71,21 @@ public class DomSampleActor extends RecordActorPrototype {
                     }
                 }
                 finally {
-                    domSampleService.stop();
+                    yield new Terminate();
                 }
 
+
+            }
+            case Terminate() -> {
+                domSampleService.stop();
+                domSampleService.kill();
                 yield new Wait(nextTimeslot());
             }
             case End() -> {
-                if (domSampleService.isRunning())
+                if (domSampleService.isRunning()) {
                     domSampleService.stop();
+                    domSampleService.kill();
+                }
                 yield new End(); // will not run, terminal state
             }
             default -> new Error();
