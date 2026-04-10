@@ -17,6 +17,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -119,11 +120,24 @@ public class GrpcMultiNodeChannelPool<STUB> {
         }
 
         /** Run the given method on each node, returning a list of results.
-         * This is a blocking method, where each call will be made in sequence */
-        public List<T> run(I arg) {
-            return getEligibleNodes().stream()
-                    .map(node -> getPoolForNode(node).call(method).run(arg))
-                    .toList();
+         * This is a blocking method, where each call will be made in sequence
+         *
+         * @param arg request
+         * @param exceptionCallback invoked when sending a request to a node fails
+         * */
+        public List<T> run(I arg, BiConsumer<Integer, RuntimeException> exceptionCallback) {
+            List<T> ret = new ArrayList<>();
+
+            for (int node: getEligibleNodes()) {
+                try {
+                    ret.add(getPoolForNode(node).call(method).run(arg));
+                }
+                catch (RuntimeException ex) {
+                    exceptionCallback.accept(node, ex);
+                }
+            }
+
+            return ret;
         }
 
         /** Generate an async call builder for the given method */

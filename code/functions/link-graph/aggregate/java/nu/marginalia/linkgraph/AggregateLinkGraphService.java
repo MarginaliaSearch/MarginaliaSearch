@@ -31,7 +31,7 @@ public class AggregateLinkGraphService
                             StreamObserver<RpcDomainIdPairs> responseObserver) {
 
         client.getChannelPool().call(PartitionLinkGraphApiBlockingStub::getAllLinks)
-                .run(Empty.getDefaultInstance())
+                .run(Empty.getDefaultInstance(), (node, ex) -> { throw ex; })
                 .forEach(iter -> iter.forEachRemaining(responseObserver::onNext));
 
         responseObserver.onCompleted();
@@ -43,7 +43,7 @@ public class AggregateLinkGraphService
         var rspBuilder = RpcDomainIdList.newBuilder();
 
         client.getChannelPool().call(PartitionLinkGraphApiBlockingStub::getLinksFromDomain)
-                .run(request)
+                .run(request, (node, ex) -> logger.warn("Failed to invoke getLinksFromDomain() on partition {}", node, ex))
                 .stream()
                 .map(RpcDomainIdList::getDomainIdList)
                 .flatMap(List::stream)
@@ -60,7 +60,7 @@ public class AggregateLinkGraphService
 
 
         client.getChannelPool().call(PartitionLinkGraphApiBlockingStub::getLinksToDomain)
-                .run(request)
+                .run(request, (node, ex) -> logger.warn("Failed to invoke getLinksToDomain() on partition {}", node, ex))
                 .stream()
                 .map(RpcDomainIdList::getDomainIdList)
                 .flatMap(List::stream)
@@ -74,7 +74,7 @@ public class AggregateLinkGraphService
     public void countLinksFromDomain(RpcDomainId request,
                                      StreamObserver<RpcDomainIdCount> responseObserver) {
         int sum = client.getChannelPool().call(PartitionLinkGraphApiBlockingStub::countLinksFromDomain)
-                .run(request)
+                .run(request, (node, ex) -> logger.warn("Failed to invoke countLinksFromDomain() on partition {}", node, ex))
                 .stream()
                 .mapToInt(RpcDomainIdCount::getIdCount)
                 .sum();
@@ -90,7 +90,7 @@ public class AggregateLinkGraphService
                                    StreamObserver<RpcDomainIdCount> responseObserver) {
 
         int sum = client.getChannelPool().call(PartitionLinkGraphApiBlockingStub::countLinksToDomain)
-                .run(request)
+                .run(request, (node, ex) -> logger.warn("Failed to invoke countLinksToDomain() on partition {}", node, ex))
                 .stream()
                 .mapToInt(RpcDomainIdCount::getIdCount)
                 .sum();
