@@ -45,9 +45,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
-import org.slf4j.MarkerFactory;
 
+import javax.annotation.Nullable;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import java.io.IOException;
@@ -82,7 +81,9 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
 
     private static final SimpleRobotRulesParser robotsParser = new SimpleRobotRulesParser();
     private static final ContentTypeLogic contentTypeLogic = new ContentTypeLogic();
-    private final Marker crawlerAuditMarker = MarkerFactory.getMarker("CRAWLER");
+
+    @Nullable // in tests
+    private final CrawlerAuditLog auditLog;
 
     private final LinkParser linkParser = new LinkParser();
     @Override
@@ -186,7 +187,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
     }
 
     @Inject
-    public HttpFetcherImpl(UserAgent userAgent)
+    public HttpFetcherImpl(UserAgent userAgent, CrawlerAuditLog auditLog)
     {
         this.proxyManager = new SocksProxyManager(new SocksProxyConfiguration());
         try {
@@ -198,6 +199,11 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
         }
         this.userAgentString = userAgent.uaString();
         this.userAgentIdentifier = userAgent.uaIdentifier();
+        this.auditLog = auditLog;
+    }
+
+    public HttpFetcherImpl(UserAgent userAgent) {
+        this(userAgent, null);
     }
 
     public HttpFetcherImpl(String userAgent) {
@@ -211,6 +217,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
         }
         this.userAgentString = userAgent;
         this.userAgentIdentifier = userAgent;
+        this.auditLog = null;
     }
 
     // Not necessary in prod, but useful in test
@@ -411,30 +418,27 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                 try {
                     var probeResult = probeContentType(url, cookies, timer, contentTags);
 
+                    if (auditLog != null)
+                        auditLog.logProbe(probeResult, url);
+
                     switch (probeResult) {
                         case HttpFetcher.ContentTypeProbeResult.NoOp():
-                            break; //
+                            break;
                         case HttpFetcher.ContentTypeProbeResult.Ok(EdgeUrl resolvedUrl):
-                            logger.info(crawlerAuditMarker, "Probe result OK for {}", url);
                             url = resolvedUrl; // If we were redirected while probing, use the final URL for fetching
                             break;
                         case ContentTypeProbeResult.BadContentType badContentType:
                             warcRecorder.flagAsFailedContentTypeProbe(url, badContentType.contentType(), badContentType.statusCode());
-                            logger.info(crawlerAuditMarker, "Probe result Bad ContenType ({}) for {}", badContentType.contentType(), url);
                             return new HttpFetchResult.ResultNone();
                         case ContentTypeProbeResult.BadContentType.Timeout(Exception ex):
-                            logger.info(crawlerAuditMarker, "Probe result Timeout for {}", url);
                             warcRecorder.flagAsTimeout(url);
                             return new HttpFetchResult.ResultException(ex);
                         case ContentTypeProbeResult.Exception(Exception ex):
-                            logger.info(crawlerAuditMarker, "Probe result Exception({}) for {}", ex.getClass().getSimpleName(), url);
                             warcRecorder.flagAsError(url, ex);
                             return new HttpFetchResult.ResultException(ex);
                         case ContentTypeProbeResult.HttpError httpError:
-                            logger.info(crawlerAuditMarker, "Probe result HTTP Error ({}) for {}", httpError.statusCode(), url);
                             return new HttpFetchResult.ResultException(new HttpException("HTTP status code " + httpError.statusCode() + ": " + httpError.message()));
                         case ContentTypeProbeResult.Redirect redirect:
-                            logger.info(crawlerAuditMarker, "Probe result redirect for {} -> {}", url, redirect.location());
                             return new HttpFetchResult.ResultRedirect(redirect.location());
                     }
                 } catch (Exception ex) {
@@ -464,20 +468,15 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                     }
                 }
 
-                switch (result) {
-                    case HttpFetchResult.ResultOk ok -> logger.info(crawlerAuditMarker, "Fetch result OK {} for {} ({} ms)", ok.statusCode(), url, fetchDuration.toMillis());
-                    case HttpFetchResult.ResultRedirect redirect -> logger.info(crawlerAuditMarker, "Fetch result redirect: {}  for {}", redirect.url(), url);
-                    case HttpFetchResult.ResultNone none -> logger.info(crawlerAuditMarker, "Fetch result none for {}", url);
-                    case HttpFetchResult.ResultException ex -> logger.error(crawlerAuditMarker, "Fetch result exception for {}", url, ex.ex());
-                    case HttpFetchResult.Result304Raw raw -> logger.info(crawlerAuditMarker, "Fetch result: 304 Raw for {}", url);
-                    case HttpFetchResult.Result304ReplacedWithReference ref -> logger.info(crawlerAuditMarker, "Fetch result: 304 With reference for {}", url);
-                }
+                if (auditLog != null)
+                    auditLog.logFetch(result, url, fetchDuration);
 
                 return result;
             }
         }
         catch (Exception ex) {
-            logger.error(crawlerAuditMarker, "Fetch result exception for {}", url, ex);
+            if (auditLog != null)
+                auditLog.logFetch(new HttpFetchResult.ResultException(ex), url, Duration.ZERO);
 
             return new HttpFetchResult.ResultException(ex);
         }

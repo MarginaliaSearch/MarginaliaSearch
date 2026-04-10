@@ -13,6 +13,7 @@ import nu.marginalia.atags.source.AnchorTagsSource;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.coordination.DomainCoordinator;
 import nu.marginalia.coordination.DomainLock;
+import nu.marginalia.crawl.fetcher.CrawlerAuditLog;
 import nu.marginalia.crawl.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
@@ -82,6 +83,7 @@ public class CrawlerMain extends ProcessMainClass {
 
     private final AtomicInteger tasksDone = new AtomicInteger(0);
     private final HttpFetcherImpl fetcher;
+    private final CrawlerAuditLog auditLog;
 
     private int totalTasks = 1;
 
@@ -94,6 +96,7 @@ public class CrawlerMain extends ProcessMainClass {
     @Inject
     public CrawlerMain(UserAgent userAgent,
                        HttpFetcherImpl httpFetcher,
+                       CrawlerAuditLog auditLog,
                        ProcessHeartbeatImpl heartbeat,
                        ProcessEventLog eventLog,
                        MessageQueueFactory messageQueueFactory, DomainProber domainProber,
@@ -111,6 +114,7 @@ public class CrawlerMain extends ProcessMainClass {
 
         this.userAgent = userAgent;
         this.fetcher = httpFetcher;
+        this.auditLog = auditLog;
         this.heartbeat = heartbeat;
         this.eventLog = eventLog;
         this.domainProber = domainProber;
@@ -193,6 +197,7 @@ public class CrawlerMain extends ProcessMainClass {
                 instructions.err();
             }
             finally {
+                crawler.auditLog.close();
                 crawler.serviceRegistry.deregisterProcess("crawler", crawler.node);
             }
 
