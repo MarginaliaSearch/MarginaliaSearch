@@ -34,6 +34,7 @@ dependencies {
     implementation project(':code:functions:language-processing')
     implementation project(':code:libraries:easy-lsh')
     implementation project(':code:libraries:domain-lock')
+    implementation project(':code:libraries:buffering')
     implementation project(':code:processes:crawling-process:model')
     implementation project(':code:processes:crawling-process:ft-crawl-blocklist')
     implementation project(':code:processes:crawling-process:ft-link-parser')
