@@ -47,7 +47,8 @@ public abstract class WarcInputBuffer implements AutoCloseable {
      */
     static WarcInputBuffer forResponse(ClassicHttpResponse response,
                                        HttpGet request,
-                                       Duration timeLimit) throws IOException {
+                                       Duration timeLimit,
+                                       Path tempDir) throws IOException {
         if (response == null)
             return new ErrorBuffer();
 
@@ -76,7 +77,7 @@ public abstract class WarcInputBuffer implements AutoCloseable {
             } else {
                 // For compressed responses we always use a file buffer since the
                 // Content-Length reflects the compressed size, not the decompressed size
-                return new FileBuffer(response.getHeaders(), request, timeLimit, is);
+                return new FileBuffer(response.getHeaders(), request, timeLimit, is, tempDir);
             }
         }
         finally {
@@ -300,7 +301,7 @@ class MemoryBuffer extends WarcInputBuffer {
 class FileBuffer extends WarcInputBuffer {
     private final Path tempFile;
 
-    public FileBuffer(Header[] headers, HttpGet request, Duration timeLimit, InputStream responseStream) throws IOException {
+    public FileBuffer(Header[] headers, HttpGet request, Duration timeLimit, InputStream responseStream, Path tempDir) throws IOException {
         super(suppressContentEncoding(headers));
 
         if (!isRangeComplete(headers)) {
@@ -309,7 +310,7 @@ class FileBuffer extends WarcInputBuffer {
             truncationReason = WarcTruncationReason.NOT_TRUNCATED;
         }
 
-        this.tempFile = Files.createTempFile("rsp", ".html");
+        this.tempFile = Files.createTempFile(tempDir, "rsp", ".html");
 
         try (var out = Files.newOutputStream(tempFile)) {
             copy(responseStream, request, out, timeLimit);

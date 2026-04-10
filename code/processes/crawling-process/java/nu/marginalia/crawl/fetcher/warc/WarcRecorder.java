@@ -105,7 +105,7 @@ public class WarcRecorder implements AutoCloseable {
         try {
             return client.execute(request,response -> {
 
-                try (WarcInputBuffer inputBuffer = WarcInputBuffer.forResponse(response, request, timeout);
+                try (WarcInputBuffer inputBuffer = WarcInputBuffer.forResponse(response, request, timeout, warcFile.getParent());
                      InputStream inputStream = inputBuffer.read()) {
 
                     Instant responseDate = Instant.now();
