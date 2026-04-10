@@ -157,9 +157,7 @@ public class HttpPingService {
             case HttpsResponse httpsResponse -> {
                 var validationResult = CertificateValidator.validateCertificate(
                         (X509Certificate[]) httpsResponse.sslCertificates(),
-                        domainReference.domainName(),
-                        true
-                        );
+                        domainReference.domainName());
 
                 newPingStatus = domainAvailabilityInformationFactory.createHttpsResponse(
                         domainReference.domainId(),

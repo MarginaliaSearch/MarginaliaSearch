@@ -92,9 +92,6 @@ public class DomainSecurityInformationFactory {
             logger.warn("Failed to get SAN from certificate: {}", e.getMessage());
         }
 
-
-        String keyExchange = getKeyExchange(sslCertificates[0]);
-
         return DomainSecurityRecord.builder()
                 .domainId(domainId)
                 .nodeId(nodeId)
@@ -114,7 +111,7 @@ public class DomainSecurityInformationFactory {
                 .headerXPoweredBy(headers.getFirst("X-Powered-By"))
                 .sslProtocol(metadata.protocol())
                 .sslCipherSuite(metadata.cipherSuite())
-                .sslKeyExchange(keyExchange)
+                .sslKeyExchange(getPossibleKeyExchanges(sslCertificates[0]))
                 .sslCertNotBefore(sslCertificates[0].getNotBefore().toInstant())
                 .sslCertNotAfter(sslCertificates[0].getNotAfter().toInstant())
                 .sslCertIssuer(sslCertificates[0].getIssuerX500Principal().getName())
@@ -141,7 +138,7 @@ public class DomainSecurityInformationFactory {
         }
         catch (NoSuchAlgorithmException e) {
             logger.warn("Failed to calculate public key hash: {}", e.getMessage());
-            return new byte[0]; // Re-throw to handle it upstream
+            return new byte[0];
         }
     }
 
@@ -152,55 +149,40 @@ public class DomainSecurityInformationFactory {
         }
         catch (NoSuchAlgorithmException | CertificateEncodingException e) {
             logger.warn("Failed to calculate certificate fingerprint: {}", e.getMessage());
-            return new byte[0]; // Re-throw to handle it upstream
+            return new byte[0];
         }
     }
 
-    private String getKeyExchange(X509Certificate cert) {
+    // https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.3
+    private static final int KU_DIGITAL_SIGNATURE = 0;
+    private static final int KU_KEY_ENCIPHERMENT = 2;
+    private static final int KU_KEY_AGREEMENT = 4;
+
+    private String getPossibleKeyExchanges(X509Certificate cert) {
+        boolean[] keyUsages = cert.getKeyUsage();
+        if (keyUsages == null) return "";
+
         StringJoiner keyExchanges = new StringJoiner(", ");
-        Set<String> keyUsages = getKeyUsage(cert);
         String algorithm = cert.getPublicKey().getAlgorithm();
 
-        boolean supportsPFS = false; // Perfect Forward Secrecy
         if ("RSA".equals(algorithm)) {
-            if (keyUsages.contains("keyEncipherment")) {
+            if (keyUsages.length > KU_KEY_ENCIPHERMENT && keyUsages[KU_KEY_ENCIPHERMENT]) {
                 keyExchanges.add("RSA");
             }
-            if (keyUsages.contains("digitalSignature")) {
+            if (keyUsages.length > KU_DIGITAL_SIGNATURE && keyUsages[KU_DIGITAL_SIGNATURE]) {
                 keyExchanges.add("DHE_RSA");
                 keyExchanges.add("ECDHE_RSA");
             }
         } else if ("EC".equals(algorithm)) {
-            if (keyUsages.contains("digitalSignature")) {
+            if (keyUsages.length > KU_DIGITAL_SIGNATURE && keyUsages[KU_DIGITAL_SIGNATURE]) {
                 keyExchanges.add("ECDHE_ECDSA");
             }
-            if (keyUsages.contains("keyAgreement")) {
+            if (keyUsages.length > KU_KEY_AGREEMENT && keyUsages[KU_KEY_AGREEMENT]) {
                 keyExchanges.add("ECDH_ECDSA");
             }
         }
 
         return keyExchanges.toString();
-    }
-
-    public static Set<String> getKeyUsage(X509Certificate cert) {
-        boolean[] keyUsage = cert.getKeyUsage();
-        Set<String> usages = new HashSet<>();
-
-        if (keyUsage != null) {
-            String[] names = {
-                    "digitalSignature", "nonRepudiation", "keyEncipherment",
-                    "dataEncipherment", "keyAgreement", "keyCertSign",
-                    "cRLSign", "encipherOnly", "decipherOnly"
-            };
-
-            for (int i = 0; i < keyUsage.length && i < names.length; i++) {
-                if (keyUsage[i]) {
-                    usages.add(names[i]);
-                }
-            }
-        }
-
-        return usages;
     }
 
 }
