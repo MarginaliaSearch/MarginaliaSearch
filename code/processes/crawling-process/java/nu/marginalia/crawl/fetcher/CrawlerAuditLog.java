@@ -43,13 +43,15 @@ public class CrawlerAuditLog implements Closeable {
         }
 
         writerThread = Thread.ofPlatform().start(() -> {
-            while (running) {
+            while (true) {
                 String message = messages.tryTake1C();
                 if (message != null) {
                     try {
                         writer.write(message.getBytes(StandardCharsets.UTF_8));
                     }
                     catch (IOException ex) {}
+                } else if (!running) {
+                    break;
                 }
             }
 
