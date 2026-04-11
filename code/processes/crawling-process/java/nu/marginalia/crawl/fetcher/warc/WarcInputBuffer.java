@@ -66,10 +66,13 @@ public abstract class WarcInputBuffer implements AutoCloseable {
             if (length == 0) {
                 return new ErrorBuffer();
             }
-            if (length < 8192) {
+
+            if (length > 0 && length < 8192) {
                 return new MemoryBuffer(response.getHeaders(), request, timeLimit, is, (int) length);
             }
             else {
+                // handles both the negative length case (e.g. HTTP 1.0)
+                // and the known length case
                 return new FileBuffer(response.getHeaders(), request, timeLimit, is, tempDir);
             }
         }
