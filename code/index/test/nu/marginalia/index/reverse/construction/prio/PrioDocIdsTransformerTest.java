@@ -1,5 +1,8 @@
 package nu.marginalia.index.reverse.construction.prio;
 
+import nu.marginalia.array.LongArrayFactory;
+import nu.marginalia.array.page.LongQueryBuffer;
+import nu.marginalia.index.reverse.PrioIndexEntrySource;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.sequence.io.BitReader;
 import org.junit.jupiter.api.AfterEach;
@@ -13,9 +16,10 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class PrioDocIdsTransformerTest {
 
@@ -36,6 +40,56 @@ class PrioDocIdsTransformerTest {
         if (outputFile != null) {
             Files.deleteIfExists(outputFile);
         }
+    }
+
+    /** Simulates multi-language index construction,
+     * where transformer concatenate on the same file. */
+    @Test
+    public void testSequentialTransformersAppend() throws IOException {
+
+        Files.deleteIfExists(inputFile);
+
+        try (var array = LongArrayFactory.mmapForWritingShared(inputFile, 3)) {
+            array.set(0, UrlIdCodec.encodeId(2, 100, 1));
+            array.set(1, UrlIdCodec.encodeId(2, 100, 2));
+            array.set(2, UrlIdCodec.encodeId(2, 200, 0));
+        }
+
+
+        long offset1;
+        try (var writeChannel = (FileChannel) Files.newByteChannel(outputFile, StandardOpenOption.WRITE);
+             var readChannel = (FileChannel) Files.newByteChannel(inputFile);
+             var transformer = new PrioDocIdsTransformer(writeChannel, readChannel))
+        {
+            offset1 = transformer.transform(0, 3);
+        }
+
+        Files.deleteIfExists(inputFile);
+        long firstSize = Files.size(outputFile);
+
+        // Validate assumptions
+        assertEquals(0, offset1);
+        assertNotEquals(0, firstSize);
+
+        try (var array = LongArrayFactory.mmapForWritingShared(inputFile, 2)) {
+            array.set(0, UrlIdCodec.encodeId(2, 300, 1));
+            array.set(1, UrlIdCodec.encodeId(2, 400, 2));
+        }
+
+        long offset2;
+        try (var writeChannel = (FileChannel) Files.newByteChannel(outputFile, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+             var readChannel = (FileChannel) Files.newByteChannel(inputFile);
+             var transformer = new PrioDocIdsTransformer(writeChannel, readChannel))
+        {
+            offset2 = transformer.transform(0, 2);
+        }
+
+
+        // Ensure we don't do the old, broken behavior
+        assertNotEquals(offset1, offset2);
+
+        // Offset2 should be >= the size of the first data block
+        assertTrue(firstSize <= offset2);
     }
 
     @Test

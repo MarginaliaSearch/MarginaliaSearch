@@ -23,12 +23,13 @@ public class PrioDocIdsTransformer implements LongArrayTransformations.LongIOTra
     private final ByteBuffer writeBuffer = ByteBuffer.allocate(65536);
 
     long startL = 0;
-    long writeOffsetB = 0;
+    long writeOffsetB;
 
     public PrioDocIdsTransformer(FileChannel writeChannel,
-                                 FileChannel readChannel) {
+                                 FileChannel readChannel) throws IOException {
         this.writeChannel = writeChannel;
         this.readChannel = readChannel;
+        this.writeOffsetB = writeChannel.size();
     }
 
     @Override
