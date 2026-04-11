@@ -28,10 +28,7 @@ import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.cookie.StandardCookieSpec;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
-import org.apache.hc.core5.http.Header;
-import org.apache.hc.core5.http.HeaderElement;
-import org.apache.hc.core5.http.HeaderElements;
-import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.*;
 import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
@@ -43,9 +40,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.zip.GZIPInputStream;
 import java.nio.file.Files;
 import java.sql.SQLException;
 import java.time.Instant;
@@ -128,6 +128,7 @@ public class FeedFetcherService {
                 .setConnectionManager(connectionManager)
                 .setUserAgent(WmsaHome.getUserAgent().uaIdentifier())
                 .setConnectionManager(connectionManager)
+                .disableContentCompression()
                 .setKeepAliveStrategy(new ConnectionKeepAliveStrategy() {
                     // Default keep-alive duration is 3 minutes, but this is too long for us,
                     // as we are either going to re-use it fairly quickly or close it for a long time.
@@ -369,21 +370,16 @@ public class FeedFetcherService {
                             if (rsp.getEntity() == null) {
                                 return new FetchResult.TransientError(); // No content to read, treat as transient error
                             }
-                            byte[] responseData = EntityUtils.toByteArray(rsp.getEntity());
 
-                            // Decode the response body based on the Content-Type header
-                            Header contentTypeHeader = rsp.getFirstHeader("Content-Type");
-                            if (contentTypeHeader == null) {
+                            Optional<String> bodyText = decodeBodyText(rsp);
+                            if (bodyText.isEmpty())
                                 return new FetchResult.TransientError();
-                            }
-                            String contentType = contentTypeHeader.getValue();
-                            String bodyText = DocumentBodyToString.getStringData(ContentType.parse(contentType), responseData);
 
                             // Grab the ETag header if it exists
                             Header etagHeader = rsp.getFirstHeader("ETag");
                             String newEtagValue = etagHeader == null ? null : etagHeader.getValue();
 
-                            return new FetchResult.Success(bodyText, newEtagValue);
+                            return new FetchResult.Success(bodyText.get(), newEtagValue);
                         }
                         case 304 -> {
                             return new FetchResult.NotModified(); // via If-Modified-Since semantics
@@ -416,6 +412,33 @@ public class FeedFetcherService {
         record NotModified() implements FetchResult {}
         record TransientError() implements FetchResult {}
         record PermanentError()  implements FetchResult {}
+    }
+
+    private Optional<String> decodeBodyText(ClassicHttpResponse rsp) throws IOException {
+
+        Header contentTypeHeader = rsp.getFirstHeader("Content-Type");
+        if (contentTypeHeader == null) {
+            return Optional.empty();
+        }
+        ContentType contentType = ContentType.parse(contentTypeHeader.getValue());
+
+        byte[] responseBytes;
+
+        Header contentEncoding = rsp.getFirstHeader("Content-Encoding");
+        if (contentEncoding != null && "gzip".equalsIgnoreCase(contentEncoding.getValue())) {
+            try (InputStream gzipStream = new GZIPInputStream(rsp.getEntity().getContent());
+                 ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                gzipStream.transferTo(baos);
+                responseBytes = baos.toByteArray();
+            }
+        }
+        else {
+            responseBytes = EntityUtils.toByteArray(rsp.getEntity());
+        }
+
+        return Optional.of(
+                DocumentBodyToString.getStringData(contentType, responseBytes)
+        );
     }
 
     public Collection<FeedDefinition> readDefinitionsFromSystem() throws IOException {
@@ -559,4 +582,6 @@ public class FeedFetcherService {
             return true;
         }
     }
+
+
 }
