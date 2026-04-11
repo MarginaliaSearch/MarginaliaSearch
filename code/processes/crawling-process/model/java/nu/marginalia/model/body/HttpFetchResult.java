@@ -7,16 +7,15 @@ import org.apache.hc.core5.http.message.BasicHeader;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.netpreserve.jwarc.MessageHeaders;
 import org.netpreserve.jwarc.WarcResponse;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.zip.GZIPInputStream;
 import java.net.InetAddress;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 /* FIXME:  This interface has a very unfortunate name that is not very descriptive.
@@ -25,27 +24,37 @@ public sealed interface HttpFetchResult {
 
     boolean isOk();
 
+    final int MAX_BODY_SIZE = Integer.getInteger("crawler.maxFetchSize", 32 * 1024 * 1024);
+
     /** Convert a WarcResponse to a HttpFetchResult */
     static HttpFetchResult importWarc(WarcResponse response) {
         try {
             var http = response.http();
 
             try (var body = http.body()) {
-                byte[] bytes = body.stream().readAllBytes();
-
                 String ipAddress = response
                         .ipAddress()
                         .map(InetAddress::getHostAddress)
                         .orElse("");
 
-                return new ResultOk(
+                Header[] headers = http.headers().map().entrySet().stream()
+                        .mapMulti((entry, c) -> {
+                            String key = entry.getKey();
+                            if (key.isBlank()) return;
+                            if (!Character.isAlphabetic(key.charAt(0))) return;
+
+                            for (var val : entry.getValue()) {
+                                c.accept(new BasicHeader(key, val));
+                            }
+                        })
+                        .toArray(Header[]::new);
+
+                return ResultOk.forStreamedBytes(
                         response.targetURI(),
                         http.status(),
-                        http.headers(),
+                        headers,
                         ipAddress,
-                        bytes,
-                        0,
-                        bytes.length
+                        body.stream()
                 );
             }
         }
@@ -63,28 +72,33 @@ public sealed interface HttpFetchResult {
                     int statusCode,
                     Header[] headers,
                     String ipAddress,
-                    byte[] bytesRaw, // raw data for the entire response including headers
-                    int bytesStart,
-                    int bytesLength
+                    byte[] bytes
     ) implements HttpFetchResult {
 
-        public ResultOk(URI uri, int status, MessageHeaders headers, String ipAddress, byte[] bytes, int bytesStart, int length) {
-            this(uri, status, convertHeaders(headers), ipAddress, bytes, bytesStart, length);
-        }
+        public static ResultOk forStreamedBytes(URI uri,
+                                                int statusCode,
+                                                Header[] headers,
+                                                String ipAddress,
+                                                InputStream stream) throws IOException {
+            boolean isGzip = false;
 
-        private static Header[] convertHeaders(MessageHeaders messageHeaders) {
-            List<Header> headers = new ArrayList<>(12);
+            for (var header : headers) {
+                if ("Content-Encoding".equalsIgnoreCase(header.getName())) {
+                    isGzip = "gzip".equalsIgnoreCase(header.getValue());
 
-            messageHeaders.map().forEach((k, v) -> {
-                if (k.isBlank()) return;
-                if (!Character.isAlphabetic(k.charAt(0))) return;
+                    // Reconstruct a clean header array that doesn't claim the data is compressed
+                    headers = Arrays.stream(headers)
+                            .filter(h -> h != header)
+                            .toArray(Header[]::new);
 
-                for (var value : v) {
-                    headers.add(new BasicHeader(k, value));
+                    break;
                 }
-            });
+            }
 
-            return headers.toArray(new Header[0]);
+            if (isGzip) stream = new GZIPInputStream(stream);
+            byte[] bytes = stream.readNBytes(MAX_BODY_SIZE);
+
+            return new ResultOk(uri, statusCode, headers, ipAddress, bytes);
         }
 
         public boolean isOk() {
@@ -92,13 +106,11 @@ public sealed interface HttpFetchResult {
         }
 
         public InputStream getInputStream() {
-            return new ByteArrayInputStream(bytesRaw, bytesStart, bytesLength);
+            return new ByteArrayInputStream(bytes);
         }
 
-        /** Copy the byte range corresponding to the payload of the response,
-            Warning:  Copies the data, use getInputStream() for zero copy access */
         public byte[] getBodyBytes() {
-            return Arrays.copyOfRange(bytesRaw, bytesStart, bytesStart + bytesLength);
+            return bytes;
         }
 
         public Optional<Document> parseDocument() {
@@ -123,6 +135,9 @@ public sealed interface HttpFetchResult {
             return null;
         }
 
+        public int byteLength() {
+            return bytes.length;
+        }
     }
 
     /** This is a special case where the document was not fetched

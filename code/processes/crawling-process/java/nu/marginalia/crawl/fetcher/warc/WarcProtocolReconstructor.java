@@ -171,12 +171,9 @@ public class WarcProtocolReconstructor {
             if (headerCapitalized.startsWith("X-Marginalia"))
                 continue;
 
-            // Omit Transfer-Encoding and Content-Encoding headers
+            // Omit Transfer-Encoding
             if (headerCapitalized.equals("Transfer-Encoding"))
                 continue;
-            if (headerCapitalized.equals("Content-Encoding"))
-                continue;
-
 
             // Since we're transparently decoding gzip, we need to update the Content-Length header
             // to reflect the actual size of the response body. We'll do this at the end.
@@ -202,10 +199,8 @@ public class WarcProtocolReconstructor {
             if (headerCapitalized.startsWith("X-Marginalia"))
                 return;
 
-            // Omit Transfer-Encoding and Content-Encoding headers
+            // Omit Transfer-Encoding
             if (headerCapitalized.equals("Transfer-Encoding"))
-                return;
-            if (headerCapitalized.equals("Content-Encoding"))
                 return;
 
             // Since we're transparently decoding gzip, we need to update the Content-Length header
