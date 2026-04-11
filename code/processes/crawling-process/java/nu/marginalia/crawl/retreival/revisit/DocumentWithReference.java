@@ -36,7 +36,7 @@ public record DocumentWithReference(
             return false;
         if (doc.documentBodyBytes.length == 0) {
             if (doc.httpStatus < 300) {
-                return resultOk.bytesLength() == 0;
+                return resultOk.byteLength() == 0;
             }
             else if (doc.httpStatus == 301 || doc.httpStatus == 302 || doc.httpStatus == 307) {
                 @Nullable

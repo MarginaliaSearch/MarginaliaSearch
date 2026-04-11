@@ -145,9 +145,7 @@ public class CrawlerMockFetcherTest {
                             200,
                             new Header[0],
                             "127.0.0.1",
-                            bodyBytes,
-                            0,
-                            bodyBytes.length
+                            bodyBytes
                     );
                 }
                 catch (URISyntaxException e) {
