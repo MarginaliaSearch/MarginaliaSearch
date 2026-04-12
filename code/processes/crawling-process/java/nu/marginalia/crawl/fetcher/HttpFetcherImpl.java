@@ -566,12 +566,16 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                         entityStream = new GZIPInputStream(entityStream);
                     }
 
-                    Document parsedSitemap = Jsoup.parse(
-                            entityStream,
-                            null,
-                            sitemapUrl.toString(),
-                            Parser.xmlParser()
-                    );
+                    Document parsedSitemap;
+
+                    try (var stream = entityStream) {
+                        parsedSitemap = Jsoup.parse(
+                                stream,
+                                null,
+                                sitemapUrl.toString(),
+                                Parser.xmlParser()
+                        );
+                    }
 
                     if (parsedSitemap.childrenSize() == 0) {
                         return new SitemapResult.SitemapError();
