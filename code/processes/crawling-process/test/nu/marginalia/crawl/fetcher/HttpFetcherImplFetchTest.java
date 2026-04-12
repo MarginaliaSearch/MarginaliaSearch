@@ -375,8 +375,6 @@ class HttpFetcherImplFetchTest {
     private List<WarcRecord> getWarcRecords() throws IOException {
         List<WarcRecord> records = new ArrayList<>();
 
-        System.out.println(Files.readString(warcFile));
-
         try (var reader = new WarcReader(warcFile)) {
             WarcXResponseReference.register(reader);
             WarcXEntityRefused.register(reader);

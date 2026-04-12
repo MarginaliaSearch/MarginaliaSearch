@@ -51,10 +51,9 @@ public class DocumentBodyExtractor {
     /** Extract the body from a fetch result as a byte array. */
     public static DocumentBodyResult<byte[]> asBytes(HttpFetchResult.ResultOk rsp) {
         try {
-            var byteStream = rsp.getInputStream();
             var contentTypeHeader = rsp.header("Content-Type");
 
-            byte[] data = byteStream.readAllBytes(); // size is limited by WarcRecorder
+            byte[] data = rsp.bytes();
             var contentType = ContentTypeParser.parseContentType(contentTypeHeader, data);
 
             return new DocumentBodyResult.Ok<>(contentType, data);

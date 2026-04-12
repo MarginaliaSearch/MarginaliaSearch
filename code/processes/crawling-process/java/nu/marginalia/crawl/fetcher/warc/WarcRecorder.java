@@ -16,6 +16,7 @@ import org.netpreserve.jwarc.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -40,7 +41,7 @@ public class WarcRecorder implements AutoCloseable {
     /** Maximum time we'll wait on a single request */
     static final int MAX_TIME = 30_000;
 
-    /** Maximum (decompressed) size we'll save */
+    /** Maximum size we'll save */
     static final int MAX_SIZE = Integer.getInteger("crawler.maxFetchSize", 32 * 1024 * 1024);
 
     private final WarcWriter writer;
@@ -223,14 +224,16 @@ public class WarcRecorder implements AutoCloseable {
                         }
                     }
 
+                    try (ByteArrayInputStream stream = new ByteArrayInputStream(
+                            responseDataBuffer.data, dataStart,
+                            responseDataBuffer.length() - dataStart)) {
 
-                    return new HttpFetchResult.ResultOk(responseUri,
-                            response.getCode(),
-                            inputBuffer.headers(),
-                            inetAddress.getHostAddress(),
-                            responseDataBuffer.data,
-                            dataStart,
-                            responseDataBuffer.length() - dataStart);
+                        return HttpFetchResult.ResultOk.forStreamedBytes(responseUri,
+                                response.getCode(),
+                                inputBuffer.headers(),
+                                inetAddress.getHostAddress(),
+                                stream);
+                    }
                 } catch (Exception ex) {
                     flagAsError(new EdgeUrl(requestUri), ex); // write a WARC record to indicate the error
                     logger.warn("Failed to fetch URL {}:  {}", requestUri, ex.getMessage());

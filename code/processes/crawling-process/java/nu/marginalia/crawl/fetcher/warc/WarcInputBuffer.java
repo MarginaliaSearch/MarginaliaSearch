@@ -13,9 +13,6 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.zip.GZIPInputStream;
-
-import static nu.marginalia.crawl.fetcher.warc.ErrorBuffer.suppressContentEncoding;
 
 /** Input buffer for temporary storage of a HTTP response
  *  This may be in-memory or on-disk, at the discretion of
@@ -64,19 +61,18 @@ public abstract class WarcInputBuffer implements AutoCloseable {
         try {
             is = entity.getContent();
 
-            boolean isGzipEncoded = isContentEncodingGzip(response);
-            if (isGzipEncoded) {
-                is = new GZIPInputStream(is);
-            }
-
             long length = entity.getContentLength();
 
-            if (!isGzipEncoded && length > 0 && length < 8192) {
-                // If the content is small and not compressed, we can just read it into memory
+            if (length == 0) {
+                return new ErrorBuffer();
+            }
+
+            if (length > 0 && length < 8192) {
                 return new MemoryBuffer(response.getHeaders(), request, timeLimit, is, (int) length);
-            } else {
-                // For compressed responses we always use a file buffer since the
-                // Content-Length reflects the compressed size, not the decompressed size
+            }
+            else {
+                // handles both the negative length case (e.g. HTTP 1.0)
+                // and the known length case
                 return new FileBuffer(response.getHeaders(), request, timeLimit, is, tempDir);
             }
         }
@@ -161,11 +157,6 @@ public abstract class WarcInputBuffer implements AutoCloseable {
             }
         }
 
-    }
-
-    private static boolean isContentEncodingGzip(ClassicHttpResponse response) {
-        Header header = response.getFirstHeader("Content-Encoding");
-        return header != null && "gzip".equalsIgnoreCase(header.getValue());
     }
 
     /** Takes a Content-Range header and checks if it is complete.
@@ -267,7 +258,7 @@ class ErrorBuffer extends WarcInputBuffer {
 class MemoryBuffer extends WarcInputBuffer {
     byte[] data;
     public MemoryBuffer(Header[] headers, HttpGet request, Duration timeLimit, InputStream responseStream, int size) {
-        super(suppressContentEncoding(headers));
+        super(headers);
 
         if (!isRangeComplete(headers)) {
             truncationReason = WarcTruncationReason.LENGTH;
@@ -302,7 +293,7 @@ class FileBuffer extends WarcInputBuffer {
     private final Path tempFile;
 
     public FileBuffer(Header[] headers, HttpGet request, Duration timeLimit, InputStream responseStream, Path tempDir) throws IOException {
-        super(suppressContentEncoding(headers));
+        super(headers);
 
         if (!isRangeComplete(headers)) {
             truncationReason = WarcTruncationReason.LENGTH;
