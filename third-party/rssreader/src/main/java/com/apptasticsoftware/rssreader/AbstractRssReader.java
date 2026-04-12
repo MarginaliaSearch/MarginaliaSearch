@@ -555,10 +555,12 @@ public abstract class AbstractRssReader<C extends Channel, I extends Item> {
                     inputStream = new GZIPInputStream(inputStream);
                 }
 
-                inputStream = new BufferedInputStream(inputStream);
-                removeBadData(inputStream);
-                var itemIterator = new RssItemIterator(inputStream);
-                return AutoCloseStream.of(StreamUtil.asStream(itemIterator).onClose(itemIterator::close));
+                try (var bufferedStream = new BufferedInputStream(inputStream)) {
+                    removeBadData(bufferedStream);
+                    var itemIterator = new RssItemIterator(bufferedStream);
+                    return AutoCloseStream.of(StreamUtil.asStream(itemIterator).onClose(itemIterator::close));
+                }
+
             } catch (IOException e) {
                 throw new CompletionException(e);
             }
