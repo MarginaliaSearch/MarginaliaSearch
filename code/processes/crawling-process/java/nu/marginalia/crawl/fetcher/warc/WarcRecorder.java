@@ -30,7 +30,6 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
-import java.util.zip.GZIPInputStream;
 
 /** Based on JWarc's fetch method, APL 2.0 license
  * <p></p>

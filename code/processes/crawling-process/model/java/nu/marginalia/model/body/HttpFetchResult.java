@@ -79,7 +79,7 @@ public sealed interface HttpFetchResult {
                                                 int statusCode,
                                                 Header[] headers,
                                                 String ipAddress,
-                                                InputStream stream) throws IOException {
+                                                InputStream rawStream) throws IOException {
             boolean isGzip = false;
 
             for (var header : headers) {
@@ -95,10 +95,13 @@ public sealed interface HttpFetchResult {
                 }
             }
 
-            if (isGzip) stream = new GZIPInputStream(stream);
-            byte[] bytes = stream.readNBytes(MAX_BODY_SIZE);
+            InputStream bytesStream = isGzip ? new GZIPInputStream(rawStream) : rawStream;
 
-            return new ResultOk(uri, statusCode, headers, ipAddress, bytes);
+            try (bytesStream) {
+                byte[] bytes = bytesStream.readNBytes(MAX_BODY_SIZE);
+
+                return new ResultOk(uri, statusCode, headers, ipAddress, bytes);
+            }
         }
 
         public boolean isOk() {
