@@ -95,6 +95,7 @@ public class ForwardIndexConverter {
                         var metaReader = instance.openDocumentMeta(slopTable);
                         var featuresReader = instance.openFeatures(slopTable);
                         var sizeReader = instance.openSize(slopTable);
+                        var pubDateReader = instance.openPubDate(slopTable);
 
                         var spansCodesReader = instance.openSpanCodes(slopTable);
                         var spansSeqReader = instance.openSpans(slopTable);
@@ -110,8 +111,11 @@ public class ForwardIndexConverter {
 
                             final int docFeatures = featuresReader.get();
                             final int docSize = sizeReader.get();
+                            final int pubDate = pubDateReader.get();
 
-                            long features = docFeatures | ((long) docSize << 32L);
+                            long features = (docFeatures & 0xFFFF_FFFFL)
+                                          | ((long)(pubDate & 0xFFFF) << 32L)
+                                          | ((long)(docSize & 0xFFFF) << 48L);
 
                             // Write spans data
                             byte[] spansCodes = spansCodesReader.get();

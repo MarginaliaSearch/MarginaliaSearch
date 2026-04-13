@@ -298,6 +298,7 @@ public class CombinedIndexReaderTest {
                                 meta.features,
                                 meta.documentMetadata.encode(),
                                 100,
+                                0,
                                 "en",
                                 keywords,
                                 metadata,
