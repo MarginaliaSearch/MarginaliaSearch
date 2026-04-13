@@ -7,6 +7,7 @@ import nu.marginalia.index.config.ForwardIndexParameters;
 import nu.marginalia.index.forward.spans.IndexSpansWriter;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.journal.IndexJournalPage;
+import nu.marginalia.index.model.FeaturesCodec;
 import nu.marginalia.index.searchset.DomainRankings;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentMetadata;
@@ -111,11 +112,12 @@ public class ForwardIndexConverter {
 
                             final int docFeatures = featuresReader.get();
                             final int docSize = sizeReader.get();
-                            final int pubDate = pubDateReader.get();
+                            final short pubDate = pubDateReader.get();
 
-                            long features = (docFeatures & 0xFFFF_FFFFL)
-                                          | ((long)(pubDate & 0xFFFF) << 32L)
-                                          | ((long)(docSize & 0xFFFF) << 48L);
+                            long features = FeaturesCodec.encode(
+                                    docFeatures,
+                                    docSize,
+                                    pubDate);
 
                             // Write spans data
                             byte[] spansCodes = spansCodesReader.get();
