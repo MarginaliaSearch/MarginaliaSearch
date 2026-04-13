@@ -142,7 +142,14 @@ public class ForwardIndexReader {
         long offset = idxForDoc(combinedDocId);
         if (offset < 0) return 0;
 
-        return (int) (data.get(ENTRY_SIZE * offset + FEATURES_OFFSET) >>> 32L);
+        return (int) ((data.get(ENTRY_SIZE * offset + FEATURES_OFFSET) >>> 48L) & 0xFFFFL);
+    }
+
+    public int getDocPubDate(long combinedDocId) {
+        long offset = idxForDoc(combinedDocId);
+        if (offset < 0) return 0;
+
+        return (int) ((data.get(ENTRY_SIZE * offset + FEATURES_OFFSET) >>> 32L) & 0xFFFFL);
     }
 
 
