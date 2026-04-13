@@ -6,6 +6,7 @@ import nu.marginalia.slop.column.array.ByteArrayColumn;
 import nu.marginalia.slop.column.array.LongArrayColumn;
 import nu.marginalia.slop.column.primitive.IntColumn;
 import nu.marginalia.slop.column.primitive.LongColumn;
+import nu.marginalia.slop.column.primitive.ShortColumn;
 import nu.marginalia.slop.column.string.EnumColumn;
 import nu.marginalia.slop.desc.StorageType;
 
@@ -16,6 +17,7 @@ import java.nio.file.Path;
 public record IndexJournalPage(Path baseDir, int page) {
     public static IntColumn features = new IntColumn("features", StorageType.PLAIN);
     public static IntColumn size = new IntColumn("size", StorageType.PLAIN);
+    public static ShortColumn pubDate = new ShortColumn("pubDate", StorageType.PLAIN);
 
     public static LongColumn combinedId = new LongColumn("combinedId", StorageType.PLAIN);
     public static LongColumn documentMeta = new LongColumn("documentMeta", StorageType.PLAIN);
@@ -74,5 +76,9 @@ public record IndexJournalPage(Path baseDir, int page) {
 
     public ByteArrayColumn.Reader openSpanCodes(SlopTable table) throws IOException {
         return spanCodes.open(table);
+    }
+
+    public ShortColumn.Reader openPubDate(SlopTable table) throws IOException {
+        return pubDate.open(table);
     }
 }

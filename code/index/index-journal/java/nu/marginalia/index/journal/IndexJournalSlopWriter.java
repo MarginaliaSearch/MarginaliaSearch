@@ -8,6 +8,7 @@ import nu.marginalia.slop.column.array.ByteArrayColumn;
 import nu.marginalia.slop.column.array.LongArrayColumn;
 import nu.marginalia.slop.column.primitive.IntColumn;
 import nu.marginalia.slop.column.primitive.LongColumn;
+import nu.marginalia.slop.column.primitive.ShortColumn;
 import nu.marginalia.slop.column.string.EnumColumn;
 
 import java.io.IOException;
@@ -19,6 +20,7 @@ public class IndexJournalSlopWriter extends SlopTable {
 
     private final IntColumn.Writer featuresWriter;
     private final IntColumn.Writer sizeWriter;
+    private final ShortColumn.Writer pubDateWriter;
     private final LongColumn.Writer combinedIdWriter;
     private final LongColumn.Writer documentMetaWriter;
 
@@ -40,6 +42,7 @@ public class IndexJournalSlopWriter extends SlopTable {
 
         featuresWriter = IndexJournalPage.features.create(this);
         sizeWriter = IndexJournalPage.size.create(this);
+        pubDateWriter = IndexJournalPage.pubDate.create(this);
 
         combinedIdWriter = IndexJournalPage.combinedId.create(this);
         documentMetaWriter = IndexJournalPage.documentMeta.create(this);
@@ -59,6 +62,7 @@ public class IndexJournalSlopWriter extends SlopTable {
         combinedIdWriter.put(combinedId);
         featuresWriter.put(keywordsProjection.htmlFeatures());
         sizeWriter.put(keywordsProjection.length());
+        pubDateWriter.put((short) keywordsProjection.pubDate());
         documentMetaWriter.put(keywordsProjection.documentMetadata());
         languagesWriter.put(keywordsProjection.languageIsoCode());
 
@@ -85,6 +89,7 @@ public class IndexJournalSlopWriter extends SlopTable {
     public void close() throws IOException {
         featuresWriter.close();
         sizeWriter.close();
+        pubDateWriter.close();
         combinedIdWriter.close();
         documentMetaWriter.close();
         termIdsWriter.close();
