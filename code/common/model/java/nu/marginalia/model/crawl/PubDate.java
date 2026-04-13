@@ -2,63 +2,86 @@ package nu.marginalia.model.crawl;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 
-public record PubDate(String dateIso8601, int year) {
+import javax.annotation.Nullable;
 
-    // First year we'll believe something can have been published on the web
-    // cut off at 1995 to reduce false positive error rate; number of bona fide
-    // documents from these years are so few almost all hits are wrong
+/** Publication date of a document with two levels of accuracy */
+public sealed interface PubDate permits PubDate.ExactDate, PubDate.ApproximateYear {
 
-    public static final int MIN_YEAR = 1995;
+    /** Bounds for yearByte encoding */
+    int MIN_YEAR = 1995;
+    int MAX_YEAR = LocalDate.now().getYear() + 1;
 
-    // Last year we'll believe something can be published in
-    public static final int MAX_YEAR = LocalDate.now().getYear() + 1;
+    /** March 12, 1989. Origin for the dateShort encoding. */
+    LocalDate WEB_EPOCH = LocalDate.of(1989, 3, 12);
 
+    int year();
+    boolean hasYear();
+    boolean isEmpty();
+    String describe();
 
-    public PubDate() {
-        this(null, Integer.MIN_VALUE);
+    @Nullable
+    String dateIso8601();
+
+    /** Days since WEB_EPOCH, or 0 if only year-level accuracy. */
+    int dateShort();
+
+    int yearByte();
+
+    static PubDate ofDate(LocalDate date) {
+        return new ExactDate(date);
     }
 
-    public PubDate(LocalDate date) {
-        this(date.format(DateTimeFormatter.ISO_DATE), date.getYear());
+    static PubDate ofYear(int year) {
+        return new ApproximateYear(year);
     }
 
-
-    public boolean isEmpty() {
-        return year == Integer.MIN_VALUE;
+    static PubDate unknown() {
+        return new ApproximateYear(Integer.MIN_VALUE);
     }
 
-    public String describe() {
-        if (dateIso8601 != null)
-            return dateIso8601;
-
-        if (hasYear())
-            return Integer.toString(year);
-
-        return "";
-    }
-
-    public static boolean isValidYear(int year) {
+    static boolean isValidYear(int year) {
         return year >= MIN_YEAR && year <= MAX_YEAR;
     }
-    public boolean hasYear() {
-        return isValidYear(this.year);
+
+    int BYTE_ENCODING_OFFSET = MIN_YEAR + 1;
+
+    static int fromYearByte(int yearByte) {
+        return yearByte + BYTE_ENCODING_OFFSET;
     }
 
-    private static final int ENCODING_OFFSET = MIN_YEAR + 1;
-
-    public int yearByte() {
-        if (hasYear()) {
-            return year - ENCODING_OFFSET;
-        }
-        else return 0;
+    static int toYearByte(int year) {
+        return Math.max(0, year - BYTE_ENCODING_OFFSET);
     }
 
-    public static int fromYearByte(int yearByte) {
-        return yearByte + ENCODING_OFFSET;
-    }
-    public static int toYearByte(int year) {
-        return Math.max(0, year - ENCODING_OFFSET);
+    static int toDateShort(LocalDate date) {
+        long days = ChronoUnit.DAYS.between(WEB_EPOCH, date);
+        return (int) Math.max(1, Math.min(Short.MAX_VALUE, days));
     }
 
+    @Nullable
+    static LocalDate fromDateShort(int ds) {
+        if (ds <= 0) return null;
+        return WEB_EPOCH.plusDays(ds);
+    }
+
+    record ExactDate(LocalDate date) implements PubDate {
+        @Override public int year() { return date.getYear(); }
+        @Override public boolean hasYear() { return isValidYear(year()); }
+        @Override public boolean isEmpty() { return false; }
+        @Override public String dateIso8601() { return date.format(DateTimeFormatter.ISO_DATE); }
+        @Override public int dateShort() { return toDateShort(date); }
+        @Override public int yearByte() { return hasYear() ? year() - BYTE_ENCODING_OFFSET : 0; }
+        @Override public String describe() { return dateIso8601(); }
+    }
+
+    record ApproximateYear(int year) implements PubDate {
+        @Override public boolean hasYear() { return isValidYear(year); }
+        @Override public boolean isEmpty() { return !hasYear(); }
+        @Override public @Nullable String dateIso8601() { return null; }
+        @Override public int dateShort() { return 0; }
+        @Override public int yearByte() { return hasYear() ? year - BYTE_ENCODING_OFFSET : 0; }
+        @Override public String describe() { return hasYear() ? Integer.toString(year) : ""; }
+    }
 }

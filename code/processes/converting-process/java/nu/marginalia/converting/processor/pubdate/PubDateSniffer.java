@@ -12,42 +12,58 @@ import java.util.List;
 
 public class PubDateSniffer {
 
-    private final List<PubDateHeuristic> heuristics = new ArrayList<>();
+    private final List<PubDateHeuristic> highQualityHeuristics = new ArrayList<>();
+    private final List<PubDateHeuristic> lowQualityHeuristics = new ArrayList<>();
 
     public PubDateSniffer() {
-        heuristics.add(new PubDateHeuristicJSONLD());
-        heuristics.add(new PubDateHeuristicMicrodata());
-        heuristics.add(new PubDateHeuristicOpenGraph());
-        heuristics.add(new PubDateHeuristicRDFaTag());
+        highQualityHeuristics.add(new PubDateHeuristicJSONLD());
+        highQualityHeuristics.add(new PubDateHeuristicMicrodata());
+        highQualityHeuristics.add(new PubDateHeuristicOpenGraph());
+        highQualityHeuristics.add(new PubDateHeuristicRDFaTag());
 
-        heuristics.add(new PubDateHeuristicHtml5ItempropDateTag());
-        heuristics.add(new PubDateHeuristicHtml5ArticleDateTag());
+        highQualityHeuristics.add(new PubDateHeuristicHtml5ItempropDateTag());
+        highQualityHeuristics.add(new PubDateHeuristicHtml5ArticleDateTag());
 
-        // The more questionable heuristics should be kept below this line
-        heuristics.add(new PubDateHeuristicUrlPatternPass1());
+        lowQualityHeuristics.add(new PubDateHeuristicUrlPatternPass1());
 
-        heuristics.add(new PubDateHeuristicDOMParsingPass1());
-        heuristics.add(new PubDateHeuristicHtml5AnyTimeTag());
+        lowQualityHeuristics.add(new PubDateHeuristicDOMParsingPass1());
+        lowQualityHeuristics.add(new PubDateHeuristicHtml5AnyTimeTag());
 
-        heuristics.add(new PubDateHeuristicDOMParsingPass2());
-        heuristics.add(new PubDateHeuristicUrlPatternPass2());
+        lowQualityHeuristics.add(new PubDateHeuristicDOMParsingPass2());
+        lowQualityHeuristics.add(new PubDateHeuristicUrlPatternPass2());
 
-        heuristics.add(new PubDateHeuristicLastModified());
-        // This is complete guesswork
+        lowQualityHeuristics.add(new PubDateHeuristicLastModified());
 
-        heuristics.add(new PubDateHeuristicGuessFromHtmlStandard());
+        lowQualityHeuristics.add(new PubDateHeuristicGuessFromHtmlStandard());
     }
 
     public PubDate getPubDate(DocumentHeaders headers, EdgeUrl url, Document document, DocumentFormat htmlStandard, boolean runExpensive) {
         final PubDateEffortLevel effortLevel = runExpensive ? PubDateEffortLevel.HIGH : PubDateEffortLevel.LOW;
 
-        for (var heuristic : heuristics) {
+        for (var heuristic : highQualityHeuristics) {
             var maybe = heuristic.apply(effortLevel, headers, url, document, htmlStandard);
             if (maybe.isPresent())
                 return maybe.get();
         }
 
-        return new PubDate();
+        for (var heuristic : lowQualityHeuristics) {
+            var maybe = heuristic.apply(effortLevel, headers, url, document, htmlStandard);
+            if (maybe.isEmpty()) {
+                continue;
+            }
+
+            PubDate result = maybe.get();
+
+            // Coerce low-resolution guesstimate to year accuracy
+            if (result.hasYear()) {
+                return PubDate.ofYear(result.year());
+            }
+            else {
+                return PubDate.unknown();
+            }
+        }
+
+        return PubDate.unknown();
     }
 
 }
