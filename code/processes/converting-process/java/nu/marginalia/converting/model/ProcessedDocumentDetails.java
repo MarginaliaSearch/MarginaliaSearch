@@ -16,6 +16,8 @@ public class ProcessedDocumentDetails {
     @Nullable
     public Integer pubYear;
 
+    public int pubDate;
+
     public int length;
     public double quality;
     public long hashCode;

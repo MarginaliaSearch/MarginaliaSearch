@@ -10,6 +10,7 @@ import nu.marginalia.converting.sideload.SideloaderProcessing;
 import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.crawl.DomainIndexingState;
+import nu.marginalia.model.crawl.PubDate;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -89,6 +90,7 @@ public class DirtreeSideloader implements SideloadSource, AutoCloseable {
                             DocumentClass.NORMAL,
                             new LinkTexts(),
                             LocalDate.now().getYear(),
+                            PubDate.INVALID_DATE_SENTINEL,
                             10_000);
         }
         catch (IOException | URISyntaxException e) {

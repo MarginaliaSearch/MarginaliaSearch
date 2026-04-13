@@ -120,7 +120,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
         ret.description = getDescription(doc);
         ret.hashCode = dld.localitySensitiveHashCode();
 
-        final PubDate pubDate = new PubDate(LocalDate.ofYearDay(1993, 1));
+        final PubDate pubDate = PubDate.ofYear(1993);
 
         EnumSet<DocumentFlags> documentFlags = EnumSet.of(DocumentFlags.PdfFile);
 

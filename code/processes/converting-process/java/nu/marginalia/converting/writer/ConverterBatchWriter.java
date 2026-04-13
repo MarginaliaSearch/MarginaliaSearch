@@ -121,6 +121,7 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
                     document.details.metadata.encode(),
                     document.details.languageIsoCode,
                     document.details.pubYear,
+                    document.details.pubDate,
                     wb.keywords(),
                     wb.metadata(),
                     wb.positions(),

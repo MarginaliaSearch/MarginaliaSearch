@@ -198,6 +198,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         if (pubDate.hasYear()) {
             ret.pubYear = pubDate.year();
         }
+        ret.pubDate = pubDate.dateShort();
 
         return new DetailsWithWords(ret, words);
     }

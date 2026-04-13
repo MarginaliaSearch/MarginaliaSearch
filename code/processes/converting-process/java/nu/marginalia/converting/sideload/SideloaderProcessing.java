@@ -42,6 +42,7 @@ public class SideloaderProcessing {
                                              DocumentClass documentClass,
                                              LinkTexts linkTexts,
                                              int pubYear,
+                                             int pubDate,
                                              int size) throws URISyntaxException {
         var crawledDoc = new CrawledDocument(
                 "synthetic",
@@ -87,6 +88,7 @@ public class SideloaderProcessing {
 
             ret.details.format = DocumentFormat.HTML5;
             ret.details.pubYear = pubYear;
+            ret.details.pubDate = pubDate;
             ret.details.features.add(HtmlFeature.JS);
             ret.details.features.add(HtmlFeature.TRACKING);
             ret.details.quality = -4.5;
