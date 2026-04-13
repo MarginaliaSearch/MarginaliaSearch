@@ -82,6 +82,7 @@ class PubDateSnifferTest {
 
     @Test
     public void testHtml5B() throws URISyntaxException {
+        // Bare <time> tag is a low-quality heuristic, so result is year-only
         var ret = dateSniffer.getPubDate(new DocumentHeaders(""),
                 new EdgeUrl("https://www.example.com/"),
                 Jsoup.parse("""
@@ -93,7 +94,8 @@ class PubDateSnifferTest {
                         """), DocumentFormat.UNKNOWN, true);
 
         assertFalse(ret.isEmpty());
-        assertEquals("2022-08-24", ret.dateIso8601());
+        assertNull(ret.dateIso8601());
+        assertEquals(2022, ret.year());
     }
 
     @Test
@@ -220,7 +222,9 @@ class PubDateSnifferTest {
                         """), DocumentFormat.UNKNOWN, true);
 
         assertFalse(ret.isEmpty());
-        assertEquals("2022-02-03", ret.dateIso8601());
+        // Last-Modified header is a low quality heuristic, so result is year only
+        assertNull(ret.dateIso8601());
+        assertEquals(2022, ret.year());
     }
 
 

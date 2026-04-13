@@ -71,11 +71,11 @@ public class PubDateParser {
         }
 
         if (max != min && PubDate.isValidYear(min) && PubDate.isValidYear(max)) {
-            return Optional.of(new PubDate(null, guessYear(min, max)));
+            return Optional.of(PubDate.ofYear(guessYear(min, max)));
         }
 
         if (max >= PubDate.MIN_YEAR)
-            return Optional.of(new PubDate(null, max));
+            return Optional.of(PubDate.ofYear(max));
         else
             return Optional.empty();
     }
@@ -105,11 +105,11 @@ public class PubDateParser {
         }
 
         if (max != min && PubDate.isValidYear(min) && PubDate.isValidYear(max)) {
-            return Optional.of(new PubDate(null, guessYear(min, max, guess)));
+            return Optional.of(PubDate.ofYear(guessYear(min, max, guess)));
         }
 
         if (max >= PubDate.MIN_YEAR)
-            return Optional.of(new PubDate(null, max));
+            return Optional.of(PubDate.ofYear(max));
         else
             return Optional.empty();
     }
@@ -154,12 +154,12 @@ public class PubDateParser {
         return parseOptionally(maybe, DateTimeFormatter.ISO_DATE)
                 .or(() -> parseOptionallyWithTime(maybe, DateTimeFormatter.ISO_DATE_TIME))
                 .or(() -> parseOptionallyWithZonedTime(maybe, DateTimeFormatter.ISO_DATE_TIME))
-                .map(PubDate::new);
+                .map(PubDate::ofDate);
     }
 
     public static Optional<PubDate> parse1123(String maybe) {
         return parseOptionally(maybe, DateTimeFormatter.RFC_1123_DATE_TIME)
-                .map(PubDate::new);
+                .map(PubDate::ofDate);
     }
 
     public static Optional<LocalDate> parseOptionally(String str, DateTimeFormatter formatter) {

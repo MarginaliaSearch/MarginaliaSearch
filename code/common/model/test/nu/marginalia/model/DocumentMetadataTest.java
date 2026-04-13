@@ -85,7 +85,7 @@ class DocumentMetadataTest {
     @Test
     public void testYear() {
         for (int year = 1996; year < 2023; year++) {
-            var meta = new DocumentMetadata(~0, new PubDate(null, year).yearByte(), ~0, EnumSet.allOf(DocumentFlags.class))
+            var meta = new DocumentMetadata(~0, PubDate.ofYear(year).yearByte(), ~0, EnumSet.allOf(DocumentFlags.class))
                     .withSizeAndTopology(~0, ~0);
 
             var encoded = DocumentMetadata.encodeRank(meta.encode(), 0);
@@ -94,7 +94,7 @@ class DocumentMetadataTest {
         }
 
         for (int year = 1996; year < 2023; year++) {
-            var meta = new DocumentMetadata(0, new PubDate(null, year).yearByte(), 0, EnumSet.noneOf(DocumentFlags.class))
+            var meta = new DocumentMetadata(0, PubDate.ofYear(year).yearByte(), 0, EnumSet.noneOf(DocumentFlags.class))
                     .withSizeAndTopology(0, 0);
 
             var encoded = DocumentMetadata.encodeRank(meta.encode(), 0);

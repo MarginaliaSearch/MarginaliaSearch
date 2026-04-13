@@ -37,7 +37,7 @@ public class PubDateHeuristicUrlPatternPass1 implements PubDateHeuristic {
 
             int y = year.getAsInt();
             if (y >= MIN_URL_PATTERN_YEAR && y <= PubDate.MAX_YEAR) {
-                return Optional.of(new PubDate(null, y));
+                return Optional.of(PubDate.ofYear(y));
             }
         }
 

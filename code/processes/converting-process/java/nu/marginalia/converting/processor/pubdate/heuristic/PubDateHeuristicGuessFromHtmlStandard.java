@@ -18,7 +18,7 @@ public class PubDateHeuristicGuessFromHtmlStandard implements PubDateHeuristic {
         if (htmlStandard == DocumentFormat.UNKNOWN)
             return Optional.empty();
 
-        return Optional.of(new PubDate(null, PubDateParser.guessYear(htmlStandard)));
+        return Optional.of(PubDate.ofYear(PubDateParser.guessYear(htmlStandard)));
     }
 
 }
