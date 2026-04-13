@@ -13,6 +13,7 @@ import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
+import nu.marginalia.model.crawl.PubDate;
 import org.netpreserve.jwarc.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -138,6 +139,7 @@ public class WarcSideloader implements SideloadSource, AutoCloseable {
                             DocumentClass.SIDELOAD,
                             new LinkTexts(),
                             LocalDate.now().getYear(), // TODO: This should be the actual year of the document
+                            PubDate.INVALID_DATE_SENTINEL,
                             10_000));
         }
         catch (Exception e) {

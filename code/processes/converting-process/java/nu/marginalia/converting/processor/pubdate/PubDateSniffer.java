@@ -42,8 +42,10 @@ public class PubDateSniffer {
 
         for (var heuristic : highQualityHeuristics) {
             var maybe = heuristic.apply(effortLevel, headers, url, document, htmlStandard);
-            if (maybe.isPresent())
-                return maybe.get();
+            if (maybe.isEmpty())
+                continue;
+
+            return maybe.get();
         }
 
         for (var heuristic : lowQualityHeuristics) {

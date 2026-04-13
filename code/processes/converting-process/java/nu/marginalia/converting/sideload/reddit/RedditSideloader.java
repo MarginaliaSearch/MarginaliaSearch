@@ -13,6 +13,7 @@ import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.crawl.HtmlFeature;
+import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.util.ProcessingIterator;
 import org.apache.commons.lang3.StringUtils;
 
@@ -108,9 +109,9 @@ public class RedditSideloader implements SideloadSource {
                                               DomainLinks domainLinks) throws URISyntaxException {
         String fullUrl = "https://old.reddit.com" + permalink;
 
-        int pubYear = LocalDate
-                .ofInstant(Instant.ofEpochSecond(createdUtc), ZoneOffset.UTC)
-                .getYear();
+        LocalDate pubLocalDate = LocalDate.ofInstant(Instant.ofEpochSecond(createdUtc), ZoneOffset.UTC);
+        int pubYear = pubLocalDate.getYear();
+        int pubDateShort = PubDate.toDateShort(pubLocalDate);
 
         String fullHtml = """
             <!DOCTYPE html>
@@ -150,6 +151,7 @@ public class RedditSideloader implements SideloadSource {
                         DocumentClass.SIDELOAD,
                         anchorTextKeywords.getAnchorTextKeywords(domainLinks, urls),
                         pubYear,
+                        pubDateShort,
                         10_000_000);
 
 

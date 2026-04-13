@@ -15,6 +15,7 @@ public sealed interface PubDate permits PubDate.ExactDate, PubDate.ApproximateYe
 
     /** March 12, 1989. Origin for the dateShort encoding. */
     LocalDate WEB_EPOCH = LocalDate.of(1989, 3, 12);
+    public int INVALID_DATE_SENTINEL = 0;
 
     int year();
     boolean hasYear();

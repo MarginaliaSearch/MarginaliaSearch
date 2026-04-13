@@ -151,6 +151,7 @@ public class StackexchangeSideloader implements SideloadSource {
 
             ret.details = new ProcessedDocumentDetails();
             ret.details.pubYear = post.year();
+            ret.details.pubDate = PubDate.INVALID_DATE_SENTINEL;
             ret.details.quality = -10;
             ret.details.metadata = new DocumentMetadata(3,
                     PubDate.toYearByte(ret.details.pubYear),

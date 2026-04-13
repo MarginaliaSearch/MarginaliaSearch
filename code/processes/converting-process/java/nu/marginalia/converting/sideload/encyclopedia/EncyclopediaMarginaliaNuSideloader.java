@@ -16,6 +16,7 @@ import nu.marginalia.converting.sideload.SideloaderProcessing;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
+import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.util.ProcessingIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -136,6 +137,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
                         DocumentClass.SIDELOAD,
                         anchorTextKeywords.getAnchorTextKeywords(domainLinks, new EdgeUrl(fullUrl)),
                         LocalDate.now().getYear(),
+                        PubDate.INVALID_DATE_SENTINEL,
                         10_000_000);
     }
 
