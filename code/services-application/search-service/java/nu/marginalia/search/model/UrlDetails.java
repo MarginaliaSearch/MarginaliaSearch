@@ -5,8 +5,11 @@ import nu.marginalia.api.searchquery.model.results.SearchResultKeywordScore;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.crawl.HtmlFeature;
+import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.idx.DocumentMetadata;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,7 +40,11 @@ public class UrlDetails implements Comparable<UrlDetails> {
     public SearchResultItem resultItem;
     public List<SearchResultKeywordScore> keywordScores;
 
-    public UrlDetails(long id, int domainId, EdgeUrl url, String title, String description, String format, int features, DomainIndexingState domainState, double termScore, int resultsFromSameDomain, String positions, long positionsMask, int positionsCount, SearchResultItem resultItem, List<SearchResultKeywordScore> keywordScores) {
+    public int pubDate;
+
+    private static final DateTimeFormatter DISPLAY_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    public UrlDetails(long id, int domainId, EdgeUrl url, String title, String description, String format, int features, DomainIndexingState domainState, double termScore, int resultsFromSameDomain, int pubDate, String positions, long positionsMask, int positionsCount, SearchResultItem resultItem, List<SearchResultKeywordScore> keywordScores) {
         this.id = id;
         this.domainId = domainId;
         this.url = url;
@@ -48,6 +55,7 @@ public class UrlDetails implements Comparable<UrlDetails> {
         this.domainState = domainState;
         this.termScore = termScore;
         this.resultsFromSameDomain = resultsFromSameDomain;
+        this.pubDate = pubDate;
         this.positions = positions;
         this.positionsCount = positionsCount;
         this.positionsMask = positionsMask;
@@ -61,6 +69,13 @@ public class UrlDetails implements Comparable<UrlDetails> {
 
     public boolean hasMoreResults() {
         return resultsFromSameDomain > 1;
+    }
+
+    public String getDisplayDate() {
+        if (pubDate <= 0) return null;
+        LocalDate date = PubDate.fromDateShort(pubDate);
+        if (date == null) return null;
+        return DISPLAY_DATE_FORMAT.format(date);
     }
 
     public String getFormat() {
