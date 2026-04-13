@@ -272,7 +272,7 @@ public class FeedFetcherService {
                                 int errorCount = errorCounts.getOrDefault(feed.domain().toLowerCase(), 0);
                                 writer.setErrorCount(feed.domain().toLowerCase(), ++errorCount);
 
-                                if (errorCount < 5) {
+                                if (errorCount < 10) {
                                     // Permit the server a few days worth of retries before we drop the feed entirely
                                     writer.saveFeed(oldData);
                                 }
