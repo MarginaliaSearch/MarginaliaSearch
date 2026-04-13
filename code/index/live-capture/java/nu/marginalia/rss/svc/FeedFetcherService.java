@@ -8,8 +8,10 @@ import nu.marginalia.contenttype.ContentType;
 import nu.marginalia.contenttype.DocumentBodyToString;
 import nu.marginalia.coordination.DomainCoordinator;
 import nu.marginalia.coordination.DomainLock;
+import nu.marginalia.db.DomainTypes;
 import nu.marginalia.executor.client.ExecutorClient;
 import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.rss.db.FeedDb;
 import nu.marginalia.rss.db.FeedDbWriter;
@@ -40,11 +42,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.zip.GZIPInputStream;
 import java.nio.file.Files;
 import java.sql.SQLException;
@@ -68,6 +69,7 @@ public class FeedFetcherService {
     private static final Logger logger = LoggerFactory.getLogger(FeedFetcherService.class);
 
     private final FeedDb feedDb;
+    private final DomainTypes domainTypes;
     private final FileStorageService fileStorageService;
     private final NodeConfigurationService nodeConfigurationService;
     private final ServiceHeartbeat serviceHeartbeat;
@@ -85,6 +87,7 @@ public class FeedFetcherService {
 
     @Inject
     public FeedFetcherService(FeedDb feedDb,
+                              DomainTypes domainTypes,
                               DomainCoordinator domainCoordinator,
                               FileStorageService fileStorageService,
                               NodeConfigurationService nodeConfigurationService,
@@ -92,6 +95,7 @@ public class FeedFetcherService {
                               ExecutorClient executorClient)
     {
         this.feedDb = feedDb;
+        this.domainTypes = domainTypes;
         this.fileStorageService = fileStorageService;
         this.nodeConfigurationService = nodeConfigurationService;
         this.serviceHeartbeat = serviceHeartbeat;
@@ -221,6 +225,9 @@ public class FeedFetcherService {
             if (definitions == null || definitions.isEmpty() || updateMode == UpdateMode.CLEAN) {
                 definitions = readDefinitionsFromSystem();
             }
+
+            // Sync feed definitions from the small web dataset, adding any missing feeds
+            definitions = mergeSmallWebDatasetFeeds(definitions);
 
             logger.info("Found {} feed definitions", definitions.size());
 
@@ -466,6 +473,75 @@ public class FeedFetcherService {
         }
 
         return feedDefinitionList;
+    }
+
+    private Collection<FeedDefinition> mergeSmallWebDatasetFeeds(Collection<FeedDefinition> existing) {
+        String sourceUrl = domainTypes.getUrlForSelection(DomainTypes.Type.SMALL);
+        if (sourceUrl == null || sourceUrl.isBlank()) {
+            return existing;
+        }
+
+        Collection<FeedDefinition> datasetFeeds = downloadFeedDefinitions(sourceUrl);
+        if (datasetFeeds.isEmpty()) {
+            return existing;
+        }
+
+        Set<String> existingDomains = new HashSet<>();
+        for (var def : existing) {
+            existingDomains.add(def.domain().toLowerCase());
+        }
+
+        List<FeedDefinition> merged = new ArrayList<>(existing);
+        int added = 0;
+        for (var def : datasetFeeds) {
+            if (existingDomains.add(def.domain().toLowerCase())) {
+                merged.add(def);
+                added++;
+            }
+        }
+
+        if (added > 0) {
+            logger.info("Added {} feed definitions from the small web dataset", added);
+        }
+
+        return merged;
+    }
+
+    /** Download a list of feed URLs from the given source URL and convert them to FeedDefinitions. */
+    private Collection<FeedDefinition> downloadFeedDefinitions(String sourceUrl) {
+        List<FeedDefinition> definitions = new ArrayList<>();
+
+        byte[] streamBytes;
+        try (var urlStream = new URL(sourceUrl).openStream()) {
+            streamBytes = urlStream.readNBytes(32*1024*1024);  // zip bomb safety
+        }
+        catch (IOException ex) {
+            logger.error("Error downloading feed definitions from small web dataset: {}", sourceUrl, ex);
+            return List.of();
+        }
+
+        var scanner = new Scanner(new ByteArrayInputStream(streamBytes));
+
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+
+            int hashIdx = line.indexOf('#');
+            if (hashIdx >= 0) {
+                line = line.substring(0, hashIdx);
+            }
+            line = line.trim();
+
+            if (line.isBlank()) continue;
+
+            String feedUrl = line;
+            EdgeUrl.parse(feedUrl).ifPresent(url ->
+                definitions.add(
+                        new FeedDefinition(url.getDomain().toString(), feedUrl, null)
+                )
+            );
+        }
+
+        return definitions;
     }
 
     private Collection<FileStorage> getLatestFeedStorages() {
