@@ -26,6 +26,8 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 
+import static nu.marginalia.index.config.ForwardIndexParameters.ForwardIndexVersion.*;
+
 public class ForwardIndexConverter {
 
     private final ProcessHeartbeat heartbeat;
@@ -86,7 +88,8 @@ public class ForwardIndexConverter {
 
             // docIdToIdx -> file offset for id
 
-            LongArray docFileData = LongArrayFactory.mmapForWritingConfined(outputFileDocsData, ForwardIndexParameters.ENTRY_SIZE * docsFileId.size());
+            LongArray docFileData = LongArrayFactory.mmapForWritingConfined(outputFileDocsData,
+                    ForwardIndexParameters.ENTRY_SIZE * docsFileId.size() + 1 /* <-- footer */);
 
             ByteBuffer workArea = ByteBuffer.allocate(1024*1024*100);
             for (IndexJournal journal : journals) {
@@ -141,6 +144,10 @@ public class ForwardIndexConverter {
                     }
                 }
             }
+
+            docFileData.set(docFileData.size() - 1,
+                    ForwardIndexParameters.encodeFooter(V2026_04__1)
+            );
 
             progress.progress(TaskSteps.FORCE);
 
