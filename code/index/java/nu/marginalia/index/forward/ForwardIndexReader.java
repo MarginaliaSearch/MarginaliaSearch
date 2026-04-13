@@ -6,6 +6,7 @@ import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.ffi.LinuxSystemCalls;
 import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
 import nu.marginalia.index.forward.spans.SpansCodec;
+import nu.marginalia.index.model.FeaturesCodec;
 import nu.marginalia.index.searchset.DomainRankings;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.slf4j.Logger;
@@ -135,21 +136,24 @@ public class ForwardIndexReader {
         long offset = idxForDoc(combinedDocId);
         if (offset < 0) return 0;
 
-        return (int) (data.get(ENTRY_SIZE * offset + FEATURES_OFFSET) & 0xFFFF_FFFFL);
+        long encoded = data.get(ENTRY_SIZE * offset + FEATURES_OFFSET);
+        return FeaturesCodec.getHtmlFeatures(encoded);
     }
 
     public int getDocumentSize(long combinedDocId) {
         long offset = idxForDoc(combinedDocId);
         if (offset < 0) return 0;
 
-        return (int) ((data.get(ENTRY_SIZE * offset + FEATURES_OFFSET) >>> 48L) & 0xFFFFL);
+        long encoded = data.get(ENTRY_SIZE * offset + FEATURES_OFFSET);
+        return FeaturesCodec.getDocumentSize(encoded);
     }
 
     public int getDocPubDate(long combinedDocId) {
         long offset = idxForDoc(combinedDocId);
         if (offset < 0) return 0;
 
-        return (int) ((data.get(ENTRY_SIZE * offset + FEATURES_OFFSET) >>> 32L) & 0xFFFFL);
+        long encoded = data.get(ENTRY_SIZE * offset + FEATURES_OFFSET);
+        return FeaturesCodec.getPubDate(encoded);
     }
 
 
