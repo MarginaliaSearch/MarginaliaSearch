@@ -82,6 +82,7 @@ class ForwardIndexConverterTest {
                         id%3,
                         id%5,
                         15,
+                        0,
                         "en",
                         List.of(),
                         new long[0],
