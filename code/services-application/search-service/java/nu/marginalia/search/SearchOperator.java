@@ -249,6 +249,7 @@ public class SearchOperator {
                 DomainIndexingState.ACTIVE,
                 item.rankingScore, // termScore
                 item.resultsFromDomain,
+                item.pubDate,
                 BrailleBlockPunchCards.printBits(item.bestPositions, 64),
                 item.bestPositions,
                 Long.bitCount(item.bestPositions),

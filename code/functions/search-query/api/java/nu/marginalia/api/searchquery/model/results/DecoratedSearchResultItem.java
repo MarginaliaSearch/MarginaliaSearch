@@ -28,6 +28,7 @@ public class DecoratedSearchResultItem implements Comparable<DecoratedSearchResu
 
     @Nullable
     public final Integer pubYear;
+    public final int pubDate;
     public final long dataHash;
     public final int wordsTotal;
     public final long bestPositions;
@@ -67,6 +68,7 @@ public class DecoratedSearchResultItem implements Comparable<DecoratedSearchResu
                                      int features,
                                      @Nullable
                                      Integer pubYear,
+                                     int pubDate,
                                      long dataHash,
                                      int wordsTotal,
                                      long bestPositions,
@@ -83,6 +85,7 @@ public class DecoratedSearchResultItem implements Comparable<DecoratedSearchResu
         this.format = format;
         this.features = features;
         this.pubYear = pubYear;
+        this.pubDate = pubDate;
         this.dataHash = dataHash;
         this.wordsTotal = wordsTotal;
         this.bestPositions = bestPositions;
@@ -132,6 +135,10 @@ public class DecoratedSearchResultItem implements Comparable<DecoratedSearchResu
     @Nullable
     public Integer getPubYear() {
         return this.pubYear;
+    }
+
+    public int getPubDate() {
+        return this.pubDate;
     }
 
     public long getDataHash() {
