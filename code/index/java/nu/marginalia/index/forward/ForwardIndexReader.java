@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.ffi.LinuxSystemCalls;
+import nu.marginalia.index.config.ForwardIndexParameters;
 import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
 import nu.marginalia.index.forward.spans.SpansCodec;
 import nu.marginalia.index.model.FeaturesCodec;
@@ -42,6 +43,8 @@ public class ForwardIndexReader {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    private static ForwardIndexVersion version;
+
     public ForwardIndexReader(Path idsFile,
                               Path dataFile,
                               Path spansFile) throws IOException {
@@ -51,6 +54,7 @@ public class ForwardIndexReader {
             data = null;
             domainRankings = null;
             spansFd = -1;
+            version = null;
             return;
         }
         else if (!Files.exists(idsFile)) {
@@ -59,6 +63,7 @@ public class ForwardIndexReader {
             data = null;
             domainRankings = null;
             spansFd = -1;
+            version = null;
             return;
         }
         else if (!Files.exists(spansFile)) {
@@ -67,6 +72,7 @@ public class ForwardIndexReader {
             data = null;
             domainRankings = null;
             spansFd = -1;
+            version = null;
             return;
         }
 
@@ -74,6 +80,8 @@ public class ForwardIndexReader {
 
         ids = loadIds(idsFile);
         data = loadData(dataFile);
+
+        version = ForwardIndexParameters.decodeVersion(data.get(data.size() - 1));
 
         domainRankings = new DomainRankings();
         domainRankings.load(dataFile.getParent());
@@ -145,7 +153,7 @@ public class ForwardIndexReader {
         if (offset < 0) return 0;
 
         long encoded = data.get(ENTRY_SIZE * offset + FEATURES_OFFSET);
-        return FeaturesCodec.getDocumentSize(encoded);
+        return FeaturesCodec.getDocumentSize(encoded, version);
     }
 
     public int getDocPubDate(long combinedDocId) {
@@ -153,7 +161,7 @@ public class ForwardIndexReader {
         if (offset < 0) return 0;
 
         long encoded = data.get(ENTRY_SIZE * offset + FEATURES_OFFSET);
-        return FeaturesCodec.getPubDate(encoded);
+        return FeaturesCodec.getPubDate(encoded, version);
     }
 
 
