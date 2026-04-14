@@ -81,6 +81,14 @@ class CompiledQueryParserTest {
         assertEquals(w(q,"a"), q.root);
     }
 
+    @Test
+    public void testOptionalBranch() {
+        CompiledQuery<String> q = CompiledQueryParser.parse("foo ( bar | ) baz");
+        assertEquals(
+                and(w(q, "foo"), or(w(q, "bar"), ignore()), w(q, "baz")),
+                q.root);
+    }
+
     private CqExpression.Word w(CompiledQuery<String> query, String word) {
         return new CqExpression.Word(query.indices().filter(idx -> word.equals(query.at(idx))).findAny().orElseThrow());
     }
@@ -91,5 +99,9 @@ class CompiledQueryParserTest {
 
     private CqExpression or(CqExpression... parts) {
         return new CqExpression.Or(List.of(parts));
+    }
+
+    private CqExpression ignore() {
+        return CqExpression.Ignore.INSTANCE;
     }
 }
