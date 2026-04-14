@@ -192,7 +192,8 @@ public class ExecutorClient {
 
         var endpoints = registry.getEndpoints(ServiceKey.forRest(ServiceId.Index, fileStorage.node()));
         if (endpoints.isEmpty()) {
-            throw new RuntimeException("No endpoints for node " + fileStorage.node());
+            logger.warn("No endpoints for node {}", fileStorage.node());
+            return null;
         }
         var service = endpoints.getFirst();
 
