@@ -1,5 +1,6 @@
 package nu.marginalia.functions.searchquery.query_parser.model;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -8,6 +9,24 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class QWordGraphTest {
+
+    @Test
+    void testRepetition() {
+        QWordGraph graph = new QWordGraph("to", "be", "or", "not", "to", "be");
+        String compiled = graph.compileToQuery();
+        System.out.println(compiled);
+        Assertions.assertEquals("to be or not to be", compiled);
+    }
+
+    @Test
+    void testBriding() {
+        QWordGraph graph = new QWordGraph("first", "middle", "end");
+        // Bridge "first" directly to "end", making "middle" optional
+        graph.addLink(graph.node("first"), graph.node("end"));
+        String compiled = graph.compileToQuery();
+        System.out.println(compiled);
+        Assertions.assertEquals("first ( middle | ) end", compiled);
+    }
 
     @Test
     void forwardReachability() {
@@ -65,7 +84,7 @@ class QWordGraphTest {
         QWordGraph graph = new QWordGraph("q", "b", "c");
         graph.addVariant(graph.node("b"), "d");
 
-        assertEquals("q c ( b | d )", graph.compileToQuery());
+        assertEquals("q ( b | d ) c", graph.compileToQuery());
     }
 
     @Test
@@ -86,7 +105,7 @@ class QWordGraphTest {
         //   \- d -/
         QWordGraph graph = new QWordGraph("q", "b", "c");
         graph.addVariant(graph.node("q"), "d");
-        assertEquals("b c ( q | d )", graph.compileToQuery());
+        assertEquals("( q | d ) b c", graph.compileToQuery());
     }
 
     @Test
@@ -111,6 +130,6 @@ class QWordGraphTest {
         QWordGraph graph = new QWordGraph("q", "b", "c");
         graph.addVariant(graph.node("c"), "d");
         graph.addVariant(graph.node("b"), "e");
-        assertEquals("q ( c ( b | e ) | d ( b | e ) )", graph.compileToQuery());
+        assertEquals("q ( b ( c | d ) | e ( c | d ) )", graph.compileToQuery());
     }
 }

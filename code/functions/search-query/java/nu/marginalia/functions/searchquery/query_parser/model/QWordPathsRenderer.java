@@ -41,7 +41,10 @@ public class QWordPathsRenderer {
      */
     String render(QWordGraph.ReachabilityData reachability) {
         if (paths.size() == 1) {
-            return paths.iterator().next().stream().map(QWord::word).collect(Collectors.joining(" "));
+            return paths.iterator().next().stream()
+                    .sorted(reachability.topologicalComparator())
+                    .map(QWord::word)
+                    .collect(Collectors.joining(" "));
         }
 
         // Find the commonality of words in the paths
@@ -65,25 +68,46 @@ public class QWordPathsRenderer {
         if (!commonToAll.isEmpty()) { // Case where one or more words are common to all paths
             commonToAll.sort(reachability.topologicalComparator());
 
-            for (var word : commonToAll) {
-                resultJoiner.add(word.word());
-            }
+            // Render the divergent portion (if any) and determine where it belongs
+            // topologically, so it can be interleaved between common words rather
+            // than always appended at the end.
+            String divergentRendered = "";
+            int divergentPos = Integer.MAX_VALUE;
 
-            // Deal portion of the paths that do not all share a common word
             if (!notCommonToAll.isEmpty()) {
-
                 List<QWordPath> nonOverlappingPortions = new ArrayList<>();
+                boolean hasEmptyProjection = false;
 
-                // Create a new path for each path that does not contain the common words we just printed
                 for (var path : paths) {
                     var np = path.project(notCommonToAll);
-                    if (np.isEmpty())
+                    if (np.isEmpty()) {
+                        // A path with no divergent words means the whole divergent
+                        // group is optional (e.g. introduced by a bridging edge).
+                        hasEmptyProjection = true;
                         continue;
+                    }
                     nonOverlappingPortions.add(np);
                 }
 
-                // Recurse into the non-overlapping portions
-                resultJoiner.add(render(nonOverlappingPortions, reachability));
+                if (!nonOverlappingPortions.isEmpty()) {
+                    String inner = render(nonOverlappingPortions, reachability);
+                    divergentRendered = hasEmptyProjection ? "( " + inner + " | )" : inner;
+                    divergentPos = notCommonToAll.stream()
+                            .mapToInt(reachability.sortOrder()::get)
+                            .min().orElse(Integer.MAX_VALUE);
+                }
+            }
+
+            boolean divergentEmitted = divergentRendered.isEmpty();
+            for (var word : commonToAll) {
+                if (!divergentEmitted && reachability.sortOrder().get(word) >= divergentPos) {
+                    resultJoiner.add(divergentRendered);
+                    divergentEmitted = true;
+                }
+                resultJoiner.add(word.word());
+            }
+            if (!divergentEmitted) {
+                resultJoiner.add(divergentRendered);
             }
         } else if (commonality.size() > 1) { // The case where no words are common to all paths
 
