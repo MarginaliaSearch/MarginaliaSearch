@@ -270,6 +270,11 @@ public class QueryFactoryTest {
     }
 
     @Test
+    public void testExpansion11() {
+        var subquery = parseAndGetQuery("traceroute vs tracepath");
+    }
+
+    @Test
     public void testContractionWordNum() {
         var subquery = parseAndGetQuery("glove 80");
 

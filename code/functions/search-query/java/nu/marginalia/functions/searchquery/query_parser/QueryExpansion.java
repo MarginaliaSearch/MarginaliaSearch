@@ -62,6 +62,7 @@ public class QueryExpansion {
                     this::joinTerms,
                     this::nounPluralFormsEN,
                     this::categoryKeywords,
+                    this::joinerVariants,
                     this::ngramAll
             );
         }
@@ -119,6 +120,26 @@ public class QueryExpansion {
         }
     }
 
+    public void joinerVariants(QWordGraph graph) {
+
+        for (var qw : graph) {
+            // Only consider terms not appearing at the ends of the graph
+
+            if (graph.getNextOriginal(qw).getFirst().isEnd()) {
+                continue;
+            }
+            if (graph.getPrevOriginal(qw).getFirst().isBeg()) {
+                continue;
+            }
+
+            switch (qw.word()) {
+                case "vs" -> {
+                    graph.addVariant(qw, "or");
+                    graph.addVariant(qw, "and");
+                }
+            }
+        }
+    }
     // Category keyword substitution, e.g. guitar wiki -> guitar generator:wiki
     public void categoryKeywords(QWordGraph graph) {
 
