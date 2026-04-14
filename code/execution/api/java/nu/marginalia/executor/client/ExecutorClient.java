@@ -186,7 +186,7 @@ public class ExecutorClient {
     /** Get the URL to download a file from a (possibly remote) file storage.
      * The endpoint is compatible with range requests.
      * */
-    public URL remoteFileURL(FileStorage fileStorage, String path) {
+    public @Nullable  URL remoteFileURL(FileStorage fileStorage, String path) {
         String uriPath = "/transfer/file/" + fileStorage.id();
         String uriQuery = "path=" + URLEncoder.encode(path, StandardCharsets.UTF_8);
 
@@ -200,7 +200,8 @@ public class ExecutorClient {
             return service.endpoint().toURL(uriPath, uriQuery);
         }
         catch (URISyntaxException|MalformedURLException ex) {
-            throw new RuntimeException("Failed to construct URL for path", ex);
+            logger.warn("Failed to construct URL for path", ex);
+            return null;
         }
     }
 

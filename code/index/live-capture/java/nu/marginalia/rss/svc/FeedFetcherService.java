@@ -454,6 +454,9 @@ public class FeedFetcherService {
 
         for (var storage : storages) {
             var url = executorClient.remoteFileURL(storage, "feeds.csv.gz");
+            if (null == url) {
+                continue;
+            }
             logger.info("Fetching from {}", url);
 
             try (var feedStream = new GZIPInputStream(url.openStream())) {
