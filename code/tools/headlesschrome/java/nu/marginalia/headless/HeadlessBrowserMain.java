@@ -48,7 +48,7 @@ public class HeadlessBrowserMain extends Jooby {
 
     public HeadlessBrowserMain() {
         try {
-            driverManager = new ChromeDriverManager(4);
+            driverManager = new ChromeDriverManager(6);
         }
         catch (IOException ex) {
             logger.error("Failed to initialize ChromeDriverManager", ex);
@@ -159,12 +159,12 @@ public class HeadlessBrowserMain extends Jooby {
 
         logger.info("Fetching DOM sample {}", request.url);
 
-        try (var holder = driverManager.getExtensionDriver(Duration.ofSeconds(15))) {
+        try (var holder = driverManager.getExtensionDriver(Duration.ofSeconds(30))) {
             ChromeDriver driver = holder.get();
 
             driver.get(request.url());
 
-            new WebDriverWait(driver, Duration.ofSeconds(15))
+            new WebDriverWait(driver, Duration.ofSeconds(30))
                     .until(ExpectedConditions.presenceOfElementLocated(
                             By.id("marginaliahack")));
 
