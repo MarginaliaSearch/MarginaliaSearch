@@ -134,8 +134,8 @@ public class QueryExpansion {
 
             switch (qw.word()) {
                 case "vs" -> {
-                    graph.addVariant(qw, "or");
-                    graph.addVariant(qw, "and");
+                    graph.addLink(graph.getPrevOriginal(qw).getFirst(),
+                            graph.getNextOriginal(qw).getFirst());
                 }
             }
         }
