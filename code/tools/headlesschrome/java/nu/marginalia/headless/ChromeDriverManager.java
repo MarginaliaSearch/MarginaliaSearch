@@ -61,11 +61,12 @@ public class ChromeDriverManager {
         screenshotOptions = new ChromeOptions().merge(baseOptions).addArguments("--window-size=1024,768");
         extensionOptions = new ChromeOptions().merge(baseOptions).addArguments("--load-extension=/dom-export");
 
-        for (int i = 0; i < 4; i++) {
-            Path userDir = createUserDir();
-            screenshotDriverHolders.add(new DriverHolder(createScreenshotDriver(userDir), screenshotDriverHolders, userDir));
+        for (int i = 0; i < queueSize; i++) {
+            Path screenshotUserDir = createUserDir();
+            screenshotDriverHolders.add(new DriverHolder(createScreenshotDriver(screenshotUserDir), screenshotDriverHolders, screenshotUserDir));
 
-            extensionDriverHolders.add(new DriverHolder(createExtensionDriver(userDir), extensionDriverHolders, userDir));
+            Path extensionUserDir = createUserDir();
+            extensionDriverHolders.add(new DriverHolder(createExtensionDriver(extensionUserDir), extensionDriverHolders, extensionUserDir));
         }
     }
 
