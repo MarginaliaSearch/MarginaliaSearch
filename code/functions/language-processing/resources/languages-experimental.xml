@@ -120,12 +120,14 @@
         <keywordHash algorithm="asciish" />
         <stemmer algorithm="snowball" variant="FRENCH" />
         <sentenceDetector algorithm="opennlp"/>
+        <rdrTagger dictId="pos-dict-fr" rdrId="pos-rdr-fr" />
     </language>
     <language isoCode="de" name="German" display="ltr">
         <keywordHash algorithm="asciish" />
         <stemmer algorithm="snowball" variant="GERMAN" />
         <sentenceDetector algorithm="opennlp"/>
         <unicodeNormalization algorithm="german" />
+        <rdrTagger dictId="pos-dict-de" rdrId="pos-rdr-de" />
     </language>
     <!--
     <language isoCode="fa" name="Farsi" display="rtl">
@@ -139,5 +141,8 @@
     <resource id="pos-rdr-en" md5="" path="rdr/English.RDR" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/POS/English.RDR" />
     <resource id="pos-dict-sv" md5="" path="rdr/Swedish.DICT" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/ud-treebanks-v2.4/UD_Swedish-Talbanken/sv_talbanken-ud-train.conllu.UPOS.DICT" />
     <resource id="pos-rdr-sv" md5="" path="rdr/Swedish.RDR"   href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/ud-treebanks-v2.4/UD_Swedish-Talbanken/sv_talbanken-ud-train.conllu.UPOS.RDR" />
-
+    <resource id="pos-rdr-de" md5="" path="rdr/German.RDR"   href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/POS/German.RDR" />
+    <resource id="pos-dict-de" md5="" path="rdr/German.DICT"   href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/POS/German.DICT" />
+    <resource id="pos-rdr-fr" md5="" path="rdr/French.RDR"   href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/POS/French.RDR" />
+    <resource id="pos-dict-fr" md5="" path="rdr/French.DICT"   href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/POS/French.DICT" />
 </languages>
