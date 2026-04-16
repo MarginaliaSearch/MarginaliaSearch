@@ -401,7 +401,8 @@ public class FeedFetcherService {
                     }
                 }
                 catch (Exception ex) {
-                    return new FetchResult.PermanentError(); // treat as permanent error
+                    logger.warn("Errror in http client response handler", ex);
+                    return new FetchResult.TransientError();
                 }
                 finally {
                     EntityUtils.consumeQuietly(rsp.getEntity());
