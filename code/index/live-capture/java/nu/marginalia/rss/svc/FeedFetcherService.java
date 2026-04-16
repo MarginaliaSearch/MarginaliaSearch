@@ -222,13 +222,14 @@ public class FeedFetcherService {
 
             Collection<FeedDefinition> datasetFeeds;
 
-            String sourceUrl = domainTypes.getUrlForSelection(DomainTypes.Type.SMALL);
-            if (sourceUrl == null || sourceUrl.isBlank()) {
-                datasetFeeds = downloadFeedDefinitions(sourceUrl);
+            // If we didn't get any definitions, or a clean update is requested, read the definitions from the system
+            // instead
+            if (definitions == null || definitions.isEmpty() || updateMode == UpdateMode.CLEAN) {
+                definitions = readDefinitionsFromSystem();
             }
-            else {
-                datasetFeeds = readDefinitionsFromSystem();
-            }
+
+            // Sync feed definitions from the small web dataset, adding any missing feeds
+            definitions = mergeSmallWebDatasetFeeds(definitions);
 
             logger.info("Found {} feed definitions", definitions.size());
 
@@ -479,6 +480,40 @@ public class FeedFetcherService {
 
         return feedDefinitionList;
     }
+
+
+    private Collection<FeedDefinition> mergeSmallWebDatasetFeeds(Collection<FeedDefinition> existing) {
+        String sourceUrl = domainTypes.getUrlForSelection(DomainTypes.Type.SMALL);
+        if (sourceUrl == null || sourceUrl.isBlank()) {
+            return existing;
+        }
+
+        Collection<FeedDefinition> datasetFeeds = downloadFeedDefinitions(sourceUrl);
+        if (datasetFeeds.isEmpty()) {
+            return existing;
+        }
+
+        Set<String> existingDomains = new HashSet<>();
+        for (var def : existing) {
+            existingDomains.add(def.domain().toLowerCase());
+        }
+
+        List<FeedDefinition> merged = new ArrayList<>(existing);
+        int added = 0;
+        for (var def : datasetFeeds) {
+            if (existingDomains.add(def.domain().toLowerCase())) {
+                merged.add(def);
+                added++;
+            }
+        }
+
+        if (added > 0) {
+            logger.info("Added {} feed definitions from the small web dataset", added);
+        }
+
+        return merged;
+    }
+
 
     /** Download a list of feed URLs from the given source URL and convert them to FeedDefinitions. */
     private Collection<FeedDefinition> downloadFeedDefinitions(String sourceUrl) {
