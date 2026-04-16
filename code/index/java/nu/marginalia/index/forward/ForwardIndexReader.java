@@ -203,13 +203,29 @@ public class ForwardIndexReader {
     }
 
     public void close() {
-        if (spansFd >= 0)
-            LinuxSystemCalls.closeFd(spansFd);
+        try {
+            if (spansFd >= 0)
+                LinuxSystemCalls.closeFd(spansFd);
+        }
+        catch (RuntimeException ex) {
+            logger.error("Error closing 'spansFd'", ex);
+        }
 
-        if (data != null)
-            data.close();
-        if (ids != null)
-            ids.close();
+        try {
+            if (data != null)
+                data.close();
+        }
+        catch (RuntimeException ex) {
+            logger.error("Error closing 'data'", ex);
+        }
+
+        try {
+            if (data != null)
+                ids.close();
+        }
+        catch (RuntimeException ex) {
+            logger.error("Error closing 'ids'", ex);
+        }
     }
 
     public boolean isLoaded() {

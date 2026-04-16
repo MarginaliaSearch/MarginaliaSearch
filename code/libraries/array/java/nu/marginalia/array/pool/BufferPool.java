@@ -110,19 +110,23 @@ public class BufferPool implements AutoCloseable {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        LinuxSystemCalls.closeFd(fd);
-        arena.close();
+        finally {
+            arena.close();
 
-        System.out.println("Disk read count: " + diskReadCount.get());
-        System.out.println("Cached read count: " + cacheReadCount.get());
+            LinuxSystemCalls.closeFd(fd);
 
-        try {
-            monitorThread.interrupt();
-            monitorThread.join();
+            System.out.println("Disk read count: " + diskReadCount.get());
+            System.out.println("Cached read count: " + cacheReadCount.get());
+
+            try {
+                monitorThread.interrupt();
+                monitorThread.join();
+            }
+            catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
         }
-        catch (InterruptedException ex) {
-            throw new RuntimeException(ex);
-        }
+
 
     }
 
