@@ -315,27 +315,29 @@ public class CombinedIndexReader {
     /** Close the indexes.  This blocks the calling thread until all users are finished.
      * */
     public void close() {
-        closeLock().lock();
+        var closeLock = closeLock();
 
         try {
-            forwardIndexReader.close();
-        }
-        catch (Throwable t) {
-            logger.error("Failed to close forward index reader", t);
-        }
+            try {
+                forwardIndexReader.close();
+            } catch (Throwable t) {
+                logger.error("Failed to close forward index reader", t);
+            }
 
-        try {
-            reverseIndexFullReader.close();
-        }
-        catch (Throwable t) {
-            logger.error("Failed to close full reverse index reader", t);
-        }
+            try {
+                reverseIndexFullReader.close();
+            } catch (Throwable t) {
+                logger.error("Failed to close full reverse index reader", t);
+            }
 
-        try {
-            reverseIndexPriorityReader.close();
+            try {
+                reverseIndexPriorityReader.close();
+            } catch (Throwable t) {
+                logger.error("Failed to close prio reverse index reader", t);
+            }
         }
-        catch (Throwable t) {
-            logger.error("Failed to close prio reverse index reader", t);
+        finally {
+            closeLock.unlock();
         }
     }
 
