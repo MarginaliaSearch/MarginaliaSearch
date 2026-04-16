@@ -46,13 +46,10 @@ import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.*;
 import java.util.zip.GZIPInputStream;
 import java.nio.file.Files;
 import java.sql.SQLException;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -61,7 +58,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
-import java.util.zip.GZIPInputStream;
 
 @Singleton
 public class FeedFetcherService {
@@ -238,6 +234,8 @@ public class FeedFetcherService {
 
             SimpleBlockingThreadPool executor = new SimpleBlockingThreadPool("FeedFetcher", 64, 4);
 
+            int today = (int) ((LocalDate.now().toEpochDay()) & 0x7FFF_FFFFL);
+
             for (var feed : definitions) {
                 if (Thread.interrupted() || requestStop)
                     break;
@@ -246,6 +244,8 @@ public class FeedFetcherService {
                     try {
                         EdgeDomain domain = new EdgeDomain(feed.domain());
                         var oldData = feedDb.getFeed(domain);
+
+                        int lastFetch = feedDb.getLastFetch(domain);
 
                         @Nullable
                         String ifModifiedSinceDate = switch(updateMode) {
@@ -260,10 +260,20 @@ public class FeedFetcherService {
                         };
 
                         FetchResult feedData;
-                        try (DomainLock domainLock = domainCoordinator.lockDomain(new EdgeDomain(feed.domain()))) {
-                            feedData = fetchFeedData(feed, fetchExecutor, ifModifiedSinceDate, ifNoneMatchTag);
-                        } catch (Exception ex) {
-                            feedData = new FetchResult.TransientError();
+                        DomainSkip domainSkip = shouldSkip(domain, lastFetch, today);
+                        if (domainSkip == DomainSkip.SKIP_TODAY) {
+                            feedData = new FetchResult.NotModified();
+                        }
+                        else {
+                            try (DomainLock domainLock = domainCoordinator.lockDomain(new EdgeDomain(feed.domain()))) {
+                                feedData = fetchFeedData(feed, fetchExecutor, ifModifiedSinceDate, ifNoneMatchTag);
+
+                                if (domainSkip == DomainSkip.NO_SKIP_TODAY && !(feedData instanceof FetchResult.TransientError)) {
+                                    writer.saveFetchDate(domain.toString(), today);
+                                }
+                            } catch (Exception ex) {
+                                feedData = new FetchResult.TransientError();
+                            }
                         }
 
                         switch (feedData) {
@@ -329,6 +339,40 @@ public class FeedFetcherService {
         }
         finally {
             updating = false;
+        }
+    }
+
+    private enum DomainSkip {
+        NEVER,
+        NO_SKIP_TODAY,
+        SKIP_TODAY,
+    }
+
+    private DomainSkip shouldSkip(EdgeDomain domain, int lastFetch, int today) {
+        // We can't fetch these domains every day, since we can't hammer them with too many parallel requests,
+        // they become a bottleneck
+        int fetchCadence = switch (domain.topDomain) {
+            case "wordpress.com" -> 4;
+            case "blogspot.com" -> 4;
+            case "substack.com" -> 7;
+            default -> 0;
+        };
+
+        if (fetchCadence == 0) {
+            return DomainSkip.NEVER;
+        }
+
+        // We lack fetch date, so let's generate one based on hash code,
+        // so that we'll get a nice, reasonably uniform distribution
+        if (lastFetch == 0) {
+            lastFetch = today - (domain.hashCode() & 0x7FFF_FFFF) % (fetchCadence + 1);
+        }
+
+        if (today < (lastFetch + fetchCadence)) {
+            return DomainSkip.SKIP_TODAY;
+        }
+        else {
+            return DomainSkip.NO_SKIP_TODAY;
         }
     }
 
@@ -666,6 +710,5 @@ public class FeedFetcherService {
             return true;
         }
     }
-
 
 }

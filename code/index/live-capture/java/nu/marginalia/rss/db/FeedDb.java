@@ -155,6 +155,24 @@ public class FeedDb {
         return null;
     }
 
+    public int getLastFetch(EdgeDomain domain) {
+        if (!feedDbEnabled) {
+            throw new IllegalStateException("Feed database is disabled on this node");
+        }
+
+        // Capture the current reader to avoid concurrency issues
+        FeedDbReader reader = this.reader;
+        try {
+            if (reader != null) {
+                return reader.getLastFetch(domain);
+            }
+        }
+        catch (Exception e) {
+            logger.error("Error getting last_fetch for " + domain, e);
+        }
+        return 0;
+    }
+
     public FeedDbWriter createWriter() {
         if (!feedDbEnabled) {
             throw new IllegalStateException("Feed database is disabled on this node");

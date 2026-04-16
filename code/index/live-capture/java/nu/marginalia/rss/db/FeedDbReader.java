@@ -34,6 +34,7 @@ public class FeedDbReader implements AutoCloseable {
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS feed (domain TEXT PRIMARY KEY, feed JSON)");
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS errors (domain TEXT PRIMARY KEY, cnt INT DEFAULT 0)");
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS etags (domain TEXT PRIMARY KEY, etag TEXT)");
+            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS last_fetch (domain TEXT PRIMARY KEY, fetch_day INT DEFAULT 0)");
         }
     }
 
@@ -122,6 +123,22 @@ public class FeedDbReader implements AutoCloseable {
         }
 
         return null;
+    }
+
+    public int getLastFetch(EdgeDomain domain) {
+        try (var stmt = connection.prepareStatement("SELECT fetch_day FROM last_fetch WHERE DOMAIN = ?")) {
+            stmt.setString(1, domain.toString());
+            var rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+
+        } catch (SQLException e) {
+            logger.error("Error getting last_fetch for " + domain, e);
+        }
+
+        return 0;
     }
 
     private FeedItems deserialize(String string) {
