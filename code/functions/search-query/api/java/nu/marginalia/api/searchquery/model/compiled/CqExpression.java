@@ -5,10 +5,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntImmutableList;
 import it.unimi.dsi.fastutil.ints.IntList;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.stream.Stream;
 
 /** Expression in a parsed index service query
@@ -30,14 +27,17 @@ public sealed interface CqExpression {
         if (pathsRaw.isEmpty())
             return pathsRaw;
 
-        List<IntList> ret = new ArrayList<>(pathsRaw.size());
+        Set<IntList> ret = new LinkedHashSet<>(pathsRaw.size());
 
         for (IntList list: pathsRaw) {
+            // Remove pathological cases potentially introduced by empty branches
+            if (list.isEmpty()) continue;
+
             // sort, unique, and make immutable each the paths list
             ret.add(new IntImmutableList(new IntAVLTreeSet(list)));
         }
 
-        return Collections.unmodifiableList(ret);
+        return new ArrayList<>(ret);
     }
 
     record And(List<? extends CqExpression> parts) implements CqExpression {
