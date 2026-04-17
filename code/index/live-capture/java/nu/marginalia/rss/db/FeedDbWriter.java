@@ -40,7 +40,7 @@ public class FeedDbWriter implements AutoCloseable {
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS last_fetch (domain TEXT PRIMARY KEY, fetch_day INT DEFAULT 0)");
         }
 
-        insertFeedStmt = connection.prepareStatement("INSERT INTO feed (domain, feed) VALUES (?, ?)");
+        insertFeedStmt = connection.prepareStatement("INSERT OR IGNORE INTO feed (domain, feed) VALUES (?, ?)");
         insertErrorStmt = connection.prepareStatement("INSERT INTO errors (domain, cnt) VALUES (?, ?)");
         insertEtagStmt = connection.prepareStatement("INSERT INTO etags (domain, etag) VALUES (?, ?)");
         insertLastFetchStmt = connection.prepareStatement("INSERT INTO last_fetch (domain, fetch_day) VALUES (?, ?)");
