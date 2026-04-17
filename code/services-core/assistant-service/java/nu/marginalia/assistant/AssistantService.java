@@ -3,7 +3,9 @@ package nu.marginalia.assistant;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import io.jooby.Context;
+import io.jooby.Cookie;
 import io.jooby.Jooby;
+import io.jooby.SessionStore;
 import nu.marginalia.assistant.suggest.Suggestions;
 import nu.marginalia.functions.domains.DomainInfoGrpcService;
 import nu.marginalia.functions.math.MathGrpcService;
@@ -41,6 +43,8 @@ public class AssistantService extends JoobyService {
 
     public void startJooby(Jooby jooby) {
         super.startJooby(jooby);
+
+        jooby.setSessionStore(SessionStore.memory(Cookie.session("marginalia-session")));
 
         jooby.get("/suggest/", this::getSuggestions);
         jooby.get("/screenshot/{id}", screenshotService::serveScreenshotRequest);

@@ -49,6 +49,8 @@ public class ApiService extends JoobyService {
     public void startJooby(Jooby jooby) {
         super.startJooby(jooby);
 
+        jooby.setSessionStore(SessionStore.memory(Cookie.session("marginalia-session")));
+
         jooby.errorCode(ServiceNotAvailableException.class, StatusCode.BAD_GATEWAY);
 
         jooby.install(apiV1);

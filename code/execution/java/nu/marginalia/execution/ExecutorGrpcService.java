@@ -7,7 +7,6 @@ import io.grpc.Status;
 import io.grpc.StatusException;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
-import io.jooby.annotation.Header;
 import io.netty.handler.codec.HeadersUtils;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.actor.ActorApi;

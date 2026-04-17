@@ -7,7 +7,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import io.jooby.Context;
 import io.jooby.MapModelAndView;
 import io.jooby.ModelAndView;
-import io.jooby.ValueNode;
+import io.jooby.value.Value;
 import io.jooby.annotation.*;
 import nu.marginalia.api.domains.DomainInfoClient;
 import nu.marginalia.api.domains.RpcDomainInfoResponse;
@@ -230,7 +230,7 @@ public class SearchSiteInfoService {
         searchSiteSubscriptions.toggleSubscription(context, new EdgeDomain(domainName));
 
         String sstBit;
-        ValueNode sstParam = context.query("sst");
+        Value sstParam = context.query("sst");
 
         if (sstParam.isPresent()) {
             sstBit = "?sst=" + sstParam.value();

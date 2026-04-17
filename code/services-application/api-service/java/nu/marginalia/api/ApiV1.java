@@ -3,6 +3,7 @@ package nu.marginalia.api;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import io.jooby.*;
+import io.jooby.value.Value;
 import nu.marginalia.api.model.ApiLicense;
 import nu.marginalia.api.model.ApiLicenseOptions;
 import nu.marginalia.api.model.ApiSearchResults;
