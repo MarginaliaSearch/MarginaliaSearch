@@ -317,28 +317,27 @@ public class CombinedIndexReader {
     public void close() {
         var closeLock = closeLock();
 
+        closeLock.lock();
+
         try {
-            try {
-                forwardIndexReader.close();
-            } catch (Throwable t) {
-                logger.error("Failed to close forward index reader", t);
-            }
-
-            try {
-                reverseIndexFullReader.close();
-            } catch (Throwable t) {
-                logger.error("Failed to close full reverse index reader", t);
-            }
-
-            try {
-                reverseIndexPriorityReader.close();
-            } catch (Throwable t) {
-                logger.error("Failed to close prio reverse index reader", t);
-            }
+            forwardIndexReader.close();
+        } catch (Throwable t) {
+            logger.error("Failed to close forward index reader", t);
         }
-        finally {
-            closeLock.unlock();
+
+        try {
+            reverseIndexFullReader.close();
+        } catch (Throwable t) {
+            logger.error("Failed to close full reverse index reader", t);
         }
+
+        try {
+            reverseIndexPriorityReader.close();
+        } catch (Throwable t) {
+            logger.error("Failed to close prio reverse index reader", t);
+        }
+
+        // We don't unlock here, as the index is no longer readable ever
     }
 
     /** Returns true if index data is available */
