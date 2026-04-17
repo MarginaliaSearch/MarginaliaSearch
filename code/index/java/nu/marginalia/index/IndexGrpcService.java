@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.LockSupport;
 
 @Singleton
 public class IndexGrpcService
@@ -130,11 +131,10 @@ public class IndexGrpcService
                                 index = indexReference.get();
                                 useLock = index.useLock();
 
-                                if (!useLock.tryLock())
-                                    Thread.yield();
-                                else {
+                                if (useLock.tryLock())
                                     break;
-                                }
+
+                                LockSupport.parkNanos(100_000);
 
                                 // This shouldn't really happen unless there's a failed index switch
                                 // or some similar disaster scenario.
