@@ -31,6 +31,7 @@ import org.slf4j.MarkerFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
 
 @Singleton
 public class IndexGrpcService
@@ -107,8 +108,6 @@ public class IndexGrpcService
                                 return List.of();
                             }
 
-                            CombinedIndexReader index = indexReference.get();
-
                             final SearchSet set = getSearchSet(request);
                             final ConnectivityView connectivityView;
 
@@ -122,11 +121,36 @@ public class IndexGrpcService
                                 connectivityView = ConnectivityView.empty();
                             }
 
-                            SearchContext rankingContext = SearchContext.create(index, hasher, request, set, connectivityView);
+                            CombinedIndexReader index;
+                            Lock useLock;
 
-                            IndexQueryExecution queryExecution = new IndexQueryExecution(index, documentDbReader, rankingService, rankingContext, nodeId);
+                            // Acquire a useLock to ensure locks acquired by the index threads
+                            // will guarantee to succeed.  This blocks the index reference from closing.
+                            for (;;) {
+                                index = indexReference.get();
+                                useLock = index.useLock();
 
-                            return queryExecution.run();
+                                if (!useLock.tryLock())
+                                    Thread.yield();
+                                else {
+                                    break;
+                                }
+
+                                // This shouldn't really happen unless there's a failed index switch
+                                // or some similar disaster scenario.
+                                if (System.currentTimeMillis() > endTime) {
+                                    throw new IllegalStateException("Could not acquire index lock");
+                                }
+                            }
+
+                            try {
+                                SearchContext rankingContext = SearchContext.create(index, hasher, request, set, connectivityView);
+                                IndexQueryExecution queryExecution = new IndexQueryExecution(index, documentDbReader, rankingService, rankingContext, nodeId);
+                                return queryExecution.run();
+                            } finally {
+                                useLock.unlock();
+                            }
+
                         }
                         catch (IndexQueryExecution.TooManySimultaneousQueriesException ex) {
                             logger.error("Rejected request execution due to overload");
