@@ -189,7 +189,7 @@ dependencyResolutionManagement {
             library('httpclient', 'org.apache.httpcomponents.client5','httpclient5').version('5.4.3')
             library('commons.net', 'commons-net','commons-net').version('3.9.0')
             library('commons.lang3', 'org.apache.commons','commons-lang3').version('3.12.0')
-            library('commons.compress','org.apache.commons','commons-compress').version('1.25.0')
+            library('commons.compress','org.apache.commons','commons-compress').version('1.28.0')
             library('commons.io','commons-io','commons-io').version('2.11.0')
             library('commons.codec', 'commons-codec', 'commons-codec').version('1.16.0')
 

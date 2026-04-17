@@ -38,7 +38,10 @@ dependencies {
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
 
-    testImplementation platform('org.testcontainers:testcontainers-bom:1.21.4')
+    testImplementation platform('org.testcontainers:testcontainers-bom:1.21.4') {
+        exclude group: 'org.apache.commons'
+    }
+    testImplementation libs.commons.compress
     testImplementation libs.commons.codec
     testImplementation project(':code:common:service')
     testImplementation 'org.testcontainers:mariadb:1.21.4'
