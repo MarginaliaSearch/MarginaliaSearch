@@ -2,10 +2,13 @@ package nu.marginalia.headless;
 
 import com.google.gson.Gson;
 import io.jooby.Context;
+import io.jooby.Cookie;
 import io.jooby.Jooby;
 import io.jooby.ServerOptions;
+import io.jooby.SessionStore;
 import io.jooby.StatusCode;
 import io.jooby.exception.StatusCodeException;
+import io.jooby.netty.NettyServer;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.gson.GsonFactory;
 import org.openqa.selenium.By;
@@ -43,7 +46,12 @@ public class HeadlessBrowserMain extends Jooby {
     private volatile boolean killRequested = false;
 
     static void main(String[] args) {
-        Jooby.runApp(new String[] { "application.env=prod" }, HeadlessBrowserMain::new);
+        var options = new ServerOptions();
+        options.setCompressionLevel(1);
+        options.setWorkerThreads(Math.min(4, options.getWorkerThreads()));
+        options.setIoThreads(Math.min(4, options.getIoThreads()));
+
+        Jooby.runApp(new String[] { "application.env=prod" }, new NettyServer(options), HeadlessBrowserMain::new);
     }
 
     public HeadlessBrowserMain() {
@@ -55,11 +63,7 @@ public class HeadlessBrowserMain extends Jooby {
             throw new RuntimeException(ex);
         }
 
-        var options = new ServerOptions();
-        options.setCompressionLevel(1);
-        options.setWorkerThreads(Math.min(4, options.getWorkerThreads()));
-        options.setIoThreads(Math.min(4, options.getIoThreads()));
-        setServerOptions(options);
+        setSessionStore(SessionStore.memory(Cookie.session("marginalia-session")));
 
         get("/health", this::health);
         post("/kill", this::kill);

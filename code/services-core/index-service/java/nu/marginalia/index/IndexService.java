@@ -1,7 +1,9 @@
 package nu.marginalia.index;
 
 import com.google.inject.Inject;
+import io.jooby.Cookie;
 import io.jooby.Jooby;
+import io.jooby.SessionStore;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.domsample.DomSampleGrpcService;
 import nu.marginalia.execution.*;
@@ -100,6 +102,8 @@ public class IndexService extends JoobyService {
     @Override
     public void startJooby(Jooby jooby) {
         super.startJooby(jooby);
+
+        jooby.setSessionStore(SessionStore.memory(Cookie.session("marginalia-session")));
 
         jooby.get("/transfer/file/{fid}", fileTransferService::transferFile);
         jooby.head("/transfer/file/{fid}", fileTransferService::transferFile);

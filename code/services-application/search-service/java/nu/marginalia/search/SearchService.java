@@ -86,7 +86,7 @@ public class SearchService extends JoobyService {
     public void startJooby(Jooby jooby) {
         super.startJooby(jooby);
 
-        final String startTimeAttribute = "start-time";
+        jooby.setSessionStore(SessionStore.memory(Cookie.session("marginalia-session")));
 
         jooby.error(NoSuchElementException.class, new ErrorHandler() {
             @Override
@@ -131,19 +131,6 @@ public class SearchService extends JoobyService {
                 return emptySvg;
             }
             return "";
-        });
-
-        jooby.after((Context ctx, Object result, Throwable failure) -> {
-            if  (failure != null) {
-                wmsa_search_service_error_count.labelValues(ctx.getRoute().getPattern(), ctx.getMethod()).inc();
-            }
-            else {
-                Long startTime = ctx.getAttribute(startTimeAttribute);
-                if (startTime != null) {
-                    wmsa_search_service_request_time.labelValues(ctx.getRoute().getPattern(), ctx.getMethod())
-                            .observe((System.nanoTime() - startTime) / 1e9);
-                }
-            }
         });
     }
 

@@ -1,6 +1,8 @@
 package nu.marginalia.service.server;
 
 import io.jooby.*;
+import io.jooby.jte.JteModule;
+import io.jooby.netty.NettyServer;
 import io.prometheus.metrics.core.metrics.Counter;
 import nu.marginalia.mq.inbox.MqInboxIf;
 import nu.marginalia.service.client.ServiceNotAvailableException;
@@ -8,7 +10,6 @@ import nu.marginalia.service.discovery.property.ServiceEndpoint;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.module.ServiceConfiguration;
-import nu.marginalia.service.server.jte.JteModule;
 import nu.marginalia.service.server.mq.ServiceMqSubscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,12 +49,12 @@ public class JoobyService {
     private GrpcServer grpcServer;
 
     private ServiceConfiguration config;
-    private final List<MvcExtension> joobyServices;
+    private final List<Extension> joobyServices;
     private final ServiceEndpoint restEndpoint;
 
     public JoobyService(BaseServiceParams params,
                         List<DiscoverableService> grpcServices,
-                        List<MvcExtension> joobyServices
+                        List<Extension> joobyServices
     ) throws Exception {
 
         this.joobyServices = joobyServices;
@@ -98,20 +99,10 @@ public class JoobyService {
         }
     }
 
-    public void startJooby(Jooby jooby) {
-
-        logger.info("{} Listening to {}:{} ({})", getClass().getSimpleName(),
-                restEndpoint.host(),
-                restEndpoint.port(),
-                config.externalAddress());
-
-        // FIXME:  This won't work outside of docker, may need to submit a PR to jooby to allow classpaths here
-        if (Files.exists(Path.of("/app/resources/jte")) || Files.exists(Path.of("/app/classes"))) {
-            jooby.install(new JteModule(Path.of("/app/resources/jte"), Path.of("/app/classes")));
-        }
-        if (Files.exists(Path.of("/app/resources/static"))) {
-            jooby.assets("/*", Paths.get("/app/resources/static"));
-        }
+    /** Build the HTTP server with options derived from the service configuration
+     * for Jooby to use.
+     */
+    public Server createServer() {
         var options = new ServerOptions();
         options.setHost(config.bindAddress());
         options.setPort(restEndpoint.port());
@@ -127,7 +118,23 @@ public class JoobyService {
         options.setWorkerThreads(Math.min(16, options.getWorkerThreads()));
         options.setIoThreads(Math.min(16, options.getIoThreads()));
 
-        jooby.setServerOptions(options);
+        return new NettyServer(options);
+    }
+
+    public void startJooby(Jooby jooby) {
+
+        logger.info("{} Listening to {}:{} ({})", getClass().getSimpleName(),
+                restEndpoint.host(),
+                restEndpoint.port(),
+                config.externalAddress());
+
+        // FIXME:  This won't work outside of docker, may need to submit a PR to jooby to allow classpaths here
+        if (Files.exists(Path.of("/app/resources/jte")) || Files.exists(Path.of("/app/classes"))) {
+            jooby.install(new JteModule(Path.of("/app/resources/jte"), Path.of("/app/classes")));
+        }
+        if (Files.exists(Path.of("/app/resources/static"))) {
+            jooby.assets("/*", Paths.get("/app/resources/static"));
+        }
 
         jooby.get("/internal/ping", ctx -> "pong");
         jooby.get("/internal/started", this::isInitialized);

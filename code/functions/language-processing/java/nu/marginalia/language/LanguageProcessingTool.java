@@ -1,9 +1,7 @@
 package nu.marginalia.language;
 
-import io.jooby.Context;
-import io.jooby.Jooby;
-import io.jooby.MapModelAndView;
-import io.jooby.ModelAndView;
+import io.jooby.*;
+import io.jooby.jte.JteModule;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
@@ -53,9 +51,11 @@ public class LanguageProcessingTool extends Jooby {
             System.out.println("Base path: " + basePath);
 
             if (Files.exists(basePath.resolve("resources/ltt/jte")))
-                install(new nu.marginalia.service.server.jte.JteModule(basePath.resolve("resources/ltt/jte")));
+                install(new JteModule(basePath.resolve("resources/ltt/jte")));
             if (Files.exists(basePath.resolve("resources/ltt/static")))
                 assets("/*", basePath.resolve("resources/ltt/static"));
+
+            setSessionStore(SessionStore.memory(Cookie.session("marginalia-session")));
 
             get("/", this::handleKeywords);
             post("/", this::handleKeywords);

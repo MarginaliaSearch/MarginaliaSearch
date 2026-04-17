@@ -3,7 +3,7 @@ package nu.marginalia.search.svc;
 import com.google.inject.Inject;
 import io.jooby.Context;
 import io.jooby.Cookie;
-import io.jooby.Value;
+import io.jooby.value.Value;
 import nu.marginalia.api.feeds.FeedsClient;
 import nu.marginalia.api.feeds.RpcFeed;
 import nu.marginalia.db.DbDomainQueries;
