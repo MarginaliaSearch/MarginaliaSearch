@@ -11,8 +11,10 @@ import org.netpreserve.jwarc.WarcReader;
 import org.netpreserve.jwarc.WarcRequest;
 import org.netpreserve.jwarc.WarcResponse;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -20,6 +22,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPOutputStream;
 
 @Tag("slow")
 class WarcRecorderFakeServerTest {
@@ -37,6 +40,23 @@ class WarcRecorderFakeServerTest {
             try (var os = exchange.getResponseBody()) {
                 os.write("<html><body>hello</body></html>".getBytes());
                 os.flush();
+            }
+            exchange.close();
+        });
+
+        // This endpoint serves a gzip-compressed response
+        server.createContext("/gzip", exchange -> {
+            byte[] html = "<html><body>hello gzip</body></html>".getBytes(StandardCharsets.UTF_8);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try (GZIPOutputStream gzos = new GZIPOutputStream(baos)) {
+                gzos.write(html);
+            }
+            byte[] compressed = baos.toByteArray();
+            exchange.getResponseHeaders().add("Content-Type", "text/html");
+            exchange.getResponseHeaders().add("Content-Encoding", "gzip");
+            exchange.sendResponseHeaders(200, compressed.length);
+            try (var os = exchange.getResponseBody()) {
+                os.write(compressed);
             }
             exchange.close();
         });
@@ -157,6 +177,28 @@ class WarcRecorderFakeServerTest {
         // so we expect the request to take 1s and change before it times out.
 
         Assertions.assertTrue(Duration.between(start, end).toMillis() < 3000);
+    }
+
+    @Test
+    public void fetchGzip() throws Exception {
+        HttpGet request = new HttpGet("http://localhost:14510/gzip");
+        request.addHeader("User-agent", "test.marginalia.nu");
+        client.fetch(httpClient, new DomainCookies(), request);
+
+        try (var warcReader = new WarcReader(fileNameWarc)) {
+            for (var record : warcReader) {
+                if (record instanceof WarcResponse rsp) {
+                    var http = rsp.http();
+                    Assertions.assertTrue(http.headers().first("Content-Encoding").isEmpty(),
+                            "WARC response must not retain Content-Encoding");
+                    try (var body = http.body()) {
+                        String bodyStr = new String(body.stream().readAllBytes(), StandardCharsets.UTF_8);
+                        Assertions.assertTrue(bodyStr.contains("hello gzip"),
+                                "WARC response body must be decompressed");
+                    }
+                }
+            }
+        }
     }
 
 }

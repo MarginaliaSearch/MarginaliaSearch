@@ -175,6 +175,10 @@ public class WarcProtocolReconstructor {
             if (headerCapitalized.equals("Transfer-Encoding"))
                 continue;
 
+            // Omit Content-Encoding as the body is transparently decoded
+            if (headerCapitalized.equals("Content-Encoding"))
+                continue;
+
             // Since we're transparently decoding gzip, we need to update the Content-Length header
             // to reflect the actual size of the response body. We'll do this at the end.
             if (headerCapitalized.equals("Content-Length"))

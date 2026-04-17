@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.zip.GZIPInputStream;
 
 /** Input buffer for temporary storage of a HTTP response
  *  This may be in-memory or on-disk, at the discretion of
@@ -67,13 +68,28 @@ public abstract class WarcInputBuffer implements AutoCloseable {
                 return new ErrorBuffer();
             }
 
+            Header[] headers = response.getHeaders();
+            boolean isGzip = false;
+            for (var header : headers) {
+                if ("Content-Encoding".equalsIgnoreCase(header.getName())
+                        && "gzip".equalsIgnoreCase(header.getValue())) {
+                    isGzip = true;
+                    break;
+                }
+            }
+
+            InputStream bodyStream = isGzip ? new GZIPInputStream(is) : is;
+            Header[] storedHeaders = isGzip
+                    ? Arrays.stream(headers).filter(h -> !"Content-Encoding".equalsIgnoreCase(h.getName())).toArray(Header[]::new)
+                    : headers;
+
             if (length > 0 && length < 8192) {
-                return new MemoryBuffer(response.getHeaders(), request, timeLimit, is, (int) length);
+                return new MemoryBuffer(storedHeaders, request, timeLimit, bodyStream, (int) length);
             }
             else {
                 // handles both the negative length case (e.g. HTTP 1.0)
                 // and the known length case
-                return new FileBuffer(response.getHeaders(), request, timeLimit, is, tempDir);
+                return new FileBuffer(storedHeaders, request, timeLimit, bodyStream, tempDir);
             }
         }
         finally {
