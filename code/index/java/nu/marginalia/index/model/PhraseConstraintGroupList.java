@@ -23,27 +23,24 @@ public class PhraseConstraintGroupList {
     /** A list of groups representing segments of the query */
     private final List<PhraseConstraintGroup> optionalGroups = new ArrayList<>();
 
-    /** Groups representing the full query in all its variant orderings.
-     *  The first entry is the primary (original word sequence); the rest
-     *  are alternative paths introduced by query expansion (e.g. bridging). */
-    private final List<PhraseConstraintGroup> fullGroups;
+    /** A group representing all terms in the query, segmentation be damned */
+    private final PhraseConstraintGroup fullGroup;
 
     public PhraseConstraintGroupList(
-            List<PhraseConstraintGroup> fullGroups,
+            PhraseConstraintGroup fullGroup,
             List<PhraseConstraintGroup> mandatoryGroups,
             List<PhraseConstraintGroup> optionalGroups) {
         this.mandatoryGroups.addAll(mandatoryGroups);
         this.optionalGroups.addAll(optionalGroups);
-        this.fullGroups = List.copyOf(fullGroups);
+        this.fullGroup = fullGroup;
     }
 
     public List<PhraseConstraintGroup> getOptionalGroups() {
         return Collections.unmodifiableList(optionalGroups);
     }
 
-    /** Returns all full groups, including alternatives from variant paths. */
-    public List<PhraseConstraintGroup> getFullGroups() {
-        return fullGroups;
+    public PhraseConstraintGroup getFullGroup() {
+        return fullGroup;
     }
 
     public boolean testMandatory(CodedSequence[] positions) {
