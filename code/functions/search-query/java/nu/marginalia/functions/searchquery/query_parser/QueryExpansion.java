@@ -4,7 +4,6 @@ import ca.rmen.porterstemmer.PorterStemmer;
 import com.google.inject.Inject;
 import nu.marginalia.functions.searchquery.query_parser.model.QWord;
 import nu.marginalia.functions.searchquery.query_parser.model.QWordGraph;
-import nu.marginalia.functions.searchquery.query_parser.model.QWordGraphPathLister;
 import nu.marginalia.functions.searchquery.query_parser.model.QWordPathsRenderer;
 import nu.marginalia.language.NounVariants;
 import nu.marginalia.segmentation.NgramLexicon;
@@ -42,9 +41,17 @@ public class QueryExpansion {
             strategy.expand(graph);
         }
 
-        return new Expansion(QWordPathsRenderer.render(graph),
-                createSegments(graph),
-                listFullConstraints(graph));
+        List<List<String>> optionalPhraseConstraints = createSegments(graph);
+
+        // also create a segmentation that is just the entire query
+        List<String> fullPhraseConstraint = new ArrayList<> ();
+        for (var qw : graph) {
+            fullPhraseConstraint.add(qw.word());
+        }
+
+        var compiled = QWordPathsRenderer.render(graph);
+
+        return new Expansion(compiled, optionalPhraseConstraints, fullPhraseConstraint);
     }
 
     public List<ExpansionStrategy> getStrategies(String langIsoCode) {
@@ -129,7 +136,6 @@ public class QueryExpansion {
                 case "vs" -> {
                     graph.addLink(graph.getPrevOriginal(qw).getFirst(),
                             graph.getNextOriginal(qw).getFirst());
-                    graph.addVariant(qw, "and");
                 }
             }
         }
@@ -242,42 +248,9 @@ public class QueryExpansion {
         return new ArrayList<>(constraints);
     }
 
-    /** Enumerate full phrase constraints from all paths through the graph.
-     */
-    private static List<List<String>> listFullConstraints(QWordGraph graph) {
-        var paths = QWordGraphPathLister.listPaths(graph);
-        var reachability = graph.reachability();
-
-        Set<List<String>> result = new LinkedHashSet<>();
-
-        outer:
-        for (var path : paths) {
-            List<String> words = path.stream()
-                    .sorted(reachability.topologicalComparator())
-                    .map(QWord::word)
-                    .toList();
-
-            if (words.size() < 2)
-                continue;
-
-            // Exclude paths that contain ngrams, as these will never be meaningful for position matching
-            // since they lack position data
-            for (String word : words) {
-                if (word.contains("_"))
-                    continue outer;
-            }
-
-            result.add(words);
-        }
-
-        return new ArrayList<>(result);
-    }
-
     public interface ExpansionStrategy {
         void expand(QWordGraph graph);
     }
 
-    public record Expansion(String compiledQuery,
-                            List<List<String>> optionalPharseConstraints,
-                            List<List<String>> fullPhraseConstraints) {}
+    public record Expansion(String compiledQuery, List<List<String>> optionalPharseConstraints, List<String> fullPhraseConstraint) {}
 }
