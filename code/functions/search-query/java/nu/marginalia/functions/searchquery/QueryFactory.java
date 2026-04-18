@@ -183,9 +183,8 @@ public class QueryFactory {
             queryBuilder.phraseConstraint(SearchPhraseConstraint.optional(coh));
         }
 
-        for (var cons : expansion.fullPhraseConstraints()) {
-            queryBuilder.phraseConstraint(SearchPhraseConstraint.full(cons));
-        }
+        // add a pseudo-constraint for the full query
+        queryBuilder.phraseConstraint(SearchPhraseConstraint.full(expansion.fullPhraseConstraint()));
         queryBuilder.compiledQuery(expansion.compiledQuery());
 
         if (!"NONE".equals(searchFilter.temporalBias())) {
