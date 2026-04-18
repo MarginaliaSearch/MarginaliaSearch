@@ -93,6 +93,10 @@ public class ConverterWriter implements AutoCloseable {
         catch (Exception ex) {
             logger.error("Writer thread failed", ex);
         }
+        catch (Throwable t) {
+            logger.error("Writer thread failed", t);
+            throw t;
+        }
     }
 
     public boolean switchBatch() {
