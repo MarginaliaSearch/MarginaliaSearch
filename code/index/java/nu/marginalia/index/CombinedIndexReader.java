@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -317,7 +318,14 @@ public class CombinedIndexReader {
     public void close() {
         var closeLock = closeLock();
 
-        closeLock.lock();
+        try {
+            // Diagnostic for detecting if we have a read lock that is stuck or abandoned somewhere
+            while (!closeLock.tryLock(10, TimeUnit.MINUTES)) {
+                logger.error("Failed to acquire close lock");
+            }
+        } catch (InterruptedException e) {
+            logger.info("Interrupted while waiting for close lock", e);
+        }
 
         try {
             forwardIndexReader.close();

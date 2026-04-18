@@ -122,34 +122,11 @@ public class IndexGrpcService
                                 connectivityView = ConnectivityView.empty();
                             }
 
-                            CombinedIndexReader index;
-                            Lock useLock;
+                            CombinedIndexReader index = indexReference.get();
 
-                            // Acquire a useLock to ensure locks acquired by the index threads
-                            // will guarantee to succeed.  This blocks the index reference from closing.
-                            for (;;) {
-                                index = indexReference.get();
-                                useLock = index.useLock();
-
-                                if (useLock.tryLock())
-                                    break;
-
-                                LockSupport.parkNanos(100_000);
-
-                                // This shouldn't really happen unless there's a failed index switch
-                                // or some similar disaster scenario.
-                                if (System.currentTimeMillis() > endTime) {
-                                    throw new IllegalStateException("Could not acquire index lock");
-                                }
-                            }
-
-                            try {
-                                SearchContext rankingContext = SearchContext.create(index, hasher, request, set, connectivityView);
-                                IndexQueryExecution queryExecution = new IndexQueryExecution(index, documentDbReader, rankingService, rankingContext, nodeId);
-                                return queryExecution.run();
-                            } finally {
-                                useLock.unlock();
-                            }
+                            SearchContext rankingContext = SearchContext.create(index, hasher, request, set, connectivityView);
+                            IndexQueryExecution queryExecution = new IndexQueryExecution(index, documentDbReader, rankingService, rankingContext, nodeId);
+                            return queryExecution.run();
 
                         }
                         catch (IndexQueryExecution.TooManySimultaneousQueriesException ex) {
