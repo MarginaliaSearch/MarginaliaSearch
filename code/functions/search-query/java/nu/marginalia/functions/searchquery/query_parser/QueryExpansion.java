@@ -270,6 +270,15 @@ public class QueryExpansion {
             result.add(words);
         }
 
+        // If no paths were found, add a constraint that matches the entire query
+        if (result.isEmpty()) {
+            List<String> fullPhraseConstraint = new ArrayList<> ();
+            for (var qw : graph) {
+                fullPhraseConstraint.add(qw.word());
+            }
+            result.add(fullPhraseConstraint);
+        }
+
         return new ArrayList<>(result);
     }
 
