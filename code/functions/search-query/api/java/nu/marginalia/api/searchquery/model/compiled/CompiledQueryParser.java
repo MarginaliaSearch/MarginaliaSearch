@@ -68,52 +68,38 @@ public class CompiledQueryParser {
 
     private static class AndOrState {
         private List<CqExpression> andState = new ArrayList<>();
-        private final List<CqExpression> orState = new ArrayList<>();
+        private List<CqExpression> orState = new ArrayList<>();
 
+        /** Add a new item to the and-list */
         public void and(CqExpression e) {
             andState.add(e);
         }
 
-        /** Close the current and-list into the or-list, then start a fresh and-list */
+        /** Turn the and-list into an expression on the or-list, and then start a new and-list */
         public void or() {
-            flushAnd();
+            closeAnd();
+
             andState = new ArrayList<>();
         }
 
-        private void flushAnd() {
-            if (andState.isEmpty())
-                orState.add(CqExpression.Ignore.INSTANCE);
-            else if (andState.size() == 1)
+        /** Turn the and-list into an And-expression in the or-list */
+        private void closeAnd() {
+            if (andState.size() == 1)
                 orState.add(andState.getFirst());
-            else
+            else if (!andState.isEmpty())
                 orState.add(new CqExpression.And(andState));
         }
 
-        /** Finalize the current and-list, then turn the or-list into an Or-expression.
-         * An Ignore branch alongside a real branch expresses optionality (e.g.
-         * the trailing alternative in "( bar | )"). If every branch is empty
-         * (ignore or nested empty()) the whole group collapses to empty() to
-         * preserve behavior for inputs like "( | )" and "| ( | ) |".
-         */
+        /** Finalize the current and-list, then turn the or-list into an Or-expression */
         public CqExpression closeOr() {
-            flushAnd();
+            closeAnd();
 
-            List<CqExpression> parts = new ArrayList<>(orState.size());
-            boolean anyReal = false;
-            for (var e : orState) {
-                if (e instanceof CqExpression.Ignore) {
-                    parts.add(e);
-                } else if (!e.equals(CqExpression.empty())) {
-                    parts.add(e);
-                    anyReal = true;
-                }
-            }
-
-            if (!anyReal)
+            if (orState.isEmpty())
                 return CqExpression.empty();
-            if (parts.size() == 1)
-                return parts.getFirst();
-            return new CqExpression.Or(parts);
+            if (orState.size() == 1)
+                return orState.getFirst();
+
+            return new CqExpression.Or(orState);
         }
     }
 

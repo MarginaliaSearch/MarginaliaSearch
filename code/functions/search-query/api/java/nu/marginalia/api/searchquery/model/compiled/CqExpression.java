@@ -127,23 +127,4 @@ public sealed interface CqExpression {
         }
     }
 
-    record Ignore() implements CqExpression {
-        public static final Ignore INSTANCE = new Ignore();
-
-        @Override
-        public Stream<Word> stream() {
-            return Stream.empty();
-        }
-
-        @Override
-        public List<IntList> paths() {
-            return List.of(IntList.of());
-        }
-
-        @Override
-        public String toString() {
-            return "ignore";
-        }
-    }
-
 }
