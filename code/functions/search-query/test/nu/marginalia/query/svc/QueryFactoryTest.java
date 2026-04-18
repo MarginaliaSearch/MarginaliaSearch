@@ -212,7 +212,6 @@ public class QueryFactoryTest {
     @Test
     public void testExpansion() {
         var subquery = parseAndGetQuery("elden ring mechanical keyboard slackware linux duke nukem 3d").getTerms();
-
         System.out.println(subquery.getCompiledQuery());
     }
 
@@ -268,13 +267,11 @@ public class QueryFactoryTest {
     public void testExpansion10() {
         var subquery = parseAndGetQuery("when was captain james cook born");
         System.out.println(subquery);
-
     }
 
     @Test
     public void testExpansion11() {
         var subquery = parseAndGetQuery("traceroute vs tracepath");
-        System.out.println(subquery);
     }
 
     @Test
