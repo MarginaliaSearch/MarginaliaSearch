@@ -46,6 +46,10 @@ public class ConverterWriter implements AutoCloseable {
         if (null == domain)
             return;
 
+        if (!running) {
+            throw new IllegalStateException("Writer is not running");
+        }
+
         try {
             domainData.put(domain);
         }
@@ -96,6 +100,9 @@ public class ConverterWriter implements AutoCloseable {
         catch (Throwable t) {
             logger.error("Writer thread failed", t);
             throw t;
+        }
+        finally {
+            running = false;
         }
     }
 
