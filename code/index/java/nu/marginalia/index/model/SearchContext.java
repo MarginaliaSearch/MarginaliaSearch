@@ -256,7 +256,7 @@ public class SearchContext {
             constraintsFull.add(new PhraseConstraintGroupList.PhraseConstraintGroup(keywordHasher, queryTerms.getTermsRequireList(), termIdsAll));
         }
 
-        this.phraseConstraints = new PhraseConstraintGroupList(constraintsFull, constraintsMandatory, constraintsOptional);
+        this.phraseConstraints = new PhraseConstraintGroupList(constraintsFull.getFirst(), constraintsMandatory, constraintsOptional);
     }
 
     public int termFreqDocCount() {
