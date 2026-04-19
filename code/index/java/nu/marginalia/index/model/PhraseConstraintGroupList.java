@@ -135,7 +135,7 @@ public class PhraseConstraintGroupList {
         }
 
         public boolean test(IntList[] positions) {
-            int[] offsets = new int[positions.length];
+            int[] offsets = new int[presentCardinality];
             IntIterator[] sequences = new IntIterator[presentCardinality];
 
             for (int oi = 0, si = 0; oi < offsets.length; oi++) {
