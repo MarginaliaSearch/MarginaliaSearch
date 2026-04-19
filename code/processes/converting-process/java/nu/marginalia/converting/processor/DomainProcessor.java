@@ -26,6 +26,7 @@ import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.crawldata.CrawledDomain;
 import nu.marginalia.model.crawldata.CrawlerDomainStatus;
+import nu.marginalia.service.client.ServiceNotAvailableException;
 import nu.marginalia.util.ProcessingIterator;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
@@ -36,9 +37,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 
 public class DomainProcessor {
@@ -48,7 +46,6 @@ public class DomainProcessor {
     private final GeoIpDictionary geoIpDictionary;
     private final DomSampleClient domSampleClient;
     private final DomSampleClassifier domSampleClassifier;
-    private final ExecutorService domSampleExecutor = Executors.newCachedThreadPool();
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final boolean hasDomSamples;
@@ -68,7 +65,8 @@ public class DomainProcessor {
         this.domSampleClassifier = domSampleClassifier;
 
         geoIpDictionary.waitReady();
-        hasDomSamples = !Boolean.getBoolean("converter.ignoreDomSampleData") && domSampleClient.waitReady(Duration.ofSeconds(15));
+
+        hasDomSamples = Boolean.getBoolean("converter.useDomSampleData");
     }
 
     public SimpleProcessing simpleProcessing(SerializableCrawlDataStream dataStream, int sizeHint, Collection<String> extraKeywords) {
@@ -92,24 +90,37 @@ public class DomainProcessor {
     }
 
     /** Fetch and process the DOM sample and extract classifications */
-    private Set<DomSampleClassification> getDomainClassifications(String domainName) throws ExecutionException, InterruptedException {
+    private Set<DomSampleClassification> getDomainClassifications(String domainName) throws InterruptedException {
         if (!hasDomSamples) {
             return EnumSet.of(DomSampleClassification.UNCLASSIFIED);
         }
 
-        return domSampleClient
-                .getSampleAsync(domainName, domSampleExecutor)
-                .thenApply(domSampleClassifier::classifySample)
-                .handle((a,b) -> {
-                    if (b != null) {
-                        var cause = b.getCause();
-                        if (!(cause instanceof StatusRuntimeException sre && sre.getStatus() != Status.NOT_FOUND)) {
-                            logger.warn("Exception when fetching sample data", b);
-                        }
-                        return EnumSet.of(DomSampleClassification.UNCLASSIFIED);
-                    }
-                    return a;
-                }).get();
+        for (;;) {
+            try {
+                return domSampleClassifier.classifySample(
+                        domSampleClient.getSampleOrThrow(domainName)
+                );
+            }
+            catch (StatusRuntimeException sre) {
+
+                if (sre.getStatus().getCode() == Status.NOT_FOUND.getCode()) {
+                    break;
+                }
+
+                logger.warn("Failed to fetch DOM sample for {} -- {}, retrying in 10 seconds" , domainName, sre.getStatus().getDescription());
+            }
+            catch (ServiceNotAvailableException snae) {
+                logger.warn("Failed to fetch DOM sample for {}, waiting for DomSampleService availability" , domainName);
+            }
+
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+
+            Thread.sleep(Duration.ofSeconds(10));
+        }
+
+        return EnumSet.of(DomSampleClassification.UNCLASSIFIED);
     }
 
     @Nullable

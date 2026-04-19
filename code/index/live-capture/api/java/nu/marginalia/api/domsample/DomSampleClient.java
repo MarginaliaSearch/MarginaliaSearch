@@ -92,6 +92,11 @@ public class DomSampleClient {
                 .run(RpcDomainName.newBuilder().setDomainName(domainName).build());
     }
 
+    public RpcDomainSample getSampleOrThrow(String domainName) {
+        return channelPool.call(DomSampleApiGrpc.DomSampleApiBlockingStub::getSample)
+                .run(RpcDomainName.newBuilder().setDomainName(domainName).build());
+    }
+
     public List<RpcDomainSample> getAllSamples(String domainName) {
         try {
             Iterator<RpcDomainSample> val = channelPool.call(DomSampleApiGrpc.DomSampleApiBlockingStub::getAllSamples)
