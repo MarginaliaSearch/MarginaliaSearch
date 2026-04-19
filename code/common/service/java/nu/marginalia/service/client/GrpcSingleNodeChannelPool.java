@@ -52,7 +52,7 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
                     Thread.ofPlatform()
                         .name("grpc-pool-health-check-job")
                         .daemon()
-                        .start(r)
+                        .unstarted(r)
             );
 
     private final ScheduledFuture<?> healthCheckJob;
