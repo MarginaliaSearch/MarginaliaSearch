@@ -18,10 +18,7 @@ import org.slf4j.MarkerFactory;
 
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -49,6 +46,17 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
     private final Function<InstanceAddress, ManagedChannel> channelConstructor;
     private final Function<ManagedChannel, STUB> defaultStubConstructor;
 
+    // We don't really need more than one of these across all pools in a process
+    private static final ScheduledExecutorService connectionPoolScheduledJobExecutor =
+            Executors.newSingleThreadScheduledExecutor((r) ->
+                    Thread.ofPlatform()
+                        .name("grpc-pool-health-check-job")
+                        .daemon()
+                        .start(r)
+            );
+
+    private final ScheduledFuture<?> healthCheckJob;
+
     public GrpcSingleNodeChannelPool(ServiceRegistryIf serviceRegistryIf,
                                      ServiceKey<? extends PartitionTraits.Unicast> serviceKey,
                                      Function<InstanceAddress, ManagedChannel> channelConstructor,
@@ -63,6 +71,20 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
 
         serviceRegistryIf.registerMonitor(this);
 
+        onChange();
+
+        healthCheckJob = connectionPoolScheduledJobExecutor.scheduleAtFixedRate(
+                this::checkConnectionHealth, 300, 30, TimeUnit.SECONDS);
+    }
+
+    private synchronized void checkConnectionHealth() {
+        for (var channel : channels.values()) {
+            if (!channel.hasRecentError()) {
+                return;
+            }
+        }
+
+        logger.warn(grpcMarker, "Connection pool {} is degraded, attempting to repair", serviceKey);
         onChange();
     }
 
@@ -95,6 +117,7 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
         for (var channel : channels.values()) {
             channel.closeHard();
         }
+        healthCheckJob.cancel(true);
         channels.clear();
     }
 
@@ -209,11 +232,13 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
 
         @Override
         public int compareTo(@NotNull GrpcSingleNodeChannelPool<STUB>.ConnectionHolder o) {
-            int diff = Boolean.compare(hasConnection(), o.hasConnection());
+
+            int diff = Boolean.compare(hasRecentError(), o.hasRecentError());
+            if (diff != 0) return diff; // prefer false
+
+            diff = Boolean.compare(hasConnection(), o.hasConnection());
             if (diff != 0) return -diff; // prefer true
 
-            diff = Boolean.compare(hasRecentError(), o.hasRecentError());
-            if (diff != 0) return diff; // prefer false
 
             // If no error has been recorded (or both have recent errors), round-robin between the options
             return Long.compare(lastUsed, o.lastUsed);
