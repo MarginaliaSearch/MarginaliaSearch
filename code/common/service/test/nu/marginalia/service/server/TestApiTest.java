@@ -29,7 +29,7 @@ public class TestApiTest {
 
         System.out.println(cf.createMulti(null, TestApiGrpc::newBlockingStub).call(
                 TestApiGrpc.TestApiBlockingStub::increment
-        ).run(RpcInteger.newBuilder().setValue(5).build()));
+        ).run(RpcInteger.newBuilder().setValue(5).build(), (i,e)->{}));
 
         cf.close();
     }
