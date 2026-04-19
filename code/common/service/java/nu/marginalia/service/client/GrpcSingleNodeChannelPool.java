@@ -48,11 +48,11 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
 
     // We don't really need more than one of these across all pools in a process
     private static final ScheduledExecutorService connectionPoolScheduledJobExecutor =
-            Executors.newSingleThreadScheduledExecutor((r) ->
+            Executors.newSingleThreadScheduledExecutor(
                     Thread.ofPlatform()
                         .name("grpc-pool-health-check-job")
                         .daemon()
-                        .unstarted(r)
+                        .factory()
             );
 
     private final ScheduledFuture<?> healthCheckJob;
