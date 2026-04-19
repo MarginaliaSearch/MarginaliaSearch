@@ -26,6 +26,7 @@ import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.crawldata.CrawledDomain;
 import nu.marginalia.model.crawldata.CrawlerDomainStatus;
+import nu.marginalia.process.control.ProcessEventLog;
 import nu.marginalia.service.client.ServiceNotAvailableException;
 import nu.marginalia.util.ProcessingIterator;
 import org.apache.commons.lang3.StringUtils;
@@ -36,7 +37,10 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 public class DomainProcessor {
@@ -45,10 +49,14 @@ public class DomainProcessor {
     private final AnchorTagsSource anchorTagsSource;
     private final GeoIpDictionary geoIpDictionary;
     private final DomSampleClient domSampleClient;
+    private final ProcessEventLog eventLog;
     private final DomSampleClassifier domSampleClassifier;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final boolean hasDomSamples;
+
+    private final AtomicReference<Instant> domSampleDataDegradedLastNag = new AtomicReference<>();
+    private final AtomicBoolean domSampleDegraded = new AtomicBoolean(false);
 
     @Inject
     public DomainProcessor(DocumentProcessor documentProcessor,
@@ -56,12 +64,14 @@ public class DomainProcessor {
                            AnchorTagsSourceFactory anchorTagsSourceFactory,
                            DomSampleClient domSampleClient,
                            GeoIpDictionary geoIpDictionary,
+                           ProcessEventLog eventLog,
                            DomSampleClassifier domSampleClassifier) throws SQLException, InterruptedException {
         this.documentProcessor = documentProcessor;
         this.siteWords = siteWords;
         this.anchorTagsSource = anchorTagsSourceFactory.create();
         this.geoIpDictionary = geoIpDictionary;
         this.domSampleClient = domSampleClient;
+        this.eventLog = eventLog;
         this.domSampleClassifier = domSampleClassifier;
 
         geoIpDictionary.waitReady();
@@ -97,13 +107,19 @@ public class DomainProcessor {
 
         for (;;) {
             try {
-                return domSampleClassifier.classifySample(
+                var ret = domSampleClassifier.classifySample(
                         domSampleClient.getSampleOrThrow(domainName)
                 );
+
+                logOnDomSampleRecovered();
+
+                return ret;
             }
             catch (StatusRuntimeException sre) {
 
                 if (sre.getStatus().getCode() == Status.NOT_FOUND.getCode()) {
+                    logOnDomSampleRecovered();
+
                     break;
                 }
 
@@ -117,10 +133,34 @@ public class DomainProcessor {
                 throw new InterruptedException();
             }
 
+            logOnDomSampleStuck();
+
             Thread.sleep(Duration.ofSeconds(10));
         }
 
         return EnumSet.of(DomSampleClassification.UNCLASSIFIED);
+    }
+
+    private void logOnDomSampleStuck() {
+        domSampleDegraded.set(true);
+
+        Instant now = Instant.now();
+        Instant val = domSampleDataDegradedLastNag.get();
+
+        if (val == null || val.isBefore(now.minus(Duration.ofMinutes(30)))) {
+            if (domSampleDataDegradedLastNag.compareAndSet(val, now)) {
+                eventLog.logEvent("CONVERTER-STUCK",
+                        "Converter waiting for DOM sample availability.  REALTIME node may be degraded.");
+            }
+        }
+    }
+
+    private void logOnDomSampleRecovered() {
+        if (domSampleDegraded.compareAndSet(true, false)) {
+            domSampleDataDegradedLastNag.set(null);
+            eventLog.logEvent("CONVERTER-RECOVERED",
+                    "Converter is no longer waiting for DOM sample availability.");
+        }
     }
 
     @Nullable
