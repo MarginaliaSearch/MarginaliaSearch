@@ -7,6 +7,7 @@ import nu.marginalia.service.discovery.property.ServiceEndpoint;
 import nu.marginalia.service.discovery.property.ServiceKey;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.locks.InterProcessSemaphoreV2;
+import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.Watcher;
@@ -18,7 +19,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static nu.marginalia.service.discovery.property.ServiceEndpoint.InstanceAddress;
 
@@ -39,6 +42,9 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
 
     private final List<String> livenessPaths = new ArrayList<>();
 
+    private final List<ServiceMonitorIf> registeredMonitors = new CopyOnWriteArrayList<>();
+    private final AtomicBoolean sessionLost = new AtomicBoolean(false);
+
     @Inject
     public ZkServiceRegistry(CuratorFramework curatorFramework) {
         try {
@@ -48,6 +54,9 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
             if (!curatorFramework.blockUntilConnected(30, TimeUnit.SECONDS)) {
                 throw new IllegalStateException("Failed to connect to zookeeper after 30s");
             }
+
+            curatorFramework.getConnectionStateListenable().addListener(
+                    (client, newState) -> onConnectionStateChanged(newState));
 
             Runtime.getRuntime().addShutdownHook(
                     new Thread(this::shutDown, "ZkServiceRegistry shutdown hook")
@@ -77,6 +86,33 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
                 .forPath(path, payload);
 
         return endpoint;
+    }
+
+    private void onConnectionStateChanged(ConnectionState state) {
+        switch (state) {
+            case LOST -> {
+                logger.warn("ZK session lost; will re-arm watches on reconnect");
+                sessionLost.set(true);
+            }
+            case CONNECTED, RECONNECTED -> {
+                if (!sessionLost.compareAndSet(true, false))
+                    return;
+
+                logger.info("ZK session re-established; re-arming {} monitor(s)",
+                        registeredMonitors.size());
+
+                for (var monitor : registeredMonitors) {
+                    try {
+                        installWatches(monitor);
+                        // Reconcile anything that changed while we were blind
+                        monitor.onChange();
+                    } catch (Exception ex) {
+                        logger.error("Failed to re-arm watches for {}", monitor.getKey(), ex);
+                    }
+                }
+            }
+            default -> {}
+        }
     }
 
     @Override
@@ -220,8 +256,17 @@ public class ZkServiceRegistry implements ServiceRegistryIf {
     }
 
     public void registerMonitor(ServiceMonitorIf monitor) throws Exception {
-        if (stopped)
-            logger.info("Not registering monitor for {} because the registry is stopped", monitor.getKey());
+        if (stopped) {
+            logger.info("Not registering monitor for {} because the registry is stopped",
+                    monitor.getKey());
+            return;  // original code logged but fell through; almost certainly a pre-existing bug
+        }
+
+        installWatches(monitor);
+        registeredMonitors.add(monitor);
+    }
+
+    private void installWatches(ServiceMonitorIf monitor) throws Exception {
 
         String path = monitor.getKey().toPath();
 
