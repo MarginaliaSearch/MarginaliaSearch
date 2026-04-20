@@ -2,6 +2,7 @@ package nu.marginalia.service.client;
 
 import com.google.common.collect.Sets;
 import io.grpc.ManagedChannel;
+import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.prometheus.metrics.core.metrics.Counter;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
@@ -78,6 +79,7 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
     }
 
     private synchronized void checkConnectionHealth() {
+
         for (var channel : channels.values()) {
             if (!channel.hasRecentError()) {
                 return;
@@ -296,7 +298,10 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
                 return ret;
             }
             catch (Exception e) {
-                holder.flagError();
+                if (shouldFlagAsError(e)) {
+                    holder.flagError();
+                }
+
                 errorCounter.labelValues(serviceKeyStr).inc();
 
                 exceptions.add(e);
@@ -331,7 +336,11 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
             }
             catch (Exception e) {
                 ret.add(CompletableFuture.failedFuture(e));
-                holder.flagError();
+
+                if (shouldFlagAsError(e)) {
+                    holder.flagError();
+                }
+
                 exceptions.add(e);
             }
         }
@@ -348,6 +357,27 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
         }
 
         return ret;
+    }
+
+    private boolean shouldFlagAsError(Exception e) {
+
+        // "other exception"
+
+        if (!(e instanceof StatusRuntimeException sre))
+            return true;
+
+        // GRPC exception, we flag as bad if the status code indicates a problem
+        // with the connection or the state of the downstream service
+
+        return switch (sre.getStatus().getCode()) {
+            case UNAVAILABLE,
+                 DEADLINE_EXCEEDED,
+                 INTERNAL,
+                 UNKNOWN,
+                 DATA_LOSS,
+                 UNAUTHENTICATED -> true;
+            default -> false;
+        };
     }
 
     /** Create a call for the given method on the given node.
