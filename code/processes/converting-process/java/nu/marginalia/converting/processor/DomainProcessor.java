@@ -100,70 +100,6 @@ public class DomainProcessor {
         }
     }
 
-    /** Fetch and process the DOM sample and extract classifications */
-    private Set<DomSampleClassification> getDomainClassifications(String domainName) throws InterruptedException {
-        if (!hasDomSamples) {
-            return EnumSet.of(DomSampleClassification.UNCLASSIFIED);
-        }
-
-        for (;;) {
-            try {
-                var ret = domSampleClassifier.classifySample(
-                        domSampleClient.getSampleOrThrow(domainName)
-                );
-
-                logOnDomSampleRecovered();
-
-                return ret;
-            }
-            catch (StatusRuntimeException sre) {
-
-                if (sre.getStatus().getCode() == Status.NOT_FOUND.getCode()) {
-                    logOnDomSampleRecovered();
-
-                    break;
-                }
-
-                logger.warn("Failed to fetch DOM sample for {} -- {}, retrying in 10 seconds" , domainName, sre.getStatus().getDescription());
-            }
-            catch (ServiceNotAvailableException snae) {
-                logger.warn("Failed to fetch DOM sample for {}, waiting for DomSampleService availability" , domainName);
-            }
-
-            if (Thread.interrupted()) {
-                throw new InterruptedException();
-            }
-
-            logOnDomSampleStuck();
-
-            Thread.sleep(Duration.ofSeconds(10));
-        }
-
-        return EnumSet.of(DomSampleClassification.UNCLASSIFIED);
-    }
-
-    private void logOnDomSampleStuck() {
-        domSampleDegraded.set(true);
-
-        Instant now = Instant.now();
-        Instant val = domSampleDataDegradedLastNag.get();
-
-        if (val == null || val.isBefore(now.minus(Duration.ofMinutes(30)))) {
-            if (domSampleDataDegradedLastNag.compareAndSet(val, now)) {
-                eventLog.logEvent("CONVERTER-STUCK",
-                        "Converter waiting for DOM sample availability.  REALTIME node may be degraded.");
-            }
-        }
-    }
-
-    private void logOnDomSampleRecovered() {
-        if (domSampleDegraded.compareAndSet(true, false)) {
-            domSampleDataDegradedLastNag.set(null);
-            eventLog.logEvent("CONVERTER-RECOVERED",
-                    "Converter is no longer waiting for DOM sample availability.");
-        }
-    }
-
     @Nullable
     public ProcessedDomain fullProcessing(SerializableCrawlDataStream dataStream) {
         try {
@@ -465,5 +401,70 @@ public class DomainProcessor {
         };
     }
 
+
+
+    /** Fetch and process the DOM sample and extract classifications */
+    private Set<DomSampleClassification> getDomainClassifications(String domainName) throws InterruptedException {
+        if (!hasDomSamples) {
+            return EnumSet.of(DomSampleClassification.UNCLASSIFIED);
+        }
+
+        for (;;) {
+            try {
+                var ret = domSampleClassifier.classifySample(
+                        domSampleClient.getSampleOrThrow(domainName)
+                );
+
+                logOnDomSampleRecovered();
+
+                return ret;
+            }
+            catch (StatusRuntimeException sre) {
+
+                if (sre.getStatus().getCode() == Status.NOT_FOUND.getCode()) {
+                    logOnDomSampleRecovered();
+
+                    break;
+                }
+
+                logger.warn("Failed to fetch DOM sample for {} -- {}, retrying in 10 seconds" , domainName, sre.getStatus().getDescription());
+            }
+            catch (ServiceNotAvailableException snae) {
+                logger.warn("Failed to fetch DOM sample for {}, waiting for DomSampleService availability" , domainName);
+            }
+
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+
+            logOnDomSampleStuck();
+
+            Thread.sleep(Duration.ofSeconds(10));
+        }
+
+        return EnumSet.of(DomSampleClassification.UNCLASSIFIED);
+    }
+
+    private void logOnDomSampleStuck() {
+        domSampleDegraded.set(true);
+
+        Instant now = Instant.now();
+        Instant val = domSampleDataDegradedLastNag.get();
+
+        if (val == null || val.isBefore(now.minus(Duration.ofMinutes(30)))) {
+            if (domSampleDataDegradedLastNag.compareAndSet(val, now)) {
+                eventLog.logEvent("CONVERTER-STUCK",
+                        "Converter waiting for DOM sample availability.  REALTIME node may be degraded.");
+            }
+        }
+    }
+
+    private void logOnDomSampleRecovered() {
+        if (domSampleDegraded.compareAndSet(true, false)) {
+            domSampleDataDegradedLastNag.set(null);
+            eventLog.logEvent("CONVERTER-RECOVERED",
+                    "Converter is no longer waiting for DOM sample availability.");
+        }
+    }
 
 }
