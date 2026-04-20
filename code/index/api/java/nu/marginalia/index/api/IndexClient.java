@@ -82,7 +82,6 @@ public class IndexClient {
     /** Execute a query on the index partitions and return the combined results. */
     public AggregateQueryResponse executeQueries(RpcIndexQuery indexRequest, Pagination pagination) {
 
-        final int requestedMaxResults = indexRequest.getQueryLimits().getResultsTotal();
         int filterTier = indexRequest.getNsfwFilterTierValue();
 
         Instant bailInstant  = Instant.now().plusMillis((int) (2 * indexRequest.getQueryLimits().getTimeoutMs()));
@@ -100,6 +99,7 @@ public class IndexClient {
                     continue;
                 holder = h;
                 channel = h.get();
+                break;
             }
 
             if (null == channel)
@@ -122,26 +122,24 @@ public class IndexClient {
                     if (future.isDone()) {
                         results.addAll(future.resultNow().getResultsList());
                     }
+                    else {
+                        future.cancel(true);
+                    }
                 }
                 else {
                     results.addAll(future.get(Duration.between(now, bailInstant).toMillis(), TimeUnit.MILLISECONDS).getResultsList());
                 }
             }
             catch (ExecutionException ex) {
-
                 if (ex.getCause() instanceof StatusRuntimeException sre) {
-                    if (sre.getStatus() == Status.DEADLINE_EXCEEDED) {
-                        logger.warn("Timeout: {}", sre.getMessage());
-                    }
-                    else if (sre.getStatus() == Status.UNAVAILABLE) {
-                        holder.flagError();
-                        logger.warn("Unavailable: {}", sre.getMessage());
-                    }
-                    else if (sre.getStatus() == Status.INTERNAL) {
-                        logger.warn("Internal Error in index: {}", sre);
-                    }
-                    else {
-                        logger.error("Error while fetching results", ex.getCause());
+                    switch (sre.getStatus().getCode()) {
+                        case DEADLINE_EXCEEDED -> logger.warn("Timeout: {}", sre.getMessage());
+                        case UNAVAILABLE -> {
+                            logger.warn("Unavailable: {}", sre.getMessage());
+                            holder.flagError();
+                        }
+                        case INTERNAL -> logger.warn("Internal Error in index: {}", sre);
+                        default -> logger.error("Error while fetching results", ex.getCause());
                     }
                 }
                 else {
