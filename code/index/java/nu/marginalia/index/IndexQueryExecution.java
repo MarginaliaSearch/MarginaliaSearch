@@ -105,7 +105,7 @@ public class IndexQueryExecution {
         this.rankingService = rankingService;
         this.rankingContext = rankingContext;
 
-        resultHeap = new ResultPriorityQueue(rankingContext.limitTotal * 2);
+        resultHeap = new ResultPriorityQueue(rankingContext.limitTotal, rankingContext.limitByDomain);
 
         budget = rankingContext.budget;
         limitByDomain = rankingContext.limitByDomain;
@@ -159,18 +159,12 @@ public class IndexQueryExecution {
         List<RankableDocument> resultsList = new ArrayList<>(resultHeap.size());
         LongList idsList = new LongArrayList(limitTotal);
 
-        Int2IntOpenHashMap domainCount = new Int2IntOpenHashMap(limitByDomain);
-
         for (RankableDocument item : resultHeap) {
             if (resultsList.size() >= limitTotal) {
                 break;
             }
 
             int domainId = item.domainId();
-
-            if (domainCount.addTo(domainId, 1) >= limitByDomain) {
-                continue;
-            }
 
             resultsList.add(item);
             item.resultsFromDomain = resultHeap.numResultsFromDomain(domainId);
@@ -412,7 +406,7 @@ public class IndexQueryExecution {
 
         // per-thread instances
         private final ScratchIntListPool pool = new ScratchIntListPool(64);
-        private final ResultPriorityQueue localResults = new ResultPriorityQueue(rankingContext.limitTotal);
+        private final ResultPriorityQueue localResults = new ResultPriorityQueue(rankingContext.limitTotal, rankingContext.limitByDomain);
 
         private final Lock indexLock = currentIndex.useLock();
 
