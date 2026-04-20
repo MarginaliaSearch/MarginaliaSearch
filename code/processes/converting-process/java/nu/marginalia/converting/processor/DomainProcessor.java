@@ -22,6 +22,7 @@ import nu.marginalia.geoip.sources.AsnTable;
 import nu.marginalia.io.SerializableCrawlDataStream;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.crawl.DomainIndexingState;
+import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.crawldata.CrawledDomain;
@@ -127,6 +128,8 @@ public class DomainProcessor {
 
             Set<DomSampleClassification> classifications = getDomainClassifications(crawledDomain.getDomain());
 
+            int affiliateLinkCount = 0;
+
             try (var deduplicator = new LshDocumentDeduplicator()) {
                 while (dataStream.hasNext()) {
                     if (!(dataStream.next() instanceof CrawledDocument doc))
@@ -147,6 +150,11 @@ public class DomainProcessor {
                         }
 
                         if (processedDoc.isOk() && processedDoc.words != null && processedDoc.details != null) {
+
+                            if (processedDoc.details.features.contains(HtmlFeature.AFFILIATE_LINK)) {
+                                affiliateLinkCount++;
+                            }
+
                             classifications.forEach(classification -> {
                                 if (classification.htmlFeature == null) return;
 
@@ -162,8 +170,18 @@ public class DomainProcessor {
                 }
             }
 
-            // Add late keywords and features from domain-level information
+            if (affiliateLinkCount >= 10) {
+                // If we've found many pages with affiliate links, paint the whole domain as having affiliate links
+                // as sometimes we find content farms that funnel into documents containing all the nonsense
 
+                for (var doc : ret.documents) {
+                    if (doc.details == null) continue;
+
+                    doc.details.features.add(HtmlFeature.AFFILIATE_LINK);
+                }
+            }
+
+            // Add late keywords and features from domain-level information
             calculateStatistics(ret, externalDomainLinks);
 
             return ret;
