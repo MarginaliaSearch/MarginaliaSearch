@@ -40,6 +40,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
@@ -56,7 +57,7 @@ public class DomainProcessor {
     private final boolean hasDomSamples;
 
     private final AtomicReference<Instant> domSampleDataDegradedLastNag = new AtomicReference<>();
-    private final AtomicBoolean domSampleDegraded = new AtomicBoolean(false);
+    private final AtomicInteger domSampleStuckThreads = new AtomicInteger(0);
 
     @Inject
     public DomainProcessor(DocumentProcessor documentProcessor,
@@ -446,7 +447,8 @@ public class DomainProcessor {
     }
 
     private void logOnDomSampleStuck() {
-        domSampleDegraded.set(true);
+        if (domSampleStuckThreads.incrementAndGet() != 0)
+            return;
 
         Instant now = Instant.now();
         Instant val = domSampleDataDegradedLastNag.get();
@@ -460,11 +462,14 @@ public class DomainProcessor {
     }
 
     private void logOnDomSampleRecovered() {
-        if (domSampleDegraded.compareAndSet(true, false)) {
-            domSampleDataDegradedLastNag.set(null);
-            eventLog.logEvent("CONVERTER-RECOVERED",
-                    "Converter is no longer waiting for DOM sample availability.");
+        if (0 != domSampleStuckThreads.decrementAndGet()) {
+            return;
         }
+
+        domSampleDataDegradedLastNag.set(null);
+
+        eventLog.logEvent("CONVERTER-RECOVERED",
+                "Converter is no longer waiting for DOM sample availability.");
     }
 
 }
