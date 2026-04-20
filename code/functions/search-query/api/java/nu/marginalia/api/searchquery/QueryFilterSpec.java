@@ -130,6 +130,7 @@ public sealed interface QueryFilterSpec {
                         .addAllTermsExclude(termsExclude)
                         .addAllTermsPromote(termsPromote)
                         .addAllTermsPromoteAmounts(termsPromoteAmounts)
+                        .setQueryStrategy(queryStrategy.name())
                         .setQuality(IndexProtobufCodec.convertSpecLimit(quality))
                         .setYear(IndexProtobufCodec.convertSpecLimit(year))
                         .setSize(IndexProtobufCodec.convertSpecLimit(size))
