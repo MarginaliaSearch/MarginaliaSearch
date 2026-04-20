@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import nu.marginalia.nodecfg.NodeConfigurationService;
+import nu.marginalia.nodecfg.model.NodeProfile;
 import nu.marginalia.service.client.GrpcChannelPoolFactory;
 import nu.marginalia.service.client.GrpcSingleNodeChannelPool;
 import nu.marginalia.service.discovery.property.ServiceKey;
@@ -24,13 +25,19 @@ import java.util.concurrent.ExecutorService;
 public class DomSampleClient {
     private final GrpcSingleNodeChannelPool<DomSampleApiGrpc.DomSampleApiBlockingStub> channelPool;
     private static final Logger logger = LoggerFactory.getLogger(DomSampleClient.class);
+    private final NodeConfigurationService nodeConfigurationService;
 
     @Inject
-    public DomSampleClient(GrpcChannelPoolFactory factory, NodeConfigurationService service) {
+    public DomSampleClient(GrpcChannelPoolFactory factory, NodeConfigurationService nodeConfigurationService) {
+        this.nodeConfigurationService = nodeConfigurationService;
 
         // The client is only interested in the primary node
         var key = ServiceKey.forGrpcApi(DomSampleApiGrpc.class, ServicePartition.any());
         this.channelPool = factory.createSingle(key, DomSampleApiGrpc::newBlockingStub);
+    }
+
+    public boolean isSupported() {
+        return nodeConfigurationService.hasNodeProfile(NodeProfile.REALTIME);
     }
 
     public Optional<RpcDomainSample> getSample(String domainName) {

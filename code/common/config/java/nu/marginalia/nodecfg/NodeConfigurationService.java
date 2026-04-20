@@ -123,4 +123,8 @@ public class NodeConfigurationService {
 
         }
     }
+
+    public boolean hasNodeProfile(NodeProfile profile) {
+        return getAll().stream().anyMatch(c -> c.profile() == profile);
+    }
 }
