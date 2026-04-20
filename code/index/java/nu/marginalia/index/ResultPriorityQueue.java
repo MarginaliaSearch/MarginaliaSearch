@@ -1,8 +1,6 @@
 package nu.marginalia.index;
 
-import com.google.common.collect.MinMaxPriorityQueue;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import nu.marginalia.index.model.RankableDocument;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.jetbrains.annotations.NotNull;
@@ -12,44 +10,115 @@ import java.util.*;
 /** A priority queue for search results. This class is not thread-safe.
  */
 public class ResultPriorityQueue implements Iterable<RankableDocument> {
-    private final MinMaxPriorityQueue<RankableDocument> queue;
-    private final Int2IntOpenHashMap resultsPerDomain = new Int2IntOpenHashMap(10_000);
+    private final TreeSet<RankableDocument> queue;
+
+    /** The number of results seen from each domain (including rejects) */
+    private final Int2IntOpenHashMap resultsPerDomainSeen;
+
+    /** The number of results currently held from each domain */
+    private final Int2IntOpenHashMap resultsPerDomainHeld;
 
     private int itemsProcessed = 0;
+    private final int limit;
+    private final int domainLimit;
 
-    public ResultPriorityQueue(int limit) {
-        this.queue = MinMaxPriorityQueue.<RankableDocument>orderedBy(Comparator.naturalOrder()).maximumSize(limit).create();
+    public ResultPriorityQueue(int limit, int domainLimit) {
+        this.queue = new TreeSet<>(Comparator.naturalOrder());
+
+        this.resultsPerDomainHeld = new Int2IntOpenHashMap(limit);
+        this.resultsPerDomainHeld.defaultReturnValue(0);
+
+        this.resultsPerDomainSeen = new Int2IntOpenHashMap(2_500);
+        this.resultsPerDomainSeen.defaultReturnValue(0);
+
+        this.limit = limit;
+        this.domainLimit = domainLimit;
     }
 
     public @NotNull Iterator<RankableDocument> iterator() {
-        ArrayList<RankableDocument> results = new ArrayList<>(queue);
-        results.sort(Comparator.naturalOrder());
-        return results.iterator();
+        return queue.iterator();
     }
 
     public void addAll(ResultPriorityQueue otherQueue) {
-        queue.addAll(otherQueue.queue);
-        otherQueue.resultsPerDomain.int2IntEntrySet().fastForEach(entry -> {
-            resultsPerDomain.addTo(entry.getIntKey(), entry.getIntValue());
+        for (var doc : otherQueue) {
+            // Add with no statistics
+            add(doc, false);
+        }
+
+        // Merge the statistics
+        otherQueue.resultsPerDomainSeen.int2IntEntrySet().fastForEach(entry -> {
+            resultsPerDomainSeen.addTo(entry.getIntKey(), entry.getIntValue());
         });
         itemsProcessed += otherQueue.itemsProcessed;
     }
 
     public boolean add(@NotNull RankableDocument document) {
+        return add(document, true);
+    }
+
+    private boolean add(@NotNull RankableDocument document, boolean updateStats) {
         if (document.item == null)
             return false;
 
         int domainId = UrlIdCodec.getDomainId(document.combinedDocumentId);
 
-        itemsProcessed++;
+        if (updateStats) {
+            resultsPerDomainSeen.addTo(domainId, 1);
+            itemsProcessed++;
+        }
+
+        // Short circuit if we're already at the limit and this item is worse than the last one
+        if (queue.size() >= limit) {
+            var last = queue.last();
+            if (last.item.compareTo(document.item) <= 0) {
+                return false;
+            }
+        }
+
         queue.add(document);
-        resultsPerDomain.addTo(domainId, 1);
+
+        resultsPerDomainHeld.addTo(domainId, 1);
+
+        pruneDomain(domainId);
+        removeExcessItems();
 
         return true;
     }
 
+
+    private void removeExcessItems() {
+
+        while (queue.size() > limit) {
+            var item = queue.pollLast();
+
+            if (1 == resultsPerDomainHeld.addTo(item.domainId(), -1)) {
+                resultsPerDomainHeld.remove(item.domainId());
+            }
+        }
+
+    }
+
+    private void pruneDomain(int domainId) {
+        int heldCount = resultsPerDomainHeld.get(domainId);
+
+        if (heldCount < domainLimit) {
+            return;
+        }
+
+        for (var iter = queue.reversed().iterator(); iter.hasNext() && heldCount > domainLimit; ) {
+            var item = iter.next();
+
+            if (item.domainId() != domainId)
+                continue;
+
+            iter.remove();
+            resultsPerDomainHeld.addTo(domainId, -1);
+            heldCount--;
+        }
+    }
+
     public int numResultsFromDomain(int domainId) {
-        return resultsPerDomain.get(domainId);
+        return resultsPerDomainSeen.get(domainId);
     }
 
     public int size() {
