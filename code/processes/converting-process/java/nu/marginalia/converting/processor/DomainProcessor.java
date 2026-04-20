@@ -76,7 +76,8 @@ public class DomainProcessor {
 
         geoIpDictionary.waitReady();
 
-        hasDomSamples = Boolean.getBoolean("converter.useDomSampleData");
+        hasDomSamples = !Boolean.getBoolean("converter.ignoreDomSampleData")
+                && domSampleClient.isSupported();
     }
 
     public SimpleProcessing simpleProcessing(SerializableCrawlDataStream dataStream, int sizeHint, Collection<String> extraKeywords) {
