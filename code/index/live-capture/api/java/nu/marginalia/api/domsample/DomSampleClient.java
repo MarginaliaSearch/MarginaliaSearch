@@ -33,7 +33,10 @@ public class DomSampleClient {
 
         // The client is only interested in the primary node
         var key = ServiceKey.forGrpcApi(DomSampleApiGrpc.class, ServicePartition.any());
-        this.channelPool = factory.createSingle(key, DomSampleApiGrpc::newBlockingStub);
+
+        this.channelPool = factory.createSingle(key, (channel) -> DomSampleApiGrpc.newBlockingStub(channel)
+                .withMaxInboundMessageSize(Integer.MAX_VALUE)
+        );
     }
 
     public boolean isSupported() {
