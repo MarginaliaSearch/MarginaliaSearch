@@ -101,11 +101,16 @@ public class SparkService {
                     restEndpoint.port(),
                     params.configuration.externalAddress());
 
-            try {
-                String uriBase = "http://" + restEndpoint.host() + ":" + restEndpoint.port();
-                Files.writeString(Path.of("/tmp/rest-addr"), uriBase);
-            } catch (IOException e) {
-                e.printStackTrace();
+            // docker-specific kludge to allow the rest endpoint to be discovered from the health check,
+            // which is otherwise not possible since we have to bind to a specific internal interface on
+            // ipvlan configurations to avoid public access to the internal APIs.
+            if (Files.isDirectory(Path.of("/app"))) {
+                try {
+                    String uriBase = "http://" + restEndpoint.host() + ":" + restEndpoint.port();
+                    Files.writeString(Path.of("/tmp/rest-addr"), uriBase);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
             configureStaticFiles.run();

@@ -25,14 +25,31 @@ import java.util.concurrent.Executors;
  *
  */
 public class ServiceHealthCheckMain {
-    public static void main(String[] args) {
-        String endpoint = args[0];
-        String uriBase = null;
 
-        try {
-            uriBase = Files.readString(Path.of("/tmp/rest-addr"));
-        } catch (IOException e) {
-            uriBase = "http://localhost:80";
+    public static void main(String[] args) {
+        if (args.length != 1) {
+            System.out.println("Usage: ServiceHealthCheckMain <endpoint>");
+            System.exit(1);
+        }
+
+        String endpoint = args[0];
+        String uriBase = "";
+
+        if (Files.exists(Path.of("/app")) && endpoint.startsWith("/")) { // "in docker"
+            if (!Files.exists(Path.of("/tmp/rest-addr"))) {
+                System.out.println("No /tmp/rest-addr file found.");
+
+                System.exit(1);
+            }
+            try {
+                // In docker, on ipvlan interfaces, the service programmatically decides on a
+                // non-public interface to bind to, so we need to read the address from a file
+                uriBase = Files.readString(Path.of("/tmp/rest-addr"));
+            } catch (IOException e) {
+                e.printStackTrace();
+
+                System.exit(1);
+            }
         }
 
         String url = uriBase + endpoint;
@@ -54,7 +71,7 @@ public class ServiceHealthCheckMain {
                 System.exit(0);
             }
             else {
-                System.err.println("Health check failed: " + code);
+                System.out.println("Health check failed: " + code);
                 System.exit(1);
             }
         } catch (Exception e) {
