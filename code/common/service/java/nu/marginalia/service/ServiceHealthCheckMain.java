@@ -46,7 +46,7 @@ public class ServiceHealthCheckMain {
                 System.exit(1);
             }
         } catch (Exception e) {
-            System.err.println("Health check failed: " + e.getMessage());
+            e.printStackTrace();
             System.exit(1);
         }
     }
