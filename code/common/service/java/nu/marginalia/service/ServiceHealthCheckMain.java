@@ -37,7 +37,7 @@ public class ServiceHealthCheckMain {
 
         String url = uriBase + endpoint;
 
-        System.out.println("Health check: " + url);
+        System.out.println("Health check: '" + url + "'");
 
         HttpClient client = HttpClient.newBuilder()
                 .executor(Executors.newSingleThreadExecutor())
@@ -45,7 +45,7 @@ public class ServiceHealthCheckMain {
 
         try (client) {
             int code = client.send(HttpRequest.newBuilder()
-                        .uri(new URI(args[0]))
+                        .uri(new URI(url))
                         .timeout(Duration.ofSeconds(5))
                 .build(), HttpResponse.BodyHandlers.discarding())
                     .statusCode();
