@@ -16,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -106,6 +108,14 @@ public class JoobyService {
         var options = new ServerOptions();
         options.setHost(config.bindAddress());
         options.setPort(restEndpoint.port());
+
+        try {
+            String uriBase = "http://" + restEndpoint.host() + ":" + restEndpoint.port();
+            Files.writeString(Path.of("/tmp/rest-addr"), uriBase);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
 
         // Enable gzip compression of response data, but set compression to the lowest level
         // since it doesn't really save much more space to dial it up.  It's typically a

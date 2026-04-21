@@ -1,9 +1,12 @@
 package nu.marginalia.service;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.concurrent.Executors;
 
@@ -13,7 +16,7 @@ import java.util.concurrent.Executors;
  * Can be installed like
  *
  *     healthcheck:
- *       test: ["CMD-SHELL", "JAVA_TOOL_OPTIONS=\"\" JDK_JAVA_OPTIONS=\"\" java -Xmx64m -cp @/app/jib-classpath-file nu.marginalia.service.ServiceHealthCheckMain http://localhost:80/internal/ready"]
+ *       test: ["CMD-SHELL", "JAVA_TOOL_OPTIONS=\"\" JDK_JAVA_OPTIONS=\"\" java -Xmx64m -cp @/app/jib-classpath-file nu.marginalia.service.ServiceHealthCheckMain /internal/ready"]
  *       interval: 1m30s
  *       timeout: 10s
  *       retries: 3
@@ -23,7 +26,16 @@ import java.util.concurrent.Executors;
  */
 public class ServiceHealthCheckMain {
     public static void main(String[] args) {
-        String url = args[0];
+        String endpoint = args[0];
+        String uriBase = null;
+
+        try {
+            uriBase = Files.readString(Path.of("/tmp/rest-addr"));
+        } catch (IOException e) {
+            uriBase = "http://localhost:80";
+        }
+
+        String url = uriBase + endpoint;
 
         System.out.println("Health check: " + url);
 

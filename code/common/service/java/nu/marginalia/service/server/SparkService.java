@@ -14,6 +14,9 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 public class SparkService {
@@ -97,6 +100,13 @@ public class SparkService {
                     params.configuration.bindAddress(),
                     restEndpoint.port(),
                     params.configuration.externalAddress());
+
+            try {
+                String uriBase = "http://" + restEndpoint.host() + ":" + restEndpoint.port();
+                Files.writeString(Path.of("/tmp/rest-addr"), uriBase);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             configureStaticFiles.run();
 
