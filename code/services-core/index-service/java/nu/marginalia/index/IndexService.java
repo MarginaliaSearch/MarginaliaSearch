@@ -172,6 +172,13 @@ public class IndexService extends JoobyService {
         return Boolean.valueOf(opsService.isBusy()).toString();
     }
 
+    @Override
+    // binds to /internal/ready, used for healthchecks
+    public boolean isReady() {
+        return statefulIndex.isLoaded();
+    }
+
+
     public void initialize() {
         if (!initialized) {
             init.waitReady();
