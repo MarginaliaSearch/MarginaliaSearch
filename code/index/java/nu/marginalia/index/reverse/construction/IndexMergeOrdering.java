@@ -62,10 +62,5 @@ public final class IndexMergeOrdering {
             if (cause instanceof Error err) throw err;
             throw new RuntimeException(cause);
         }
-        finally {
-            queue.forEach(val -> {
-                val.future().cancel(true);
-            });
-        }
     }
 }
