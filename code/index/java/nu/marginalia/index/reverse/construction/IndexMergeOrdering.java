@@ -1,6 +1,7 @@
 package nu.marginalia.index.reverse.construction;
 
-import java.util.Comparator;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.PriorityQueue;
@@ -15,31 +16,37 @@ import java.util.function.BinaryOperator;
 public final class IndexMergeOrdering {
     private IndexMergeOrdering() {}
 
-    private record SizedFuture<T>(CompletableFuture<T> future, long estimatedSize) {}
+    private record SizedFuture<T>(CompletableFuture<T> future, int size)
+    implements Comparable<SizedFuture<T>>
+    {
+        public SizedFuture(T item) {
+            this(CompletableFuture.completedFuture(item), 1);
+        }
 
-    public interface Mergable {
-        long estimateSize();
+        @Override
+        public int compareTo(@NotNull IndexMergeOrdering.SizedFuture<T> o) {
+            return Integer.compare(size, o.size);
+        }
     }
 
-    public static <T extends Mergable> Optional<T> mergeAll(List<T> items, BinaryOperator<T> merge)
+    public static <T> Optional<T> mergeAll(List<T> items, BinaryOperator<T> merge)
     {
         if (items.isEmpty()) return Optional.empty();
         if (items.size() == 1) return Optional.of(items.getFirst());
 
         PriorityQueue<SizedFuture<T>> queue =
-                new PriorityQueue<>(items.size(), Comparator.comparing(SizedFuture::estimatedSize));
+                new PriorityQueue<>(items.size());
 
         for (T item : items) {
-            queue.add(new SizedFuture<>(
-                    CompletableFuture.completedFuture(item),
-                    item.estimateSize()));
+            queue.add(new SizedFuture<>(item));
         }
 
         while (queue.size() > 1) {
             SizedFuture<T> a = queue.poll();
             SizedFuture<T> b = queue.poll();
+
             CompletableFuture<T> merged = a.future.thenCombineAsync(b.future, merge);
-            queue.add(new SizedFuture<>(merged, a.estimatedSize + b.estimatedSize));
+            queue.add(new SizedFuture<>(merged, a.size + b.size));
         }
 
         try {
@@ -54,6 +61,11 @@ public final class IndexMergeOrdering {
             if (cause instanceof RuntimeException re) throw re;
             if (cause instanceof Error err) throw err;
             throw new RuntimeException(cause);
+        }
+        finally {
+            queue.forEach(val -> {
+                val.future().cancel(true);
+            });
         }
     }
 }
