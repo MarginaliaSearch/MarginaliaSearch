@@ -3,13 +3,17 @@ package nu.marginalia.index.reverse.construction.full;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.index.reverse.construction.DocIdRewriter;
+import nu.marginalia.index.reverse.construction.IndexMergeOrdering;
 import nu.marginalia.index.reverse.construction.PositionsFileConstructor;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class FullIndexConstructor {
@@ -18,6 +22,7 @@ public class FullIndexConstructor {
 
     public enum CreateReverseIndexSteps {
         CONSTRUCT,
+        MERGE,
         FINALIZE,
         FINISHED
     }
@@ -57,13 +62,17 @@ public class FullIndexConstructor {
 
             var journalVersions = journal.pages();
 
-            journalVersions
+            List<FullPreindexReference> preindexes = journalVersions
                 .parallelStream()
                 .map(in -> {
-                    preindexHeartbeat.progress("PREINDEX/MERGE", progress.incrementAndGet(), journalVersions.size());
+                    preindexHeartbeat.progress("PREINDEX", progress.incrementAndGet(), journalVersions.size());
                     return construct(in, posConstructor);
                 })
-                .reduce(this::merge)
+                .toList();
+
+            heartbeat.progress(CreateReverseIndexSteps.MERGE);
+
+            IndexMergeOrdering.mergeAll(preindexes, this::merge)
                 .ifPresent((index) -> {
                     heartbeat.progress(CreateReverseIndexSteps.FINALIZE);
                     finalizeIndex(index);
