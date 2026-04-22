@@ -1,8 +1,11 @@
 package nu.marginalia.index.reverse.construction.prio;
 
 import nu.marginalia.array.LongArrayFactory;
+import nu.marginalia.index.reverse.construction.IndexMergeOrdering;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 /** This is a dehydrated page of a PrioPreIndex, that only
@@ -14,6 +17,7 @@ public record PrioPreindexReference(
         Path countsFile,
         Path documentsFile
 )
+implements IndexMergeOrdering.Mergable
 {
     public PrioPreindexReference(PrioPreindexWordSegments segments, PrioPreindexDocuments documents) {
         this(segments.wordsFile, segments.countsFile, documents.file);
@@ -32,5 +36,15 @@ public record PrioPreindexReference(
                     documentsFile
             )
         );
+    }
+
+    @Override
+    public long estimateSize() {
+        try {
+            return Files.size(documentsFile);
+        }
+        catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
     }
 }
