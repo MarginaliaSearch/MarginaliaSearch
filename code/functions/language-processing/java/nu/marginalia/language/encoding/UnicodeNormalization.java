@@ -167,7 +167,7 @@ public interface UnicodeNormalization {
                     sb.append('g');
                 }
                 else if ("ĥȟḧḣḥẖḩḫħⱨ".indexOf(c) >= 0) {
-                    sb.append('g');
+                    sb.append('h');
                 }
                 else if ("iıíîìȉïḯīĩįịḭ".indexOf(c) >= 0) {
                     sb.append('i');
