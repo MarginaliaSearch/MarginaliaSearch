@@ -35,8 +35,12 @@ public class IndexOpsService {
         return run(searchSetService::recalculateSecondary);
     }
 
-    public boolean switchIndex() throws Exception {
-        return run(index::switchIndex).isPresent();
+    /** @return true if the index was switched
+     *
+     * @param additionalWork additional work to perform during the index switch operation
+     * */
+    public boolean switchIndex(StatefulIndex.SwitchoverTask additionalWork) throws Exception {
+        return run(() -> index.switchIndex(additionalWork)).isPresent();
     }
 
 

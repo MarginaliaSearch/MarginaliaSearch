@@ -192,8 +192,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
             }
 
             case SwitchIndex() -> {
-                indexOutbox.sendNotice(IndexMqEndpoints.SWITCH_INDEX, "here");
-                indexOutbox.sendNotice(IndexMqEndpoints.SWITCH_LINKDB, "we");
+                indexOutbox.sendNotice(IndexMqEndpoints.SWITCH_INDEX, "here we");
 
                 // Defer repartitioning the domains until after the index has been switched
                 indexOutbox.sendNotice(IndexMqEndpoints.INDEX_REPARTITION, "go");
