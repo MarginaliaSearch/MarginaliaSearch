@@ -54,6 +54,7 @@ public class PoolLru {
         reclaimThread.interrupt();
         reclaimThread.join();
     }
+
     /** Attempt to get a buffer already associated with the address */
     public MemoryPage get(long address) {
         var res = getAssociatedItem(address);
@@ -117,6 +118,11 @@ public class PoolLru {
                 LockSupport.unpark(reclaimThread);
             } else if (readIdx == writeIdx) {
                 if ((iter % 10000) == 0) {
+                    if (!running) {
+                        // This shouldn't be possible, but just in case we encounter this state,
+                        // let's blow up loudly and visibly rather than stall forever.
+                        throw new IllegalStateException("PoolLru is no longer running");
+                    }
                     LockSupport.unpark(reclaimThread);
                 }
 
