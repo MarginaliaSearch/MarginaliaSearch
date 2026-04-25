@@ -31,6 +31,8 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.sql.SQLException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 
 @Singleton
@@ -72,6 +74,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
     @Resume(behavior = ActorResumeBehavior.RETRY)
     public record ReindexPrio(long id) implements ActorStep {  public ReindexPrio() { this(-1); } }
     public record SwitchIndex() implements ActorStep {}
+    public record Repartition(String when) implements ActorStep {}
 
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
@@ -194,8 +197,17 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
             case SwitchIndex() -> {
                 indexOutbox.sendNotice(IndexMqEndpoints.SWITCH_INDEX, "here we");
 
-                // Defer repartitioning the domains until after the index has been switched
-                indexOutbox.sendNotice(IndexMqEndpoints.INDEX_REPARTITION, "go");
+                yield new Repartition(Instant.now().plus(Duration.ofMinutes(30)).toString());
+            }
+            case Repartition(String when) -> {
+                Instant end = Instant.parse(when);
+
+                if (end.isBefore(Instant.now())) {
+                    Thread.sleep(Duration.between(Instant.now(), end));
+                }
+
+                indexOutbox.sendNotice(IndexMqEndpoints.INDEX_REPARTITION, when);
+
                 yield new End();
             }
 
