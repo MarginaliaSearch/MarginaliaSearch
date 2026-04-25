@@ -109,6 +109,7 @@ public class StatefulIndex {
                 catch (Exception ex) {
                     logger.error("Failed to perform additional work", ex);
                 }
+                combinedIndexReader = null;
                 degradedState = true;
                 return false;
             }
@@ -165,9 +166,6 @@ public class StatefulIndex {
      * and closing these while the queries execute generally leads to a JVM SIGSEGV.
      */
     public IndexReference get() {
-        if (!isLoaded()) {
-            return new IndexReference(null, null);
-        }
 
         var indexReadLock = indexReplacementLock.readLock();
 
@@ -177,6 +175,8 @@ public class StatefulIndex {
         try {
             // grab a reference to avoid TOCTOU scenario
             var currentCIR = combinedIndexReader;
+            if (currentCIR == null || !currentCIR.isLoaded())
+                return new IndexReference(null, null);
 
             Lock instanceUseLock = currentCIR.useLock();
             if (instanceUseLock.tryLock()) {
