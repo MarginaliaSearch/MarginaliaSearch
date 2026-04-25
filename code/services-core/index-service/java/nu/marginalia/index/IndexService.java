@@ -138,7 +138,7 @@ public class IndexService extends JoobyService {
     @MqRequest(endpoint = IndexMqEndpoints.SWITCH_INDEX)
     public String switchIndex(String message) throws Exception {
         if (!opsService.switchIndex(() -> switchLinkdb())) {
-            throw new IllegalStateException("Ops lock busy");
+            throw new IllegalStateException("Ops lock busy or index switch failed");
         }
 
         return "ok";

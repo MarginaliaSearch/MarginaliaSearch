@@ -40,7 +40,7 @@ public class IndexOpsService {
      * @param additionalWork additional work to perform during the index switch operation
      * */
     public boolean switchIndex(StatefulIndex.SwitchoverTask additionalWork) throws Exception {
-        return run(() -> index.switchIndex(additionalWork)).isPresent();
+        return run(() -> index.switchIndex(additionalWork)).orElse(false);
     }
 
 
