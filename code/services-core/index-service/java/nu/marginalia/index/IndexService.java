@@ -135,8 +135,16 @@ public class IndexService extends JoobyService {
         return "ok";
     }
 
-    @MqRequest(endpoint = IndexMqEndpoints.SWITCH_LINKDB)
-    public void switchLinkdb(String unusedArg) throws Exception {
+    @MqRequest(endpoint = IndexMqEndpoints.SWITCH_INDEX)
+    public String switchIndex(String message) throws Exception {
+        if (!opsService.switchIndex(() -> switchLinkdb())) {
+            throw new IllegalStateException("Ops lock busy");
+        }
+
+        return "ok";
+    }
+
+    public void switchLinkdb() throws Exception {
         logger.info("Switching link databases");
 
         Path newPathDocs = IndexLocations
@@ -158,14 +166,6 @@ public class IndexService extends JoobyService {
         }
     }
 
-    @MqRequest(endpoint = IndexMqEndpoints.SWITCH_INDEX)
-    public String switchIndex(String message) throws Exception {
-        if (!opsService.switchIndex()) {
-            throw new IllegalStateException("Ops lock busy");
-        }
-
-        return "ok";
-    }
 
     @MqRequest(endpoint = IndexMqEndpoints.INDEX_IS_BLOCKED)
     public String isBlocked(String message) throws Exception {
@@ -175,7 +175,14 @@ public class IndexService extends JoobyService {
     @Override
     // binds to /internal/ready, used for healthchecks
     public boolean isReady() {
-        return statefulIndex.isLoaded();
+        if (!statefulIndex.isLoaded()) {
+            return false;
+        }
+
+        if (statefulIndex.isDegraded())
+            return false;
+
+        return true;
     }
 
 

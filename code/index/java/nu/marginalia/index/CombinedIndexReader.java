@@ -315,13 +315,14 @@ public class CombinedIndexReader {
 
     /** Close the indexes.  This blocks the calling thread until all users are finished.
      * */
-    public void close() {
+    public boolean close() {
         var closeLock = closeLock();
 
         try {
             // Diagnostic for detecting if we have a read lock that is stuck or abandoned somewhere
-            while (!closeLock.tryLock(10, TimeUnit.MINUTES)) {
+            if (!closeLock.tryLock(10, TimeUnit.MINUTES)) {
                 logger.error("Failed to acquire close lock");
+                return false;
             }
         } catch (InterruptedException e) {
             logger.info("Interrupted while waiting for close lock", e);
@@ -346,6 +347,7 @@ public class CombinedIndexReader {
         }
 
         // We don't unlock here, as the index is no longer readable ever
+        return true;
     }
 
     /** Returns true if index data is available */

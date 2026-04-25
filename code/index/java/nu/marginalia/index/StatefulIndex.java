@@ -8,7 +8,6 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -23,11 +22,19 @@ public class StatefulIndex {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final ReadWriteLock indexReplacementLock = new ReentrantReadWriteLock();
+
     @NotNull
     private final IndexFactory servicesFactory;
     private final ServiceEventLog eventLog;
 
     private volatile CombinedIndexReader combinedIndexReader;
+
+    /** The index has entered a degraded state and needs to be restarted
+     * to resolve its issues. */
+    private volatile boolean degradedState = false;
+
+    // Hint used to give the index switchover preference in indexReplacementLock acquisition
+    private volatile boolean wantSwitchoverHint = false;
 
     @Inject
     public StatefulIndex(@NotNull IndexFactory servicesFactory,
@@ -66,13 +73,45 @@ public class StatefulIndex {
         }
     }
 
-    public boolean switchIndex() {
+
+    /** Additional work to be performed during index switchover,
+     * hopefully holding a lock that excludes index queries
+     * (but in a degraded state, not guaranteed)
+     */
+    interface SwitchoverTask {
+        void call() throws Exception;
+    }
+
+    /** Returns true if the index was successfully switched
+     *
+     * @param additionalWork additional work to perform during the index switch operation
+     *
+     * */
+    public boolean switchIndex(SwitchoverTask additionalWork) {
         eventLog.logEvent("INDEX-SWITCH-BEGIN", "");
         Lock lock = indexReplacementLock.writeLock();
         try {
+            wantSwitchoverHint = true;
             lock.lock();
 
             CombinedIndexReader oldIndex = combinedIndexReader;
+
+            // We've been unable to close the index,
+            // switch the files anyway and enter a degraded state,
+            // that should provoke a restart.
+
+            if (oldIndex != null && !oldIndex.close()) {
+                eventLog.logEvent("INDEX-SWITCH-DEGRADED", "Failed to close old index");
+                servicesFactory.switchFiles();
+                try {
+                    additionalWork.call();
+                }
+                catch (Exception ex) {
+                    logger.error("Failed to perform additional work", ex);
+                }
+                degradedState = true;
+                return false;
+            }
 
             servicesFactory.switchFiles();
 
@@ -83,10 +122,12 @@ public class StatefulIndex {
             }
             combinedIndexReader = nextIndex;
 
-            if (oldIndex != null) {
-                Thread.ofPlatform()
-                        .name("IndexCloser")
-                        .start(oldIndex::close);
+            try {
+                additionalWork.call();
+            }
+            catch (Exception ex) {
+                logger.error("Failed to perform additional work", ex);
+                degradedState = true;
             }
 
             eventLog.logEvent("INDEX-SWITCH-OK", "");
@@ -97,11 +138,16 @@ public class StatefulIndex {
         }
         finally {
             lock.unlock();
+            wantSwitchoverHint = false;
         }
 
         return true;
     }
 
+    // for tests
+    public boolean switchIndex() {
+        return switchIndex(() -> {});
+    }
 
     /** Returns true if the service has initialized */
     public boolean isAvailable() {
@@ -123,17 +169,31 @@ public class StatefulIndex {
             return new IndexReference(null, null);
         }
 
-        for (;;) {
+        var indexReadLock = indexReplacementLock.readLock();
+
+        if (wantSwitchoverHint || !indexReadLock.tryLock())
+            return new IndexReference(null, null);
+
+        try {
             // grab a reference to avoid TOCTOU scenario
             var currentCIR = combinedIndexReader;
 
-            Lock useLock = currentCIR.useLock();
-            if (useLock.tryLock()) {
-                return new IndexReference(currentCIR, useLock);
+            Lock instanceUseLock = currentCIR.useLock();
+            if (instanceUseLock.tryLock()) {
+                return new IndexReference(currentCIR, instanceUseLock);
+            } else {
+                // indexReadLock.readLock being held means this shouldn't be possible,
+                // but let's blow up anyway in case there's a regression
+                throw new IllegalStateException("Expected to be able to acquire instance use lock");
             }
-            Thread.onSpinWait();
         }
+        finally {
+            indexReadLock.unlock();
+        }
+    }
 
+    public boolean isDegraded() {
+        return degradedState;
     }
 
     public static class IndexReference implements AutoCloseable {
