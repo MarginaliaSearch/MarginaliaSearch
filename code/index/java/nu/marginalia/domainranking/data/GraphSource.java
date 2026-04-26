@@ -1,15 +1,13 @@
 package nu.marginalia.domainranking.data;
 
-import org.jgrapht.Graph;
-
 import java.util.List;
 
 /** A source for the link graph (or pseudo-link graph)
- * to use when ranking domain. */
+ * to use when ranking domains. */
 public interface GraphSource {
 
     /** Construct the graph */
-    Graph<Integer, ?> getGraph();
+    DomainGraph getGraph();
 
     /** Return a list of domain ids for the given domain names.
      *  The function will also accept SQL-style wildcards,

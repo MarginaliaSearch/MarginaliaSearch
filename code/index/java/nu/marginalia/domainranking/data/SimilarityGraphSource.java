@@ -2,9 +2,6 @@ package nu.marginalia.domainranking.data;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
-import org.jgrapht.Graph;
-import org.jgrapht.graph.DefaultUndirectedWeightedGraph;
-import org.jgrapht.graph.DefaultWeightedEdge;
 
 import java.sql.SQLException;
 
@@ -21,8 +18,8 @@ public class SimilarityGraphSource extends AbstractGraphSource {
     public boolean isAvailable() {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                SELECT * 
-                FROM EC_DOMAIN_NEIGHBORS_2 
+                SELECT *
+                FROM EC_DOMAIN_NEIGHBORS_2
                 LIMIT 1
                 """);
              var rs = stmt.executeQuery())
@@ -35,40 +32,30 @@ public class SimilarityGraphSource extends AbstractGraphSource {
     }
 
     @Override
-    public Graph<Integer, ?> getGraph() {
-        Graph<Integer, ?> graph = new DefaultUndirectedWeightedGraph<>(DefaultWeightedEdge.class);
+    public DomainGraph getGraph() {
+        try {
+            DomainGraphBuilder builder = DomainGraphBuilder.undirectedWeighted();
+            addVertices(builder);
 
-        try (var conn = dataSource.getConnection()) {
-            addVertices(graph);
-
-            try (var stmt = conn.prepareStatement("""
-                SELECT DOMAIN_ID, NEIGHBOR_ID, RELATEDNESS
-                FROM EC_DOMAIN_NEIGHBORS_2
-                """))
-            {
-                var rs = stmt.executeQuery();
-                while (rs.next()) {
-                    int src = rs.getInt(1);
-                    int dest = rs.getInt(2);
-
-                    // Similarity data may contain domain ids that we don't have indexed,
-                    // omit these from the graph.
-                    if (!graph.containsVertex(src))
-                        continue;
-                    if (!graph.containsVertex(dest))
-                        continue;
-
-                    double weight = rs.getDouble(3);
-
-                    graph.addEdge(src, dest);
-                    graph.setEdgeWeight(src, dest, weight);
+            return builder.build(consumer -> {
+                try (var conn = dataSource.getConnection();
+                     var stmt = conn.prepareStatement("""
+                        SELECT DOMAIN_ID, NEIGHBOR_ID, RELATEDNESS
+                        FROM EC_DOMAIN_NEIGHBORS_2
+                        """);
+                     var rs = stmt.executeQuery())
+                {
+                    while (rs.next()) {
+                        consumer.accept(rs.getInt(1), rs.getInt(2), rs.getDouble(3));
+                    }
                 }
-            }
+                catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            });
         }
         catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
-
-        return graph;
     }
 }

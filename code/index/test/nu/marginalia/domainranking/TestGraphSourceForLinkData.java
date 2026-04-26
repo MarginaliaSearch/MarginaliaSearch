@@ -1,12 +1,12 @@
 package nu.marginalia.domainranking;
 
 import nu.marginalia.array.LongArrayFactory;
+import nu.marginalia.domainranking.data.DomainGraph;
+import nu.marginalia.domainranking.data.DomainGraphBuilder;
 import nu.marginalia.domainranking.data.GraphSource;
 import org.apache.commons.lang3.StringUtils;
-import org.jgrapht.Graph;
-import org.jgrapht.graph.DefaultDirectedGraph;
-import org.jgrapht.graph.DefaultEdge;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -44,57 +44,63 @@ public class TestGraphSourceForLinkData implements GraphSource {
     public String getName(int id) {
         if (!loaded) throw new IllegalStateException("Graph not loaded, run getGraph() first!");
 
-        return idToName.get(id);
+        String name = idToName.get(id);
+        if (null == name) {
+            return "id:"+Integer.toString(id);
+        }
+        return name;
     }
 
     @Override
-    public Graph<Integer, ?> getGraph() {
-        Graph<Integer, ?> graph = new DefaultDirectedGraph<>(DefaultEdge.class);
+    public DomainGraph getGraph() {
+        DomainGraphBuilder builder = DomainGraphBuilder.directed();
         idToName = new HashMap<>();
 
-        try (var stream = Files
-                .lines(domainDataPath)) {
+        try {
+            Files.readAllLines(domainDataPath).forEach(line -> {
+                String[] parts = line.split("\t");
+                if (!Character.isDigit(parts[0].charAt(0)))
+                    return;
+                idToName.put(Integer.parseInt(parts[0]), parts[1]);
+            });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
+        try (var stream = Files.lines(domainDataPath)) {
             stream.skip(1)
                     .mapMultiToInt((line, c) -> {
                         String[] parts = StringUtils.split(line, '\t');
                         int id = Integer.parseInt(parts[0]);
-                        String name = parts[1];
                         int node_affinity = Integer.parseInt(parts[3]);
                         if (node_affinity > 0) {
                             c.accept(id);
-//                            idToName.put(id, parts[1]);
                         }
                     })
-                    .forEach(graph::addVertex);
+                    .forEach(builder::addVertex);
         }
         catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        for (var path : linksDataPaths) {
-            try (var data = LongArrayFactory.mmapForReadingConfined(path)) {
-                data.forEach(0, data.size(), (pos, val) -> {
+        DomainGraph graph = builder.build(consumer -> {
+            for (var path : linksDataPaths) {
+                try (var data = LongArrayFactory.mmapForReadingConfined(path)) {
+                    data.forEach(0, data.size(), (pos, val) -> {
+                        val = Long.reverseBytes(val); // data is in "java endian", LongArray is in "C endian"
 
-                    val = Long.reverseBytes(val); // data is in "java endian", LongArray is in "C endian"
-
-                    int src = (int) (val >>> 32);
-                    int dest = (int) (val & 0xFFFF_FFFFL);
-
-                    if (graph.containsVertex(src) && graph.containsVertex(dest)) {
-                        graph.addEdge(src, dest);
-                    }
-                });
+                        int src = (int) (val >>> 32);
+                        int dest = (int) (val & 0xFFFF_FFFFL);
+                        consumer.accept(src, dest);
+                    });
+                }
+                catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }
-            catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        });
 
-            loaded = true;
-        }
-
-
+        loaded = true;
         return graph;
     }
-
 }

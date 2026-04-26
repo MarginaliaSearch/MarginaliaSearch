@@ -3,10 +3,6 @@ package nu.marginalia.domainranking.data;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.api.linkgraph.AggregateLinkGraphClient;
-import org.jgrapht.Graph;
-import org.jgrapht.graph.DefaultDirectedGraph;
-import org.jgrapht.graph.DefaultEdge;
-
 
 /** A source for the inverted link graph,
  * which is the same as the regular graph except
@@ -21,27 +17,19 @@ public class InvertedLinkGraphSource extends AbstractGraphSource {
     }
 
     @Override
-    public Graph<Integer, ?> getGraph() {
+    public DomainGraph getGraph() {
         try {
-            Graph<Integer, ?> graph = new DefaultDirectedGraph<>(DefaultEdge.class);
-
-            addVertices(graph);
+            DomainGraphBuilder builder = DomainGraphBuilder.directed();
+            addVertices(builder);
 
             var allLinks = graphClient.getAllDomainLinks();
-            var iter = allLinks.iterator();
-            while (iter.advance()) {
-                if (!graph.containsVertex(iter.dest())) {
-                    continue;
+            return builder.build(consumer -> {
+                var iter = allLinks.iterator();
+                while (iter.advance()) {
+                    // Invert the edge
+                    consumer.accept(iter.dest(), iter.source());
                 }
-                if (!graph.containsVertex(iter.source())) {
-                    continue;
-                }
-
-                // Invert the edge
-                graph.addEdge(iter.dest(), iter.source());
-            }
-
-            return graph;
+            });
         }
         catch (Exception ex) {
             throw new RuntimeException(ex);

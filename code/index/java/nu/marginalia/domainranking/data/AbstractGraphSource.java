@@ -1,7 +1,6 @@
 package nu.marginalia.domainranking.data;
 
 import com.zaxxer.hikari.HikariDataSource;
-import org.jgrapht.Graph;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -14,20 +13,20 @@ public abstract class AbstractGraphSource implements GraphSource {
     }
 
     @Override
-    public abstract Graph<Integer, ?> getGraph();
+    public abstract DomainGraph getGraph();
 
-    /** Adds all indexed domain ids as vertices to the graph. */
-    protected void addVertices(Graph<Integer, ?> graph) throws SQLException {
+    /** Adds all indexed domain ids as vertices to the builder. */
+    protected void addVertices(DomainGraphBuilder builder) throws SQLException {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                SELECT ID 
-                FROM EC_DOMAIN 
+                SELECT ID
+                FROM EC_DOMAIN
                 WHERE NODE_AFFINITY > 0
                 """);
              var rs = stmt.executeQuery())
         {
             while (rs.next()) {
-                graph.addVertex(rs.getInt(1));
+                builder.addVertex(rs.getInt(1));
             }
         }
     }
@@ -36,8 +35,8 @@ public abstract class AbstractGraphSource implements GraphSource {
     public List<Integer> domainIds(List<String> domainNameList) {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                SELECT ID 
-                FROM EC_DOMAIN 
+                SELECT ID
+                FROM EC_DOMAIN
                 WHERE DOMAIN_NAME LIKE ?
                 """))
         {

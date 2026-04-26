@@ -12,8 +12,6 @@ java {
 apply from: "$rootProject.projectDir/srcsets.gradle"
 
 dependencies {
-    implementation 'org.jgrapht:jgrapht-core:1.5.2'
-
     implementation project(':third-party:commons-codec')
 
     implementation project(':code:index:api')
