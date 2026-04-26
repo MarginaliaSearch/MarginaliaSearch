@@ -51,16 +51,24 @@ public class ServiceMqSubscription implements MqSubscription {
             return MqInboxResponse.err("[No handler]");
         }
 
+        logger.info("Received mqrequest for " + msg.function());
+
         try {
+            final MqInboxResponse response;
+
             if (method.getReturnType() == void.class) {
                 method.invoke(service, msg.payload());
-                return MqInboxResponse.ok();
+                response = MqInboxResponse.ok();
             }
             else {
                 // Do we want to just toString() here?  Gson? Something else?
                 String rv = method.invoke(service, msg.payload()).toString();
-                return MqInboxResponse.ok(rv);
+                response = MqInboxResponse.ok(rv);
             }
+
+            logger.info("Invoked mqrequest {} and got {}", msg.function(), response);
+
+            return response;
         }
         catch (InvocationTargetException ex) {
             logger.error("Error invoking method " + method, ex);
