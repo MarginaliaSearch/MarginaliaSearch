@@ -4,12 +4,11 @@ package nu.marginalia.domainranking;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.api.linkgraph.AggregateLinkGraphClient;
+import nu.marginalia.domainranking.data.DomainGraph;
 import nu.marginalia.domainranking.data.InvertedLinkGraphSource;
 import nu.marginalia.domainranking.data.LinkGraphSource;
 import nu.marginalia.domainranking.data.SimilarityGraphSource;
 import nu.marginalia.test.TestMigrationLoader;
-import org.jgrapht.Graph;
-import org.jgrapht.graph.DefaultWeightedEdge;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.parallel.Execution;
 import org.mockito.Mockito;
@@ -56,7 +55,7 @@ public class RankingAlgorithmsContainerTest {
                 VALUES ('memex.marginalia.nu', 'marginalia.nu', 1),
                 ('search.marginalia.nu', 'marginalia.nu', 1),
                 ('encyclopedia.marginalia.nu', 'marginalia.nu', 1),
-                ('marginalia.nu', 'marginalia.nu', 1);    
+                ('marginalia.nu', 'marginalia.nu', 1);
             """);
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -111,7 +110,7 @@ public class RankingAlgorithmsContainerTest {
     public void testLinkGraphSource() {
         allLinks.add(1, 3);
 
-        var graph = new LinkGraphSource(dataSource, domainLinksClient).getGraph();
+        DomainGraph graph = new LinkGraphSource(dataSource, domainLinksClient).getGraph();
 
         Assertions.assertTrue(graph.containsVertex(1));
         Assertions.assertTrue(graph.containsVertex(2));
@@ -127,7 +126,7 @@ public class RankingAlgorithmsContainerTest {
     public void testInvertedLinkGraphSource() {
         allLinks.add(1, 3);
 
-        var graph = new InvertedLinkGraphSource(dataSource, domainLinksClient).getGraph();
+        DomainGraph graph = new InvertedLinkGraphSource(dataSource, domainLinksClient).getGraph();
 
         Assertions.assertTrue(graph.containsVertex(1));
         Assertions.assertTrue(graph.containsVertex(2));
@@ -140,12 +139,11 @@ public class RankingAlgorithmsContainerTest {
         Assertions.assertFalse(graph.containsEdge(3, 2));
     }
     @Test
-    @SuppressWarnings("unchecked")
     public void testSimilarityGraphSource() {
 
         addSimilarity(1, 3, 0.5);
 
-        var graph = (Graph<Integer, DefaultWeightedEdge>) new SimilarityGraphSource(dataSource).getGraph();
+        DomainGraph graph = new SimilarityGraphSource(dataSource).getGraph();
 
         Assertions.assertTrue(graph.containsVertex(1));
         Assertions.assertTrue(graph.containsVertex(2));
@@ -153,7 +151,7 @@ public class RankingAlgorithmsContainerTest {
 
         Assertions.assertTrue(graph.containsEdge(3, 1));
         Assertions.assertTrue(graph.containsEdge(1, 3));
-        Assertions.assertEquals(graph.getEdgeWeight(graph.getEdge(1, 3)), 0.5, 0.0001);
+        Assertions.assertEquals(graph.edgeWeight(1, 3), 0.5, 0.0001);
 
         Assertions.assertFalse(graph.containsEdge(1, 2));
         Assertions.assertFalse(graph.containsEdge(2, 3));

@@ -3,9 +3,6 @@ package nu.marginalia.domainranking.data;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.api.linkgraph.AggregateLinkGraphClient;
-import org.jgrapht.Graph;
-import org.jgrapht.graph.DefaultDirectedGraph;
-import org.jgrapht.graph.DefaultEdge;
 
 /** A source for the regular link graph. */
 public class LinkGraphSource extends AbstractGraphSource {
@@ -18,27 +15,18 @@ public class LinkGraphSource extends AbstractGraphSource {
     }
 
     @Override
-    public Graph<Integer, ?> getGraph() {
+    public DomainGraph getGraph() {
         try {
-            Graph<Integer, ?> graph = new DefaultDirectedGraph<>(DefaultEdge.class);
-
-            addVertices(graph);
+            DomainGraphBuilder builder = DomainGraphBuilder.directed();
+            addVertices(builder);
 
             var allLinks = graphClient.getAllDomainLinks();
-            var iter = allLinks.iterator();
-            while (iter.advance()) {
-                if (!graph.containsVertex(iter.dest())) {
-                    continue;
+            return builder.build(consumer -> {
+                var iter = allLinks.iterator();
+                while (iter.advance()) {
+                    consumer.accept(iter.source(), iter.dest());
                 }
-                if (!graph.containsVertex(iter.source())) {
-                    continue;
-                }
-
-                graph.addEdge(iter.source(), iter.dest());
-            }
-
-            return graph;
-
+            });
         }
         catch (Exception ex) {
             throw new RuntimeException(ex);

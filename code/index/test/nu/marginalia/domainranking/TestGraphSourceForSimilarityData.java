@@ -1,10 +1,9 @@
 package nu.marginalia.domainranking;
 
+import nu.marginalia.domainranking.data.DomainGraph;
+import nu.marginalia.domainranking.data.DomainGraphBuilder;
 import nu.marginalia.domainranking.data.GraphSource;
 import org.apache.commons.lang3.StringUtils;
-import org.jgrapht.Graph;
-import org.jgrapht.graph.DefaultUndirectedWeightedGraph;
-import org.jgrapht.graph.DefaultWeightedEdge;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -34,13 +33,11 @@ public class TestGraphSourceForSimilarityData implements GraphSource {
     }
 
     @Override
-    public Graph<Integer, ?> getGraph() {
-        Graph<Integer, ?> graph = new DefaultUndirectedWeightedGraph<>(DefaultWeightedEdge.class);
+    public DomainGraph getGraph() {
+        DomainGraphBuilder builder = DomainGraphBuilder.undirectedWeighted();
         idToName = new HashMap<>();
 
-        try (var stream = Files
-                .lines(domainDataPath)) {
-
+        try (var stream = Files.lines(domainDataPath)) {
             stream.skip(1)
                     .mapMultiToInt((line, c) -> {
                         String[] parts = StringUtils.split(line, '\t');
@@ -52,32 +49,26 @@ public class TestGraphSourceForSimilarityData implements GraphSource {
                             idToName.put(id, name);
                         }
                     })
-                    .forEach(graph::addVertex);
+                    .forEach(builder::addVertex);
         }
         catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        try (var stream = Files
-                .lines(similarityDataPath)) {
-
-            stream.skip(1)
-                    .forEach(line -> {
-                        String[] parts = StringUtils.split(line, '\t');
-                        int src = Integer.parseInt(parts[0]);
-                        int dest = Integer.parseInt(parts[1]);
-                        double weight = Double.parseDouble(parts[2]);
-                        if (graph.containsVertex(src) && graph.containsVertex(dest)) {
-                            graph.addEdge(src, dest);
-                            graph.setEdgeWeight(src, dest, weight);
-                        }
-                    });
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return graph;
+        return builder.build(consumer -> {
+            try (var stream = Files.lines(similarityDataPath)) {
+                stream.skip(1)
+                        .forEach(line -> {
+                            String[] parts = StringUtils.split(line, '\t');
+                            int src = Integer.parseInt(parts[0]);
+                            int dest = Integer.parseInt(parts[1]);
+                            double weight = Double.parseDouble(parts[2]);
+                            consumer.accept(src, dest, weight);
+                        });
+            }
+            catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
-
 }

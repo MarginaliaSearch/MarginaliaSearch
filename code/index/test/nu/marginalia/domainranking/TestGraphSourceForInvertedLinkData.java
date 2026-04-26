@@ -1,11 +1,10 @@
 package nu.marginalia.domainranking;
 
 import nu.marginalia.array.LongArrayFactory;
+import nu.marginalia.domainranking.data.DomainGraph;
+import nu.marginalia.domainranking.data.DomainGraphBuilder;
 import nu.marginalia.domainranking.data.GraphSource;
 import org.apache.commons.lang3.StringUtils;
-import org.jgrapht.Graph;
-import org.jgrapht.graph.DefaultDirectedGraph;
-import org.jgrapht.graph.DefaultEdge;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -43,14 +42,11 @@ public class TestGraphSourceForInvertedLinkData implements GraphSource {
     }
 
     @Override
-    public Graph<Integer, ?> getGraph() {
-        Graph<Integer, ?> graph = new DefaultDirectedGraph<>(DefaultEdge.class);
+    public DomainGraph getGraph() {
+        DomainGraphBuilder builder = DomainGraphBuilder.directed();
         idToName = new HashMap<>();
 
-        try (var stream = Files
-                .lines(domainDataPath))
-        {
-
+        try (var stream = Files.lines(domainDataPath)) {
             stream.skip(1)
                     .mapMultiToInt((line, c) -> {
                         String[] parts = StringUtils.split(line, '\t');
@@ -59,36 +55,31 @@ public class TestGraphSourceForInvertedLinkData implements GraphSource {
                         int node_affinity = Integer.parseInt(parts[3]);
                         if (node_affinity > 0) {
                             c.accept(id);
-                            idToName.put(id, parts[1]);
+                            idToName.put(id, name);
                         }
                     })
-                    .forEach(graph::addVertex);
+                    .forEach(builder::addVertex);
         }
         catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        for (var path : linksDataPaths) {
-            try (var data = LongArrayFactory.mmapForReadingConfined(path)) {
-                data.forEach(0, data.size(), (pos, val) -> {
+        return builder.build(consumer -> {
+            for (var path : linksDataPaths) {
+                try (var data = LongArrayFactory.mmapForReadingConfined(path)) {
+                    data.forEach(0, data.size(), (pos, val) -> {
+                        val = Long.reverseBytes(val); // data is in "java endian", LongArray is in "C endian"
 
-                    val = Long.reverseBytes(val); // data is in "java endian", LongArray is in "C endian"
-
-                    int src = (int) (val >>> 32);
-                    int dest = (int) (val & 0xFFFF_FFFFL);
-
-                    if (graph.containsVertex(src) && graph.containsVertex(dest)) {
-                        graph.addEdge(dest, src);
-                    }
-                });
+                        int src = (int) (val >>> 32);
+                        int dest = (int) (val & 0xFFFF_FFFFL);
+                        // Invert the edge
+                        consumer.accept(dest, src);
+                    });
+                }
+                catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }
-            catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-
-        return graph;
+        });
     }
-
 }
