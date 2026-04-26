@@ -37,7 +37,9 @@ public class ProcessEventLog {
     public void logEvent(Class<?> type, String message) {
         logEvent(type.getSimpleName(), message);
     }
+
     public void logEvent(String type, String message) {
+        logger.info("Registered Process Event {}: {}", type, message);
 
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""

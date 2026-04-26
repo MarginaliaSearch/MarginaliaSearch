@@ -41,6 +41,8 @@ public class ServiceEventLog {
     }
     public void logEvent(String type, String message) {
 
+        logger.info("Registered Service Event {}: {}", type, message);
+
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
                         INSERT INTO SERVICE_EVENTLOG(SERVICE_NAME, SERVICE_BASE, INSTANCE, EVENT_TYPE, EVENT_MESSAGE)
