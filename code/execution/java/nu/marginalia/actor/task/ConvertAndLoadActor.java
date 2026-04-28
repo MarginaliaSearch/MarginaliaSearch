@@ -74,6 +74,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
     @Resume(behavior = ActorResumeBehavior.RETRY)
     public record ReindexPrio(long id) implements ActorStep {  public ReindexPrio() { this(-1); } }
     public record SwitchIndex() implements ActorStep {}
+    @Resume(behavior = ActorResumeBehavior.RETRY)
     public record Repartition(String when) implements ActorStep {}
 
     @Override
@@ -203,7 +204,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
                 Instant end = Instant.parse(when);
 
                 if (end.isBefore(Instant.now())) {
-                    Thread.sleep(Duration.between(Instant.now(), end));
+                    Thread.sleep(Duration.between(end, Instant.now()));
                 }
 
                 indexOutbox.sendNotice(IndexMqEndpoints.INDEX_REPARTITION, when);
