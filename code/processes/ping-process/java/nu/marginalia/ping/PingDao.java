@@ -206,7 +206,7 @@ public class PingDao {
                 String domainName = rs.getString("DOMAIN_NAME");
                 var ts = rs.getTimestamp("NEXT_SCHEDULED_UPDATE");
                 int nodeId = rs.getInt("NODE_AFFINITY");
-                Instant nextUpdate = ts == null ? Instant.now() : ts.toInstant();
+                Instant nextUpdate = ts == null ? Instant.EPOCH : ts.toInstant();
 
                 var ref = new DomainReference(domainId, nodeId, domainName.toLowerCase());
                 updateJobs.add(new UpdateSchedule.UpdateJob<>(ref, nextUpdate));
