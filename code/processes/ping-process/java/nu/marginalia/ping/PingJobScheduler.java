@@ -2,6 +2,7 @@ package nu.marginalia.ping;
 
 import com.google.inject.Inject;
 import nu.marginalia.coordination.DomainCoordinator;
+import nu.marginalia.coordination.DomainLock;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.ping.fetcher.PingDnsFetcher;
 import nu.marginalia.ping.model.*;
@@ -124,8 +125,6 @@ public class PingJobScheduler {
         }
     }
 
-    private ConcurrentHashMap<String, Instant> lastDomainReschedule = new ConcurrentHashMap<>();
-
     private void availabilityJobConsumer() {
         while (running && !Thread.interrupted()) {
             try {
@@ -140,54 +139,66 @@ public class PingJobScheduler {
                 if (ref == null)
                     continue;
 
-                long nextId = ref.domainId();
-                var data = pingDao.getHistoricalAvailabilityData(nextId);
-                if (data == null) {
-                    logger.warn("No availability data found for ID: {}", nextId);
-                    continue; // No data to process, skip this iteration
-                }
+                var maybeLock = domainCoordinator.tryLockDomain(ref.asEdgeDomain());
 
-                var edgeDomain = ref.asEdgeDomain();
-
-                var maybeLock = domainCoordinator
-                        .tryLockDomain(ref.asEdgeDomain(), Duration.ofSeconds(1));
-
-                // If we can't acquire a domain lock in a timely manner, we'll reschedule this job in the future
-
+                // If we've failed the TOCTOU race, we'll reschedule this for later
                 if (maybeLock.isEmpty()) {
-                    Instant newScheduledTime = lastDomainReschedule.compute(edgeDomain.topDomain,
-                            (k,v) -> {
-                                if (v == null) {
-                                    return Instant.now().plus(Duration.ofSeconds(10));
-                                } else {
-                                    return v.plus(Duration.ofSeconds(5));
-                                }
-                            });
-                    availabilityUpdateSchedule.add(ref, newScheduledTime);
+                    rescheduleLockedDomain(ref);
                     continue;
                 }
 
-                var lock = maybeLock.get();
+                DomainLock lock = maybeLock.get();
                 List<WritableModel> objects;
+
                 try (lock) {
-                    objects = switch (data) {
-                        case HistoricalAvailabilityData.JustDomainReference(DomainReference reference) ->
-                                httpPingService.pingDomain(reference, null, null);
-                        case HistoricalAvailabilityData.JustAvailability(
-                                String domain, DomainAvailabilityRecord record
-                        ) -> httpPingService.pingDomain(
-                                new DomainReference(record.domainId(), record.nodeId(), domain), record, null);
-                        case HistoricalAvailabilityData.AvailabilityAndSecurity(
-                                String domain, DomainAvailabilityRecord availability, DomainSecurityRecord security
-                        ) -> httpPingService.pingDomain(
-                                new DomainReference(availability.domainId(), availability.nodeId(), domain), availability, security);
+                    long nextId = ref.domainId();
+
+                    HistoricalAvailabilityData data = pingDao.getHistoricalAvailabilityData(nextId);
+                    if (data == null) {
+                        logger.warn("No availability data found for ID: {}", nextId);
+                        continue; // No data to process, skip this iteration
+                    }
+
+                    @Nullable
+                    DomainReference reference = null;
+                    @Nullable
+                    DomainAvailabilityRecord availabilityRecord = null;
+                    @Nullable
+                    DomainSecurityRecord domainSecurityRecord = null;
+
+                    switch (data) {
+                        case HistoricalAvailabilityData.JustDomainReference(DomainReference justRef) ->
+                        {
+                            reference = justRef;
+                        }
+
+                        case HistoricalAvailabilityData.JustAvailability(String domain,
+                                                                         DomainAvailabilityRecord availability) ->
+                        {
+                            reference = new DomainReference(availability.domainId(), availability.nodeId(), domain);
+                            availabilityRecord = availability;
+                        }
+
+                        case HistoricalAvailabilityData.AvailabilityAndSecurity(String domain,
+                                                                                DomainAvailabilityRecord availability,
+                                                                                DomainSecurityRecord security) ->
+                        {
+                            reference = new DomainReference(availability.domainId(), availability.nodeId(), domain);
+                            availabilityRecord = availability;
+                            domainSecurityRecord = security;
+                        }
                     };
+
+                    if (reference == null)
+                        continue;
+
+                    objects = httpPingService.pingDomain(reference, availabilityRecord, domainSecurityRecord);
                 }
 
                 pingDao.write(objects);
 
                 // Re-schedule the next update time for the domain
-                for (var object : objects) {
+                for (WritableModel object : objects) {
                     var ts = object.nextUpdateTime();
                     if (ts != null) {
                         availabilityUpdateSchedule.add(ref, ts);
@@ -205,6 +216,27 @@ public class PingJobScheduler {
         }
     }
 
+    // We expect a pareto distribution in number of subdomains, so
+    // this map will stay pretty small.
+    private ConcurrentHashMap<String, Instant> lastDomainReschedule = new ConcurrentHashMap<>();
+
+    private void rescheduleLockedDomain(DomainReference ref) {
+        String topDomain = ref.asEdgeDomain().topDomain;
+
+        Instant newScheduledTime = lastDomainReschedule.compute(topDomain,
+                (k,v) -> {
+                    Instant now = Instant.now();
+
+                    if (v == null || v.isBefore(now)) {
+                        return now.plus(Duration.ofSeconds(10));
+                    } else {
+                        return v.plus(Duration.ofSeconds(5));
+                    }
+                });
+
+        availabilityUpdateSchedule.add(ref, newScheduledTime);
+    }
+
     private void dnsJobConsumer() {
         while (running && !Thread.interrupted()) {
             try {
@@ -214,21 +246,30 @@ public class PingJobScheduler {
                 }
 
                 try {
-                    List<WritableModel> objects = switch(ref) {
+                    @Nullable
+                    String domainName = null;
+                    @Nullable
+                    DomainDnsRecord oldRecord = null;
+
+                    switch(ref) {
                         case RootDomainReference.ByIdAndName(long id, String name) -> {
-                            var oldRecord = Objects.requireNonNull(pingDao.getDomainDnsRecord(id));
-                            yield dnsPingService.pingDomain(oldRecord.rootDomainName(), oldRecord);
+                            domainName = oldRecord.rootDomainName();
+                            oldRecord = Objects.requireNonNull(pingDao.getDomainDnsRecord(id));
                         }
                         case RootDomainReference.ByName(String name) -> {
-                            @Nullable var oldRecord = pingDao.getDomainDnsRecord(name);
-                            yield dnsPingService.pingDomain(name, oldRecord);
+                            domainName = name;
+                            oldRecord = pingDao.getDomainDnsRecord(name);
                         }
                     };
 
+                    if (domainName == null)
+                        continue;
+
+                    List<WritableModel> objects = dnsPingService.pingDomain(domainName, oldRecord);
                     pingDao.write(objects);
 
                     // Re-schedule the next update time for the domain
-                    for (var object : objects) {
+                    for (WritableModel object : objects) {
                         var ts = object.nextUpdateTime();
                         if (ts != null) {
                             dnsUpdateSchedule.add(ref, ts);

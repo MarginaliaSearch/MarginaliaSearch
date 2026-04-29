@@ -87,7 +87,7 @@ public class UpdateSchedule<T, T2> {
                         rejectedJobs.clear();
                     }
 
-                    wait(Math.min(1000, toWait.toMillis()));
+                    wait(Math.min(250, toWait.toMillis()));
                     continue;
                 } else {
                     var candidate = updateQueue.poll(); // Remove the job from the queue since it's due
