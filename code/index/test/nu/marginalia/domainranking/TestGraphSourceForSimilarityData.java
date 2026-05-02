@@ -1,8 +1,8 @@
 package nu.marginalia.domainranking;
 
-import nu.marginalia.domainranking.data.DomainGraph;
-import nu.marginalia.domainranking.data.DomainGraphBuilder;
-import nu.marginalia.domainranking.data.GraphSource;
+import nu.marginalia.domaingraph.DomainGraph;
+import nu.marginalia.domaingraph.DomainGraphBuilder;
+import nu.marginalia.domaingraph.GraphSource;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
