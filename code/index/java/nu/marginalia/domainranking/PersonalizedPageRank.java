@@ -1,7 +1,7 @@
 package nu.marginalia.domainranking;
 
 import it.unimi.dsi.fastutil.ints.IntCollection;
-import nu.marginalia.domainranking.data.DomainGraph;
+import nu.marginalia.domaingraph.DomainGraph;
 
 import java.util.BitSet;
 
