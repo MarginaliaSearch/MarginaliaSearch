@@ -2,13 +2,12 @@ package nu.marginalia.adjacencies;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import it.unimi.dsi.fastutil.longs.LongList;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.parallel.Execution;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
-import java.util.List;
 
 import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 
@@ -60,9 +59,9 @@ public class AdjacenciesLoaderTest {
     public void testLoad() {
         var loader = new AdjacenciesLoader(dataSource);
         try {
-            loader.load(new WebsiteAdjacenciesCalculator.DomainSimilarities(1,
-                    List.of(new WebsiteAdjacenciesCalculator.DomainSimilarity(2, 0.5),
-                            new WebsiteAdjacenciesCalculator.DomainSimilarity(3, 0.6)
+            loader.load(new DomainSimilarities(1,
+                    LongList.of(DomainSimilarities.encode(2, 0.5f),
+                            DomainSimilarities.encode(3, 0.6f)
                             )));
             loader.stop();
         } catch (InterruptedException e) {
