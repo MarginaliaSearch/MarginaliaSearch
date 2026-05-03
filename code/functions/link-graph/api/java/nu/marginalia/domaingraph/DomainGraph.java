@@ -138,8 +138,27 @@ public final class DomainGraph {
         return new EdgeRange(inNeighbors, inOffsets[internalIdx], inOffsets[internalIdx + 1]);
     }
 
+    public EdgeBloomFilter inEdgesBloomFilter(int sizeLongs) {
+        var filter = new EdgeBloomFilter(vertexIds.length, sizeLongs);
+
+        for (int i = 0; i < vertexIds.length; i++) {
+            filter.populateRange(i, inNeighbors, inOffsets[i], inOffsets[i + 1]);
+        }
+        return filter;
+    }
+
     public EdgeRange outEdges(int internalIdx) {
         return new EdgeRange(outNeighbors, outOffsets[internalIdx], outOffsets[internalIdx + 1]);
+    }
+
+
+    public EdgeBloomFilter outEdgesBloomFilter(int sizeLongs) {
+        var filter = new EdgeBloomFilter(vertexIds.length, sizeLongs);
+
+        for (int i = 0; i < vertexIds.length; i++) {
+            filter.populateRange(i, outNeighbors, outOffsets[i], outOffsets[i + 1]);
+        }
+        return filter;
     }
 
     public OverlapRange inOverlapEdges(int internalIdxA, int internalIdxB) {
@@ -217,24 +236,6 @@ public final class DomainGraph {
 
         public int size() {
             return end - start;
-        }
-
-        /** Return a Bloom filter hash value for this range,
-         * such that if a.bloomHash() & b.bloomHash() == 0, then a and b are distinct.
-         */
-        public long bloomHash() {
-            // For high population ranges, we shortcut to setting all bits
-
-            if (size() >= 32) {
-                return ~0L;
-            }
-
-            long hv = 0L;
-            for (int i = start; i < end; i++) {
-                hv |= Long.rotateLeft(1, neighbors[i]);
-            }
-
-            return hv;
         }
     }
 
