@@ -21,8 +21,6 @@ public class WebsiteAdjacenciesCalculator {
 
     private final ProcessConfiguration configuration;
     private final HikariDataSource dataSource;
-    public AdjacenciesData adjacenciesData;
-    public DomainAliases domainAliases;
     private static final Logger logger = LoggerFactory.getLogger(WebsiteAdjacenciesCalculator.class);
 
     float[] weights;
@@ -61,112 +59,115 @@ public class WebsiteAdjacenciesCalculator {
         logger.info("Loading graph");
         DomainGraph graph = linkGraphSource.getGraph();
 
-        float[] weights = new float[graph.size()];
-        long[] bloomHashes = new long[graph.size()];
+        logger.info("Calculating edge bloom filter");
 
-        logger.info("Calculating weights for {} domains", graph.size());
+        // Create a bloom filter for the incoming edge sets for each vertex.
+        // size is 4 * 64 bits ~ 700 MB with prod data, which is expected to
+        // cover the average degree of a vertex.
+        // (... which is pareto distributed, bigger we go the faster the edge cases go,
+        //   but the edge cases are also more likely to have true positive overlaps)
 
-        for (int i = 0; i < weights.length; i++) {
-            int degree = graph.inDegree(i);
-            weights[i] = 1.0f / (float) Math.log(2+degree);
-        }
+        try (EdgeBloomFilter bloomFilter = graph.inEdgesBloomFilter(4)) {
 
-        logger.info("Calculating bloom hashes for {} domains", graph.size());
+            logger.info("Calculating weights for {} domains", graph.size());
+            float[] weights = new float[graph.size()];
+            for (int i = 0; i < weights.length; i++) {
+                int degree = graph.inDegree(i);
+                weights[i] = 1.0f / (float) Math.log(2 + degree);
+            }
 
-        for (int i = 0; i < bloomHashes.length; i++) {
-            DomainGraph.EdgeRange range = graph.inEdges(i);
-            bloomHashes[i] = range.bloomHash();
-        }
+            logger.info("Calculating similarities for {} domains", graph.size());
 
-        logger.info("Calculating similarities for {} domains", graph.size());
+            AtomicInteger progress = new AtomicInteger(0);
+            AtomicInteger output = new AtomicInteger(0);
 
-        AtomicInteger progress = new AtomicInteger(0);
-        AtomicInteger output = new AtomicInteger(0);
+            IntStream.range(0, weights.length)
+                    .parallel()
+                    .forEach(iv -> {
+                        int progressVal = progress.incrementAndGet();
 
-        IntStream.range(0, bloomHashes.length)
-                .parallel()
-                .forEach(iv -> {
-                    int progressVal = progress.incrementAndGet();
-
-                    if (progressVal % 10000 == 0) {
-                        logger.info("Calculating similarities: {}/{}: {}", progressVal, bloomHashes.length, output.get());
-                    }
-
-                    LongList encodedSimilarIds = new LongArrayList();
-                    IntSet considered = new IntOpenHashSet();
-
-                    // We're going to find domains the current domain is linking to,
-                    // and then looking back at the set of domains that those domain's links are coming from
-
-                    var candidateSourceEdges = graph.inEdges(iv);
-
-                    while (candidateSourceEdges.hasNext()) {
-                        int cv = candidateSourceEdges.nextInternalId();
-
-                        if (iv == cv)
-                            continue;
-
-                        var candidateEdges = graph.outEdges(cv);
-
-                        // This website is very widely linked, and not interesting
-                        if (candidateEdges.size() > 1000) {
-                            continue;
+                        if (progressVal % 10000 == 0) {
+                            logger.info("Calculating similarities: {}/{}: {}", progressVal, weights.length, output.get());
                         }
 
-                        while (candidateEdges.hasNext()) {
+                        LongList encodedSimilarIds = new LongArrayList();
+                        IntSet considered = new IntOpenHashSet();
 
-                            int jv = candidateEdges.nextInternalId();
-                            if (iv == jv)
+                        // We're going to find domains the current domain is linking to,
+                        // and then looking back at the set of domains that those domain's links are coming from
+
+                        var candidateSourceEdges = graph.inEdges(iv);
+
+                        while (candidateSourceEdges.hasNext()) {
+                            int cv = candidateSourceEdges.nextInternalId();
+
+                            if (iv == cv)
                                 continue;
 
-                            if (0 == (bloomHashes[iv] & bloomHashes[jv])) continue;
+                            var candidateEdges = graph.outEdges(cv);
 
-                            if (!considered.add(jv)) continue;
-
-                            var overlap = graph.inOverlapEdges(iv, jv);
-
-                            // Too small to say much about similarity
-                            if (overlap.rangeSize() < 5)
-                                continue;
-
-                            float jaccardSimilarity = overlap.jaccardSimilarity();
-
-                            if (jaccardSimilarity < 0.1) {
-                                continue;
-                            }
-                            float weightedSimilarity = 0.f;
-                            float weightedSimilarityA = 0.f;
-                            float weightedSimilarityB = 0.f;
-
-                            overlap.reset();
-
-                            while (overlap.findNext()) {
-                                weightedSimilarity += weights[overlap.nextInternalId()];
-                            }
-
-                            var aEdges = overlap.aEdges();
-                            while (aEdges.hasNext()) {
-                                weightedSimilarityA += weights[aEdges.nextInternalId()];
-                            }
-                            var bEdges = overlap.bEdges();
-                            while (bEdges.hasNext()) {
-                                weightedSimilarityB += weights[bEdges.nextInternalId()];
-                            }
-
-                            weightedSimilarity /= Math.sqrt(weightedSimilarityA * weightedSimilarityB);
-                            if (weightedSimilarity < 0.1) {
+                            // This website is very widely linked, and not interesting
+                            if (candidateEdges.size() > 1000) {
                                 continue;
                             }
 
-                            encodedSimilarIds.add(
-                                    DomainSimilarities.encode(graph.vertexId(jv), weightedSimilarity)
-                            );
+                            while (candidateEdges.hasNext()) {
+
+                                int jv = candidateEdges.nextInternalId();
+                                if (iv == jv)
+                                    continue;
+
+                                if (!bloomFilter.mayOverlap(iv, jv)) continue;
+
+                                if (!considered.add(jv)) continue;
+
+                                var overlap = graph.inOverlapEdges(iv, jv);
+
+                                // Too small to say much about similarity
+                                if (overlap.rangeSize() < 5)
+                                    continue;
+
+                                float jaccardSimilarity = overlap.jaccardSimilarity();
+
+                                if (jaccardSimilarity < 0.1) {
+                                    continue;
+                                }
+                                float weightedSimilarity = 0.f;
+                                float weightedSimilarityA = 0.f;
+                                float weightedSimilarityB = 0.f;
+
+                                overlap.reset();
+
+                                while (overlap.findNext()) {
+                                    weightedSimilarity += weights[overlap.nextInternalId()];
+                                }
+
+                                var aEdges = overlap.aEdges();
+                                while (aEdges.hasNext()) {
+                                    weightedSimilarityA += weights[aEdges.nextInternalId()];
+                                }
+                                var bEdges = overlap.bEdges();
+                                while (bEdges.hasNext()) {
+                                    weightedSimilarityB += weights[bEdges.nextInternalId()];
+                                }
+
+                                weightedSimilarity /= Math.sqrt(weightedSimilarityA * weightedSimilarityB);
+                                if (weightedSimilarity < 0.1) {
+                                    continue;
+                                }
+
+                                encodedSimilarIds.add(
+                                        DomainSimilarities.encode(graph.vertexId(jv), weightedSimilarity)
+                                );
+                            }
                         }
-                    }
 
-                    if (!encodedSimilarIds.isEmpty()) {
-                        consumer.accept(new DomainSimilarities(graph.vertexId(iv), encodedSimilarIds));
-                    }
-                });
+                        if (!encodedSimilarIds.isEmpty()) {
+                            consumer.accept(new DomainSimilarities(graph.vertexId(iv), encodedSimilarIds));
+                        }
+                    });
+
+            logger.info("Done");
+        }
     }
 }
