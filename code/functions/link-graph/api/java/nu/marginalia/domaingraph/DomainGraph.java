@@ -252,6 +252,9 @@ public final class DomainGraph {
 
         private int next;
 
+        private static final int IMBALANCED_THRESHOLD = 8;
+        private static final int GALLOP_THRESHOLD = 8;
+
         public OverlapRange(int[] neighbors, int startA, int endA, int startB, int endB) {
             this.neighbors = neighbors;
 
@@ -275,10 +278,16 @@ public final class DomainGraph {
             int remA = endA - posA;
             int remB = endB - posB;
 
+            // Handle edge cases when checking a small number of needles in a large haystack
+            if (IMBALANCED_THRESHOLD * remA < remB) {
+                return findNextImbalancedB();
+            }
+            else if (IMBALANCED_THRESHOLD * remB < remA) {
+                return findNextImbalancedA();
+            }
+
             // Galloping phase
-            while(remA > 0
-                    && remB > 0
-                    && remA + remB > 8)
+            while (remA > 0 && remB > 0 && (remA > GALLOP_THRESHOLD || remB > GALLOP_THRESHOLD))
             {
                 int valA = neighbors[posA];
                 int valB = neighbors[posB];
@@ -292,23 +301,27 @@ public final class DomainGraph {
 
                 if (valA < valB) {
                     posA = Arrays.binarySearch(neighbors, posA, endA, valB);
-                    if (posA < 0) posA = -posA - 1;
-                    else {
+
+                    if (posA >= 0) {
                         posA++;
                         posB++;
                         next = valB;
                         return true;
                     }
+
+                    posA = -posA - 1;
                     remA = endA - posA;
                 } else {
                     posB = Arrays.binarySearch(neighbors, posB, endB, valA);
-                    if (posB < 0) posB = -posB - 1;
-                    else {
+
+                    if (posB >= 0) {
                         posA++;
                         posB++;
                         next = valA;
                         return true;
                     }
+
+                    posB = -posB - 1;
                     remB = endB - posB;
                 }
             }
@@ -336,6 +349,45 @@ public final class DomainGraph {
 
             return false;
         }
+
+        public boolean findNextImbalancedA() {
+            while (posA < endA && posB < endB) {
+                int valB = neighbors[posB];
+                posA = Arrays.binarySearch(neighbors, posA, endA, valB);
+                if (posA < 0) {
+                    posA = -posA - 1;
+                    posB++;
+                }
+                else {
+                    posA++;
+                    posB++;
+                    next = valB;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public boolean findNextImbalancedB() {
+            while (posA < endA && posB < endB) {
+                int valA = neighbors[posA];
+                posB = Arrays.binarySearch(neighbors, posB, endB, valA);
+                if (posB < 0) {
+                    posB = -posB - 1;
+                    posA++;
+                }
+                else {
+                    posA++;
+                    posB++;
+                    next = valA;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
 
         /** Return the number of edges in this range that overlap with the given range.
          * Mutates the position of the given range.
