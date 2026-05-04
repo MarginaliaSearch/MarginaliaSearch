@@ -431,5 +431,12 @@ public final class DomainGraph {
         public int rangeSize() {
             return endA - startA + endB - startB;
         }
+
+        public int minSubRangeSize() {
+            return Math.min(endA - startA,  endB - startB);
+        }
+        public int maxSubRangeSize() {
+            return Math.max(endA - startA,  endB - startB);
+        }
     }
  }
