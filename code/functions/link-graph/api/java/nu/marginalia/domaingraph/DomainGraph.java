@@ -252,8 +252,8 @@ public final class DomainGraph {
 
         private int next;
 
-        private static final int IMBALANCED_THRESHOLD = 8;
-        private static final int GALLOP_THRESHOLD = 8;
+        private static final int IMBALANCED_FACTOR = 8;
+        private static final int GALLOP_THRESHOLD = 64;
 
         public OverlapRange(int[] neighbors, int startA, int endA, int startB, int endB) {
             this.neighbors = neighbors;
@@ -279,10 +279,10 @@ public final class DomainGraph {
             int remB = endB - posB;
 
             // Handle edge cases when checking a small number of needles in a large haystack
-            if (IMBALANCED_THRESHOLD * remA < remB) {
+            if (IMBALANCED_FACTOR * remA < remB) {
                 return findNextImbalancedB();
             }
-            else if (IMBALANCED_THRESHOLD * remB < remA) {
+            else if (IMBALANCED_FACTOR * remB < remA) {
                 return findNextImbalancedA();
             }
 
