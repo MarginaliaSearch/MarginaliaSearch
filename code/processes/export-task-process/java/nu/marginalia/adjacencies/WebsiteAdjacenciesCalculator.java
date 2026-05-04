@@ -123,20 +123,13 @@ public class WebsiteAdjacenciesCalculator {
 
                                 var overlap = graph.inOverlapEdges(iv, jv);
 
-                                // Too small to say much about similarity
-                                if (overlap.rangeSize() < 5)
-                                    continue;
-
-                                float jaccardSimilarity = overlap.jaccardSimilarity();
-
-                                if (jaccardSimilarity < 0.1) {
+                                if (!testJaccard(overlap, 0.1))  {
                                     continue;
                                 }
+
                                 float weightedSimilarity = 0.f;
                                 float weightedSimilarityA = 0.f;
                                 float weightedSimilarityB = 0.f;
-
-                                overlap.reset();
 
                                 while (overlap.findNext()) {
                                     weightedSimilarity += weights[overlap.nextInternalId()];
@@ -168,6 +161,29 @@ public class WebsiteAdjacenciesCalculator {
                     });
 
             logger.info("Done");
+        }
+    }
+
+    /** Returns true if the overlap has a jaccard similarity above the given threshold. */
+    private boolean testJaccard(DomainGraph.OverlapRange overlap, double jaccardLimit) {
+        int minRange = overlap.minSubRangeSize();
+
+        if (minRange < 4)
+            return false;
+
+        int maxRange = overlap.maxSubRangeSize();
+
+        // If the ratio is too large, we can't find a similarity above the threshold
+        double minMaxSizeRatio = (1-jaccardLimit)/jaccardLimit;
+
+        if (maxRange > minMaxSizeRatio * minRange)
+            return false;
+
+        try {
+            return overlap.jaccardSimilarity() >= jaccardLimit;
+        }
+        finally {
+            overlap.reset();
         }
     }
 }
