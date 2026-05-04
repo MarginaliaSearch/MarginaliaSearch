@@ -1,4 +1,4 @@
-package nu.marginalia.domainranking.data;
+package nu.marginalia.domaingraph;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;

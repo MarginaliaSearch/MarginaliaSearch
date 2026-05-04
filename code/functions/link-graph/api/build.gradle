@@ -32,7 +32,9 @@ dependencies {
     implementation libs.gson
     implementation libs.bundles.protobuf
     implementation libs.roaringbitmap
-    implementation libs.guava
+    implementation libs.fastutil
+    implementation libs.bundles.mariadb
+
     libs.bundles.grpc.get().each {
         implementation dependencies.create(it) {
             exclude group: 'com.google.guava'

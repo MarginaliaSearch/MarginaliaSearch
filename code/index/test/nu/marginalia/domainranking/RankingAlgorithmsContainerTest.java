@@ -4,10 +4,10 @@ package nu.marginalia.domainranking;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.api.linkgraph.AggregateLinkGraphClient;
-import nu.marginalia.domainranking.data.DomainGraph;
-import nu.marginalia.domainranking.data.InvertedLinkGraphSource;
-import nu.marginalia.domainranking.data.LinkGraphSource;
-import nu.marginalia.domainranking.data.SimilarityGraphSource;
+import nu.marginalia.domaingraph.DomainGraph;
+import nu.marginalia.domaingraph.InvertedLinkGraphSource;
+import nu.marginalia.domaingraph.LinkGraphSource;
+import nu.marginalia.domaingraph.SimilarityGraphSource;
 import nu.marginalia.test.TestMigrationLoader;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.parallel.Execution;
@@ -138,6 +138,7 @@ public class RankingAlgorithmsContainerTest {
         Assertions.assertFalse(graph.containsEdge(2, 3));
         Assertions.assertFalse(graph.containsEdge(3, 2));
     }
+
     @Test
     public void testSimilarityGraphSource() {
 
@@ -151,7 +152,7 @@ public class RankingAlgorithmsContainerTest {
 
         Assertions.assertTrue(graph.containsEdge(3, 1));
         Assertions.assertTrue(graph.containsEdge(1, 3));
-        Assertions.assertEquals(graph.edgeWeight(1, 3), 0.5, 0.0001);
+        Assertions.assertEquals(graph.inEdgeWeight(1, 3), 0.5, 0.0001);
 
         Assertions.assertFalse(graph.containsEdge(1, 2));
         Assertions.assertFalse(graph.containsEdge(2, 3));

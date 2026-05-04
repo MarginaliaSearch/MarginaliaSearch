@@ -1,12 +1,10 @@
 package nu.marginalia.domainranking;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongHeapPriorityQueue;
-import it.unimi.dsi.fastutil.longs.LongList;
 import nu.marginalia.domainranking.accumulator.RankingResultAccumulator;
-import nu.marginalia.domainranking.data.DomainGraph;
-import nu.marginalia.domainranking.data.GraphSource;
+import nu.marginalia.domaingraph.DomainGraph;
+import nu.marginalia.domaingraph.GraphSource;
 
 import java.util.List;
 import java.util.function.Supplier;

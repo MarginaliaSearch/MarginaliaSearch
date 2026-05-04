@@ -1,19 +1,66 @@
-package nu.marginalia.domainranking;
+package nu.marginalia.adjacencies;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.domaingraph.DomainGraph;
 import nu.marginalia.domaingraph.DomainGraphBuilder;
 import nu.marginalia.domaingraph.GraphSource;
+import nu.marginalia.process.ProcessConfiguration;
+import nu.marginalia.test.TestMigrationLoader;
+import nu.marginalia.test.TestUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.mockito.Mockito;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
-public class TestGraphSourceForInvertedLinkData implements GraphSource {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
+
+@Tag("slow")
+public class WebsiteAdjacenciesCalculatorTest {
+
+    @Test
+    public void test() throws Exception {
+        if (!TestGraphSourceForForwardLinkData.isAvailable()) {
+            return;
+        }
+
+        var forwardSource = new TestGraphSourceForForwardLinkData();
+
+        try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter("/tmp/adjacencies.log")))) {
+            new WebsiteAdjacenciesCalculator(forwardSource).run(similarities -> {
+
+                synchronized (this) {
+                    pw.println(forwardSource.getName(similarities.domainId()) + ":");
+                    similarities.encodedSimilarities().toLongArray();
+                    for (long encoded : similarities.encodedSimilarities()) {
+                        int otherId = DomainSimilarities.decodeOtherId(encoded);
+                        float similarity = DomainSimilarities.deocdeSimilarity(encoded);
+
+                        pw.println("\t" + forwardSource.getName(otherId) + ": " + similarity);
+                    }
+                    pw.println();
+                }
+
+            });
+        }
+    }
+}
+
+class TestGraphSourceForForwardLinkData implements GraphSource {
     // The data is available at
     // https://downloads.marginalia.nu/link-test-data.tar.gz
     private static Path domainDataPath = Paths.get("/home/vlofgren/Exports/Links/domains.export.tsv");
@@ -72,8 +119,7 @@ public class TestGraphSourceForInvertedLinkData implements GraphSource {
 
                         int src = (int) (val >>> 32);
                         int dest = (int) (val & 0xFFFF_FFFFL);
-                        // Invert the edge
-                        consumer.accept(dest, src);
+                        consumer.accept(src, dest);
                     });
                 }
                 catch (Exception e) {
@@ -81,5 +127,6 @@ public class TestGraphSourceForInvertedLinkData implements GraphSource {
                 }
             }
         });
+
     }
 }
