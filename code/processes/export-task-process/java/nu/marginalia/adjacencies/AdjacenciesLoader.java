@@ -56,9 +56,19 @@ public class AdjacenciesLoader {
                          item = similaritiesLinkedBlockingDeque.pollFirst())
                     {
                         for (var encoded : item.encodedSimilarities()) {
-                            stmt.setInt(1, item.domainId());
-                            stmt.setInt(2, DomainSimilarities.decodeOtherId(encoded));
-                            stmt.setDouble(3, DomainSimilarities.deocdeSimilarity(encoded));
+                            int thisId = item.domainId();
+                            int otherId = DomainSimilarities.decodeOtherId(encoded);
+                            float similarity = DomainSimilarities.deocdeSimilarity(encoded);
+
+                            stmt.setInt(1, thisId);
+                            stmt.setInt(2, otherId);
+                            stmt.setDouble(3, similarity);
+                            stmt.addBatch();
+                            itemCount++;
+
+                            stmt.setInt(1, otherId);
+                            stmt.setInt(2, thisId);
+                            stmt.setDouble(3, similarity);
                             stmt.addBatch();
                             itemCount++;
                         }

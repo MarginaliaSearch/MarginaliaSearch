@@ -101,7 +101,7 @@ public class WebsiteAdjacenciesCalculator {
                         while (candidateSourceEdges.hasNext()) {
                             int cv = candidateSourceEdges.nextInternalId();
 
-                            if (iv == cv)
+                            if (iv >= cv)
                                 continue;
 
                             var candidateEdges = graph.outEdges(cv);
