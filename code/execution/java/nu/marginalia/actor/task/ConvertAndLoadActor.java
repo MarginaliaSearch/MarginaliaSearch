@@ -201,10 +201,11 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
                 yield new Repartition(Instant.now().plus(Duration.ofMinutes(30)).toString());
             }
             case Repartition(String when) -> {
+                Instant now = Instant.now();
                 Instant end = Instant.parse(when);
 
-                if (end.isBefore(Instant.now())) {
-                    Thread.sleep(Duration.between(end, Instant.now()));
+                if (now.isBefore(end)) {
+                    Thread.sleep(Duration.between(now, end));
                 }
 
                 indexOutbox.sendNotice(IndexMqEndpoints.INDEX_REPARTITION, when);
