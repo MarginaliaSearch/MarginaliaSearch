@@ -266,7 +266,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                     EntityUtils.consumeQuietly(response.getEntity());
 
                     return switch (response.getCode()) {
-                        case 200 -> new DomainProbeResult.Ok(url);
+                        case 200, 206 -> new DomainProbeResult.Ok(url);
                         case 405 -> {
                             if (!tryGet.get()) {
                                 tryGet.set(true);
