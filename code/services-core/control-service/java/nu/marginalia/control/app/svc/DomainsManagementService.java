@@ -7,6 +7,7 @@ import nu.marginalia.control.Redirects;
 import nu.marginalia.control.app.model.DomainModel;
 import nu.marginalia.control.app.model.DomainSearchResultModel;
 import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
@@ -155,16 +156,10 @@ public class DomainsManagementService {
                     if (s.isBlank()) continue;
                     if (!s.contains("://")) continue;
 
-                    URI uri = URI.create(s);
-                    String scheme = uri.getScheme();
-                    String host = uri.getHost();
-
-                    if (scheme == null || host == null)
-                        continue;
-                    if (!scheme.equalsIgnoreCase("http") && !scheme.equalsIgnoreCase("https"))
-                        continue;
-
-                    validDomains.add(new EdgeDomain(host));
+                    EdgeUrl.parse(s)
+                            .filter(url -> url.proto.equals("http") || url.proto.equals("https"))
+                            .map(EdgeUrl::getDomain)
+                            .ifPresent(validDomains::add);
                 }
             }
 
