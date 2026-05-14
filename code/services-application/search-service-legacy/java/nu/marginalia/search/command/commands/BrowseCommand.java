@@ -1,6 +1,7 @@
 package nu.marginalia.search.command.commands;
 
 import com.google.inject.Inject;
+import nu.marginalia.browse.RandomDomainSet;
 import nu.marginalia.browse.model.BrowseResultSet;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
@@ -58,11 +59,7 @@ public class BrowseCommand implements SearchCommandInterface {
 
         try {
             if ("random".equals(word)) {
-                return browseService.getRandomEntries(0);
-            }
-            if (word.startsWith("random:")) {
-                int set = Integer.parseInt(word.split(":")[1]);
-                return browseService.getRandomEntries(set);
+                return browseService.getRandomEntries(RandomDomainSet.EXPLORE);
             }
             else {
                 return browseService.getRelatedEntries(word);

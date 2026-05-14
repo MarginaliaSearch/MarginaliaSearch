@@ -19,6 +19,7 @@ import nu.marginalia.api.feeds.FeedsClient;
 import nu.marginalia.api.feeds.RpcFeed;
 import nu.marginalia.api.feeds.RpcFeedItem;
 import nu.marginalia.api.livecapture.LiveCaptureClient;
+import nu.marginalia.browse.RandomDomainSuggestionsDao;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.ddtrackergradar.DDGTrackerData;
 import nu.marginalia.ddtrackergradar.model.DDGTDomain;
@@ -72,6 +73,7 @@ public class SearchSiteInfoService {
     private final LiveCaptureClient liveCaptureClient;
     private final DomSampleClient domSampleClient;
     private final ScreenshotService screenshotService;
+    private final RandomDomainSuggestionsDao randomDomainSuggestionsDao;
 
     private final HikariDataSource dataSource;
     private final DDGTrackerData ddgTrackerData;
@@ -91,6 +93,7 @@ public class SearchSiteInfoService {
                                  FeedsClient feedsClient,
                                  LiveCaptureClient liveCaptureClient,
                                  ScreenshotService screenshotService,
+                                 RandomDomainSuggestionsDao randomDomainSuggestionsDao,
                                  HikariDataSource dataSource,
                                  DomSampleClient domSampleClient,
                                  DomSampleClassifier domSampleClassifier,
@@ -106,6 +109,7 @@ public class SearchSiteInfoService {
         this.feedsClient = feedsClient;
         this.liveCaptureClient = liveCaptureClient;
         this.screenshotService = screenshotService;
+        this.randomDomainSuggestionsDao = randomDomainSuggestionsDao;
         this.dataSource = dataSource;
         this.domSampleClient = domSampleClient;
         this.domSampleClassifier = domSampleClassifier;
@@ -242,6 +246,22 @@ public class SearchSiteInfoService {
     }
 
     @POST
+    @Path("/site/{domainName}/suggest-random")
+    public ModelAndView<?> suggestForRandomExploration(@PathParam String domainName) {
+        if (null == domainName || domainName.isBlank()) {
+            return new MapModelAndView("redirect.jte", Map.of("url", "/site"));
+        }
+
+        int domainId = domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1);
+        RandomDomainSuggestionsDao.SubmitOutcome outcome = (domainId < 0)
+                ? RandomDomainSuggestionsDao.SubmitOutcome.INELIGIBLE
+                : randomDomainSuggestionsDao.submitSuggestion(domainId);
+
+        return new MapModelAndView("redirect.jte",
+                Map.of("url", "/site/" + domainName + "?suggested=" + outcome.name()));
+    }
+
+    @POST
     @Path("/site/{domainName}")
     public ModelAndView<?> handleComplaint(
             @PathParam String domainName,
@@ -312,6 +332,8 @@ public class SearchSiteInfoService {
         String url = "https://" + domainName + "/";
 
         boolean hasScreenshot = screenshotService.hasScreenshot(domainId);
+        RandomDomainSuggestionsDao.DomainStatus randomStatus = randomDomainSuggestionsDao.getStatus(domainId);
+        RandomDomainSuggestionsDao.SubmitOutcome suggestionFlash = parseSuggestionFlash(context.query("suggested").valueOrNull());
 
         boolean isSubscribed = searchSiteSubscriptions.isSubscribed(context, domain);
 
@@ -361,6 +383,8 @@ public class SearchSiteInfoService {
                 domainId,
                 url,
                 hasScreenshot,
+                randomStatus,
+                suggestionFlash,
                 waitForFuture(domainInfoFuture, () -> createDummySiteInfo(domainName)),
                 waitForFuture(similarSetFuture, List::of),
                 waitForFuture(linkingDomainsFuture, List::of),
@@ -372,6 +396,16 @@ public class SearchSiteInfoService {
             requestMissingScreenshots(result);
         }
         return result;
+    }
+
+    private static RandomDomainSuggestionsDao.SubmitOutcome parseSuggestionFlash(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        try {
+            return RandomDomainSuggestionsDao.SubmitOutcome.valueOf(raw);
+        }
+        catch (IllegalArgumentException ex) {
+            return null;
+        }
     }
 
     /** Request missing screenshots for the given site info */
@@ -782,6 +816,9 @@ public class SearchSiteInfoService {
                                       int domainId,
                                       String siteUrl,
                                       boolean hasScreenshot,
+                                      RandomDomainSuggestionsDao.DomainStatus randomStatus,
+                                      @Nullable
+                                      RandomDomainSuggestionsDao.SubmitOutcome suggestionFlash,
                                       RpcDomainInfoResponse domainInformation,
                                       List<SimilarDomain> similar,
                                       List<SimilarDomain> linking,

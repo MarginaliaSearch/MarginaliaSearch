@@ -6,6 +6,7 @@ import nu.marginalia.api.domains.RpcDomainInfoResponse;
 import nu.marginalia.api.domains.model.DomainInformation;
 import nu.marginalia.api.domains.model.SimilarDomain;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
+import nu.marginalia.browse.RandomDomainSuggestionsDao;
 import nu.marginalia.browse.model.BrowseResult;
 import nu.marginalia.browse.model.BrowseResultSet;
 import nu.marginalia.db.DbDomainQueries;
@@ -138,6 +139,19 @@ public class MockedSearchResults {
         );
     }
 
+    private static RandomDomainSuggestionsDao.DomainStatus randomDomainStatus() {
+        var values = RandomDomainSuggestionsDao.DomainStatus.values();
+        return values[ThreadLocalRandom.current().nextInt(values.length)];
+    }
+
+    /** Returns a random {@link RandomDomainSuggestionsDao.SubmitOutcome}, or {@code null}
+     *  to represent the no-flash case. Picking via reload exercises every JTE branch. */
+    private static RandomDomainSuggestionsDao.SubmitOutcome randomSuggestionFlash() {
+        var values = RandomDomainSuggestionsDao.SubmitOutcome.values();
+        int pick = ThreadLocalRandom.current().nextInt(values.length + 1);
+        return pick == values.length ? null : values[pick];
+    }
+
     public static SearchSiteInfoService.SiteInfoWithContext mockSiteInfoData() throws URISyntaxException {
         return new SearchSiteInfoService.SiteInfoWithContext(
                 "www.example.com",
@@ -150,6 +164,8 @@ public class MockedSearchResults {
                 14,
                 "https://www.example.com",
                 true,
+                randomDomainStatus(),
+                randomSuggestionFlash(),
                 RpcDomainInfoResponse.newBuilder()
                         .setDomain("www.example.com")
                         .setBlacklisted(false)

@@ -3,6 +3,7 @@ package nu.marginalia.control.app.svc;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import gnu.trove.list.array.TIntArrayList;
+import nu.marginalia.browse.RandomDomainSuggestionsDao;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.model.EdgeDomain;
 import spark.Request;
@@ -20,21 +21,28 @@ public class RandomExplorationService {
 
     private final HikariDataSource dataSource;
     private final ControlRendererFactory rendererFactory;
+    private final RandomDomainSuggestionsDao suggestionsDao;
 
     @Inject
     public RandomExplorationService(HikariDataSource dataSource,
-                                    ControlRendererFactory rendererFactory
+                                    ControlRendererFactory rendererFactory,
+                                    RandomDomainSuggestionsDao suggestionsDao
     ) {
         this.dataSource = dataSource;
         this.rendererFactory = rendererFactory;
+        this.suggestionsDao = suggestionsDao;
     }
 
     public void register() throws IOException {
         var reviewRandomDomainsRenderer = rendererFactory.renderer("control/app/review-random-domains");
+        var suggestionsRenderer = rendererFactory.renderer("control/app/random-domain-suggestions");
 
-        Spark.get("/review-random-domains", this::reviewRandomDomainsModel, reviewRandomDomainsRenderer::render);
+        Spark.get("/random-domains/review", this::reviewRandomDomainsModel, reviewRandomDomainsRenderer::render);
+        Spark.post("/random-domains/review", this::reviewRandomDomainsAction);
 
-        Spark.post("/review-random-domains", this::reviewRandomDomainsAction);
+        Spark.get("/random-domains/suggestions", this::suggestionsModel, suggestionsRenderer::render);
+        Spark.post("/random-domains/suggestions/approve", this::approveSuggestionsAction);
+        Spark.post("/random-domains/suggestions/reject", this::rejectSuggestionsAction);
     }
 
     private Object reviewRandomDomainsModel(Request request, Response response) throws SQLException {
@@ -49,34 +57,23 @@ public class RandomExplorationService {
     }
 
     private Object reviewRandomDomainsAction(Request request, Response response) throws SQLException {
-        TIntArrayList idList = new TIntArrayList();
-
-        request.queryParams().forEach(key -> {
-            if (key.startsWith("domain-")) {
-                String value = request.queryParams(key);
-                if ("on".equalsIgnoreCase(value)) {
-                    int id = Integer.parseInt(key.substring(7));
-                    idList.add(id);
-                }
-            }
-        });
-
-        removeRandomDomains(idList.toArray());
+        removeRandomDomains(collectSelectedDomainIds(request));
 
         String after = request.queryParams("after");
 
         return """
                 <?doctype html>
-                <html><head><meta http-equiv="refresh" content="0;URL='/review-random-domains?after=%s'" /></head></html>
+                <html><head><meta http-equiv="refresh" content="0;URL='/random-domains/review?after=%s'" /></head></html>
                 """.formatted(after);
     }
 
     public void removeRandomDomains(int[] ids) throws SQLException {
+        // /random-domains/review lists rows from every set; matching that, the
+        // delete is unfiltered by set so operators can prune any visible row.
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
                      DELETE FROM EC_RANDOM_DOMAINS
                      WHERE DOMAIN_ID = ?
-                     AND DOMAIN_SET = 0
                      """))
         {
             for (var id : ids) {
@@ -126,4 +123,49 @@ public class RandomExplorationService {
 
 
     public record RandomDomainResult(int id, String domainName) {}
+
+    private Object suggestionsModel(Request request, Response response) throws SQLException {
+        String afterVal = Objects.requireNonNullElse(request.queryParams("after"), "0");
+        int after = Integer.parseInt(afterVal);
+        var suggestions = suggestionsDao.listSuggestions(after, 25);
+        int nextAfter = suggestions.stream()
+                .mapToInt(RandomDomainSuggestionsDao.SuggestionRow::id)
+                .max().orElse(Integer.MAX_VALUE);
+
+        return Map.of("suggestions", suggestions,
+                "after", nextAfter,
+                "hasSuggestions", !suggestions.isEmpty());
+    }
+
+    private Object approveSuggestionsAction(Request request, Response response) throws SQLException {
+        suggestionsDao.approveSuggestions(collectSelectedDomainIds(request));
+        return suggestionsRedirect(request.queryParams("after"));
+    }
+
+    private Object rejectSuggestionsAction(Request request, Response response) throws SQLException {
+        suggestionsDao.rejectSuggestions(collectSelectedDomainIds(request));
+        return suggestionsRedirect(request.queryParams("after"));
+    }
+
+    private int[] collectSelectedDomainIds(Request request) {
+        TIntArrayList idList = new TIntArrayList();
+        request.queryParams().forEach(key -> {
+            if (key.startsWith("domain-")) {
+                String value = request.queryParams(key);
+                if ("on".equalsIgnoreCase(value)) {
+                    int id = Integer.parseInt(key.substring(7));
+                    idList.add(id);
+                }
+            }
+        });
+        return idList.toArray();
+    }
+
+    private String suggestionsRedirect(String after) {
+        String afterParam = (after == null || after.isBlank()) ? "0" : after;
+        return """
+                <?doctype html>
+                <html><head><meta http-equiv="refresh" content="0;URL='/random-domains/suggestions?after=%s'" /></head></html>
+                """.formatted(afterParam);
+    }
 }

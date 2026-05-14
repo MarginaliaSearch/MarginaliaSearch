@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import nu.marginalia.api.domains.DomainInfoClient;
 import nu.marginalia.api.domains.model.SimilarDomain;
 import nu.marginalia.browse.DbBrowseDomainsRandom;
+import nu.marginalia.browse.RandomDomainSet;
 import nu.marginalia.browse.model.BrowseResult;
 import nu.marginalia.browse.model.BrowseResultSet;
 import nu.marginalia.db.DbDomainQueries;
@@ -42,7 +43,7 @@ public class SearchBrowseService {
         this.browseResultCleaner = browseResultCleaner;
     }
 
-    public BrowseResultSet getRandomEntries(int set) {
+    public BrowseResultSet getRandomEntries(RandomDomainSet set) {
         List<BrowseResult> results = randomDomains.getRandomDomains(25, blacklist, set);
 
         results.removeIf(browseResultCleaner.shouldRemoveResultPredicateBr());

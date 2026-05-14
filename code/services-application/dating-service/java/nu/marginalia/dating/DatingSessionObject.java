@@ -2,6 +2,7 @@ package nu.marginalia.dating;
 
 import nu.marginalia.browse.DbBrowseDomainsRandom;
 import nu.marginalia.browse.DbBrowseDomainsSimilarCosine;
+import nu.marginalia.browse.RandomDomainSet;
 import nu.marginalia.browse.model.BrowseResult;
 import nu.marginalia.db.DomainBlacklist;
 
@@ -22,7 +23,7 @@ public class DatingSessionObject {
 
     public BrowseResult next(DbBrowseDomainsRandom random, DomainBlacklist blacklist) {
         if (queue.isEmpty()) {
-            random.getRandomDomains(25, blacklist, 0).forEach(queue::addLast);
+            random.getRandomDomains(25, blacklist, RandomDomainSet.DATING).forEach(queue::addLast);
         }
         return queue.pollFirst();
     }
