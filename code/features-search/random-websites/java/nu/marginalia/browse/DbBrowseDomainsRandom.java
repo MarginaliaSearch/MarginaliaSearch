@@ -24,8 +24,10 @@ public class DbBrowseDomainsRandom {
         this.dataSource = dataSource;
     }
 
-    public List<BrowseResult> getRandomDomains(int count, DomainBlacklist blacklist, int set) {
+    public List<BrowseResult> getRandomDomains(int count, DomainBlacklist blacklist, RandomDomainSet set) {
 
+        // Always pull from the requested set plus the approved-suggestions set, so
+        // operator-approved user submissions surface alongside the curated lists.
         final String q = """
                 SELECT EC_RANDOM_DOMAINS.DOMAIN_ID, DOMAIN_NAME, INDEXED
                 FROM EC_RANDOM_DOMAINS
@@ -33,7 +35,7 @@ public class DbBrowseDomainsRandom {
                 LEFT JOIN DOMAIN_AVAILABILITY_INFORMATION DAI ON DAI.DOMAIN_ID=EC_RANDOM_DOMAINS.DOMAIN_ID
                 WHERE STATE<2
                 AND SERVER_AVAILABLE
-                AND DOMAIN_SET=?
+                AND DOMAIN_SET IN (?, ?)
                 AND DOMAIN_ALIAS IS NULL
                 ORDER BY RAND()
                 LIMIT ?
@@ -41,8 +43,9 @@ public class DbBrowseDomainsRandom {
         List<BrowseResult> domains = new ArrayList<>(count);
         try (var conn = dataSource.getConnection()) {
             try (var stmt = conn.prepareStatement(q)) {
-                stmt.setInt(1, set);
-                stmt.setInt(2, count);
+                stmt.setInt(1, set.setId);
+                stmt.setInt(2, RandomDomainSet.APPROVED_SUGGESTIONS.setId);
+                stmt.setInt(3, count);
                 var rsp = stmt.executeQuery();
                 while (rsp.next()) {
                     int id = rsp.getInt(1);

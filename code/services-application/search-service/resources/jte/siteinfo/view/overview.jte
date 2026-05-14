@@ -1,3 +1,5 @@
+@import nu.marginalia.browse.RandomDomainSuggestionsDao.DomainStatus
+@import nu.marginalia.browse.RandomDomainSuggestionsDao.SubmitOutcome
 @import nu.marginalia.db.DbDomainQueries
 @import nu.marginalia.search.svc.SearchSiteInfoService
 @import nu.marginalia.search.svc.SearchSiteInfoService.*
@@ -33,6 +35,45 @@
             <a class="mx-3 " tabindex="-1" rel="nofollow noopener external" href="${siteInfo.siteUrl()}">
                 <img class="border dark:border-gray-600 shadow-inner" src="/screenshot/${siteInfo.domainId()}" alt="Screenshot of ${siteInfo.domain()}">
             </a>
+        @endif
+
+        @if (siteInfo.suggestionFlash() == SubmitOutcome.SUBMITTED)
+            <div class="mx-3 p-2 text-sm bg-green-100 dark:bg-green-900 dark:text-green-100 rounded">
+                Thanks! This domain has been queued for review.
+            </div>
+        @elseif (siteInfo.suggestionFlash() == SubmitOutcome.DUPLICATE)
+            <div class="mx-3 p-2 text-sm bg-gray-100 dark:bg-gray-700 dark:text-gray-100 rounded">
+                This domain is already awaiting review.
+            </div>
+        @elseif (siteInfo.suggestionFlash() == SubmitOutcome.INELIGIBLE)
+            <div class="mx-3 p-2 text-sm bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-100 rounded">
+                This domain is not eligible for the random exploration set.
+            </div>
+        @endif
+
+        @if (siteInfo.randomStatus() == DomainStatus.LISTED)
+            <div class="mx-3 flex place-items-center space-x-2 p-2 text-sm bg-gray-100 dark:bg-gray-700 dark:text-gray-100 rounded">
+                <i class="fas fa-dice text-margeblue dark:text-blue-200"></i>
+                <span>Featured in <a class="underline text-liteblue dark:text-blue-200" href="/explore">random exploration</a>.</span>
+            </div>
+        @elseif (siteInfo.randomStatus() == DomainStatus.PENDING_REVIEW)
+            <div class="mx-3 flex place-items-center space-x-2 p-2 text-sm bg-gray-100 dark:bg-gray-700 dark:text-gray-100 rounded">
+                <i class="fa-regular fa-hourglass-half text-margeblue dark:text-blue-200"></i>
+                <span>Suggested for random exploration. Awaiting review.</span>
+            </div>
+        @elseif (siteInfo.randomStatus() == DomainStatus.ELIGIBLE)
+            <form method="POST" action="/site/${siteInfo.domain()}/suggest-random"
+                  class="mx-3 p-3 flex items-center space-x-3 bg-gray-50 dark:bg-gray-700 border dark:border-gray-600 rounded">
+                <i class="fas fa-dice text-margeblue dark:text-blue-200"></i>
+                <div class="grow text-sm text-gray-700 dark:text-gray-200">
+                    Recommend this domain for random exploration?
+                </div>
+                <button type="submit"
+                        class="text-sm font-medium text-white bg-margeblue rounded-md py-1.5 px-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:margeblue"
+                        title="Submit this domain for operator review">
+                    Suggest
+                </button>
+            </form>
         @endif
 
         @if (siteInfo.hasFeed())

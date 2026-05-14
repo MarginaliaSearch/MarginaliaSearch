@@ -17,7 +17,8 @@
 					<ul class="dropdown-menu">
 						<li><a class="dropdown-item" href="/api-keys" title="Create or remove API keys">API Keys</a></li>
 						<li><a class="dropdown-item" href="/complaints" title="View and act on user complaints">Complaints</a></li>
-						<li><a class="dropdown-item" href="/review-random-domains" title="Review random domains list">Random Exploration</a></li>
+						<li><a class="dropdown-item" href="/random-domains/review" title="Review the random domains list">Random Exploration Review</a></li>
+						<li><a class="dropdown-item" href="/random-domains/suggestions" title="Review user-submitted random domain suggestions">Random Exploration Suggestions</a></li>
 					</ul>
 				</li>
                 {{/unless}}
