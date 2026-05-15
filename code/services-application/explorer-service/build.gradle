@@ -43,6 +43,7 @@ dependencies {
         exclude group: 'org.eclipse.jetty'
     }
     implementation libs.bundles.jetty
+    implementation libs.bundles.jooby
     implementation libs.opencsv
     implementation libs.trove
     implementation libs.fastutil
