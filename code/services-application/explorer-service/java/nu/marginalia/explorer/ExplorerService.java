@@ -2,9 +2,14 @@ package nu.marginalia.explorer;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
+import io.jooby.Context;
+import io.jooby.Cookie;
+import io.jooby.Jooby;
+import io.jooby.SessionStore;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.service.server.BaseServiceParams;
+import nu.marginalia.service.server.JoobyService;
 import nu.marginalia.service.server.SparkService;
 import nu.marginalia.service.server.StaticResources;
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +20,7 @@ import spark.Spark;
 import java.sql.SQLException;
 import java.util.*;
 
-public class ExplorerService extends SparkService {
+public class ExplorerService extends JoobyService {
 
     private final MustacheRenderer<Object> renderer;
     private final HikariDataSource dataSource;
@@ -46,47 +51,44 @@ public class ExplorerService extends SparkService {
 
     {
 
-        super(params);
+        super(params, List.of(), List.of());
 
         renderer = rendererFactory.renderer("explorer/explorer");
 
         this.dataSource = dataSource;
         this.staticResources = staticResources;
+    }
 
-        Spark.get("/", this::serveIndex, this::render);
-        Spark.get("/search", this::search, this::render);
-        Spark.get("/:resource", this::serveStatic);
+    public void startJooby(Jooby jooby) {
+
+        super.startJooby(jooby);
+
+        jooby.setSessionStore(SessionStore.memory(Cookie.session("marginalia-session")));
+
+        jooby.get("/", this::serveIndex);
+        jooby.get("/search", this::search);
+    }
+
+    private Object serveIndex(Context ctx) {
+        ctx.setResponseType("text/html");
+
+        return renderer.render(new SearchResults("", "", null, Collections.emptyList()));
     }
 
 
-    private Object serveStatic(Request request, Response response) {
-        String resource = request.params("resource");
-
-        staticResources.serveStatic("explore", resource, request, response);
-
-        return "";
-    }
-
-    public String render(Object results) {
-        return renderer.render(results);
-    }
-
-    private SearchResults serveIndex(Request request, Response response) {
-
-        return new SearchResults("", "", null, Collections.emptyList());
-    }
-
-
-    private SearchResults search(Request request, Response response) throws SQLException {
-        String query = request.queryParams("domain");
+    private Object search(Context ctx) throws SQLException {
+        String query = ctx.query("domain").value();
+        ctx.setResponseType("text/html");
 
         query = trimUrlJunk(query);
 
         DomainIdInformation domainId = getDomainId(query);
         if (!domainId.isPresent()) {
-            return new SearchResults(query,
+            return renderer.render(
+                    new SearchResults(query,
                     "Could not find such a domain (maybe try adding/removing www?)",
-                    null, Collections.emptyList());
+                    null, Collections.emptyList())
+            );
         }
 
         var relatedDomains = getRelatedDomains(domainId);
@@ -99,10 +101,14 @@ public class ExplorerService extends SparkService {
                  not very interesting to look at either as everyone links to them and there's no real pattern to discern.
                 """;
 
-            return new SearchResults(query, message, domainId.alias, relatedDomains);
+            return renderer.render(
+                    new SearchResults(query, message, domainId.alias, relatedDomains)
+            );
         }
 
-        return new SearchResults(query, "", domainId.alias, relatedDomains);
+        return renderer.render(
+                new SearchResults(query, "", domainId.alias, relatedDomains)
+        );
     }
 
     private List<SearchResult> getRelatedDomains(DomainIdInformation domainIdInformation) throws SQLException {
