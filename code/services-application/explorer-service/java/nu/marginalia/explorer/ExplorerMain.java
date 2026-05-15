@@ -14,7 +14,6 @@ import nu.marginalia.service.ServiceId;
 import nu.marginalia.service.module.ServiceConfigurationModule;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.service.server.Initialization;
-import spark.Spark;
 
 public class ExplorerMain extends MainClass {
     final ExplorerService service;
@@ -26,8 +25,6 @@ public class ExplorerMain extends MainClass {
 
     public static void main(String... args) {
         init(ServiceId.Explorer, args);
-
-        Spark.staticFileLocation("/explore/");
 
         Injector injector = Guice.createInjector(
                 new ServiceConfigurationModule(ServiceId.Explorer),

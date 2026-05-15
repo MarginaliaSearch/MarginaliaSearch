@@ -13,9 +13,6 @@ import nu.marginalia.service.server.JoobyService;
 import nu.marginalia.service.server.SparkService;
 import nu.marginalia.service.server.StaticResources;
 import org.jetbrains.annotations.NotNull;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
 
 import java.sql.SQLException;
 import java.util.*;
