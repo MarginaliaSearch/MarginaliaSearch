@@ -40,11 +40,7 @@ dependencies {
     implementation project(':code:functions:nsfw-filter')
 
     implementation libs.bundles.slf4j
-
-    implementation dependencies.create(libs.spark.get()) {
-        exclude group: 'org.eclipse.jetty'
-    }
-    implementation libs.bundles.jetty
+    implementation libs.bundles.jooby
     implementation libs.gson
     implementation libs.prometheus
     implementation libs.notnull
@@ -54,6 +50,7 @@ dependencies {
     }
     implementation libs.bundles.mariadb
     implementation libs.guava
+
     libs.bundles.grpc.get().each {
         implementation dependencies.create(it) {
             exclude group: 'com.google.guava'

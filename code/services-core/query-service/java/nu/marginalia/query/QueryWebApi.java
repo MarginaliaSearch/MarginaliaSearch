@@ -3,6 +3,8 @@ package nu.marginalia.query;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
+import io.jooby.Context;
+import io.jooby.value.Value;
 import nu.marginalia.api.searchquery.QueryFilterSpec;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.model.SearchFilterDefaults;
@@ -15,8 +17,6 @@ import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
-import spark.Request;
-import spark.Response;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -44,8 +44,8 @@ public class QueryWebApi {
         this.searchRenderer = rendererFactory.renderer("search");
     }
 
-    public Object handleDomainInfo(Request request, Response response) throws SQLException {
-        String domainName = request.splat()[0];
+    public Object handleDomainInfo(Context ctx) throws SQLException {
+        String domainName = ctx.path("domain").value();
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
                 SELECT 
@@ -68,17 +68,18 @@ public class QueryWebApi {
                 Optional.ofNullable(rs.getObject("STATE", String.class)).ifPresent(val -> result.put("STATE", val));
                 Optional.ofNullable(rs.getObject("NODE_AFFINITY", String.class)).ifPresent(val -> result.put("NODE_AFFINITY", val));
 
-                response.type("application/json");
+                ctx.setResponseType("application/json");
                 return gson.toJson(result);
             }
         }
 
-        response.status(404);
+        ctx.setResponseCode(404);
         return "Unknown domain";
     }
 
-    public Object handleDomainAvailability(Request request, Response response) throws SQLException {
-        String domainName = request.splat()[0];
+    public Object handleDomainAvailability(Context ctx) throws SQLException {
+        String domainName = ctx.path("domain").value();
+
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
                 SELECT 
@@ -127,43 +128,46 @@ public class QueryWebApi {
                 Optional.ofNullable(rs.getTimestamp("TS_LAST_AVAILABLE")).map(Timestamp::toInstant).ifPresent(val -> result.put("TS_LAST_AVAILABLE", val));
                 Optional.ofNullable(rs.getTimestamp("TS_LAST_ERROR")).map(Timestamp::toInstant).ifPresent(val -> result.put("TS_LAST_ERROR", val));
 
-                response.type("application/json");
+                ctx.setResponseType("application/json");
                 return gson.toJson(result);
             }
         }
 
-        response.status(404);
-        return "Unknown domain";
+        ctx.setResponseCode(404);
+        return "Missing availabilty data";
     }
 
 
-    public Object handleApiSearch(Request request, Response response) {
+    public Object handleApiSearch(Context ctx) {
         // Support both 'query' and 'q' parameter names
-        String queryString = request.queryParams("query");
-        if (queryString == null || queryString.isBlank()) {
-            queryString = request.queryParams("q");
+        Value query = ctx.query("query");
+        if (query.isMissing()) {
+            query = ctx.query("q");
         }
-        if (queryString == null || queryString.isBlank()) {
+
+        String queryString = query.value();
+        if (query.isMissing()) {
+            ctx.setResponseType("text/html");
             return searchRenderer.render(new Object());
         }
 
-        int count = clamp(intParam(request, "count", 20), 1, 100);
-        int domainCount = clamp(intParam(request, "dc", 2), 1, 100);
-        int timeout = clamp(intParam(request, "timeout", 150), 50, 250);
-        int page = Math.max(1, intParam(request, "page", 1));
-        String langIsoCode = requireNonNullElse(request.queryParams("lang"), "en");
+        int count = clamp(ctx.query("count").intValue(20), 1, 100);
+        int domainCount = clamp(ctx.query("dc").intValue(2), 1, 100);
+        int timeout = clamp(ctx.query("timeout").intValue(150), 50, 250);
+        int page = Math.max(1, ctx.query("page").intValue(1));
+        String langIsoCode = ctx.query("lang").value("en");
 
-        int nsfwValue = intParam(request, "nsfw", 1);
+        int nsfwValue = ctx.query("nsfw").intValue(1);
         NsfwFilterTier nsfwFilterTier;
         try {
             nsfwFilterTier = NsfwFilterTier.fromCodedValue(nsfwValue);
         }
         catch (IllegalArgumentException e) {
-            response.status(400);
+            ctx.setResponseCode(400);
             return "Invalid 'nsfw' parameter value";
         }
 
-        QueryFilterSpec filterSpec = resolveFilter(request.queryParams("filter"));
+        QueryFilterSpec filterSpec = resolveFilter(ctx.query("filter").valueOrNull());
 
         IndexClient.Pagination pagination = new IndexClient.Pagination(page, count);
 
@@ -185,7 +189,7 @@ public class QueryWebApi {
             totalPages = (result.totalResults() + pagination.pageSize() - 1) / pagination.pageSize();
         }
 
-        String accept = request.headers("Accept");
+        String accept = ctx.header("Accept").valueOrNull();
         if (accept != null && accept.contains("application/json")) {
             ApiSearchResults apiResults = new ApiSearchResults(
                     queryString,
@@ -194,7 +198,7 @@ public class QueryWebApi {
                     convertResults(result.result())
             );
 
-            response.type("application/json");
+            ctx.setResponseType("application/json");
             return gson.toJson(apiResults);
         }
 
@@ -203,6 +207,7 @@ public class QueryWebApi {
             paginationInfo.add(new PaginationInfoPage(i, i == page));
         }
 
+        ctx.setResponseType("text/html");
         return searchRenderer.render(
                 Map.of("query", queryString,
                         "pages", paginationInfo,
@@ -262,19 +267,6 @@ public class QueryWebApi {
             return alternative;
         }
         return value;
-    }
-
-    private int intParam(Request request, String name, int defaultValue) {
-        String val = request.queryParams(name);
-        if (val == null || val.isBlank()) {
-            return defaultValue;
-        }
-        try {
-            return parseInt(val);
-        }
-        catch (NumberFormatException e) {
-            return defaultValue;
-        }
     }
 
     private int clamp(int value, int min, int max) {
