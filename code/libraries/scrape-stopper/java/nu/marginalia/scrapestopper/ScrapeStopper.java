@@ -54,10 +54,6 @@ public class ScrapeStopper {
     }
 
     public String assignSst(String zone, Token token) {
-        // Evict any pre-existing tokens with the same remote IP
-        // (this is a bit heavy handed I guess?)
-        tokens.values().removeIf(token::hasSameRemoteIp);
-
         for (;;) {
             String maybeKey = String.format("%s-%016x",
                     zone,
