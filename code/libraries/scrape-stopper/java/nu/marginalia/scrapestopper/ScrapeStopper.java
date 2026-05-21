@@ -17,6 +17,7 @@ public class ScrapeStopper {
     private static final Logger logger = LoggerFactory.getLogger(ScrapeStopper.class);
 
     private final ConcurrentHashMap<String, Token> tokens = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Token> tokensByIpZone = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, ValidationRate> validationRatePerZone = new ConcurrentHashMap<>();
 
     public ScrapeStopper() {
@@ -26,6 +27,7 @@ public class ScrapeStopper {
                     Thread.sleep(Duration.ofMinutes(1));
 
                     tokens.values().removeIf(Token::isExpired);
+                    tokensByIpZone.values().removeIf(Token::isExpired);
                     validationRatePerZone.values().forEach(ValidationRate::updateTarget);
                 }
             }
@@ -54,12 +56,32 @@ public class ScrapeStopper {
     }
 
     public String assignSst(String zone, Token token) {
+        // If this ip+zone already has a token, then we return that.
+        // This will slightly hurt people sharing the same IP, but not by much,
+        // and will make token storage more inconvenient.
+
+        String ipZone = token.remoteIp + "-" + zone;
+        Token existingTokenForIp = tokensByIpZone.get(ipZone);
+
+        if (existingTokenForIp != null && !existingTokenForIp.isExpired()) {
+            String sst = existingTokenForIp.sst;
+
+            if (sst != null) {
+                return existingTokenForIp.sst;
+            }
+        }
+
         for (;;) {
             String maybeKey = String.format("%s-%016x",
                     zone,
                     ThreadLocalRandom.current().nextLong(0, Long.MAX_VALUE));
 
+            token.sst = maybeKey;
             if (tokens.put(maybeKey, token) == null) {
+                // There is some minor raceyness here,
+                // but it shouldn't really affect realistic paths
+                tokensByIpZone.put(ipZone, token);
+
                 return maybeKey;
             }
         }
@@ -76,6 +98,8 @@ public class ScrapeStopper {
 
         if (null == (token = tokens.remove(sst)))
             return Optional.empty();
+
+        tokensByIpZone.remove(token.remoteIp);
 
         return Optional.of(assignSst(zone, token));
     }
@@ -117,10 +141,12 @@ public class ScrapeStopper {
 
 class Token {
     public final String zone;
+    @Nullable
+    public String sst;
 
     private final Instant validAfter;
     private final Instant validUntil;
-    private final String remoteIp;
+    public final String remoteIp;
     private AtomicInteger remainingUses;
 
     private volatile Instant lastValidation;
@@ -137,6 +163,7 @@ class Token {
         this.validUntil = validUntil;
         this.remoteIp = remoteIp;
         this.remainingUses = new AtomicInteger(uses);
+        this.sst = null; // will be assigned later
     }
 
     public ScrapeStopper.TokenState validate(String remoteIp, String context) {
