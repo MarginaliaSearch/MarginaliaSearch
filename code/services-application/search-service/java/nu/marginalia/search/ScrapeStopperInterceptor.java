@@ -19,6 +19,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Singleton
 public class ScrapeStopperInterceptor {
 
+    private final String realIpHeader = System.getProperty("system.realIpHeader", "X-Forwarded-For");
     private final boolean isEnabled = Boolean.getBoolean("search.useScrapeStopper");
     private final boolean isRerollEnabled = Boolean.getBoolean("search.scrapeStopper.rerollSst");
 
@@ -62,7 +63,7 @@ public class ScrapeStopperInterceptor {
             );
         }
 
-        String remoteIp = context.header("X-Forwarded-For").valueOrNull();
+        String remoteIp = context.header(realIpHeader).valueOrNull();
 
         ScrapeStopper.TokenState tokenState = scrapeStopper.validateToken(sst, remoteIp, zoneContext);
 

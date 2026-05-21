@@ -42,6 +42,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class ApiV2 implements Extension {
+    private final String realIpHeader = System.getProperty("system.realIpHeader", "X-Forwarded-For");
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Marker apiUsageMarker = MarkerFactory.getMarker("APIUSAGE");
@@ -383,7 +384,7 @@ public class ApiV2 implements Extension {
         }
 
         if (license.hasOption(ApiLicenseOptions.ADUIT_USAGE)) {
-            logger.info(apiUsageMarker, "{} {} {}", license.key(), limitState, ctx.header("X-Forwarded-For"));
+            logger.info(apiUsageMarker, "{} {} {}", license.key(), limitState, ctx.header(realIpHeader));
         }
 
         if (license.hasOption(ApiLicenseOptions.ALLOW_QUERY_DAILY_OVERUSE)) {
