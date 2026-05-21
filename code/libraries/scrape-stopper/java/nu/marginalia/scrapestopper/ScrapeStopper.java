@@ -154,9 +154,18 @@ class Token {
 
         var lastValidation = this.lastValidation;
 
-        if (lastValidation != null) {
+        if (lastValidation == null) {
+
+            // Token validation is suspiciously delayed
+            if (Instant.now().isAfter(validAfter.plusSeconds(5))) {
+                remainingUses.set(0);
+                return ScrapeStopper.TokenState.INVALID;
+            }
+        }
+        else { // We have a previous validation time
             Duration timeSinceValidation = Duration.between(lastValidation, Instant.now());
 
+            // Requests are too frequent
             if (timeSinceValidation.minusSeconds(1).isNegative()) {
                 remainingUses.set(0);
 
