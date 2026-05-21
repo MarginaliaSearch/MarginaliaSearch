@@ -54,6 +54,10 @@ public class ScrapeStopper {
     }
 
     public String assignSst(String zone, Token token) {
+        // Evict any pre-existing tokens with the same remote IP
+        // (this is a bit heavy handed I guess?)
+        tokens.values().removeIf(token::hasSameRemoteIp);
+
         for (;;) {
             String maybeKey = String.format("%s-%016x",
                     zone,
@@ -180,6 +184,10 @@ class Token {
         this.lastValidation = Instant.now();
 
         return ScrapeStopper.TokenState.VALIDATED;
+    }
+
+    public boolean hasSameRemoteIp(Token otherToken) {
+        return Objects.equals(otherToken.remoteIp, this.remoteIp);
     }
 
     public Duration timeUntilValid() {
