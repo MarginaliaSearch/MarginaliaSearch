@@ -14,8 +14,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Singleton
 public class ScrapeStopper {
-    private final Duration viabilityPeriod = Duration.ofMinutes(5);
-
     private static final Logger logger = LoggerFactory.getLogger(ScrapeStopper.class);
 
     private final ConcurrentHashMap<String, Token> tokens = new ConcurrentHashMap<>();
@@ -180,7 +178,7 @@ class Token {
     }
 
     public boolean isExpired() {
-        return Instant.now().isAfter(validAfter) && remainingUses.getAcquire() <= 0;
+        return Instant.now().isAfter(validUntil) || remainingUses.getAcquire() <= 0;
     }
 }
 
