@@ -99,7 +99,7 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
         while (documentIterator.hasNext()) {
             var document = documentIterator.next();
 
-            if (document.details == null || document.words == null) {
+            if (!document.isOk() || document.details == null || document.words == null) {
                 continue;
             }
 
