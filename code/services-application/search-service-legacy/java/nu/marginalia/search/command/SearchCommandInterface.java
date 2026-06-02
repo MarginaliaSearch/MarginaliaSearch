@@ -1,10 +1,10 @@
 package nu.marginalia.search.command;
 
 
-import spark.Response;
+import io.jooby.Context;
 
 import java.util.Optional;
 
 public interface SearchCommandInterface {
-    Optional<Object> process(Response response, SearchParameters parameters);
+    Optional<Object> process(Context ctx, SearchParameters parameters);
 }
