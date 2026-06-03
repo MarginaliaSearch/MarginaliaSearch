@@ -28,6 +28,7 @@ dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:service')
     implementation project(':code:common:config')
+    implementation project(':code:index:live-capture:api')
     implementation project(':code:functions:search-query:api')
     implementation project(':code:functions:search-query')
     implementation project(':code:functions:domain-info:api')

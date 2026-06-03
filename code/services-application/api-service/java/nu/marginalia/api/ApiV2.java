@@ -9,6 +9,8 @@ import nu.marginalia.api.domains.RpcDomainInfoPingData;
 import nu.marginalia.api.domains.RpcDomainInfoResponse;
 import nu.marginalia.api.domains.RpcDomainInfoSecurityData;
 import nu.marginalia.api.domains.model.SimilarDomain;
+import nu.marginalia.api.feeds.FeedsClient;
+import nu.marginalia.api.feeds.RpcFeed;
 import nu.marginalia.api.model.*;
 import nu.marginalia.api.searchquery.QueryClient;
 import nu.marginalia.api.searchquery.QueryFilterSpec;
@@ -33,9 +35,7 @@ import java.sql.SQLException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -54,6 +54,7 @@ public class ApiV2 implements Extension {
     private final ApiSearchOperator searchOperator;
     private final QueryClient queryClient;
     private final FiltersService filtersService;
+    private final FeedsClient feedsClient;
     private final DomainInfoClient domainInfoClient;
     private final DbDomainQueries dbDomainQueries;
 
@@ -64,6 +65,7 @@ public class ApiV2 implements Extension {
                  ApiSearchOperator searchOperator,
                  QueryClient queryClient,
                  FiltersService filtersService,
+                 FeedsClient feedsClient,
                  DomainInfoClient domainInfoClient,
                  DbDomainQueries dbDomainQueries)
     {
@@ -73,6 +75,7 @@ public class ApiV2 implements Extension {
         this.searchOperator = searchOperator;
         this.queryClient = queryClient;
         this.filtersService = filtersService;
+        this.feedsClient = feedsClient;
         this.domainInfoClient = domainInfoClient;
         this.dbDomainQueries = dbDomainQueries;
     }
@@ -96,6 +99,7 @@ public class ApiV2 implements Extension {
         jooby.delete("/api/v2/filter/{id}", this::deleteFilter);
 
         jooby.get("/api/v2/site/{domain}", this::siteInfo);
+        jooby.get("/api/v2/site/{domain}/feed", this::siteFeedUrl);
         jooby.get("/api/v2/site/{domain}/similar", (ctx) -> relatedDomains(ctx, Relation.Similar));
         jooby.get("/api/v2/site/{domain}/linking", (ctx) -> relatedDomains(ctx, Relation.Linked));
     }
@@ -486,6 +490,67 @@ public class ApiV2 implements Extension {
 
         ctx.setResponseType("application/json");
         return gson.toJson(result);
+    }
+
+
+
+    @NotNull
+    private Object siteFeedUrl(Context ctx) {
+        Value apiKeyVal = ctx.header("API-Key");
+        if (apiKeyVal.isMissing()) {
+            ctx.setResponseCode(400);
+            return "Missing API-Key header";
+        }
+
+        ApiLicense license;
+        try {
+            license = licenseService.getLicense(apiKeyVal.value());
+        } catch (LicenseService.NoSuchKeyException | IOException ex) {
+            ctx.setResponseCode(StatusCode.UNAUTHORIZED);
+            return "";
+        }
+
+        if (!rateLimiterService.isAllowedSiteInfoQPM(license)) {
+            ApiMetrics.wmsa_api_timeout_count.labelValues(license.key()).inc();
+            ctx.setResponseCode(429);
+            return "Site Info QPM Limit Exceeded";
+        }
+
+        if (!rateLimiterService.isAllowedSiteInfoQPD(license)) {
+            ApiMetrics.wmsa_api_timeout_count.labelValues(license.key()).inc();
+            ctx.setResponseCode(429);
+            return "Site Info Daily Limit Exceeded";
+        }
+
+        String domainName = ctx.path("domain").value();
+        int domainId;
+        try {
+            domainId = dbDomainQueries.getDomainId(new EdgeDomain(domainName));
+        } catch (NoSuchElementException ex) {
+            ctx.setResponseCode(StatusCode.NOT_FOUND);
+            return "Domain not known";
+        }
+
+        try {
+            RpcFeed feed = feedsClient.getFeed(domainId).get(100, TimeUnit.MILLISECONDS);
+
+            Map<String, String> ret = new HashMap<>();
+
+            ret.put("url", feed.getFeedUrl());
+            ret.put("domain", feed.getDomain());
+
+            return gson.toJson(ret);
+        } catch (ExecutionException e) {
+            logger.error("Failed to fetch feed for {}", domainName, e);
+            ctx.setResponseCode(StatusCode.SERVER_ERROR_CODE);
+            return "Failed to fetch feed";
+
+        } catch (TimeoutException|InterruptedException e) {
+            logger.error("Failed to fetch feed for {}", domainName, e);
+
+            ctx.setResponseCode(StatusCode.GATEWAY_TIMEOUT_CODE);
+            return "Timeout or interrupt fetching feed";
+        }
     }
 
     enum Relation {
