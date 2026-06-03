@@ -109,30 +109,26 @@ public class CrawlerRevisitor {
 
             // calculate the probability of skipping this document based on the
             // fraction of documents that haven't changed
-            if (recrawled > 0) {
-                if (strategy == Strategy.SUMMARY && recrawled >= 5 && retained > 0.8 * recrawled) {
-                    skipProb = 1.0;
+            if (strategy == Strategy.SUMMARY && recrawled >= 5 && retained > 0.8 * recrawled) {
+                skipProb = 1.0;
+            }
+            else {
+                skipProb = (double) retained / recrawled;
+
+                // If we've crawled a lot of documents, we'll be more conservative
+                // in trying to recrawl documents, to avoid hammering the server too much;
+                // in the case of a large change, we'll eventually catch it anyway
+
+                if (skipped + recrawled > 10_000) {
+                    skipProb = Math.clamp(skipProb, 0.75, 0.99);
+                } else if (skipped + recrawled > 1000) {
+                    skipProb = Math.clamp(skipProb, 0.5, 0.75);
+                } else if (recrawled > 25) {
+                    skipProb = Math.clamp(skipProb, 0, 0.50);
                 }
                 else {
-                    skipProb = (double) retained / recrawled;
-
-                    // If we've crawled a lot of documents, we'll be more conservative
-                    // in trying to recrawl documents, to avoid hammering the server too much;
-                    // in the case of a large change, we'll eventually catch it anyway
-
-                    if (skipped + recrawled > 10_000) {
-                        skipProb = Math.clamp(skipProb, 0.75, 0.99);
-                    } else if (skipped + recrawled > 1000) {
-                        skipProb = Math.clamp(skipProb, 0.5, 0.99);
-                    } else {
-                        skipProb = Math.clamp(skipProb, 0, 0.95);
-                    }
+                    skipProb = 0;
                 }
-
-            } else {
-                // If we haven't recrawled anything yet, we'll be more aggressive
-                // in trying to recrawl documents
-                skipProb = 0.25;
             }
 
             if (Math.random() < skipProb) //
