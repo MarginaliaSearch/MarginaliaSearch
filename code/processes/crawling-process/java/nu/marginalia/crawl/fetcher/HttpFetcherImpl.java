@@ -267,15 +267,6 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
 
                     return switch (response.getCode()) {
                         case 200, 206 -> new DomainProbeResult.Ok(url);
-                        case 405 -> {
-                            if (!tryGet.get()) {
-                                tryGet.set(true);
-                                yield new DomainProbeResult.RedirectSameDomain_Internal(url);
-                            }
-                            else {
-                                yield new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, "HTTP status 405, tried HEAD and GET?!");
-                            }
-                        }
                         case 301, 302, 307 -> {
                             var location = response.getFirstHeader("Location");
 
@@ -296,8 +287,15 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                             yield new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, "No location header on redirect");
 
                         }
-                        default ->
-                                new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, "HTTP status " + response.getCode());
+                        default -> {
+                            if (!tryGet.get()) {
+                                tryGet.set(true);
+                                yield new DomainProbeResult.RedirectSameDomain_Internal(url);
+                            }
+                            else {
+                                yield new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, "HTTP status " + response.getCode() + ", tried HEAD and GET?!");
+                            }
+                        }
                     };
                 });
 
