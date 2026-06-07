@@ -24,6 +24,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.SQLException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -92,6 +93,55 @@ public class SearchServiceLegacyDockerIntegrationTest {
             .withExposedPorts(80)
             .waitingFor(Wait.forHttp("/internal/ready").withStartupTimeout(Duration.ofMinutes(5)));
 
+    private static GenericContainer<?> assistantContainer = new GenericContainer<>(DockerImageName.parse("marginalia/assistant-service"))
+            .withImagePullPolicy(PullPolicy.defaultPolicy())
+            .withNetworkAliases("assistant-service")
+            .withNetwork(Network.SHARED)
+            .withEnv(Map.of("ZOOKEEPER_HOSTS", "zookeeper:2181",
+                    "SERVICE_HOST", "assistant-service"
+            ))
+            .withFileSystemBind(runDir + "/data", "/wmsa/data", BindMode.READ_ONLY)
+            .withFileSystemBind(runDir + "/model", "/wmsa/model", BindMode.READ_ONLY)
+            .withLogConsumer(frame -> {
+                System.out.print(frame.getUtf8String());
+            })
+            .withCopyToContainer(Transferable.of(dbProperties), "/wmsa/conf/db.properties")
+            .withExposedPorts(80)
+            .waitingFor(Wait.forHttp("/internal/ready").withStartupTimeout(Duration.ofMinutes(5)));
+
+    private static GenericContainer<?> queryContainer = new GenericContainer<>(DockerImageName.parse("marginalia/query-service"))
+            .withImagePullPolicy(PullPolicy.defaultPolicy())
+            .withNetworkAliases("query-service")
+            .withNetwork(Network.SHARED)
+            .withEnv(Map.of("ZOOKEEPER_HOSTS", "zookeeper:2181",
+                    "SERVICE_HOST", "query-service"
+            ))
+            .withFileSystemBind(runDir + "/data", "/wmsa/data", BindMode.READ_ONLY)
+            .withFileSystemBind(runDir + "/model", "/wmsa/model", BindMode.READ_ONLY)
+            .withLogConsumer(frame -> {
+                System.out.print(frame.getUtf8String());
+            })
+            .withCopyToContainer(Transferable.of(dbProperties), "/wmsa/conf/db.properties")
+            .withExposedPorts(80)
+            .waitingFor(Wait.forHttp("/internal/ready").withStartupTimeout(Duration.ofMinutes(5)));
+
+
+    private static GenericContainer<?> indexContainer = new GenericContainer<>(DockerImageName.parse("marginalia/index-service"))
+            .withImagePullPolicy(PullPolicy.defaultPolicy())
+            .withNetworkAliases("index-service")
+            .withNetwork(Network.SHARED)
+            .withEnv(Map.of("ZOOKEEPER_HOSTS", "zookeeper:2181",
+                    "SERVICE_HOST", "index-service"
+            ))
+            .withFileSystemBind(runDir + "/data", "/wmsa/data", BindMode.READ_ONLY)
+            .withFileSystemBind(runDir + "/model", "/wmsa/model", BindMode.READ_ONLY)
+            .withLogConsumer(frame -> {
+                System.out.print(frame.getUtf8String());
+            })
+            .withCopyToContainer(Transferable.of(dbProperties), "/wmsa/conf/db.properties")
+            .withExposedPorts(80)
+            .waitingFor(Wait.forHttp("/internal/started").withStartupTimeout(Duration.ofMinutes(5))); // <-- note different health check
+
     private static GenericContainer<?> sslContainer = new GenericContainer<>(DockerImageName.parse("marginalia/search-service-legacy"))
             .withImagePullPolicy(PullPolicy.defaultPolicy())
             .withNetworkAliases("search-service-legacy")
@@ -110,7 +160,7 @@ public class SearchServiceLegacyDockerIntegrationTest {
             .waitingFor(Wait.forHttp("/internal/ready").withStartupTimeout(Duration.ofMinutes(5)));
 
     @BeforeAll
-    public static void setUpAll() throws InterruptedException {
+    public static void setUpAll() throws InterruptedException, SQLException {
 
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(mariaDBContainer.getJdbcUrl());
@@ -121,15 +171,34 @@ public class SearchServiceLegacyDockerIntegrationTest {
 
         TestMigrationLoader.flywayMigration(dataSource);
 
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.createStatement()) {
+            stmt.executeQuery("INSERT INTO EC_DOMAIN(DOMAIN_NAME, DOMAIN_TOP, NODE_AFFINITY) VALUES ('www.marginalia.nu', 'marginalia.nu', 1)");
+            stmt.executeQuery("INSERT INTO EC_DOMAIN(DOMAIN_NAME, DOMAIN_TOP, NODE_AFFINITY) VALUES ('api.marginalia.nu', 'marginalia.nu', 0)");
+        }
+
         zookeeper.start();
         controlContainer.start();
+        assistantContainer.start();
+        queryContainer.start();
+        indexContainer.start();
         sslContainer.start();
+
+        // Warm up the internal connection pools
+        for (int i = 0; i < 10; i++) {
+            Thread.sleep(1000);
+            testRequest("/site/www.marginalia.nu");
+            testRequest("/search?query=test");
+        }
     }
 
     @AfterAll
     public static void tearDownAll() {
         zookeeper.stop();
         controlContainer.stop();
+        assistantContainer.stop();
+        indexContainer.stop();
+        queryContainer.stop();
         sslContainer.stop();
     }
 
@@ -151,17 +220,71 @@ public class SearchServiceLegacyDockerIntegrationTest {
 
     @Test
     public void testFrontPage() {
-        HttpClient client = HttpClient.newHttpClient();
-        String assetUrl = "http://" + sslContainer.getContainerIpAddress() + ":" + sslContainer.getMappedPort(80) + "/";
+        var rsp = testRequest("/");
 
-        var req = HttpRequest.newBuilder(URI.create(assetUrl)).GET().build();
-        try {
-            var rsp = client.send(req, HttpResponse.BodyHandlers.ofString());
-            Assertions.assertEquals(200, rsp.statusCode());
-            Assertions.assertTrue(rsp.body().contains("Marginalia Search"));
-        }
-        catch (Exception ex) {
-            Assertions.fail("Failed to retrieve static resource", ex);
-        }
+        Assertions.assertEquals(200, rsp.statusCode(), "Unexpected status code: " + rsp.statusCode());
+
+        String body = rsp.body();
+        String contentType = rsp.headers().firstValue("Content-Type").get();
+
+        Assertions.assertTrue(contentType.startsWith("text/html"), "Unexpected content type: " + contentType);
+        Assertions.assertTrue(body.contains("Marginalia Search"), "Unexpected body: " + body);
     }
+
+    @Test
+    public void testSearch() {
+        var rsp = testRequest("/search?query=test");
+
+        Assertions.assertEquals(200, rsp.statusCode(), "Unexpected status code: " + rsp.statusCode());
+
+        String body = rsp.body();
+        String contentType = rsp.headers().firstValue("Content-Type").get();
+
+        Assertions.assertTrue(contentType.startsWith("text/html"), "Unexpected content type: " + contentType);
+        Assertions.assertTrue(body.contains("No search results found"), "Unexpected body: " + body);
+    }
+
+
+    @Test
+    public void testCrosstalk() {
+        var rsp = testRequest("/crosstalk/?domains=git.marginalia.nu,www.marginalia.nu");
+
+        Assertions.assertEquals(200, rsp.statusCode(), "Unexpected status code: " + rsp.statusCode());
+
+        String body = rsp.body();
+        String contentType = rsp.headers().firstValue("Content-Type").get();
+
+        Assertions.assertTrue(contentType.startsWith("text/html"), "Unexpected content type: " + contentType);
+        Assertions.assertTrue(body.contains("No search results found"), "Unexpected body: " + body);
+    }
+
+    @Test
+    public void testSite() {
+        var rsp = testRequest("/site/www.marginalia.nu");
+
+        Assertions.assertEquals(200, rsp.statusCode(), "Unexpected status code: " + rsp.statusCode());
+
+        String body = rsp.body();
+        String contentType = rsp.headers().firstValue("Content-Type").get();
+
+        Assertions.assertTrue(contentType.startsWith("text/html"), "Unexpected content type: " + contentType);
+        Assertions.assertTrue(body.contains("This website is not queued for crawling"), "Unexpected body: " + body);
+
+    }
+
+    static HttpResponse<String> testRequest(String endpoint) {
+        try (HttpClient client = HttpClient.newHttpClient()) {
+
+            var req = HttpRequest.newBuilder(URI.create("http://" + sslContainer.getContainerIpAddress() + ":" + sslContainer.getMappedPort(80) + endpoint)).GET().build();
+            try {
+                return client.send(req, HttpResponse.BodyHandlers.ofString());
+            } catch (Exception ex) {
+                Assertions.fail("Failed to retrieve static resource", ex);
+            }
+        }
+
+        Assertions.fail("Failed execute query");
+        return null;  // unreacahable
+    }
+
 }
