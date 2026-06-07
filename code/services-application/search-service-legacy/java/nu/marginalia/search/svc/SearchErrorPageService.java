@@ -27,6 +27,7 @@ public class SearchErrorPageService {
 
     public void serveError(Context ctx) {
         ctx.setResponseCode(500);
+        ctx.setResponseType("text/html");
         ctx.send(renderError(ctx, "Internal error",
                 """
                     An error occurred when communicating with the search engine index.

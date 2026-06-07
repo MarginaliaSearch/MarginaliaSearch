@@ -77,10 +77,10 @@ public class SearchService extends JoobyService {
         jooby.setSessionStore(SessionStore.memory(Cookie.session("marginalia-session")));
 
         jooby.get("/search", searchQueryService::pathSearch);
-        jooby.get("/search/{site}", siteInfoService::handle);
-        jooby.post("/search", siteInfoService::handlePost);
         jooby.get("/news.xml", frontPageService::renderNewsFeed);
         jooby.get("/", frontPageService::render);
+        jooby.post("/site", siteInfoService::handlePost);
+        jooby.get("/site/{site}", siteInfoService::handle);
         jooby.post("/site/suggest/", addToCrawlQueueService::suggestCrawling);
         jooby.get("/site-search/{site}/{query}", this::siteSearchRedir);
         jooby.get("/crosstalk/", crosstalkService::handle);

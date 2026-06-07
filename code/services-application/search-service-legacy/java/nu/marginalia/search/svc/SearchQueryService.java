@@ -46,6 +46,8 @@ public class SearchQueryService {
             return "";
         }
 
+        ctx.setResponseType("text/html");
+
         SearchParameters params = parseParameters(ctx);
 
         var intercept = scrapeStopperInterceptor.intercept("S", params.query(), rateLimiter, ctx);

@@ -40,6 +40,7 @@ public class SearchFrontPageService {
 
     public String render(Context ctx) {
         ctx.setResponseHeader("Cache-control", "public,max-age=3600");
+        ctx.setResponseType("text/html");
 
         return template.render(new IndexModel(
                 getNewsItems(),

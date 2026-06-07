@@ -29,8 +29,8 @@ public class SearchAddToCrawlQueueService {
     }
 
     public Object suggestCrawling(Context ctx) throws SQLException {
-        int id = ctx.query("id").intValue();
-        boolean nomisclick = "on".equals(ctx.query("nomisclick").value());
+        int id = ctx.form("id").intValue();
+        boolean nomisclick = "on".equals(ctx.form("nomisclick").value());
 
         var maybeDomainName = domainQueries.getDomain(id);
         if (maybeDomainName.isEmpty()) {

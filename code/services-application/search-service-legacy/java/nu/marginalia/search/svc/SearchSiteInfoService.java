@@ -77,6 +77,7 @@ public class SearchSiteInfoService {
             ctx.setResponseCode(400);
             return "";
         }
+        ctx.setResponseType("text/html");
 
         String domainName = ctx.path("site").value();
 
@@ -103,6 +104,8 @@ public class SearchSiteInfoService {
     }
 
     public Object handlePost(Context ctx) throws SQLException {
+        ctx.setResponseType("text/html");
+
         String domainName = ctx.path("site").value();
         String view = ctx.query("view").value( "info");
         String sst = ctx.query("sst").value( "");
@@ -118,9 +121,9 @@ public class SearchSiteInfoService {
 
         FlagSiteFormData formData = new FlagSiteFormData(
                 domainId,
-                ctx.query("category").value(""),
-                ctx.query("description").value(""),
-                ctx.query("sampleQuery").value("")
+                ctx.form("category").value(""),
+                ctx.form("description").value(""),
+                ctx.form("sampleQuery").value("")
         );
         flagSiteService.insertComplaint(formData);
 
