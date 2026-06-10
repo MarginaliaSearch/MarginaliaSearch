@@ -427,14 +427,17 @@ public class IndexQueryExecution {
 
                 rankableDocument.documentSpans = spans;
                 rankableDocument.positions = positions;
+
+                SearchResultItem resultItem = rankingService.calculateScore(
+                        null, pool, currentIndex, rankingContext, rankableDocument);
+
+                if (null != resultItem) {
+                    rankableDocument.item = resultItem;
+                    localResults.add(rankableDocument);
+                }
             }
-
-            SearchResultItem resultItem = rankingService.calculateScore(
-                    null, pool, currentIndex, rankingContext, rankableDocument);
-
-            if (null != resultItem) {
-                rankableDocument.item = resultItem;
-                localResults.add(rankableDocument);
+            finally {
+                pool.reset();
             }
         }
 
