@@ -16,7 +16,6 @@ import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.screenshot.ScreenshotService;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.service.server.JoobyService;
-import nu.marginalia.service.server.SparkService;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -78,6 +77,7 @@ public class DatingService extends JoobyService {
         }
         var session = sessionObjectOpt.get();
         session.resetQueue();
+        saveSession(ctx, session);
 
         return getNext(ctx);
     }
@@ -96,6 +96,7 @@ public class DatingService extends JoobyService {
             res = findViableDomain(session, res);
             session.browseForward(res);
             current = session.getCurrent();
+            saveSession(ctx, session);
         }
 
         ctx.setResponseType("text/html");
@@ -115,6 +116,7 @@ public class DatingService extends JoobyService {
         res = findViableDomain(session, res);
 
         session.browseForward(res);
+        saveSession(ctx, session);
 
         ctx.sendRedirect(WEBSITE_URL+"view");
         return "";
@@ -135,6 +137,7 @@ public class DatingService extends JoobyService {
         }
 
         session.browseBackward(res);
+        saveSession(ctx, session);
 
         ctx.sendRedirect(WEBSITE_URL+"view");
         return "";
@@ -155,6 +158,7 @@ public class DatingService extends JoobyService {
         res = findViableDomain(session, res);
 
         session.browseForward(res);
+        saveSession(ctx, session);
 
         ctx.sendRedirect(WEBSITE_URL + "view");
         return "";
@@ -171,10 +175,10 @@ public class DatingService extends JoobyService {
     private static final String EMPTY_SESSION = gson.toJson(new DatingSessionObject());
 
     private Object getInitSession(Context ctx) {
-        var sess = ctx.sessionOrNull();
+        var sess = ctx.session();
 
-        if (null == sess) {
-            ctx.session().put(SESSION_OBJECT_NAME, EMPTY_SESSION);
+        if (sess.get(SESSION_OBJECT_NAME).isMissing()) {
+            sess.put(SESSION_OBJECT_NAME, EMPTY_SESSION);
         }
 
         ctx.sendRedirect(WEBSITE_URL + "view");
@@ -193,5 +197,9 @@ public class DatingService extends JoobyService {
 
         DatingSessionObject decodedSession = (DatingSessionObject) gson.fromJson(encoded.value(), DatingSessionObject.class);
         return Optional.of(decodedSession);
+    }
+
+    private void saveSession(Context ctx, DatingSessionObject session) {
+        ctx.session().put(SESSION_OBJECT_NAME, gson.toJson(session));
     }
 }
