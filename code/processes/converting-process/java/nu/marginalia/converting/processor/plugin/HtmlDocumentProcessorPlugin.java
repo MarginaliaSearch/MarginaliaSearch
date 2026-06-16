@@ -50,7 +50,6 @@ import static nu.marginalia.converting.model.DisqualifiedException.Disqualificat
 public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final double minDocumentQuality;
 
     private final FeatureExtractor featureExtractor;
     private final DocumentKeywordExtractor keywordExtractor;
@@ -72,7 +71,6 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
     @Inject
     public HtmlDocumentProcessorPlugin(
-            @Named("min-document-quality") Double minDocumentQuality,
             LanguageConfiguration languageConfiguration,
             FeatureExtractor featureExtractor,
             DocumentKeywordExtractor keywordExtractor,
@@ -85,7 +83,6 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     {
         this.languageConfiguration = languageConfiguration;
         this.documentLengthLogic = documentLengthLogic;
-        this.minDocumentQuality = minDocumentQuality;
         this.featureExtractor = featureExtractor;
 
         this.keywordExtractor = keywordExtractor;
@@ -228,12 +225,6 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
                                    EdgeUrl url,
                                    double quality,
                                    String title) {
-
-        if (documentClass.enforceQualityLimits()
-            && quality < minDocumentQuality)
-        {
-            return true;
-        }
 
         // These pages shouldn't be publicly accessible
         if ("phpinfo()".equals(title)) {
