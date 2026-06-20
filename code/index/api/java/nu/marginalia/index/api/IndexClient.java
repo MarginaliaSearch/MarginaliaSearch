@@ -7,6 +7,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.prometheus.metrics.core.metrics.Counter;
+import io.prometheus.metrics.core.metrics.Gauge;
 import nu.marginalia.api.searchquery.*;
 import nu.marginalia.db.DomainBlacklistImpl;
 import nu.marginalia.model.id.UrlIdCodec;
@@ -46,6 +47,19 @@ public class IndexClient {
     private static final boolean useLoom = Boolean.getBoolean("system.experimentalUseLoom");
     private static final ExecutorService executor = useLoom ? Executors.newVirtualThreadPerTaskExecutor() : Executors.newCachedThreadPool();
 
+    // Bound the number of index queries executed concurrently
+    private static final int maxConcurrentQueries = Integer.getInteger("index.query.maxConcurrentQueries", 256);
+    private final Semaphore queryThrottle = new Semaphore(maxConcurrentQueries);
+
+    private static final Gauge wmsa_index_query_inflight = Gauge.builder()
+            .name("wmsa_index_query_inflight")
+            .help("Index queries currently executing")
+            .register();
+    private static final Counter wmsa_index_query_rejected = Counter.builder()
+            .name("wmsa_index_query_rejected")
+            .help("Index queries rejected")
+            .register();
+
     @Inject
     public IndexClient(GrpcChannelPoolFactoryIf channelPoolFactory,
                        DomainBlacklistImpl blacklist,
@@ -81,6 +95,31 @@ public class IndexClient {
 
     /** Execute a query on the index partitions and return the combined results. */
     public AggregateQueryResponse executeQueries(RpcIndexQuery indexRequest, Pagination pagination) {
+        boolean acquired = false;
+        try {
+            acquired = queryThrottle.tryAcquire(indexRequest.getQueryLimits().getTimeoutMs()/2, TimeUnit.MILLISECONDS);
+            if (!acquired) {
+                wmsa_index_query_rejected.inc();
+                throw Status.RESOURCE_EXHAUSTED
+                        .withDescription("Too many concurrent index queries in flight")
+                        .asRuntimeException();
+            }
+            wmsa_index_query_inflight.inc();
+            return executeQueriesInternal(indexRequest, pagination);
+        }
+        catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw Status.CANCELLED.withDescription("Interrupted awaiting query slot").asRuntimeException();
+        }
+        finally {
+            if (acquired) {
+                wmsa_index_query_inflight.dec();
+                queryThrottle.release();
+            }
+        }
+    }
+
+    private AggregateQueryResponse executeQueriesInternal(RpcIndexQuery indexRequest, Pagination pagination) {
 
         int filterTier = indexRequest.getNsfwFilterTierValue();
 

@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import io.prometheus.metrics.core.metrics.Histogram;
 import nu.marginalia.api.searchquery.*;
@@ -161,6 +162,8 @@ public class QueryGRPCService
                         responseObserver.onNext(responseBuilder.build());
                         responseObserver.onCompleted();
                     });
+        } catch (StatusRuntimeException e) {
+            responseObserver.onError(e);
         } catch (Exception e) {
             logger.error("Exception", e);
             responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
