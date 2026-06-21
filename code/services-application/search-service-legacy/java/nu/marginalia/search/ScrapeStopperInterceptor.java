@@ -2,14 +2,14 @@ package nu.marginalia.search;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.jooby.Context;
+import io.jooby.value.Value;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.scrapestopper.ScrapeStopper;
 import nu.marginalia.service.server.RateLimiter;
 import org.jetbrains.annotations.Nullable;
-import spark.Request;
-import spark.Response;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -46,14 +46,13 @@ public class ScrapeStopperInterceptor {
                                         @Nullable
                                         String zoneContext,
                                         RateLimiter limiter,
-                                        Request request,
-                                        Response response)
+                                        Context ctx)
     {
         if (!isEnabled)
             return new InterceptPass("");
 
-        String remoteIp = request.headers(realIpHeader);
-        String sst = request.queryParamOrDefault("sst", "");
+        String remoteIp = ctx.header(realIpHeader).value("");
+        String sst = ctx.query("sst").value("");
         ScrapeStopper.TokenState tokenState = scrapeStopper.validateToken(sst, remoteIp, zoneContext);
 
         if (tokenState == ScrapeStopper.TokenState.VALIDATED) {
@@ -62,7 +61,7 @@ public class ScrapeStopperInterceptor {
 
                 // Concurrent relocates, let's revalidate this token
                 if (newSst.isEmpty())
-                    return intercept(zone, zoneContext, limiter, request, response);
+                    return intercept(zone, zoneContext, limiter, ctx);
 
                 sst = newSst.get();
 
@@ -77,24 +76,26 @@ public class ScrapeStopperInterceptor {
         if (tokenState == ScrapeStopper.TokenState.INVALID)
             sst = scrapeStopper.getToken(zone, remoteIp, Duration.ofMinutes(5));
 
-        response.header("Cache-Control", "no-store");
+        ctx.setResponseHeader("Cache-Control", "no-store");
 
         return new InterceptRedirect(sst,
                 waitRenderer.render(Map.of(
                 "waitDuration", (int) scrapeStopper.getRemaining(sst).orElseThrow().toSeconds() + 1,
-                "redirUrl", constructRedirectUrl(sst, request)
+                "redirUrl", constructRedirectUrl(sst, ctx)
         )));
     }
 
-    private String constructRedirectUrl(String sst, Request request) {
+    private String constructRedirectUrl(String sst, Context ctx) {
 
-        StringJoiner redirUrlBuilder = new StringJoiner("&", request.pathInfo() + "?", "");
+        StringJoiner redirUrlBuilder = new StringJoiner("&", ctx.getRequestPath() + "?", "");
 
-        for (String name: request.queryParams()) {
+        for (Map.Entry<String, String> entry: ctx.queryMap().entrySet()) {
+            String name = entry.getKey();
+            String val = entry.getValue();
+
             if ("sst".equalsIgnoreCase(name))
                 continue;
 
-            String val = request.queryParams(name);
             String valEncoded = URLEncoder.encode(val, StandardCharsets.UTF_8);
             redirUrlBuilder.add(name + "=" + valEncoded);
         }

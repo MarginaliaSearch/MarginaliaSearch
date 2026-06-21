@@ -1,12 +1,12 @@
 package nu.marginalia.search.command;
 
+import io.jooby.Context;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.api.searchquery.QueryFilterSpec;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
 import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.QueryStrategy;
 import nu.marginalia.search.model.SearchProfile;
-import spark.Request;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -43,17 +43,17 @@ public record SearchParameters(String query,
         return NsfwFilterTier.DANGER;
     }
 
-    public SearchParameters(String queryString, Request request) {
+    public SearchParameters(String queryString, Context ctx) {
         this(
                 queryString,
-                SearchProfile.getSearchProfile(request.queryParams("profile")),
-                SearchJsParameter.parse(request.queryParams("js")),
-                SearchRecentParameter.parse(request.queryParams("recent")),
-                SearchTitleParameter.parse(request.queryParams("searchTitle")),
-                SearchAdtechParameter.parse(request.queryParams("adtech")),
-                request.queryParamOrDefault("sst", ""),
-                "true".equals(request.queryParams("newfilter")),
-                Integer.parseInt(Objects.requireNonNullElse(request.queryParams("page"), "1"))
+                SearchProfile.getSearchProfile(ctx.query("profile").value("")),
+                SearchJsParameter.parse(ctx.query("js").value("")),
+                SearchRecentParameter.parse(ctx.query("recent").value("")),
+                SearchTitleParameter.parse(ctx.query("searchTitle").value("")),
+                SearchAdtechParameter.parse(ctx.query("adtech").value("")),
+                ctx.query("sst").value(""),
+                "true".equals(ctx.query("newfilter")),
+                ctx.query("page").intValue(1)
             );
     }
 

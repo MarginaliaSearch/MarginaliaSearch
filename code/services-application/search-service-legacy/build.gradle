@@ -64,10 +64,7 @@ dependencies {
         exclude group: 'com.google.guava'
     }
     implementation libs.handlebars
-    implementation dependencies.create(libs.spark.get()) {
-        exclude group: 'org.eclipse.jetty'
-    }
-    implementation libs.bundles.jetty
+    implementation libs.bundles.jooby
     implementation libs.opencsv
     implementation libs.trove
     implementation libs.fastutil

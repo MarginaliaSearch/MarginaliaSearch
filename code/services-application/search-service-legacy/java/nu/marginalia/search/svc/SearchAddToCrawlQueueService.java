@@ -2,15 +2,15 @@ package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
+import io.jooby.Context;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.db.DbDomainQueries;
+import nu.marginalia.model.EdgeDomain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
 
 import java.sql.SQLException;
+import java.util.Optional;
 
 public class SearchAddToCrawlQueueService {
 
@@ -28,11 +28,17 @@ public class SearchAddToCrawlQueueService {
         this.dataSource = dataSource;
     }
 
-    public Object suggestCrawling(Request request, Response response) throws SQLException {
-        int id = Integer.parseInt(request.queryParams("id"));
-        boolean nomisclick = "on".equals(request.queryParams("nomisclick"));
+    public Object suggestCrawling(Context ctx) throws SQLException {
+        int id = ctx.form("id").intValue();
+        boolean nomisclick = "on".equals(ctx.form("nomisclick").value());
 
-        String domainName = getDomainName(id);
+        var maybeDomainName = domainQueries.getDomain(id);
+        if (maybeDomainName.isEmpty()) {
+            ctx.setResponseCode(404);
+            return "";
+        }
+
+        String domainName = maybeDomainName.map(EdgeDomain::toString).get();
 
         if (nomisclick) {
             logger.info("Adding {} to crawl queue", domainName);
@@ -42,7 +48,7 @@ public class SearchAddToCrawlQueueService {
             logger.info("Nomisclick not set, not adding {} to crawl queue", domainName);
         }
 
-        response.redirect(websiteUrl.withPath("/site/" + domainName));
+        ctx.sendRedirect(websiteUrl.withPath("/site/" + domainName));
 
         return "";
     }
@@ -58,11 +64,6 @@ public class SearchAddToCrawlQueueService {
         }
     }
 
-    private String getDomainName(int id) {
-        var domain = domainQueries.getDomain(id);
-        if (domain.isEmpty())
-            Spark.halt(404);
-        return domain.get().toString();
-    }
+
 }
 
