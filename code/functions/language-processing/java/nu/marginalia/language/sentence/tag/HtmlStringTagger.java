@@ -20,13 +20,13 @@ public class HtmlStringTagger implements NodeVisitor {
     public static List<HtmlTaggedString> tagDocumentStrings(Document document) {
         var tagger = new HtmlStringTagger();
         document.traverse(tagger);
-        return tagger.getOutput();
+        return tagger.compactOutput();
     }
 
-    List<HtmlTaggedString> getOutput() {
+    List<HtmlTaggedString> compactOutput() {
         List<HtmlTaggedString> compactedOutput = new ArrayList<>(output.size());
 
-        for (var ts : output) {
+        for (HtmlTaggedString ts : output) {
             if (compactedOutput.isEmpty()) {
                 compactedOutput.add(ts);
             }
@@ -41,7 +41,7 @@ public class HtmlStringTagger implements NodeVisitor {
             }
         }
 
-        return output;
+        return compactedOutput;
     }
 
     @Override
