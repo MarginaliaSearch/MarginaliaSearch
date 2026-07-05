@@ -367,8 +367,9 @@ public class ApiV2 implements Extension {
 
             try {
                 results = doSearch(license, query, ctx);
-                if (results == null)
-                    return null;
+                if (results == null) {
+                    return "Query Execution Failed";
+                }
             }
             catch (RuntimeException ex) {
                 logger.error("Error execuing query {}", ex);

@@ -68,10 +68,10 @@ public class ApiV1 implements Extension {
             license = licenseService.getLicense(key.value());
         } catch (LicenseService.NoSuchKeyException ex) {
             ctx.setResponseCode(StatusCode.UNAUTHORIZED);
-            return null;
+            return "";
         } catch (IOException e) {
             ctx.setResponseCode(StatusCode.SERVER_ERROR_CODE);
-            return null;
+            return "";
         }
 
         ctx.setResponseType("application/json");
@@ -98,10 +98,10 @@ public class ApiV1 implements Extension {
             license = licenseService.getLicense(keyPathVal.value());
         } catch (LicenseService.NoSuchKeyException ex) {
             ctx.setResponseCode(StatusCode.UNAUTHORIZED);
-            return null;
+            return "";
         } catch (IOException ex) {
             ctx.setResponseCode(StatusCode.BAD_REQUEST);
-            return null;
+            return "";
         }
 
         if (!license.hasOption(ApiLicenseOptions.ALLOW_V1_API)) {
@@ -127,6 +127,11 @@ public class ApiV1 implements Extension {
 
         // When no cached response, do the search and cache the result
         var result = doSearch(license, query, ctx);
+
+        if (null == result) {
+            return "Query Execution Failed";
+        }
+
         responseCache.putResults(license, query, ctx.queryString(), result);
         return gson.toJson(result);
     }
