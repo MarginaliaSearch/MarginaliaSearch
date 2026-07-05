@@ -114,8 +114,9 @@ public class SkipListReader {
                 maxVal = maxValueInBlock(page, fc, n);
             }
 
-            if (data.peekValueLt(maxVal) > maxVal) {
-                nextBlock = findNextBlock(page, fc, maxVal);
+            long nextNeededValue = data.peekValueLt(maxVal);
+            if (nextNeededValue > maxVal) {
+                nextBlock = findNextBlock(page, fc, nextNeededValue);
             }
             else {
                 nextBlock = currentBlock + BLOCK_STRIDE;
@@ -248,8 +249,6 @@ public class SkipListReader {
     public boolean tryRejectData(@NotNull LongQueryBuffer data) {
         assert data.isAscending();
 
-        assert data.isAscending();
-
         try (var page = indexPool.get(currentBlock)) {
 
             int n = headerNumRecords(page, currentBlockOffset);
@@ -273,8 +272,9 @@ public class SkipListReader {
 
             long nextBlock;
 
-            if (data.peekValueLt(maxVal) > maxVal) {
-                nextBlock = findNextBlock(page, fc, maxVal);
+            long nextNeededValue = data.peekValueLt(maxVal);
+            if (nextNeededValue > maxVal) {
+                nextBlock = findNextBlock(page, fc, nextNeededValue);
             }
             else {
                 nextBlock = currentBlock + BLOCK_STRIDE;

@@ -130,6 +130,14 @@ public class BufferPool implements AutoCloseable {
 
     }
 
+    public long getDiskReadCount() {
+        return diskReadCount.get();
+    }
+
+    public long getCacheReadCount() {
+        return cacheReadCount.get();
+    }
+
     @Nullable
     public MemoryPage getExistingBufferForReading(long address) {
         MemoryPage cachedBuffer = poolLru.get(address);
