@@ -465,7 +465,7 @@ public class SkipListReader {
     /** Fills the buffer with keys from the index.  The caller should use
      * atEnd() to decide when the index has been exhausted.
      *
-     * @return the number of items added to the index
+     * @return the number of items added to the buffer
      * */
     public int getKeys(@NotNull LongQueryBuffer dest, @NotNull SkipListValueRanges ranges)
     {
@@ -502,7 +502,10 @@ public class SkipListReader {
                         long blockMinValue = decompressedData[currentBlockIdx];
                         long rangeEnd;
                         while ((rangeEnd = ranges.end()) < blockMinValue) {
-                            if (!ranges.next()) break outer;
+                            if (!ranges.next()) {
+                                atEnd = true;
+                                break outer;
+                            }
                         }
 
                         long rangeStart = ranges.start();
@@ -518,7 +521,11 @@ public class SkipListReader {
                             int nCopied = dest.addData(decompressedData, dataStart, dataEnd - dataStart);
 
                             totalCopied += nCopied;
-                            currentBlockIdx += nCopied;
+                            currentBlockIdx = dataStart + nCopied;
+
+                            if (nCopied < dataEnd - dataStart) {
+                                return totalCopied;
+                            }
 
                             if (dataEnd == n) {
                                 inRange = true;
@@ -528,16 +535,19 @@ public class SkipListReader {
                     } while (ranges.next());
                 }
                 else {
-                    long blockMinValue = ms.get(ValueLayout.JAVA_LONG, dataOffset);
                     do {
+                        long blockMinValue = ms.get(ValueLayout.JAVA_LONG, dataOffset + 8L * currentBlockIdx);
                         long rangeEnd;
                         while ((rangeEnd = ranges.end()) < blockMinValue) {
-                            if (!ranges.next()) break outer;
+                            if (!ranges.next()) {
+                                atEnd = true;
+                                break outer;
+                            }
                         }
 
                         long rangeStart = ranges.start();
 
-                        int dataStart = page.binarySearchLong(rangeStart, dataOffset, 0, n);
+                        int dataStart = page.binarySearchLong(rangeStart, dataOffset, currentBlockIdx, n);
 
                         if (dataStart == n) {
                             break;
@@ -545,7 +555,15 @@ public class SkipListReader {
 
                         int dataEnd = page.binarySearchLong(rangeEnd, dataOffset, dataStart, n);
                         if (dataStart != dataEnd) {
-                            totalCopied += dest.addData(ms, dataOffset + dataStart * 8L, (dataEnd - dataStart));
+                            int nCopied = dest.addData(ms, dataOffset + dataStart * 8L, dataEnd - dataStart);
+
+                            totalCopied += nCopied;
+                            currentBlockIdx = dataStart + nCopied;
+
+                            if (nCopied < dataEnd - dataStart) {
+                                return totalCopied;
+                            }
+
                             if (dataEnd == n) {
                                 inRange = true;
                                 break;
@@ -558,17 +576,12 @@ public class SkipListReader {
                 if (atEnd)
                     break;
 
-                long nextBlock = currentBlock + (long) BLOCK_STRIDE;
-                long currentValue = ranges.start();
-
-                if (!inRange) {
-                    for (int i = 0; i < fc; i++) {
-                        long nextBlockMaxValue = page.getLong(currentBlockOffset + DATA_BLOCK_HEADER_SIZE + 8 * i);
-                        nextBlock = currentBlock + (long) BLOCK_STRIDE * skipOffsetForPointer(Math.max(0, i - 1));
-                        if (nextBlockMaxValue >= currentValue) {
-                            break;
-                        }
-                    }
+                long nextBlock;
+                if (inRange) {
+                    nextBlock = currentBlock + (long) BLOCK_STRIDE;
+                }
+                else {
+                    nextBlock = findNextBlock(page, fc, ranges.start());
                 }
 
                 currentBlockOffset = 0;

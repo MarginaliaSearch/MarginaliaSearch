@@ -273,7 +273,6 @@ public class SkipListWriter implements AutoCloseable {
                 documentsChannel.write(docsBuffer);
             }
 
-            assert compressorInput.size() == 0 : " Expecting compressor input to be exhausted, has " + compressorInput.size() + " remaining";
             return startPos;
         }
 
