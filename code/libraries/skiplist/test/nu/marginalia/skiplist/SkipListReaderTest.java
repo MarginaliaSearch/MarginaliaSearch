@@ -13,7 +13,9 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import java.util.stream.LongStream;
 
@@ -548,6 +550,63 @@ public class SkipListReaderTest {
         }
     }
 
+    @Test
+    public void testRetainSparseBufferFollowsSkipPointers() throws IOException {
+        long[] keys = LongStream.range(0, 1_000_000).map(v -> 2*v).toArray();
+        long[] vals = LongStream.range(0, 1_000_000).map(v -> -v).toArray();
+
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
+            writer.writeList(createArray(keys, vals), keys.length);
+        }
+
+        long nBlocks = Files.size(docsFile) / SkipListConstants.BLOCK_SIZE;
+
+        try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+             var valueReader = new SkipListValueReader(valuesFile)) {
+            var reader = new SkipListReader(indexPool, valueReader, 0);
+
+            long[] requestKeys = new long[] { 2, 2*999_999 };
+            LongQueryBuffer lqb = new LongQueryBuffer(requestKeys, requestKeys.length);
+            reader.retainData(lqb);
+            lqb.finalizeFiltering();
+
+            Assertions.assertArrayEquals(requestKeys, lqb.copyData());
+
+            long blocksVisited = indexPool.getDiskReadCount() + indexPool.getCacheReadCount();
+            Assertions.assertTrue(blocksVisited < nBlocks / 8,
+                    "Retain visited " + blocksVisited + " of " + nBlocks
+                            + " blocks, skip pointers do not appear to be used");
+        }
+    }
+
+    @Test
+    public void testRejectSparseBufferFollowsSkipPointers() throws IOException {
+        long[] keys = LongStream.range(0, 1_000_000).map(v -> 2*v).toArray();
+        long[] vals = LongStream.range(0, 1_000_000).map(v -> -v).toArray();
+
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
+            writer.writeList(createArray(keys, vals), keys.length);
+        }
+
+        long nBlocks = Files.size(docsFile) / SkipListConstants.BLOCK_SIZE;
+
+        try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+             var valueReader = new SkipListValueReader(valuesFile)) {
+            var reader = new SkipListReader(indexPool, valueReader, 0);
+
+            long[] requestKeys = new long[] { 3, 2*999_999 };
+            LongQueryBuffer lqb = new LongQueryBuffer(requestKeys, requestKeys.length);
+            reader.rejectData(lqb);
+            lqb.finalizeFiltering();
+
+            Assertions.assertArrayEquals(new long[] { 3 }, lqb.copyData());
+
+            long blocksVisited = indexPool.getDiskReadCount() + indexPool.getCacheReadCount();
+            Assertions.assertTrue(blocksVisited < nBlocks / 8,
+                    "Reject visited " + blocksVisited + " of " + nBlocks
+                            + " blocks, skip pointers do not appear to be used");
+        }
+    }
 
     @Tag("slow")
     @Test
