@@ -518,7 +518,7 @@ public class IndexResultRankingService {
 
             // Handle matches that span multiple tags; treat them as BODY matches
             if (totalFullCnts != fullGroupIntersections.size()) {
-                int mixedCnts = fullGroupIntersections.size() - totalFullCnts;
+                int mixedCnts = Math.max(1, fullGroupIntersections.size() - totalFullCnts);
                 score += (float) (weights_full[HtmlTag.BODY.ordinal()] * fullGroup.size
                         * (1 + Math.log(1 + Math.pow(mixedCnts, attenuation[HtmlTag.BODY.ordinal()]))));
             }
@@ -628,7 +628,7 @@ public class IndexResultRankingService {
 
             // Handle matches that span multiple tags; treat them as BODY matches
             if (totalCnts != intersections.size()) {
-                int mixedCnts = intersections.size() - totalCnts;
+                int mixedCnts = Math.max(1, intersections.size() - totalCnts);
                 score += (float) (weights_partial[HtmlTag.BODY.ordinal()] * optionalGroup.size * sizeScalingFactor
                                     * (1 + Math.log(1 + Math.pow(mixedCnts, attenuation[HtmlTag.BODY.ordinal()]))));
             }
