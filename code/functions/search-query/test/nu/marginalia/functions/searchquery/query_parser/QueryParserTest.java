@@ -40,4 +40,25 @@ class QueryParserTest {
         var tokens = parser.parse(languageConfiguration.getLanguage("en"), "bob's");
         Assertions.assertEquals(List.of(new QueryToken.LiteralTerm("bob", "bob's")), tokens);
     }
+
+    @Test
+    void negatedTerm() {
+        QueryParser parser = new QueryParser();
+        var tokens = parser.parse(languageConfiguration.getLanguage("en"), "-foo");
+        Assertions.assertEquals(List.of(new QueryToken.ExcludeTerm("foo", "-foo")), tokens);
+    }
+
+    @Test
+    void negatedQuotedPhrase() {
+        QueryParser parser = new QueryParser();
+        var tokens = parser.parse(languageConfiguration.getLanguage("en"), "-\"foo bar\"");
+        Assertions.assertEquals(List.of(new QueryToken.ExcludePhrase("foo_bar", "-\"foo bar\"")), tokens);
+    }
+
+    @Test
+    void priorityQuotedPhrase() {
+        QueryParser parser = new QueryParser();
+        var tokens = parser.parse(languageConfiguration.getLanguage("en"), "?\"foo bar\"");
+        Assertions.assertEquals(List.of(new QueryToken.PriorityTerm("foo_bar", "?\"foo bar\"")), tokens);
+    }
 }

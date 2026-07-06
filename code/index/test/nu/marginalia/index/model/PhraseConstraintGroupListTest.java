@@ -71,4 +71,66 @@ class PhraseConstraintGroupListTest {
         assertTrue(group.test(positions));
     }
 
+    @Test
+    public void testHoleRequiresPositionalGap() {
+        TermIdList termIdsAll = termIdsFor("foo", "bar");
+
+        var group = new PhraseConstraintGroupList.PhraseConstraintGroup(
+                hasher, List.of("foo", "", "bar"), termIdsAll);
+
+        IntList[] gapPositions = new IntList[] {
+                new IntArrayList(new int[]{5}),
+                new IntArrayList(new int[]{7})
+        };
+        assertTrue(group.test(gapPositions));
+
+        IntList[] adjacentPositions = new IntList[] {
+                new IntArrayList(new int[]{5}),
+                new IntArrayList(new int[]{6})
+        };
+        assertFalse(group.test(adjacentPositions));
+    }
+
+    @Test
+    public void testConsecutiveHoles() {
+        TermIdList termIdsAll = termIdsFor("foo", "bar");
+
+        var group = new PhraseConstraintGroupList.PhraseConstraintGroup(
+                hasher, List.of("foo", "", "", "bar"), termIdsAll);
+
+        IntList[] positions = new IntList[] {
+                new IntArrayList(new int[]{5}),
+                new IntArrayList(new int[]{8})
+        };
+        assertTrue(group.test(positions));
+
+        IntList[] tooNarrow = new IntList[] {
+                new IntArrayList(new int[]{5}),
+                new IntArrayList(new int[]{7})
+        };
+        assertFalse(group.test(tooNarrow));
+    }
+
+    @Test
+    public void testHoleFollowedByMultipleTerms() {
+        TermIdList termIdsAll = termIdsFor("foo", "bar", "baz");
+
+        var group = new PhraseConstraintGroupList.PhraseConstraintGroup(
+                hasher, List.of("foo", "", "bar", "baz"), termIdsAll);
+
+        IntList[] positions = new IntList[] {
+                new IntArrayList(new int[]{5}),
+                new IntArrayList(new int[]{7}),
+                new IntArrayList(new int[]{8})
+        };
+        assertTrue(group.test(positions));
+
+        IntList[] adjacentPositions = new IntList[] {
+                new IntArrayList(new int[]{5}),
+                new IntArrayList(new int[]{6}),
+                new IntArrayList(new int[]{7})
+        };
+        assertFalse(group.test(adjacentPositions));
+    }
+
 }

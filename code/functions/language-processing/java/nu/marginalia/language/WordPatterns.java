@@ -58,5 +58,25 @@ public class WordPatterns {
         return false;
     }
 
+    /** Tokens the sentence splitter discards before word positions are assigned.
+     * The query side needs to make the same call when translating a quoted phrase
+     * into positional constraints, since these tokens leave no gap in the position
+     * sequence, which are kept by the splitter but not indexed.
+     */
+    public static boolean isDiscardedByTokenizer(String word) {
+        if (word.isBlank()) {
+            return true;
+        }
+        if (word.length() >= MAX_WORD_LENGTH) {
+            return true;
+        }
+        for (int i = 0; i < word.length(); i++) {
+            char c = word.charAt(i);
+            if (c != '/' && c != '*' && c != '-') {
+                return false;
+            }
+        }
+        return true;
+    }
 
 }

@@ -10,6 +10,7 @@ public sealed interface QueryToken {
     record LiteralTerm(String str, String displayStr) implements QueryToken {}
     record QuotTerm(String str, String displayStr) implements QueryToken {}
     record ExcludeTerm(String str, String displayStr) implements QueryToken {}
+    record ExcludePhrase(String str, String displayStr) implements QueryToken {}
     record AdviceTerm(String str, String displayStr) implements QueryToken {}
     record PriorityTerm(String str, String displayStr) implements QueryToken {}
     record LangTerm(String str, String displayStr) implements QueryToken {}

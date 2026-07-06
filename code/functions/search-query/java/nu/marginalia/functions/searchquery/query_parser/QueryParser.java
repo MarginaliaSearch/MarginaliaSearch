@@ -186,12 +186,15 @@ public class QueryParser {
 
         if (!(t instanceof QueryToken.Minus))
             return;
-        if (!(tn instanceof QueryToken.LiteralTerm) && !(tn instanceof QueryToken.AdviceTerm))
-            return;
 
-        first.remove();
-
-        second.replace(new QueryToken.ExcludeTerm(tn.str(), "-" + tn.displayStr()));
+        if (tn instanceof QueryToken.LiteralTerm || tn instanceof QueryToken.AdviceTerm) {
+            first.remove();
+            second.replace(new QueryToken.ExcludeTerm(tn.str(), "-" + tn.displayStr()));
+        }
+        else if (tn instanceof QueryToken.QuotTerm) {
+            first.remove();
+            second.replace(new QueryToken.ExcludePhrase(tn.str(), "-" + tn.displayStr()));
+        }
     }
 
     private static void createPriorityTerms(TransformList<QueryToken>.Entity first, TransformList<QueryToken>.Entity second) {
@@ -200,7 +203,10 @@ public class QueryParser {
 
         if (!(t instanceof QueryToken.QMark))
             return;
-        if (!(tn instanceof QueryToken.LiteralTerm) && !(tn instanceof QueryToken.AdviceTerm))
+
+        if (!(tn instanceof QueryToken.LiteralTerm) &&
+            !(tn instanceof QueryToken.AdviceTerm) &&
+            !(tn instanceof QueryToken.QuotTerm))
             return;
 
         var replacement = new QueryToken.PriorityTerm(tn.str(), "?" + tn.displayStr());

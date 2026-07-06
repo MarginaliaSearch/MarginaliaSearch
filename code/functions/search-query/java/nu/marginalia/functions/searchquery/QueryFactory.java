@@ -97,18 +97,26 @@ public class QueryFactory {
                         parts[i] = part;
                     }
 
+                    // Tokens that are never indexed must not become required terms
+                    List<String> searchableParts = new ArrayList<>(parts.length);
+                    for (String part : parts) {
+                        if (!WordPatterns.isStopWord(part) && !WordPatterns.isDiscardedByTokenizer(part)) {
+                            searchableParts.add(part);
+                        }
+                    }
+
                     if (parts.length > 1) {
                         // Require that the terms appear in sequence
                         queryBuilder.phraseConstraint(SearchPhraseConstraint.mandatory(parts));
 
                         // Construct a regular query from the parts in the quoted string
-                        queryBuilder.queryTerms(parts);
+                        queryBuilder.queryTerms(searchableParts.toArray(String[]::new));
 
                         // Prefer that the actual n-gram is present
                         queryBuilder.priority(str, 1.0f);
-                    } else {
+                    } else if (!searchableParts.isEmpty()) {
                         // If the quoted word is a single word, we don't need to do more than include it in the search
-                        queryBuilder.queryTerms(str);
+                        queryBuilder.queryTerms(searchableParts.getFirst());
                     }
                 }
 
@@ -120,6 +128,12 @@ public class QueryFactory {
                 }
 
                 case QueryToken.ExcludeTerm(String str, _) -> queryBuilder.exclude(str);
+                case QueryToken.ExcludePhrase(String str, _) -> {
+                    // We don't support excluding sentences so this is a bit of a stopgap
+                    for (String part : StringUtils.split(str, '_')) {
+                        queryBuilder.exclude(part);
+                    }
+                }
                 case QueryToken.PriorityTerm(String str, _) -> queryBuilder.priority(str, 1.0f);
                 case QueryToken.AdviceTerm(String str, _) when str.startsWith("site:*.") -> {
                     String prefix = "site:*.";

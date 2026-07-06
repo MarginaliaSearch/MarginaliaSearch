@@ -50,21 +50,17 @@ public sealed interface SearchPhraseConstraint {
     }
 
 
+    private static List<String> trimStopWords(String... terms) {
+        return trimStopWords(List.of(terms));
+    }
+
     private static List<String> trimStopWords(List<String> terms) {
         List<String> ret = new ArrayList<>(terms.size());
         for (var term : terms) {
-            if (WordPatterns.isStopWord(term)) {
-                ret.add("");
-            } else {
-                ret.add(term);
+            if (WordPatterns.isDiscardedByTokenizer(term)) {
+                continue;
             }
-        }
-        return List.copyOf(ret);
-    }
 
-    private static List<String> trimStopWords(String... terms) {
-        List<String> ret = new ArrayList<>(terms.length);
-        for (var term : terms) {
             if (WordPatterns.isStopWord(term)) {
                 ret.add("");
             } else {

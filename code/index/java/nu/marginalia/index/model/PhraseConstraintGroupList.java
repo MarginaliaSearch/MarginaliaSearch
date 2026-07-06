@@ -84,6 +84,8 @@ public class PhraseConstraintGroupList {
             int i = 0;
             for (String term : terms) {
                 if (term.isEmpty()) {
+                    // Empty terms mark unsearchable words that still occupy a position in the document
+                    i++;
                     continue;
                 }
 
@@ -135,14 +137,14 @@ public class PhraseConstraintGroupList {
         }
 
         public boolean test(IntList[] positions) {
-            int[] offsets = new int[presentCardinality];
+            int[] iterOffsets = new int[presentCardinality];
             IntIterator[] sequences = new IntIterator[presentCardinality];
 
             for (int oi = 0, si = 0; oi < offsets.length; oi++) {
                 if (!present.get(oi)) {
                     continue;
                 }
-                int offset = this.offsets[oi];
+                int offset = offsets[oi];
                 if (offset < 0)
                     return false;
 
@@ -156,10 +158,10 @@ public class PhraseConstraintGroupList {
                     return false;
                 }
                 sequences[si] = posForTerm.iterator();
-                offsets[si++] = -oi;
+                iterOffsets[si++] = -oi;
             }
 
-            return SequenceOperations.intersectOffsetSequences(sequences, offsets);
+            return SequenceOperations.intersectOffsetSequences(sequences, iterOffsets);
         }
 
 

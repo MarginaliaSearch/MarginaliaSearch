@@ -209,6 +209,50 @@ public class QueryFactoryTest {
         assertEquals("physics", subquery.getCompiledQuery());
     }
 
+    private List<String> mandatoryPhrase(RpcQueryTerms terms) {
+        for (var phrase : terms.getPhrasesList()) {
+            if (phrase.getType() == RpcPhrases.TYPE.MANDATORY) {
+                return phrase.getTermsList();
+            }
+        }
+        return List.of();
+    }
+
+    @Test
+    public void testQuotedPhraseWithTokenizerDiscardedToken() {
+        var terms = parseAndGetQuery("\"coca - cola\"").getTerms();
+        assertEquals(List.of("coca", "cola"), terms.getTermsQueryList());
+        assertEquals(List.of("coca", "cola"), mandatoryPhrase(terms));
+    }
+
+    @Test
+    public void testQuotedPhraseWithAsterisk() {
+        var terms = parseAndGetQuery("\"five * six\"").getTerms();
+        assertEquals(List.of("five", "six"), terms.getTermsQueryList());
+        assertEquals(List.of("five", "six"), mandatoryPhrase(terms));
+    }
+
+    @Test
+    public void testQuotedPhraseWithJunkWord() {
+        var terms = parseAndGetQuery("\"part number 123456789012345678 in stock\"").getTerms();
+        assertEquals(List.of("part", "number", "in", "stock"), terms.getTermsQueryList());
+        assertEquals(List.of("part", "number", "", "in", "stock"), mandatoryPhrase(terms));
+    }
+
+    @Test
+    public void testQuotedSingleWordPossessive() {
+        var terms = parseAndGetQuery("\"cat's\"").getTerms();
+        assertEquals(List.of("cat"), terms.getTermsQueryList());
+    }
+
+    @Test
+    public void testNegatedQuotedPhrase() {
+        var terms = parseAndGetQuery("pottery -\"artisanal cheese\"").getTerms();
+        assertEquals(List.of("pottery"), terms.getTermsQueryList());
+        assertEquals(List.of("artisanal", "cheese"), terms.getTermsExcludeList());
+        assertEquals(List.of(), mandatoryPhrase(terms));
+    }
+
     @Test
     public void testExpansion() {
         var subquery = parseAndGetQuery("elden ring mechanical keyboard slackware linux duke nukem 3d").getTerms();
