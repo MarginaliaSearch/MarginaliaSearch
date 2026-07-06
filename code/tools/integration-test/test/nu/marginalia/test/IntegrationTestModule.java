@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
+import com.zaxxer.hikari.HikariDataSource;
 import gnu.trove.list.array.TIntArrayList;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.LanguageModels;
@@ -105,6 +106,11 @@ public class IntegrationTestModule extends AbstractModule {
             bind(DomainTypes.class).toInstance(domainTypes);
 
             bind(ServiceEventLog.class).toInstance(Mockito.mock(ServiceEventLog.class));
+
+            // ProcessEventLog and friends want a database, give them one that throws SQLException (iwhch is swallowed)
+            HikariDataSource dataSourceMock = Mockito.mock(HikariDataSource.class);
+            when(dataSourceMock.getConnection()).thenThrow(new SQLException("No database available in integration tests"));
+            bind(HikariDataSource.class).toInstance(dataSourceMock);
 
             bind(IndexJournalSlopWriter.class).toInstance(new IndexJournalSlopWriter(
                     IndexLocations.getIndexConstructionArea(fileStorageServiceMock),
