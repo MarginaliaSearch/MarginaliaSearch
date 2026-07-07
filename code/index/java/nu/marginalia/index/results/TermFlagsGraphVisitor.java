@@ -42,31 +42,15 @@ public class TermFlagsGraphVisitor implements IntToDoubleFunction {
 
         double qcount = 0.;
 
-        if ((wordMeta & WordFlags.ExternalLink.asBit()) != 0) {
+        if ((wordMeta & WordFlags.UrlDomain.asBit()) != 0)
+            qcount += 3;
+        else if ((wordMeta & WordFlags.UrlPath.asBit()) != 0)
+            qcount += 1;
 
-            qcount += 2.5;
-
-            if ((wordMeta & WordFlags.UrlDomain.asBit()) != 0)
-                qcount += 2.5;
-            else if ((wordMeta & WordFlags.UrlPath.asBit()) != 0)
-                qcount += 1.5;
-
-            if ((wordMeta & WordFlags.Site.asBit()) != 0)
-                qcount += 1.25;
-            if ((wordMeta & WordFlags.SiteAdjacent.asBit()) != 0)
-                qcount += 1.25;
-        }
-        else {
-            if ((wordMeta & WordFlags.UrlDomain.asBit()) != 0)
-                qcount += 3;
-            else if ((wordMeta & WordFlags.UrlPath.asBit()) != 0)
-                qcount += 1;
-
-            if ((wordMeta & WordFlags.Site.asBit()) != 0)
-                qcount += 0.5;
-            if ((wordMeta & WordFlags.SiteAdjacent.asBit()) != 0)
-                qcount += 0.5;
-        }
+        if ((wordMeta & WordFlags.Site.asBit()) != 0)
+            qcount += 0.5;
+        if ((wordMeta & WordFlags.SiteAdjacent.asBit()) != 0)
+            qcount += 0.5;
 
         if ((wordMeta & WordFlags.Title.asBit()) != 0)
             qcount += 1.5;

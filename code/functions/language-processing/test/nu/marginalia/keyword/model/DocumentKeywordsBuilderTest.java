@@ -1,9 +1,12 @@
 package nu.marginalia.keyword.model;
 
 import it.unimi.dsi.fastutil.ints.IntList;
+import nu.marginalia.model.idx.WordFlags;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static nu.marginalia.keyword.model.DocumentKeywordsBuilder.POSITIONS_BITMASK_WINDOW_SIZE;
 
@@ -48,7 +51,6 @@ class DocumentKeywordsBuilderTest {
         }
     }
 
-
     @Test
     void calculatePositionMask__verifyFullRangeOfBitsUsed() {
         long totalMask = 0L;
@@ -58,5 +60,25 @@ class DocumentKeywordsBuilderTest {
         }
 
         Assertions.assertEquals(0xFFFF_FFFF_FFFF_FF00L, totalMask);
+    }
+
+
+    @Test
+    void testFlagsBleed() {
+        builder.addMeta("word", WordFlags.UrlDomain.asBit());
+        builder.setFlagOnMetadataForWords(WordFlags.UrlDomain, List.of("other"));
+        builder.addPos("word", 1);
+        builder.addPos("other", 1);
+
+        DocumentKeywords keywords = builder.build();
+
+        for (int i = 0; i < keywords.size(); i++) {
+            long meta = keywords.metadata()[i];
+
+            Assertions.assertTrue(WordFlags.UrlDomain.isPresent((byte) meta),
+                    "UrlDomain flag lost for " + keywords.keywords().get(i));
+            Assertions.assertEquals(builder.calculatePositionMask(0L, IntList.of(1)), meta & ~0xFFL,
+                    "Position mask saturated for " + keywords.keywords().get(i));
+        }
     }
 }

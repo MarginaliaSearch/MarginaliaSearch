@@ -265,7 +265,6 @@ public class QueryFactory {
             case "RF_SITE" -> QueryStrategy.REQUIRE_FIELD_SITE;
             case "RF_URL" -> QueryStrategy.REQUIRE_FIELD_URL;
             case "RF_DOMAIN" -> QueryStrategy.REQUIRE_FIELD_DOMAIN;
-            case "RF_LINK" -> QueryStrategy.REQUIRE_FIELD_LINK;
             case "SENTENCE" -> QueryStrategy.SENTENCE;
             case "TOPIC" -> QueryStrategy.TOPIC;
             default -> QueryStrategy.AUTO;

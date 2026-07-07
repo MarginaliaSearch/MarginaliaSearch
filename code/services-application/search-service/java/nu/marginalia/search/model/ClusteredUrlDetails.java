@@ -50,8 +50,6 @@ public class ClusteredUrlDetails implements Comparable<ClusteredUrlDetails> {
                     continue;
                 if (keywordScore.hasTermFlag(WordFlags.Title))
                     return false;
-                if (keywordScore.hasTermFlag(WordFlags.ExternalLink))
-                    return false;
                 if (keywordScore.hasTermFlag(WordFlags.UrlDomain))
                     return false;
                 if (keywordScore.hasTermFlag(WordFlags.UrlPath))

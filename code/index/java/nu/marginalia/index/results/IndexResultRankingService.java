@@ -245,9 +245,6 @@ public class IndexResultRankingService {
         else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_DOMAIN) {
             return WordFlags.UrlDomain.isPresent(flags);
         }
-        else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_LINK) {
-            return WordFlags.ExternalLink.isPresent(flags);
-        }
         return true;
     }
 

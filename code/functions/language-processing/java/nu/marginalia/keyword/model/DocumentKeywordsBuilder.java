@@ -162,7 +162,7 @@ public class DocumentKeywordsBuilder {
         if (word.length() > MAX_WORD_LENGTH)
             return;
 
-        wordToMeta.put(word, meta);
+        wordToMeta.put(word, Byte.toUnsignedLong(meta));
     }
 
     public void addPos(String word, int pos) {
@@ -177,13 +177,15 @@ public class DocumentKeywordsBuilder {
     }
 
     public void setFlagOnMetadataForWords(WordFlags flag, Collection<String> flagWords) {
+        long bit = Byte.toUnsignedLong(flag.asBit());
+
         flagWords.forEach(word ->
-                wordToMeta.mergeLong(word, flag.asBit(), (a, b) -> (byte) (a | b))
+                wordToMeta.mergeLong(word, bit, (a, b) -> a | b)
         );
     }
 
     public void addAllSyntheticTerms(Collection<String> newWords) {
-        byte meta = WordFlags.Synthetic.asBit();
+        long meta = Byte.toUnsignedLong(WordFlags.Synthetic.asBit());
 
         // Only add the synthetic flag if the words aren't already present
 
@@ -191,7 +193,7 @@ public class DocumentKeywordsBuilder {
     }
 
     public void addSyntheticTerm(String newWord) {
-        byte meta = WordFlags.Synthetic.asBit();
+        long meta = Byte.toUnsignedLong(WordFlags.Synthetic.asBit());
 
         wordToMeta.putIfAbsent(newWord, meta);
     }

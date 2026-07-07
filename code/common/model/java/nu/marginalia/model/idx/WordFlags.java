@@ -32,10 +32,7 @@ public enum WordFlags {
 
     /** Keyword appears in domain name
      */
-    UrlDomain,
-
-    /** Word appears in an external link */
-    ExternalLink
+    UrlDomain
     ;
 
     public byte asBit() {
@@ -43,7 +40,7 @@ public enum WordFlags {
     }
 
     public boolean isPresent(byte value) {
-        return (asBit() & value) > 0;
+        return (asBit() & value) != 0;
     }
 
     public boolean isAbsent(byte value) {
@@ -62,7 +59,7 @@ public enum WordFlags {
         EnumSet<WordFlags> ret = EnumSet.noneOf(WordFlags.class);
 
         for (WordFlags f : values()) {
-            if ((encodedValue & f.asBit()) > 0) {
+            if ((encodedValue & f.asBit()) != 0) {
                 ret.add(f);
             }
         }

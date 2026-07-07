@@ -16,6 +16,8 @@ public final class SearchResultKeywordScore {
                                     int positionCount) {
         this.termId = termId;
         this.keyword = keyword;
+        this.flags = flags;
+        this.positionCount = positionCount;
     }
 
     public boolean hasTermFlag(WordFlags flag) {
