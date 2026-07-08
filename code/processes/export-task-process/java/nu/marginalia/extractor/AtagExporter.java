@@ -12,20 +12,22 @@ import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageId;
+import nu.marginalia.util.SimpleBlockingThreadPool;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.concurrent.ThreadSafe;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
 
 public class AtagExporter implements ExporterIf {
@@ -48,29 +50,33 @@ public class AtagExporter implements ExporterIf {
 
         Path inputDir = storageService.getStorage(crawlId).asPath();
 
-        try (var bw = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(tmpFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)))))
-        {
-            var tagWriter = new ATagCsvWriter(bw);
+        SimpleBlockingThreadPool pool = new SimpleBlockingThreadPool("atag-exporter",
+                Math.clamp(Runtime.getRuntime().availableProcessors() / 2, 2, 6), 2);
 
-            for (var item : WorkLog.iterable(inputDir.resolve("crawler.log"))) {
-                if (Thread.interrupted()) {
-                    throw new InterruptedException();
+        try {
+            try (var bw = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(tmpFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)))))
+            {
+                var tagWriter = new ATagCsvWriter(bw);
+
+                for (var item : WorkLog.iterable(inputDir.resolve("crawler.log"))) {
+                    if (Thread.interrupted()) {
+                        pool.shutDownNow();
+                        throw new InterruptedException();
+                    }
+
+                    Path crawlDataPath = inputDir.resolve(item.relPath());
+                    pool.submitQuietly(() -> exportLinks(tagWriter, crawlDataPath));
                 }
 
-                Path crawlDataPath = inputDir.resolve(item.relPath());
-                try (var stream = SerializableCrawlDataStream.openDataStream(crawlDataPath)) {
-                    exportLinks(tagWriter, stream);
-                }
-                catch (Exception ex) {
-                    logger.error("Failed to export ATags for " + item.relPath(), ex);
-                }
+                pool.shutDown();
+                pool.awaitTermination(10, TimeUnit.DAYS);
             }
 
             Files.move(tmpFile, destStorage.asPath().resolve("atags.csv.gz"), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-
         }
         catch (Exception ex) {
             logger.error("Failed to export ATags", ex);
+            pool.shutDownNow();
         }
         finally {
             Files.deleteIfExists(tmpFile);
@@ -79,43 +85,49 @@ public class AtagExporter implements ExporterIf {
     }
 
 
-    private boolean exportLinks(ATagCsvWriter exporter, SerializableCrawlDataStream stream) throws IOException, URISyntaxException {
+    private void exportLinks(ATagCsvWriter exporter, Path crawlDataPath) {
         ATagLinkFilter linkFilter = new ATagLinkFilter();
 
-        while (stream.hasNext()) {
-            if (!(stream.next() instanceof CrawledDocument doc))
-                continue;
-            if (!doc.hasBody())
-                continue;
-            if (!doc.contentType.toLowerCase().startsWith("text/html"))
-                continue;
+        try (var stream = SerializableCrawlDataStream.openDataStream(crawlDataPath)) {
+            while (stream.hasNext()) {
+                if (Thread.interrupted())
+                    return;
 
-            var baseUrl = new EdgeUrl(doc.url);
-            var parsed = doc.parseBody();
-
-            for (var atag : parsed.getElementsByTag("a")) {
-                if (!atag.hasAttr("href")) {
+                if (!(stream.next() instanceof CrawledDocument doc))
                     continue;
-                }
-
-                String linkText = atag.text();
-
-                if (!linkFilter.isLinkTextEligible(linkText)) {
+                if (!doc.hasBody())
                     continue;
-                }
+                if (!doc.contentType.toLowerCase().startsWith("text/html"))
+                    continue;
 
-                var linkOpt = linkParser
-                        .parseLinkPermissive(baseUrl, atag)
-                        .filter(url -> linkFilter.isEligible(url, baseUrl, linkText));
+                var baseUrl = new EdgeUrl(doc.url);
+                var parsed = doc.parseBody();
 
-                if (linkOpt.isPresent()) {
-                    var url = linkOpt.get();
-                    exporter.accept(url, baseUrl.domain, linkText);
+                for (var atag : parsed.getElementsByTag("a")) {
+                    if (!atag.hasAttr("href")) {
+                        continue;
+                    }
+
+                    String linkText = atag.text();
+
+                    if (!linkFilter.isLinkTextEligible(linkText)) {
+                        continue;
+                    }
+
+                    var linkOpt = linkParser
+                            .parseLinkPermissive(baseUrl, atag)
+                            .filter(url -> linkFilter.isEligible(url, baseUrl, linkText));
+
+                    if (linkOpt.isPresent()) {
+                        var url = linkOpt.get();
+                        exporter.accept(url, baseUrl.domain, linkText);
+                    }
                 }
             }
         }
-
-        return true;
+        catch (Exception ex) {
+            logger.error("Failed to export ATags for " + crawlDataPath, ex);
+        }
     }
 
     private static class ATagLinkFilter {
@@ -175,13 +187,17 @@ public class AtagExporter implements ExporterIf {
             this.writer = writer;
         }
 
+        // Thread safe
         public void accept(EdgeUrl url, EdgeDomain sourceDomain, String linkText) throws IOException {
             final String urlString = urlWithNoSchema(url);
-
-            writer.write(String.format("\"%s\",\"%s\",\"%s\"\n",
+            final String line = String.format("\"%s\",\"%s\",\"%s\"\n",
                     csvify(urlString),
                     csvify(linkText),
-                    csvify(sourceDomain)));
+                    csvify(sourceDomain));
+
+            synchronized (writer) {
+                writer.write(line);
+            }
         }
 
         private static String urlWithNoSchema(EdgeUrl url) {
