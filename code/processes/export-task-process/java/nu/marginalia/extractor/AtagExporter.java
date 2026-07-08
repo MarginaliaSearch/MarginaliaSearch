@@ -65,6 +65,9 @@ public class AtagExporter implements ExporterIf {
                     }
 
                     Path crawlDataPath = inputDir.resolve(item.relPath());
+
+                    if (!Files.exists(crawlDataPath)) continue;
+
                     pool.submitQuietly(() -> exportLinks(tagWriter, crawlDataPath));
                 }
 
