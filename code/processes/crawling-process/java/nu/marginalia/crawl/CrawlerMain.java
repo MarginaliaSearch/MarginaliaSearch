@@ -323,6 +323,7 @@ public class CrawlerMain extends ProcessMainClass {
             int sizeOriginal = domainsToCrawl.size();
 
             domainsToCrawl.removeIf(domain -> availabilityData.get(domain) == DomainAvailability.MISSING);
+            crawlSpecRecords.removeIf(spec -> availabilityData.get(new EdgeDomain(spec.domain)) == DomainAvailability.MISSING);
 
             if (domainsToCrawl.size() != sizeOriginal) {
                 logger.info("Removed {} crawl tasks for unreachable domains", (sizeOriginal - domainsToCrawl.size()));
