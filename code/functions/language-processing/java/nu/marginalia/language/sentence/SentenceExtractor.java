@@ -20,9 +20,12 @@ import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 
 /**  This class still isn't thread safe!!  If you use it concurrently, it won't throw exceptions,
@@ -35,11 +38,11 @@ public class SentenceExtractor {
     private final LanguageConfiguration languageConfiguration;
     private SentenceDetectorME sentenceDetector;
 
-    private static NgramLexicon ngramLexicon = null;
-
     private static final Logger logger = LoggerFactory.getLogger(SentenceExtractor.class);
-
     private static final SentencePreCleaner sentencePrecleaner = new SentencePreCleaner();
+
+    private static NgramLexicon ngramLexicon = null;
+    private static SentenceModel sentenceModel = null;
 
     /* Truncate sentences longer than this.  This is mostly a defense measure against malformed data
      * that might otherwise use an undue amount of processing power. 250 words is about 10X longer than
@@ -50,23 +53,33 @@ public class SentenceExtractor {
     @Inject
     public SentenceExtractor(LanguageConfiguration languageConfiguration, LanguageModels models)
     {
+        initSharedModels(models);
+
         this.languageConfiguration = languageConfiguration;
 
-        try (InputStream modelIn = new FileInputStream(models.openNLPSentenceDetectionData.toFile())) {
-            var sentenceModel = new SentenceModel(modelIn);
+        if (sentenceModel != null) {
             sentenceDetector = new SentenceDetectorME(sentenceModel);
         }
-        catch (IOException ex) {
-            sentenceDetector = null;
-            logger.error("Could not initialize sentence detector", ex);
+        else {
+            logger.error("Missing model for sentence detector");
         }
+    }
 
+    private static void initSharedModels(LanguageModels models) {
         synchronized (SentenceExtractor.class) {
             if (ngramLexicon == null) {
                 ngramLexicon = new NgramLexicon(models);
             }
-        }
 
+            if (sentenceModel == null) {
+                try (InputStream modelIn = new BufferedInputStream(Files.newInputStream(
+                        models.openNLPSentenceDetectionData, StandardOpenOption.READ))) {
+                    sentenceModel = new SentenceModel(modelIn);
+                } catch (IOException ex) {
+                    logger.error("Could not initialize sentence detector model", ex);
+                }
+            }
+        }
     }
 
     public DocumentLanguageData extractSentences(Document doc) throws UnsupportedLanguageException {
