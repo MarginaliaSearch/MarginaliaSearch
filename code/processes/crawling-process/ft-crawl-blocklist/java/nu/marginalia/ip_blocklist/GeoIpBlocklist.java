@@ -15,8 +15,8 @@ public class GeoIpBlocklist {
      *  and blocking them is by far the most effective spam mitigation technique.  Sucks we throw
      *  babies out with the bathwater, but it's undeniably effective.
      */
-    private final Set<String> blacklist = Set.of("CN", "HK");
-    private final Set<String> graylist = Set.of("RU", "TW", "IN", "ZA", "SG", "UA");
+    private final Set<String> blacklist = Set.of();
+    private final Set<String> graylist = Set.of("CN", "HK", "RU", "TW", "IN", "ZA", "SG", "UA");
 
     private static final Logger logger = LoggerFactory.getLogger(GeoIpBlocklist.class);
 
@@ -35,7 +35,7 @@ public class GeoIpBlocklist {
             return false;
         }
         if (graylist.contains(country)) {
-            return "www".equals(domain.subDomain);
+            return "www".equals(domain.subDomain) || "".equals(domain.subDomain);
         }
 
         return true;
