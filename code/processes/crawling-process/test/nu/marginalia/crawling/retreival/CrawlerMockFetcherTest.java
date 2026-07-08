@@ -162,7 +162,7 @@ public class CrawlerMockFetcherTest {
         }
 
         @Override
-        public SimpleRobotRules fetchRobotRules(EdgeDomain domain, WarcRecorder recorder) {
+        public SimpleRobotRules fetchRobotRules(EdgeUrl rootUrl, WarcRecorder recorder) {
             return new SimpleRobotRules();
         }
 

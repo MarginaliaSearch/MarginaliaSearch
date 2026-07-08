@@ -624,12 +624,8 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
     }
 
     @Override
-    public SimpleRobotRules fetchRobotRules(EdgeDomain domain, WarcRecorder recorder) {
-        var ret = fetchAndParseRobotsTxt(new EdgeUrl("https", domain, null, "/robots.txt", null), recorder);
-        if (ret.isPresent())
-            return ret.get();
-
-        ret = fetchAndParseRobotsTxt(new EdgeUrl("http", domain, null, "/robots.txt", null), recorder);
+    public SimpleRobotRules fetchRobotRules(EdgeUrl rootUrl, WarcRecorder recorder) {
+        var ret = fetchAndParseRobotsTxt(rootUrl.withPathAndParam("/robots.txt", null), recorder);
         if (ret.isPresent())
             return ret.get();
 

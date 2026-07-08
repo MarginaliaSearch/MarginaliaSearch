@@ -115,7 +115,7 @@ public class CrawlerRetreiver implements AutoCloseable {
                     // so we don't know the crawl delay
                     TimeUnit.SECONDS.sleep(1);
 
-                    final SimpleRobotRules robotsRules = fetcher.fetchRobotRules(probedUrl.domain, warcRecorder);
+                    final SimpleRobotRules robotsRules = fetcher.fetchRobotRules(probedUrl, warcRecorder);
                     final CrawlDelayTimer delayTimer = new CrawlDelayTimer(robotsRules.getCrawlDelay());
 
                     if (!robotsRules.isAllowed(probedUrl.toString())) {
@@ -354,7 +354,7 @@ public class CrawlerRetreiver implements AutoCloseable {
 
 
             if (feedLink.isEmpty()) {
-                feedLink = guessFeedUrl(timer, robotsRules);
+                feedLink = guessFeedUrl(rootUrl, timer, robotsRules);
             }
 
             // Download the sitemap if available
@@ -410,7 +410,7 @@ public class CrawlerRetreiver implements AutoCloseable {
             "blog/rss"
     );
 
-    private Optional<String> guessFeedUrl(CrawlDelayTimer timer, SimpleRobotRules robotsRules) throws InterruptedException {
+    private Optional<String> guessFeedUrl(EdgeUrl rootUrl, CrawlDelayTimer timer, SimpleRobotRules robotsRules) throws InterruptedException {
         var oldDomainStateRecord = domainStateDb.getSummary(domain);
 
         // If we are already aware of an old feed URL, then we can just revalidate it
@@ -422,7 +422,7 @@ public class CrawlerRetreiver implements AutoCloseable {
         }
 
         for (String endpoint : likelyFeedEndpoints) {
-            String url = "https://" + domain + "/" + endpoint;
+            String url = rootUrl.withPathAndParam(endpoint, null).toString();
             if (!robotsRules.isAllowed(url)) {
                 continue;
             }

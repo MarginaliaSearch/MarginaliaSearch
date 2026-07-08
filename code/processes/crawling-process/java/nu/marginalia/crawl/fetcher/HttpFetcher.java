@@ -30,7 +30,7 @@ public interface HttpFetcher extends AutoCloseable {
 
     List<EdgeUrl> fetchSitemapUrls(String rootSitemapUrl, CrawlDelayTimer delayTimer);
 
-    SimpleRobotRules fetchRobotRules(EdgeDomain domain, WarcRecorder recorder);
+    SimpleRobotRules fetchRobotRules(EdgeUrl rootUrl, WarcRecorder recorder);
 
     SitemapRetriever createSitemapRetriever();
 
