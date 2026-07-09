@@ -8,6 +8,7 @@ import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
+import nu.marginalia.crawl.DomainStateDb;
 import nu.marginalia.executor.client.ExecutorClient;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.process.log.WorkLogEntry;
@@ -61,6 +62,8 @@ public class MigrateDomainsActor extends RecordActorPrototype {
     public ActorStep transition(ActorStep self) throws Exception {
         return switch (self) {
             case Initial() -> {
+                expandWideDomainRoots();
+
                 var existing = storageService.getOnlyActiveFileStorage(FileStorageType.CRAWL_DATA);
                 FileStorageId localStorageId = existing.orElseGet(this::allocateCrawlStorage);
                 yield new Migrate(localStorageId);
@@ -77,34 +80,48 @@ public class MigrateDomainsActor extends RecordActorPrototype {
 
                 try (HttpClient httpClient = HttpClient.newHttpClient();
                      WorkLog workLog = new WorkLog(localBase.resolve("crawler.log"));
+                     DomainStateDb localStateDb = new DomainStateDb(localBase.resolve("domainstate.db"));
                      var hb = heartbeat.createServiceAdHocTaskHeartbeat("Migrating domains")) {
 
                     for (var bySource : domainsBySource.entrySet()) {
                         int sourceNode = bySource.getKey();
                         List<DomainToMigrate> domains = bySource.getValue();
 
-                        Map<String, WorkLogEntry> sourceLog = Map.of();
                         FileStorage sourceStorage = resolveSourceStorage(sourceNode);
-                        if (sourceStorage != null) {
-                            sourceLog = downloadCrawlerLog(httpClient, sourceStorage);
-                        }
+                        Map<String, WorkLogEntry> sourceLog = sourceStorage == null
+                                ? Map.of()
+                                : downloadCrawlerLog(httpClient, sourceStorage);
+                        Path sourceStateDbFile = sourceStorage == null
+                                ? null
+                                : downloadDomainStateDb(httpClient, sourceStorage);
 
-                        for (var domain : domains) {
-                            hb.progress("migrate", done++, total);
+                        try (DomainStateDb sourceStateDb = sourceStateDbFile == null ? null : new DomainStateDb(sourceStateDbFile)) {
+                            for (var domain : domains) {
+                                hb.progress("migrate", done++, total);
 
-                            WorkLogEntry logEntry = sourceLog.get(domain.name());
-                            if (sourceStorage != null && logEntry != null) {
-                                Path localSlop = localBase.resolve(logEntry.relPath());
-                                if (copyRemoteFile(httpClient, sourceStorage, logEntry.relPath(), localSlop)) {
-                                    workLog.setJobToFinished(domain.name(), localSlop.toString(), logEntry.cnt());
+                                WorkLogEntry logEntry = sourceLog.get(domain.name());
+                                if (sourceStorage != null && logEntry != null) {
+                                    Path localSlop = localBase.resolve(logEntry.relPath());
+                                    if (copyRemoteFile(httpClient, sourceStorage, logEntry.relPath(), localSlop)) {
+                                        workLog.setJobToFinished(domain.name(), localSlop.toString(), logEntry.cnt());
+                                    }
+                                    else {
+                                        eventLog.logEvent(getClass().getSimpleName(),
+                                                "No crawl data for " + domain.name() + " on node " + sourceNode + ", adopting without data");
+                                    }
                                 }
-                                else {
-                                    eventLog.logEvent(getClass().getSimpleName(),
-                                            "No crawl data for " + domain.name() + " on node " + sourceNode + ", adopting without data");
+
+                                if (sourceStateDb != null) {
+                                    carryOverDomainState(sourceStateDb, localStateDb, domain.name());
                                 }
+
+                                takeOwnership(domain.id());
                             }
-
-                            takeOwnership(domain.id());
+                        }
+                        finally {
+                            if (sourceStateDbFile != null) {
+                                Files.deleteIfExists(sourceStateDbFile);
+                            }
                         }
                     }
                 }
@@ -141,6 +158,28 @@ public class MigrateDomainsActor extends RecordActorPrototype {
                 throw new RuntimeException(ex);
             }
         }).orElse(null);
+    }
+
+    /** Enqueue every unclaimed subdomain of a flagged wide-domain root for migration onto this node.
+     */
+    private void expandWideDomainRoots() throws SQLException {
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("""
+                    INSERT INTO DOMAIN_MIGRATION_QUEUE (DOMAIN_ID, DEST_NODE)
+                    SELECT EC_DOMAIN.ID, ?
+                    FROM EC_DOMAIN
+                    JOIN WIDE_DOMAIN_ROOTS ON EC_DOMAIN.DOMAIN_TOP = WIDE_DOMAIN_ROOTS.DOMAIN_TOP
+                    WHERE EC_DOMAIN.NODE_AFFINITY <> ?
+                    ON DUPLICATE KEY UPDATE DEST_NODE = VALUES(DEST_NODE)
+                    """))
+        {
+            stmt.setInt(1, nodeId);
+            stmt.setInt(2, nodeId);
+            int affected = stmt.executeUpdate();
+            if (affected > 0) {
+                eventLog.logEvent(getClass().getSimpleName(), "Enqueued wide-domain subdomains for migration");
+            }
+        }
     }
 
     private Map<Integer, List<DomainToMigrate>> loadQueue() throws SQLException {
@@ -217,6 +256,24 @@ public class MigrateDomainsActor extends RecordActorPrototype {
         finally {
             Files.deleteIfExists(tempLog);
         }
+    }
+
+    private Path downloadDomainStateDb(HttpClient httpClient, FileStorage sourceStorage)
+            throws IOException, InterruptedException
+    {
+        Path tempDb = Files.createTempFile("domainstate", ".db");
+        URL url = executorClient.remoteFileURL(sourceStorage, "domainstate.db");
+        if (url == null || !downloadToFile(httpClient, url, tempDb)) {
+            Files.deleteIfExists(tempDb);
+            return null;
+        }
+        return tempDb;
+    }
+
+    private void carryOverDomainState(DomainStateDb sourceStateDb, DomainStateDb localStateDb, String domain) {
+        sourceStateDb.getMeta(domain).ifPresent(localStateDb::save);
+        sourceStateDb.getSummary(domain).ifPresent(localStateDb::save);
+        sourceStateDb.getIcon(domain).ifPresent(icon -> localStateDb.saveIcon(domain, icon));
     }
 
     private boolean copyRemoteFile(HttpClient httpClient, FileStorage sourceStorage, String relPath, Path localPath)

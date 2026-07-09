@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -245,6 +246,32 @@ public class DomainStateDb implements AutoCloseable {
         }
 
         return lastCrawlTimes;
+    }
+
+    public void deleteDomain(String domainName) {
+        if (connection == null)
+            return;
+
+        try (var stmt = connection.prepareStatement("DELETE FROM crawl_meta WHERE domain = ?")) {
+            stmt.setString(1, domainName);
+            stmt.executeUpdate();
+        } catch (SQLException ex) {
+            logger.error("Failed to delete crawl_meta state for {}", domainName, ex);
+        }
+
+        try (var stmt = connection.prepareStatement("DELETE FROM summary WHERE domain = ?")) {
+            stmt.setString(1, domainName);
+            stmt.executeUpdate();
+        } catch (SQLException ex) {
+            logger.error("Failed to delete summary state for {}", domainName, ex);
+        }
+
+        try (var stmt = connection.prepareStatement("DELETE FROM favicon WHERE domain = ?")) {
+            stmt.setString(1, domainName);
+            stmt.executeUpdate();
+        } catch (SQLException ex) {
+            logger.error("Failed to delete favicon state for {}", domainName, ex);
+        }
     }
 
     public Optional<CrawlMeta> getMeta(String domainName) {

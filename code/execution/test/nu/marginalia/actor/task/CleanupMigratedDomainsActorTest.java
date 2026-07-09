@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.actor.state.ActorStep;
+import nu.marginalia.crawl.DomainStateDb;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.control.ServiceAdHocTaskHeartbeat;
 import nu.marginalia.service.control.ServiceEventLog;
@@ -31,6 +32,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -136,6 +139,11 @@ class CleanupMigratedDomainsActorTest {
             log.setJobToFinished("gone.com", gone.toString(), 1);
         }
 
+        try (var stateDb = new DomainStateDb(storageDir.resolve("domainstate.db"))) {
+            stateDb.save(new DomainStateDb.CrawlMeta("keep.com", Instant.ofEpochMilli(1000), Duration.ZERO, Duration.ZERO, 0, 0, 0));
+            stateDb.save(new DomainStateDb.CrawlMeta("foreign.com", Instant.ofEpochMilli(2000), Duration.ZERO, Duration.ZERO, 0, 0, 0));
+        }
+
         ActorStep next = actor.transition(new CleanupMigratedDomainsActor.Initial());
         assertInstanceOf(CleanupMigratedDomainsActor.Cleanup.class, next);
         ActorStep end = actor.transition(next);
@@ -151,6 +159,11 @@ class CleanupMigratedDomainsActorTest {
             remainingDomains.add(entry.id());
         }
         assertEquals(List.of("keep.com"), remainingDomains);
+
+        try (var stateDb = new DomainStateDb(storageDir.resolve("domainstate.db"))) {
+            assertTrue(stateDb.getMeta("keep.com").isPresent(), "retained domain keeps its domainstate row");
+            assertTrue(stateDb.getMeta("foreign.com").isEmpty(), "removed domain's domainstate row is pruned");
+        }
     }
 
     private void insertDomain(java.sql.PreparedStatement insert, String domain, int nodeAffinity) throws SQLException {
