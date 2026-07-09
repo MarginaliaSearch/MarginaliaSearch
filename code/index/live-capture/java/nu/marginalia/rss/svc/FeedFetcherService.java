@@ -520,6 +520,10 @@ public class FeedFetcherService {
                 }
 
             }
+            catch (FileNotFoundException ex) {
+                logger.error("No feeds.csv.gz found at {} (404), aborting feed read", url);
+                throw ex;
+            }
         }
 
         return feedDefinitionList;
