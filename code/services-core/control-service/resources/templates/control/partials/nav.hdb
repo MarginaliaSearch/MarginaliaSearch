@@ -27,6 +27,7 @@
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="/domain/new" title="Add New Domains">Add Domains</a></li>
                         <li><a class="dropdown-item" href="/domain" title="List Domains">Manage Domains</a></li>
+                        <li><a class="dropdown-item" href="/wide-domains" title="Flag top domains for the wide-domains node">Wide Domains</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="/blacklist" title="Add or remove website sanctions">Blacklist</a></li>
                         <li><a class="dropdown-item" href="/search-to-ban" title="Search function for easy blacklisting">Blacklist Search</a></li>

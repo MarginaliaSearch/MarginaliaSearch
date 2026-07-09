@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>Control Service</title>
+    {{> control/partials/head-includes }}
+</head>
+<body>
+{{> control/partials/nav}}
+<div class="container">
+    <h1 class="my-3">Wide Domains</h1>
+
+    <p>
+        Wide domains are top domains (e.g. <tt>blogspot.com</tt>) that host a large number of
+        subdomains.  Flagging a top domain here schedules all of its subdomains to be migrated
+        onto the dedicated wide-domains node to avoid the pareto curse slowing down regular batch crawls.
+        Wide domains are crawled separately on a time limit.
+    </p>
+
+    <div class="container">
+        <div class="row gx-5">
+            <div class="border p-2 m-2 col">
+                <h2>Flag Top Domain</h2>
+                <form method="post" action="/wide-domains?act=add">
+                    <div class="mb-3">
+                        <label for="add-domain" class="form-label">Top domain: </label>
+                        <input type="text" id="add-domain" class="form-control" name="domain" placeholder="blogspot.com" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add</button>
+                </form>
+            </div>
+            <div class="border p-2 m-2 col">
+                <h2>Unflag Top Domain</h2>
+                <form method="post" action="/wide-domains?act=del">
+                    <div class="mb-3">
+                        <label for="rm-domain" class="form-label">Top domain: </label>
+                        <input class="form-control" type="text" id="rm-domain" name="domain" placeholder="blogspot.com" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Remove</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-5">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1>Flagged Top Domains</h1>
+            {{#if hasWideNode}}
+            <form method="post" action="/wide-domains/migrate" onsubmit="return confirm('Start a migration run on the wide-domains node?')">
+                <button type="submit" class="btn btn-primary">Run migration now</button>
+            </form>
+            {{/if}}
+        </div>
+        <table class="table">
+            <tr>
+                <th>Top Domain</th>
+                <th>Subdomains</th>
+                <th>On Wide Node</th>
+            </tr>
+            {{#each roots}}
+            <tr>
+                <td>{{domainTop}}</td>
+                <td>{{totalDomains}}</td>
+                <td>{{onWideNode}}</td>
+            </tr>
+            {{/each}}
+        </table>
+    </div>
+</div>
+
+</body>
+{{> control/partials/foot-includes }}
+</html>
