@@ -44,11 +44,19 @@
     <div class="mt-5">
         <div class="d-flex justify-content-between align-items-center">
             <h1>Flagged Top Domains</h1>
-            {{#if hasWideNode}}
-            <form method="post" action="/wide-domains/migrate" onsubmit="return confirm('Start a migration run on the wide-domains node?')">
-                <button type="submit" class="btn btn-primary">Run migration now</button>
-            </form>
-            {{/if}}
+            <div class="d-flex gap-2">
+                {{#if hasWideNode}}
+                <form method="post" action="/wide-domains/migrate" onsubmit="return confirm('Start a migration run on the wide-domains node?')">
+                    <button type="submit" class="btn btn-primary">Run migration</button>
+                </form>
+                <form method="post" action="/wide-domains/crawl" onsubmit="return confirm('Start a crawl run on the wide-domains node?')">
+                    <button type="submit" class="btn btn-primary">Run wide crawl</button>
+                </form>
+                {{/if}}
+                <form method="post" action="/wide-domains/cleanup" onsubmit="return confirm('Run cleanup on all source nodes to purge migrated-away crawl data?')">
+                    <button type="submit" class="btn btn-secondary">Run cleanup</button>
+                </form>
+            </div>
         </div>
         <table class="table">
             <tr>

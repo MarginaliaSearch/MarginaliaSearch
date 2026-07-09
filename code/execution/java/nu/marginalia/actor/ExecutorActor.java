@@ -8,8 +8,8 @@ public enum ExecutorActor {
     PREC_EXPORT_ALL(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.WIDE_DOMAINS),
     UPDATE_NSFW_LISTS(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.SIDELOAD, NodeProfile.REALTIME, NodeProfile.WIDE_DOMAINS),
 
-    CRAWL(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.WIDE_DOMAINS),
-    RECRAWL(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.WIDE_DOMAINS),
+    CRAWL(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
+    RECRAWL(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
     RECRAWL_SINGLE_DOMAIN(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.WIDE_DOMAINS),
     PROC_CRAWLER_SPAWNER(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.WIDE_DOMAINS),
     PROC_PING_SPAWNER(NodeProfile.REALTIME),
@@ -27,7 +27,7 @@ public enum ExecutorActor {
     SCHEDULED_MAINTENANCE(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.WIDE_DOMAINS),
 
     MIGRATE_DOMAINS(NodeProfile.WIDE_DOMAINS),
-    CLEANUP_MIGRATED_DOMAINS(NodeProfile.BATCH_CRAWL),
+    CLEANUP_MIGRATED_DOMAINS(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED),
     WIDE_CRAWL(NodeProfile.WIDE_DOMAINS),
 
     PROC_CONVERTER_SPAWNER(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.SIDELOAD, NodeProfile.WIDE_DOMAINS),
