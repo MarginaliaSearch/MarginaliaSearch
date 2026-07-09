@@ -4,7 +4,8 @@ public enum NodeProfile {
     BATCH_CRAWL,
     REALTIME,
     MIXED,
-    SIDELOAD;
+    SIDELOAD,
+    WIDE_DOMAINS;
 
     public boolean isBatchCrawl() {
         return this == BATCH_CRAWL;
@@ -18,9 +19,12 @@ public enum NodeProfile {
     public boolean isSideload() {
         return this == SIDELOAD;
     }
+    public boolean isWideDomains() {
+        return this == WIDE_DOMAINS;
+    }
 
     public boolean permitBatchCrawl() {
-        return isBatchCrawl() || isMixed();
+        return isBatchCrawl() || isMixed() || isWideDomains();
     }
     public boolean permitSideload() {  return isSideload() || isMixed(); }
 }

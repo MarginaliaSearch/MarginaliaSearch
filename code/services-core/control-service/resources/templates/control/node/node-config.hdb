@@ -29,6 +29,7 @@
                     <option value="SIDELOAD" {{#if node.profile.sideload}}selected{{/if}}>Sideload</option>
                     <option value="REALTIME" {{#if node.profile.realtime}}selected{{/if}}>Real Time</option>
                     <option value="MIXED" {{#if node.profile.mixed}}selected{{/if}}>Mixed Use</option>
+                    <option value="WIDE_DOMAINS" {{#if node.profile.wideDomains}}selected{{/if}}>Wide Domains</option>
                 </select>
 
                 <div class="form-text">The node profile configures which actors are available.
@@ -45,6 +46,9 @@
                         </li>
                         <li>
                             <strong>Mixed Use</strong> - This node is configured for both batch crawling and sideloading.
+                        </li>
+                        <li>
+                            <strong>Wide Domains</strong> - This node is dedicated to domains with many subdomains.
                         </li>
                     </ul>
                 </div>
