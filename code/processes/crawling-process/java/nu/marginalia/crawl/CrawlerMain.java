@@ -45,6 +45,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.Security;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
@@ -53,6 +55,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import javax.annotation.Nullable;
 
 import static nu.marginalia.mqapi.ProcessInboxNames.CRAWLER_INBOX;
 import static nu.marginalia.slop.SlopCrawlDataRecord.convertWarc;
@@ -214,29 +217,60 @@ public class CrawlerMain extends ProcessMainClass {
     }
 
     public void runForDatabaseDomains(Path outputDir) throws Exception {
+        @Nullable
+        Duration maxRuntime = configuredMaxRuntime();
 
         heartbeat.start();
 
+        DomainsToCrawl work = loadDomainsToCrawl(maxRuntime == null);
+
+        if (work.specs().isEmpty()) {
+            // This is an error state, and we should make noise about it
+            throw new IllegalStateException("No crawl tasks found, refusing to continue");
+        }
+        logger.info("Queued {} crawl tasks, let's go", work.specs().size());
+
+        try {
+            crawl(outputDir, work, maxRuntime);
+        }
+        catch (Exception ex) {
+            logger.warn("Exception in crawler", ex);
+        }
+        finally {
+            heartbeat.shutDown();
+        }
+    }
+
+    /** The wall-clock budget for a time-limited run, or null for an unbounded full crawl. */
+    @Nullable
+    private static Duration configuredMaxRuntime() {
+        int maxRunTimeSeconds = Integer.getInteger("crawler.maxRunTimeSeconds", 0);
+        return maxRunTimeSeconds > 0 ? Duration.ofSeconds(maxRunTimeSeconds) : null;
+    }
+
+    /** Load the domains assigned to this node that should be crawled, dropping blacklisted and
+     * long-unreachable ones.  When {@code assignFreeDomains} is set, unassigned domains
+     * (NODE_AFFINITY=0) are first claimed onto this node.
+     */
+    private DomainsToCrawl loadDomainsToCrawl(boolean assignFreeDomains) throws SQLException {
         logger.info("Loading domains to be crawled");
 
-        final List<CrawlSpecRecord> crawlSpecRecords = new ArrayList<>();
-        final List<EdgeDomain> domainsToCrawl = new ArrayList<>();
-
-        // Assign any domains with node_affinity=0 to this node, and then fetch all domains assigned to this node
-        // to be crawled.
+        List<CrawlSpecRecord> crawlSpecRecords = new ArrayList<>();
+        List<EdgeDomain> domainsToCrawl = new ArrayList<>();
 
         try (var conn = dataSource.getConnection()) {
-            try (var assignFreeDomains = conn.prepareStatement(
-                    """
+            if (assignFreeDomains) {
+                try (var assignFreeDomainsStmt = conn.prepareStatement("""
                         UPDATE EC_DOMAIN
                         SET NODE_AFFINITY=?
                         WHERE NODE_AFFINITY=0
                         """))
-            {
-                // Assign any domains with node_affinity=0 to this node.  We must do this now, before we start crawling
-                // to avoid race conditions with other crawl runs.  We don't want multiple crawlers to crawl the same domain.
-                assignFreeDomains.setInt(1, node);
-                assignFreeDomains.executeUpdate();
+                {
+                    // Claim unassigned domains for this node now, before crawling, so that concurrent
+                    // crawl runs don't race to crawl the same domain.
+                    assignFreeDomainsStmt.setInt(1, node);
+                    assignFreeDomainsStmt.executeUpdate();
+                }
             }
 
             IntArrayList domainIds = new IntArrayList(100_000);
@@ -247,13 +281,11 @@ public class CrawlerMain extends ProcessMainClass {
                      LEFT JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID
                      WHERE NODE_AFFINITY=?
                      """)) {
-                // Fetch the domains to be crawled
                 query.setInt(1, node);
                 query.setFetchSize(10_000);
                 var rs = query.executeQuery();
 
                 while (rs.next()) {
-                    // Skip blacklisted domains
                     int domainId = rs.getInt(3);
                     if (blacklist.isBlacklisted(domainId))
                         continue;
@@ -270,117 +302,132 @@ public class CrawlerMain extends ProcessMainClass {
 
             logger.info("Loaded {} domains", crawlSpecRecords.size());
 
-            try (var ps = conn.prepareStatement("""
-                SELECT DOMAIN_NAME, HTTP_SCHEMA, SERVER_AVAILABLE, TS_LAST_PING, TS_LAST_AVAILABLE, TS_LAST_ERROR
-                FROM DOMAIN_AVAILABILITY_INFORMATION
-                INNER JOIN EC_DOMAIN ON EC_DOMAIN.ID=DOMAIN_ID
-                WHERE DOMAIN_ID = ? 
-                    """)
-            ) {
-                Instant now = Instant.now();
+            fetchAvailability(conn, domainIds);
+        }
 
-                for (int id : domainIds) {
-                    ps.setInt(1, id);
-                    var rs = ps.executeQuery();
+        // Remove crawl tasks for domains we haven't seen in a long time
+        int sizeOriginal = domainsToCrawl.size();
+        domainsToCrawl.removeIf(domain -> availabilityData.get(domain) == DomainAvailability.MISSING);
+        crawlSpecRecords.removeIf(spec -> availabilityData.get(new EdgeDomain(spec.domain)) == DomainAvailability.MISSING);
+        if (domainsToCrawl.size() != sizeOriginal) {
+            logger.info("Removed {} crawl tasks for unreachable domains", (sizeOriginal - domainsToCrawl.size()));
+        }
 
-                    if (rs.next()) {
-                        String domainName = rs.getString("DOMAIN_NAME");
-                        String httpSchema = rs.getString("HTTP_SCHEMA");
+        return new DomainsToCrawl(domainsToCrawl, crawlSpecRecords);
+    }
 
-                        boolean serverAvailable = rs.getBoolean("SERVER_AVAILABLE");
+    /** Populate {@link #availabilityData} for the given domain ids from the ping subsystem, so that
+     * domains long-unreachable can be dropped from the crawl.
+     */
+    private void fetchAvailability(Connection conn, IntArrayList domainIds) throws SQLException {
+        try (var ps = conn.prepareStatement("""
+            SELECT DOMAIN_NAME, SERVER_AVAILABLE, TS_LAST_PING, TS_LAST_AVAILABLE, TS_LAST_ERROR
+            FROM DOMAIN_AVAILABILITY_INFORMATION
+            INNER JOIN EC_DOMAIN ON EC_DOMAIN.ID=DOMAIN_ID
+            WHERE DOMAIN_ID = ?
+                """)
+        ) {
+            Instant now = Instant.now();
 
-                        Instant tsLastPing = Optional.ofNullable(rs.getTimestamp("TS_LAST_PING"))
-                                .map(Timestamp::toInstant)
-                                .orElse(Instant.EPOCH);
-                        Instant tsLastAvailable = Optional.ofNullable(rs.getTimestamp("TS_LAST_AVAILABLE"))
-                                .map(Timestamp::toInstant)
-                                .orElse(Instant.EPOCH);
-                        Instant tsLastError = Optional.ofNullable(rs.getTimestamp("TS_LAST_ERROR"))
-                                .map(Timestamp::toInstant)
-                                .orElse(Instant.EPOCH);
+            for (int id : domainIds) {
+                ps.setInt(1, id);
+                var rs = ps.executeQuery();
 
-                        if (tsLastPing.isBefore(now.minus(Duration.ofDays(3)))) {
-                            continue; // data is stale, nothing can be said
-                        }
+                if (rs.next()) {
+                    String domainName = rs.getString("DOMAIN_NAME");
+                    boolean serverAvailable = rs.getBoolean("SERVER_AVAILABLE");
 
-                        boolean recentError = tsLastError.isAfter(now.minus(Duration.ofDays(7)));
-                        boolean recentAvailable = tsLastAvailable.isAfter(now.minus(Duration.ofDays(7)));
+                    Instant tsLastPing = Optional.ofNullable(rs.getTimestamp("TS_LAST_PING"))
+                            .map(Timestamp::toInstant)
+                            .orElse(Instant.EPOCH);
+                    Instant tsLastAvailable = Optional.ofNullable(rs.getTimestamp("TS_LAST_AVAILABLE"))
+                            .map(Timestamp::toInstant)
+                            .orElse(Instant.EPOCH);
+                    Instant tsLastError = Optional.ofNullable(rs.getTimestamp("TS_LAST_ERROR"))
+                            .map(Timestamp::toInstant)
+                            .orElse(Instant.EPOCH);
 
-                        if (serverAvailable) {
-                            availabilityData.put(new EdgeDomain(domainName), DomainAvailability.REACHABLE);
-                        } else if (recentError && recentAvailable) {
-                            availabilityData.put(new EdgeDomain(domainName), DomainAvailability.FLAKEY);
-                        } else {
-                            availabilityData.put(new EdgeDomain(domainName), DomainAvailability.MISSING);
-                        }
+                    if (tsLastPing.isBefore(now.minus(Duration.ofDays(3)))) {
+                        continue; // data is stale, nothing can be said
+                    }
+
+                    boolean recentError = tsLastError.isAfter(now.minus(Duration.ofDays(7)));
+                    boolean recentAvailable = tsLastAvailable.isAfter(now.minus(Duration.ofDays(7)));
+
+                    if (serverAvailable) {
+                        availabilityData.put(new EdgeDomain(domainName), DomainAvailability.REACHABLE);
+                    } else if (recentError && recentAvailable) {
+                        availabilityData.put(new EdgeDomain(domainName), DomainAvailability.FLAKEY);
+                    } else {
+                        availabilityData.put(new EdgeDomain(domainName), DomainAvailability.MISSING);
                     }
                 }
             }
-
-            logger.info("Fetched availability data");
-
-            // Remove crawl tasks for domains we haven't seen in a long time
-            int sizeOriginal = domainsToCrawl.size();
-
-            domainsToCrawl.removeIf(domain -> availabilityData.get(domain) == DomainAvailability.MISSING);
-            crawlSpecRecords.removeIf(spec -> availabilityData.get(new EdgeDomain(spec.domain)) == DomainAvailability.MISSING);
-
-            if (domainsToCrawl.size() != sizeOriginal) {
-                logger.info("Removed {} crawl tasks for unreachable domains", (sizeOriginal - domainsToCrawl.size()));
-            }
         }
 
+        logger.info("Fetched availability data");
+    }
 
-        crawlSpecRecords.sort(crawlSpecArrangement(crawlSpecRecords));
+    /** Run the loaded domains through the crawl pool.  A time-limited run (non-null {@code maxRuntime})
+     * crawls the least-recently-crawled domains first and stops starting new ones at the deadline.  A
+     * full run keeps the beneficial top-domain arrangement and resumes from the work log.  Either way,
+     * in-flight crawls are drained before returning.
+     */
+    private void crawl(Path outputDir, DomainsToCrawl work, @Nullable Duration maxRuntime) throws Exception {
+        List<CrawlSpecRecord> specs = work.specs();
 
-        // First a validation run to ensure the file is all good to parse
-        if (crawlSpecRecords.isEmpty()) {
-            // This is an error state, and we should make noise about it
-            throw new IllegalStateException("No crawl tasks found, refusing to continue");
-        }
-        else {
-            logger.info("Queued {} crawl tasks, let's go", crawlSpecRecords.size());
-        }
-
-        // Set up the work log and the warc archiver so we can keep track of what we've done
         try (WorkLog workLog = new WorkLog(outputDir.resolve("crawler.log"));
              DomainStateDb domainStateDb = new DomainStateDb(outputDir.resolve("domainstate.db"));
              WarcArchiverIf warcArchiver = warcArchiverFactory.get(outputDir);
-             AnchorTagsSource anchorTagsSource = anchorTagsSourceFactory.create(domainsToCrawl)
+             AnchorTagsSource anchorTagsSource = anchorTagsSourceFactory.create(work.domains())
         ) {
-            // Set the number of tasks done to the number of tasks that are already finished,
-            // (this happens when the process is restarted after a crash or a shutdown)
-            tasksDone.set(workLog.countFinishedJobs());
+            boolean partialPass = maxRuntime != null;
+
+            // Stop starting new domains once this deadline passes
+            Instant deadline = partialPass ? Instant.now().plus(maxRuntime) : null;
+
+            specs.sort(partialPass
+                    ? leastRecentlyCrawledFirst(domainStateDb.getLastFullCrawlTimes())
+                    : crawlSpecArrangement(specs));
+
+            // A partial pass recrawls everything it reaches, so it starts its progress count from zero
+            // rather than resuming from the work log.
+            tasksDone.set(partialPass ? 0 : workLog.countFinishedJobs());
 
             // List of deferred tasks used to ensure beneficial scheduling of domains with regard to DomainLocks,
-            // merely shuffling the domains tends to lead to a lot of threads being blocked waiting for a semphore,
+            // merely shuffling the domains tends to lead to a lot of threads being blocked waiting for a semaphore,
             // this will more aggressively attempt to schedule the jobs to avoid blocking
             List<CrawlTask> taskList = new ArrayList<>();
 
-            // Create crawl tasks
-            for (CrawlSpecRecord crawlSpec : crawlSpecRecords) {
-                if (workLog.isJobFinished(crawlSpec.domain))
+            for (CrawlSpecRecord crawlSpec : specs) {
+                if (deadline != null && Instant.now().isAfter(deadline))
+                    break;
+
+                // A partial pass does not rotate the work log, so it must recrawl domains a previous
+                // run already finished rather than skip them.
+                if (!partialPass && workLog.isJobFinished(crawlSpec.domain))
                     continue;
 
                 var task = new CrawlTask(crawlSpec, anchorTagsSource, outputDir, warcArchiver, domainStateDb, workLog);
 
                 // Try to run immediately, to avoid unnecessarily keeping the entire work set in RAM
                 if (!trySubmitDeferredTask(task)) {
-
                     // Drain the retry queue to the taskList, and try to submit any tasks that are in the retry queue
                     retryQueue.drainTo(taskList);
                     taskList.removeIf(this::trySubmitDeferredTask);
-
                     // Then add this new task to the retry queue
                     taskList.add(task);
                 }
             }
 
-             // Schedule viable tasks for execution until list is empty
-            for (int emptyRuns = 0;emptyRuns < 300;) {
+            // Schedule viable tasks for execution until the list is empty or the deadline passes
+            for (int emptyRuns = 0; emptyRuns < 300;) {
+                if (deadline != null && Instant.now().isAfter(deadline))
+                    break;
+
                 boolean hasTasks = !taskList.isEmpty();
 
-                // The order of these checks  very important to avoid a race condition
+                // The order of these checks is very important to avoid a race condition
                 // where we miss a task that is put into the retry queue
                 boolean hasRunningTasks = pool.getActiveCount() > 0;
                 boolean hasRetryTasks = !retryQueue.isEmpty();
@@ -402,28 +449,36 @@ public class CrawlerMain extends ProcessMainClass {
                 }
             }
 
-            logger.info("Shutting down the pool, waiting for tasks to complete...");
+            awaitCrawlCompletion();
+        }
+    }
 
-            pool.shutDown();
-            int activePoolCount = pool.getActiveCount();
+    /** Stop accepting new work and wait for the ongoing crawls to finish, aborting only if they stall. */
+    private void awaitCrawlCompletion() throws InterruptedException {
+        logger.info("Shutting down the pool, waiting for tasks to complete...");
 
-            while (!pool.awaitTermination(5, TimeUnit.HOURS)) {
-                int newActivePoolCount = pool.getActiveCount();
-                if (activePoolCount == newActivePoolCount) {
-                    logger.warn("Aborting the last {} jobs of the crawl, taking too long", newActivePoolCount);
-                    pool.shutDownNow();
-                } else {
-                    activePoolCount = newActivePoolCount;
-                }
+        pool.shutDown();
+        int activePoolCount = pool.getActiveCount();
+
+        while (!pool.awaitTermination(5, TimeUnit.HOURS)) {
+            int newActivePoolCount = pool.getActiveCount();
+            if (activePoolCount == newActivePoolCount) {
+                logger.warn("Aborting the last {} jobs of the crawl, taking too long", newActivePoolCount);
+                pool.shutDownNow();
+            } else {
+                activePoolCount = newActivePoolCount;
             }
+        }
+    }
 
-        }
-        catch (Exception ex) {
-            logger.warn("Exception in crawler", ex);
-        }
-        finally {
-            heartbeat.shutDown();
-        }
+    /** The set of domains selected for a crawl: the {@code EdgeDomain} list feeds the anchor-tags
+     * source, the {@code CrawlSpecRecord} list drives the crawl itself. */
+    private record DomainsToCrawl(List<EdgeDomain> domains, List<CrawlSpecRecord> specs) {}
+
+    public static Comparator<CrawlSpecRecord> leastRecentlyCrawledFirst(Map<String, Long> lastCrawlTimesMs) {
+        return Comparator
+                .comparingLong((CrawlSpecRecord spec) -> lastCrawlTimesMs.getOrDefault(spec.domain(), 0L))
+                .thenComparing(CrawlSpecRecord::domain);
     }
 
     /** Create a comparator that sorts the crawl specs in a way that is beneficial for the crawl,
