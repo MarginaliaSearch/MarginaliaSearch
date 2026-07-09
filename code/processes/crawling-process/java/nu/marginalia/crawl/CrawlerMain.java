@@ -25,6 +25,7 @@ import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.io.CrawlerOutputFile;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.mq.MessageQueueFactory;
+import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.process.ProcessConfiguration;
 import nu.marginalia.process.ProcessConfigurationModule;
 import nu.marginalia.process.ProcessMainClass;
@@ -72,6 +73,7 @@ public class CrawlerMain extends ProcessMainClass {
     private final WarcArchiverFactory warcArchiverFactory;
     private final HikariDataSource dataSource;
     private final DomainBlacklist blacklist;
+    private final NodeConfigurationService nodeConfigurationService;
     private final int node;
     private final ServiceRegistryIf serviceRegistry;
     private final SimpleBlockingThreadPool pool;
@@ -109,6 +111,7 @@ public class CrawlerMain extends ProcessMainClass {
                        WarcArchiverFactory warcArchiverFactory,
                        HikariDataSource dataSource,
                        DomainBlacklist blacklist,
+                       NodeConfigurationService nodeConfigurationService,
                        DomainCoordinator domainCoordinator,
                        ServiceRegistryIf serviceRegistry,
                        Gson gson) throws InterruptedException {
@@ -126,6 +129,7 @@ public class CrawlerMain extends ProcessMainClass {
         this.warcArchiverFactory = warcArchiverFactory;
         this.dataSource = dataSource;
         this.blacklist = blacklist;
+        this.nodeConfigurationService = nodeConfigurationService;
         this.node = processConfiguration.node();
         this.serviceRegistry = serviceRegistry;
         this.domainCoordinator = domainCoordinator;
@@ -217,12 +221,23 @@ public class CrawlerMain extends ProcessMainClass {
     }
 
     public void runForDatabaseDomains(Path outputDir) throws Exception {
-        @Nullable
-        Duration maxRuntime = configuredMaxRuntime();
-
         heartbeat.start();
 
-        DomainsToCrawl work = loadDomainsToCrawl(maxRuntime == null);
+        boolean wideNode = nodeConfigurationService.get(node).profile().isWideDomains();
+
+        @Nullable
+        Duration maxRuntime;
+        if (wideNode) {
+            maxRuntime =
+                    Optional.ofNullable(Integer.getInteger("crawler.maxRunTimeSeconds"))
+                        .map(Duration::ofSeconds)
+                        .orElse(Duration.ofDays(7));
+        }
+        else {
+            maxRuntime = null;
+        }
+
+        DomainsToCrawl work = loadDomainsToCrawl(wideNode);
 
         if (work.specs().isEmpty()) {
             // This is an error state, and we should make noise about it
@@ -241,35 +256,36 @@ public class CrawlerMain extends ProcessMainClass {
         }
     }
 
-    /** The wall-clock budget for a time-limited run, or null for an unbounded full crawl. */
-    @Nullable
-    private static Duration configuredMaxRuntime() {
-        int maxRunTimeSeconds = Integer.getInteger("crawler.maxRunTimeSeconds", 0);
-        return maxRunTimeSeconds > 0 ? Duration.ofSeconds(maxRunTimeSeconds) : null;
-    }
-
     /** Load the domains assigned to this node that should be crawled, dropping blacklisted and
-     * long-unreachable ones.  When {@code assignFreeDomains} is set, unassigned domains
-     * (NODE_AFFINITY=0) are first claimed onto this node.
+     * unreachable ones.
      */
-    private DomainsToCrawl loadDomainsToCrawl(boolean assignFreeDomains) throws SQLException {
+    private DomainsToCrawl loadDomainsToCrawl(boolean wideNode) throws SQLException {
         logger.info("Loading domains to be crawled");
 
         List<CrawlSpecRecord> crawlSpecRecords = new ArrayList<>();
         List<EdgeDomain> domainsToCrawl = new ArrayList<>();
 
         try (var conn = dataSource.getConnection()) {
-            if (assignFreeDomains) {
-                try (var assignFreeDomainsStmt = conn.prepareStatement("""
-                        UPDATE EC_DOMAIN
-                        SET NODE_AFFINITY=?
-                        WHERE NODE_AFFINITY=0
+            // Claim unassigned domains for this node now, before crawling, so that concurrent crawl runs
+            // don't race to crawl the same domain.
+            if (wideNode) {
+                try (var stmt = conn.prepareStatement("""
+                        UPDATE EC_DOMAIN SET NODE_AFFINITY=?
+                        WHERE NODE_AFFINITY=0 AND DOMAIN_TOP IN (SELECT DOMAIN_TOP FROM WIDE_DOMAIN_ROOTS)
                         """))
                 {
-                    // Claim unassigned domains for this node now, before crawling, so that concurrent
-                    // crawl runs don't race to crawl the same domain.
-                    assignFreeDomainsStmt.setInt(1, node);
-                    assignFreeDomainsStmt.executeUpdate();
+                    stmt.setInt(1, node);
+                    stmt.executeUpdate();
+                }
+            }
+            else {
+                try (var stmt = conn.prepareStatement("""
+                        UPDATE EC_DOMAIN SET NODE_AFFINITY=?
+                        WHERE NODE_AFFINITY=0 AND DOMAIN_TOP NOT IN (SELECT DOMAIN_TOP FROM WIDE_DOMAIN_ROOTS)
+                        """))
+                {
+                    stmt.setInt(1, node);
+                    stmt.executeUpdate();
                 }
             }
 
@@ -317,7 +333,7 @@ public class CrawlerMain extends ProcessMainClass {
     }
 
     /** Populate {@link #availabilityData} for the given domain ids from the ping subsystem, so that
-     * domains long-unreachable can be dropped from the crawl.
+     * unreachable domains can be dropped from the crawl.
      */
     private void fetchAvailability(Connection conn, IntArrayList domainIds) throws SQLException {
         try (var ps = conn.prepareStatement("""
@@ -368,10 +384,7 @@ public class CrawlerMain extends ProcessMainClass {
         logger.info("Fetched availability data");
     }
 
-    /** Run the loaded domains through the crawl pool.  A time-limited run (non-null {@code maxRuntime})
-     * crawls the least-recently-crawled domains first and stops starting new ones at the deadline.  A
-     * full run keeps the beneficial top-domain arrangement and resumes from the work log.  Either way,
-     * in-flight crawls are drained before returning.
+    /** Run the loaded domains through the crawl pool.
      */
     private void crawl(Path outputDir, DomainsToCrawl work, @Nullable Duration maxRuntime) throws Exception {
         List<CrawlSpecRecord> specs = work.specs();

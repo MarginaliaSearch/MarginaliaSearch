@@ -88,7 +88,7 @@ public class NdpMain extends ProcessMainClass {
                         if (domainEvaluator.evaluateDomain(nextDomain.domainName())) {
                             logger.info("Accepting: {}", nextDomain.domainName());
                             domainCount.incrementAndGet();
-                            domainTestingQueue.accept(nextDomain, domainNodeAllocator.nextNodeId());
+                            domainTestingQueue.accept(nextDomain, domainNodeAllocator.nextNodeId(nextDomain.domainName()));
                         } else {
                             logger.info("Rejecting: {}", nextDomain.domainName());
                             domainTestingQueue.reject(nextDomain);
