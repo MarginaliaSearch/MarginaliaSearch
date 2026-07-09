@@ -2,6 +2,7 @@ package nu.marginalia.ndp;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,6 +18,9 @@ public class DomainNodeAllocator {
     private final NodeConfigurationService nodeConfigurationService;
     private final HikariDataSource dataSource;
     private final PriorityQueue<NodeCount> countPerNode = new PriorityQueue<>();
+
+    private final Set<String> wideRootDomains = new HashSet<>();
+    private int wideNodeId = -1;
 
     private volatile boolean initialized = false;
 
@@ -53,8 +57,13 @@ public class DomainNodeAllocator {
      * This method is synchronized to ensure thread safety when multiple threads are allocating domains.
      * The node ID returned is guaranteed to be one of the viable nodes configured in the system.
      */
-    public synchronized int nextNodeId() {
+    public synchronized int nextNodeId(String domainName) {
         ensureInitialized();
+
+        // Subdomains of a flagged wide-domain root always go to the dedicated wide node
+        if (wideNodeId > 0 && wideRootDomains.contains(EdgeDomain.getTopDomain(domainName))) {
+            return wideNodeId;
+        }
 
         // Synchronized is fine here as this is not a hot path
         // (and PriorityBlockingQueue won't help since we're re-adding the same element with a new count all the time)
@@ -91,6 +100,12 @@ public class DomainNodeAllocator {
         for (var node : nodeConfigurationService.getAll()) {
             if (node.disabled())
                 continue;
+
+            if (node.profile().isWideDomains()) {
+                wideNodeId = node.node();
+                continue;
+            }
+
             if (!node.autoAssignDomains())
                 continue;
 
@@ -98,17 +113,17 @@ public class DomainNodeAllocator {
                 viableNodes.add(node.node());
         }
 
-        // Fetch the current counts of domains per node from the database
+        // Fetch the current counts of domains per node, and the flagged wide-domain roots
         try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareStatement("""
+             var countStmt = conn.prepareStatement("""
                 SELECT COUNT(*) AS CNT, NODE_AFFINITY
                 FROM EC_DOMAIN
                 WHERE NODE_AFFINITY>0
                 GROUP BY NODE_AFFINITY
-                """))
+                """);
+             var rootStmt = conn.prepareStatement("SELECT DOMAIN_TOP FROM WIDE_DOMAIN_ROOTS"))
         {
-
-            var rs = stmt.executeQuery();
+            var rs = countStmt.executeQuery();
             while (rs.next()) {
 
                 int nodeId = rs.getInt("NODE_AFFINITY");
@@ -117,6 +132,11 @@ public class DomainNodeAllocator {
                 if (viableNodes.remove(nodeId)) {
                     countPerNode.add(new NodeCount(nodeId, count));
                 }
+            }
+
+            var rootRs = rootStmt.executeQuery();
+            while (rootRs.next()) {
+                wideRootDomains.add(rootRs.getString("DOMAIN_TOP"));
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to load domain counts from database", e);
