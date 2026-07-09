@@ -17,8 +17,6 @@ import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,7 +41,6 @@ public class CleanupMigratedDomainsActor extends RecordActorPrototype {
     private final ServiceEventLog eventLog;
     private final ServiceHeartbeat heartbeat;
     private final int nodeId;
-    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Resume(behavior = ActorResumeBehavior.ERROR)
     public record Initial() implements ActorStep {}
@@ -82,8 +79,8 @@ public class CleanupMigratedDomainsActor extends RecordActorPrototype {
                 Map<String, Integer> affinityByDomain = loadAffinities(entryByDomain.keySet());
 
                 int deleted = deleteForeignFiles(base, domainByFilename, affinityByDomain);
-                rewriteCrawlerLog(base, logPath, entryByDomain, affinityByDomain);
                 pruneDomainState(base, entryByDomain.keySet(), affinityByDomain);
+                rewriteCrawlerLog(base, logPath, entryByDomain, affinityByDomain);
 
                 eventLog.logEvent(getClass().getSimpleName(),
                         "Cleanup complete, deleted " + deleted + " foreign crawl data files");
