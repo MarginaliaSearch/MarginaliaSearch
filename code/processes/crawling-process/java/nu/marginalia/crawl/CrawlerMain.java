@@ -32,6 +32,7 @@ import nu.marginalia.process.ProcessMainClass;
 import nu.marginalia.process.control.ProcessEventLog;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.process.log.WorkLog;
+import nu.marginalia.process.log.WorkLogEntry;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.service.module.ServiceDiscoveryModule;
@@ -42,6 +43,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -388,15 +390,14 @@ public class CrawlerMain extends ProcessMainClass {
      */
     private void crawl(Path outputDir, DomainsToCrawl work, @Nullable Duration maxRuntime) throws Exception {
         List<CrawlSpecRecord> specs = work.specs();
+        boolean partialPass = maxRuntime != null;
 
         try (WorkLog workLog = new WorkLog(outputDir.resolve("crawler.log"));
              DomainStateDb domainStateDb = new DomainStateDb(outputDir.resolve("domainstate.db"));
              WarcArchiverIf warcArchiver = warcArchiverFactory.get(outputDir);
              AnchorTagsSource anchorTagsSource = anchorTagsSourceFactory.create(work.domains())
         ) {
-            boolean partialPass = maxRuntime != null;
-
-            // Stop starting new domains once this deadline passes
+            // Stop starting new domains once this deadline passes.
             Instant deadline = partialPass ? Instant.now().plus(maxRuntime) : null;
 
             specs.sort(partialPass
@@ -464,6 +465,32 @@ public class CrawlerMain extends ProcessMainClass {
 
             awaitCrawlCompletion();
         }
+
+        if (partialPass) {
+            compactCrawlerLog(outputDir.resolve("crawler.log"));
+        }
+    }
+
+    /** Rewrite the crawler.log so it holds a single (latest) entry per domain, replacing the file
+     * atomically.  The work log must already be closed when this runs.
+     */
+    public static void compactCrawlerLog(Path logPath) throws IOException {
+        if (!Files.exists(logPath)) {
+            return;
+        }
+
+        Map<String, WorkLogEntry> latestByDomain = new LinkedHashMap<>();
+        for (var entry : WorkLog.iterable(logPath)) {
+            latestByDomain.put(entry.id(), entry);
+        }
+
+        Path tempLog = Files.createTempFile(logPath.getParent(), "crawler", ".log");
+        try (WorkLog compacted = new WorkLog(tempLog)) {
+            for (var entry : latestByDomain.values()) {
+                compacted.setJobToFinished(entry.id(), entry.path(), entry.cnt());
+            }
+        }
+        Files.move(tempLog, logPath, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
     }
 
     /** Stop accepting new work and wait for the ongoing crawls to finish, aborting only if they stall. */
