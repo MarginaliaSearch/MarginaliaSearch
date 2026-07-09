@@ -77,6 +77,28 @@ class DomainStateDbTest {
     }
 
     @Test
+    public void testGetLastFullCrawlTimes() throws SQLException {
+        try (var db = new DomainStateDb(tempFile)) {
+            db.save(new DomainStateDb.CrawlMeta("a.example.com", Instant.ofEpochMilli(1000), Duration.ZERO, Duration.ZERO, 0, 0, 0));
+            db.save(new DomainStateDb.CrawlMeta("b.example.com", Instant.ofEpochMilli(2000), Duration.ZERO, Duration.ZERO, 0, 0, 0));
+
+            var times = db.getLastFullCrawlTimes();
+
+            assertEquals(2, times.size());
+            assertEquals(1000L, times.get("a.example.com"));
+            assertEquals(2000L, times.get("b.example.com"));
+            assertNull(times.get("never-crawled.example.com"));
+        }
+    }
+
+    @Test
+    public void testGetLastFullCrawlTimesNoConnection() throws SQLException {
+        try (var db = new DomainStateDb((Path) null)) {
+            assertTrue(db.getLastFullCrawlTimes().isEmpty());
+        }
+    }
+
+    @Test
     public void testFavicon() throws SQLException {
         try (var db = new DomainStateDb(tempFile)) {
             db.saveIcon("www.marginalia.nu", new DomainStateDb.FaviconRecord("text/plain", "hello world".getBytes()));

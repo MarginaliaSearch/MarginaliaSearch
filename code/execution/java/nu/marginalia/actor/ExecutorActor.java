@@ -28,6 +28,7 @@ public enum ExecutorActor {
 
     MIGRATE_DOMAINS(NodeProfile.WIDE_DOMAINS),
     CLEANUP_MIGRATED_DOMAINS(NodeProfile.BATCH_CRAWL),
+    WIDE_CRAWL(NodeProfile.WIDE_DOMAINS),
 
     PROC_CONVERTER_SPAWNER(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.SIDELOAD, NodeProfile.WIDE_DOMAINS),
     PROC_LOADER_SPAWNER(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.SIDELOAD, NodeProfile.WIDE_DOMAINS),

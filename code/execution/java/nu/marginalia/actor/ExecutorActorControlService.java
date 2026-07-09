@@ -76,7 +76,8 @@ public class ExecutorActorControlService {
                                        ScreenshotActor screenshotActor,
                                        ScheduledMaintenanceActor scheduledMaintenanceActor,
                                        MigrateDomainsActor migrateDomainsActor,
-                                       CleanupMigratedDomainsActor cleanupMigratedDomainsActor
+                                       CleanupMigratedDomainsActor cleanupMigratedDomainsActor,
+                                       WideCrawlActor wideCrawlActor
                                        ) throws SQLException
     {
         this.messageQueueFactory = messageQueueFactory;
@@ -90,6 +91,7 @@ public class ExecutorActorControlService {
 
         register(ExecutorActor.MIGRATE_DOMAINS, migrateDomainsActor);
         register(ExecutorActor.CLEANUP_MIGRATED_DOMAINS, cleanupMigratedDomainsActor);
+        register(ExecutorActor.WIDE_CRAWL, wideCrawlActor);
 
         register(ExecutorActor.CRAWL, crawlActor);
         register(ExecutorActor.LIVE_CRAWL, liveCrawlActor);
