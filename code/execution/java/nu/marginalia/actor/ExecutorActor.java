@@ -26,10 +26,8 @@ public enum ExecutorActor {
     DOWNLOAD_SAMPLE(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.WIDE_DOMAINS),
     SCHEDULED_MAINTENANCE(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.WIDE_DOMAINS),
 
-    PROC_CONVERTER_SPAWNER(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.SIDELOAD),
-    PROC_LOADER_SPAWNER(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.SIDELOAD),
-    RESTORE_BACKUP(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.SIDELOAD),
-    CONVERT(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.SIDELOAD),
+    MIGRATE_DOMAINS(NodeProfile.WIDE_DOMAINS),
+    CLEANUP_MIGRATED_DOMAINS(NodeProfile.BATCH_CRAWL),
 
     PROC_CONVERTER_SPAWNER(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.SIDELOAD, NodeProfile.WIDE_DOMAINS),
     PROC_LOADER_SPAWNER(NodeProfile.BATCH_CRAWL, NodeProfile.MIXED, NodeProfile.SIDELOAD, NodeProfile.WIDE_DOMAINS),
