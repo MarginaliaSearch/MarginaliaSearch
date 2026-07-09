@@ -74,7 +74,9 @@ public class ExecutorActorControlService {
                                        UpdateRssActor updateRssActor,
                                        DomSampleActor domSampleActor,
                                        ScreenshotActor screenshotActor,
-                                       ScheduledMaintenanceActor scheduledMaintenanceActor
+                                       ScheduledMaintenanceActor scheduledMaintenanceActor,
+                                       MigrateDomainsActor migrateDomainsActor,
+                                       CleanupMigratedDomainsActor cleanupMigratedDomainsActor
                                        ) throws SQLException
     {
         this.messageQueueFactory = messageQueueFactory;
@@ -85,6 +87,9 @@ public class ExecutorActorControlService {
         this.nodeConfiguration = configurationService.get(node);
 
         register(ExecutorActor.SCHEDULED_MAINTENANCE, scheduledMaintenanceActor);
+
+        register(ExecutorActor.MIGRATE_DOMAINS, migrateDomainsActor);
+        register(ExecutorActor.CLEANUP_MIGRATED_DOMAINS, cleanupMigratedDomainsActor);
 
         register(ExecutorActor.CRAWL, crawlActor);
         register(ExecutorActor.LIVE_CRAWL, liveCrawlActor);
