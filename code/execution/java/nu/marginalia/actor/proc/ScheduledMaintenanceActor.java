@@ -100,7 +100,7 @@ public class ScheduledMaintenanceActor extends RecordActorPrototype {
             case Initial() -> {
                 var profile = nodeConfiguration.profile();
 
-                if (profile != NodeProfile.BATCH_CRAWL && profile != NodeProfile.MIXED) {
+                if (profile != NodeProfile.BATCH_CRAWL && profile != NodeProfile.MIXED && profile != NodeProfile.WIDE_DOMAINS) {
                     yield new End();
                 }
 
