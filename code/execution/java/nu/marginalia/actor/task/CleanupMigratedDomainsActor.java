@@ -8,6 +8,7 @@ import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
+import nu.marginalia.crawl.DomainStateDb;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.process.log.WorkLogEntry;
 import nu.marginalia.service.control.ServiceEventLog;
@@ -31,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Stream;
-
 
 @Singleton
 public class CleanupMigratedDomainsActor extends RecordActorPrototype {
@@ -83,6 +83,7 @@ public class CleanupMigratedDomainsActor extends RecordActorPrototype {
 
                 int deleted = deleteForeignFiles(base, domainByFilename, affinityByDomain);
                 rewriteCrawlerLog(base, logPath, entryByDomain, affinityByDomain);
+                pruneDomainState(base, entryByDomain.keySet(), affinityByDomain);
 
                 eventLog.logEvent(getClass().getSimpleName(),
                         "Cleanup complete, deleted " + deleted + " foreign crawl data files");
@@ -138,6 +139,21 @@ public class CleanupMigratedDomainsActor extends RecordActorPrototype {
             }
         }
         Files.move(tempLog, logPath, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    private void pruneDomainState(Path base, Iterable<String> domains, Map<String, Integer> affinityByDomain) throws SQLException {
+        Path stateDbPath = base.resolve("domainstate.db");
+        if (!Files.exists(stateDbPath)) {
+            return;
+        }
+
+        try (DomainStateDb stateDb = new DomainStateDb(stateDbPath)) {
+            for (String domain : domains) {
+                if (affinityByDomain.getOrDefault(domain, -1) != nodeId) {
+                    stateDb.deleteDomain(domain);
+                }
+            }
+        }
     }
 
     private Map<String, Integer> loadAffinities(Iterable<String> domains) throws SQLException {

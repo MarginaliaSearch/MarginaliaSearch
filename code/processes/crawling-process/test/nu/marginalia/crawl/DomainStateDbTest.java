@@ -99,6 +99,26 @@ class DomainStateDbTest {
     }
 
     @Test
+    public void testDeleteDomain() throws SQLException {
+        try (var db = new DomainStateDb(tempFile)) {
+            db.save(new DomainStateDb.CrawlMeta("gone.example.com", Instant.ofEpochMilli(1000), Duration.ZERO, Duration.ZERO, 0, 0, 0));
+            db.save(DomainStateDb.SummaryRecord.forSuccess("gone.example.com"));
+            db.saveIcon("gone.example.com", new DomainStateDb.FaviconRecord("text/plain", "x".getBytes()));
+
+            db.save(new DomainStateDb.CrawlMeta("stays.example.com", Instant.ofEpochMilli(2000), Duration.ZERO, Duration.ZERO, 0, 0, 0));
+
+            db.deleteDomain("gone.example.com");
+
+            assertTrue(db.getMeta("gone.example.com").isEmpty());
+            assertTrue(db.getSummary("gone.example.com").isEmpty());
+            assertTrue(db.getIcon("gone.example.com").isEmpty());
+
+            // an unrelated domain is left untouched
+            assertTrue(db.getMeta("stays.example.com").isPresent());
+        }
+    }
+
+    @Test
     public void testFavicon() throws SQLException {
         try (var db = new DomainStateDb(tempFile)) {
             db.saveIcon("www.marginalia.nu", new DomainStateDb.FaviconRecord("text/plain", "hello world".getBytes()));
