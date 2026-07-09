@@ -59,6 +59,7 @@ public class ControlService extends SparkService {
                           ControlActorService controlActorService,
                           AbortedProcessService abortedProcessService,
                           DomainsManagementService domainsManagementService,
+                          WideDomainsService wideDomainsService,
                           ControlErrorHandler errorHandler
                       ) throws Exception {
 
@@ -89,6 +90,7 @@ public class ControlService extends SparkService {
         domainComplaintService.register();
         randomExplorationService.register();
         domainsManagementService.register();
+        wideDomainsService.register();
 
         errorHandler.register();
 
