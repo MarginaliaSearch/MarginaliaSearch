@@ -13,6 +13,7 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
 
@@ -77,6 +78,10 @@ public class ControlFileStorageService {
 
         try (var urlStream = executorClient.remoteFileURL(storage, path).openStream()) {
             urlStream.transferTo(response.raw().getOutputStream());
+        }
+        catch (FileNotFoundException ex) {
+            logger.warn("File {} not found in storage {} (404)", path, fileStorageId);
+            throw ex;
         }
 
         return "";

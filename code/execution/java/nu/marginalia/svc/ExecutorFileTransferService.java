@@ -45,6 +45,13 @@ public class ExecutorFileTransferService {
             return "Forbidden";
         }
 
+        // Distinguish a missing file from a service failure with an explicit 404, so callers
+        // can tell "no data for this domain" apart from "the node serving the data is down".
+        if (!Files.exists(filePath) || Files.isDirectory(filePath)) {
+            context.setResponseCode(404);
+            return "Not found";
+        }
+
         // Announce that we support byte ranges
         context.setResponseHeader("Accept-Ranges", "bytes");
 
