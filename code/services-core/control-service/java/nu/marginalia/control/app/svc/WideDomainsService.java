@@ -8,8 +8,6 @@ import nu.marginalia.executor.client.ExecutorClient;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.nodecfg.model.NodeProfile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 import spark.Spark;
@@ -27,7 +25,6 @@ public class WideDomainsService {
     private final ControlRendererFactory rendererFactory;
     private final NodeConfigurationService nodeConfigurationService;
     private final ExecutorClient executorClient;
-    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
     public WideDomainsService(HikariDataSource dataSource,
@@ -46,6 +43,8 @@ public class WideDomainsService {
         Spark.get("/wide-domains", this::wideDomainsModel, renderer::render);
         Spark.post("/wide-domains", this::updateRoots, new Redirects.HtmlRedirect("/wide-domains"));
         Spark.post("/wide-domains/migrate", this::triggerMigration, new Redirects.HtmlRedirect("/wide-domains"));
+        Spark.post("/wide-domains/crawl", this::triggerWideCrawl, new Redirects.HtmlRedirect("/wide-domains"));
+        Spark.post("/wide-domains/cleanup", this::triggerCleanup, new Redirects.HtmlRedirect("/wide-domains"));
     }
 
     private Object wideDomainsModel(Request request, Response response) {
@@ -56,7 +55,12 @@ public class WideDomainsService {
     }
 
     private Object updateRoots(Request request, Response response) {
-        String topDomain = new EdgeDomain(request.queryParams("domain")).topDomain;
+        String domainParam = request.queryParams("domain");
+        if (domainParam == null || domainParam.isBlank()) {
+            return "";
+        }
+
+        String topDomain = new EdgeDomain(domainParam).topDomain;
 
         if ("add".equals(request.queryParams("act"))) {
             addRoot(topDomain);
@@ -72,13 +76,29 @@ public class WideDomainsService {
         return "";
     }
 
-    /** The id of the (single) node with the WIDE_DOMAINS profile, if one is configured. */
+    private Object triggerWideCrawl(Request request, Response response) {
+        wideNodeId().ifPresent(nodeId -> executorClient.startFsm(nodeId, "WIDE_CRAWL"));
+        return "";
+    }
+
+    private Object triggerCleanup(Request request, Response response) {
+        // Cleanup runs on the batch-capable nodes that domains may have been migrated away from.
+        for (var config : nodeConfigurationService.getAll()) {
+            if (config.disabled() || config.profile().isWideDomains() || !config.profile().permitBatchCrawl()) {
+                continue;
+            }
+            executorClient.startFsm(config.node(), "CLEANUP_MIGRATED_DOMAINS");
+        }
+        return "";
+    }
+
+    /** The id of the node with the WIDE_DOMAINS profile, if one is configured. */
     private Optional<Integer> wideNodeId() {
         return nodeConfigurationService.getAll().stream()
                 .filter(config -> !config.disabled())
                 .filter(config -> config.profile() == NodeProfile.WIDE_DOMAINS)
                 .map(config -> config.node())
-                .findFirst();
+                .min(Integer::compareTo);
     }
 
     private void addRoot(String topDomain) {
