@@ -32,6 +32,15 @@ subprojects.forEach {it ->
     it.tasks.withType(JavaExec).configureEach {
         jvmArgs += ['--enable-preview']
     }
+
+    it.plugins.withId('application') { _ ->
+        it.application.applicationDefaultJvmArgs = [
+                '--enable-preview',
+                '--enable-native-access=ALL-UNNAMED',
+                '--sun-misc-unsafe-memory-access=allow'
+        ]
+    }
+
     it.tasks.withType(Test).configureEach {
         jvmArgs += ['--enable-preview',
                     '--enable-native-access=ALL-UNNAMED',
@@ -73,6 +82,8 @@ ext {
     dockerImageRegistry='marginalia'
     jibVersion = '3.4.5'
 }
+
+apply from: 'dist.gradle'
 
 idea {
     module {

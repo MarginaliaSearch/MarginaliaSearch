@@ -1,0 +1,45 @@
+// Aggregated non-docker distribution for running the services under systemd or similar.
+
+def distServices = [
+        ':code:services-core:index-service',
+        ':code:services-core:query-service',
+        ':code:services-core:control-service',
+        ':code:services-core:assistant-service',
+        ':code:services-application:search-service',
+        ':code:services-application:search-service-legacy',
+        ':code:services-application:api-service',
+        ':code:services-application:dating-service',
+        ':code:services-application:explorer-service',
+]
+
+// unambiguous pointer back to the source tree
+def gitVersion = providers.exec {
+    commandLine 'git', '-C', rootProject.projectDir.toString(), 'log', '-1', '--format=%cd-%h', '--date=format:%Y-%m-%d'
+}.standardOutput.asText.map { it.trim() }
+
+tasks.register('installAggregateDist', Sync) {
+    group = 'distribution'
+    description = 'Installs all services into build/dist/marginalia with a shared lib directory'
+
+    destinationDir = layout.buildDirectory.dir('dist/marginalia').get().asFile
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    distServices.each { servicePath ->
+        into('lib') {
+            from({ project(servicePath).tasks.named('jar') })
+            from({ project(servicePath).configurations.named('runtimeClasspath') })
+        }
+        into('bin') {
+            from({ project(servicePath).tasks.named('startScripts') })
+            exclude '*.bat'
+            filePermissions {
+                unix('rwxr-xr-x')
+            }
+        }
+    }
+
+    doLast {
+        new File(destinationDir, 'release.txt').text = gitVersion.get() + '\n'
+    }
+}
