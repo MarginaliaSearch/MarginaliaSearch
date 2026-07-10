@@ -1,6 +1,9 @@
 package nu.marginalia.service.server;
 
+import gg.jte.ContentType;
+import gg.jte.TemplateEngine;
 import io.jooby.*;
+import io.jooby.handler.AssetSource;
 import io.jooby.jte.JteModule;
 import io.jooby.netty.NettyServer;
 import io.prometheus.metrics.core.metrics.Counter;
@@ -142,13 +145,7 @@ public class JoobyService {
                 restEndpoint.port(),
                 config.externalAddress());
 
-        // FIXME:  This won't work outside of docker, may need to submit a PR to jooby to allow classpaths here
-        if (Files.exists(Path.of("/app/resources/jte")) || Files.exists(Path.of("/app/classes"))) {
-            jooby.install(new JteModule(Path.of("/app/resources/jte"), Path.of("/app/classes")));
-        }
-        if (Files.exists(Path.of("/app/resources/static"))) {
-            jooby.assets("/*", Paths.get("/app/resources/static"));
-        }
+        configureStaticResources(jooby);
 
         jooby.get("/internal/ping", ctx -> "pong");
         jooby.get("/internal/started", this::isInitialized);
@@ -160,6 +157,27 @@ public class JoobyService {
 
         jooby.before(this::auditRequestIn);
         jooby.after(this::auditRequestOut);
+    }
+
+    /** Set up serving of jte templates and static resources.  In docker, the jib image build
+     * exposes an exploded directory layout under /app, and the files are served directly off
+     * the filesystem.  Outside of docker, the templates are precompiled into the service jar
+     * by the jte gradle plugin, and the static files are served from the classpath.
+     */
+    public static void configureStaticResources(Jooby jooby) {
+        if (Files.exists(Path.of("/app/resources/jte")) || Files.exists(Path.of("/app/classes"))) {
+            jooby.install(new JteModule(Path.of("/app/resources/jte"), Path.of("/app/classes")));
+        }
+        else if (JoobyService.class.getResource("/gg/jte/generated/precompiled") != null) {
+            jooby.install(new JteModule(TemplateEngine.createPrecompiled(ContentType.Html)));
+        }
+
+        if (Files.exists(Path.of("/app/resources/static"))) {
+            jooby.assets("/*", Paths.get("/app/resources/static"));
+        }
+        else if (JoobyService.class.getResource("/static") != null) {
+            jooby.assets("/*", AssetSource.create(JoobyService.class.getClassLoader(), "/static"));
+        }
     }
 
     private Object isInitialized(Context ctx) {
