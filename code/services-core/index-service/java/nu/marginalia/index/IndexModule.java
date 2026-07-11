@@ -6,6 +6,9 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import nu.marginalia.linkgraph.DomainLinks;
 import nu.marginalia.linkgraph.impl.DelayingDomainLinks;
+import nu.marginalia.process.ForkingProcessSpawnerService;
+import nu.marginalia.process.ProcessSpawnerService;
+import nu.marginalia.process.SystemdProcessSpawnerService;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.IndexLocations;
 import org.slf4j.Logger;
@@ -22,13 +25,19 @@ public class IndexModule extends AbstractModule {
     private static final Logger logger = LoggerFactory.getLogger(IndexModule.class);
 
     public void configure() {
+        // Batch processes normally run as child processes of the service, but systemd
+        // deployments can opt to run them as transient systemd units instead.
+        if ("systemd".equals(System.getProperty("process.spawner", "fork"))) {
+            bind(ProcessSpawnerService.class).to(SystemdProcessSpawnerService.class);
+        }
+        else {
+            bind(ProcessSpawnerService.class).to(ForkingProcessSpawnerService.class);
+        }
     }
 
     @Provides
     @Singleton
-    public DomainLinks domainLinkDb (
-            FileStorageService storageService
-            )
+    public DomainLinks domainLinkDb(FileStorageService storageService)
     {
         Path path = IndexLocations.getLinkdbLivePath(storageService).resolve(DOMAIN_LINKS_FILE_NAME);
 
