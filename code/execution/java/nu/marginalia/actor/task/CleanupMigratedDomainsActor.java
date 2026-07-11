@@ -126,8 +126,9 @@ public class CleanupMigratedDomainsActor extends RecordActorPrototype {
                                    Map<String, WorkLogEntry> entryByDomain,
                                    Map<String, Integer> affinityByDomain) throws IOException
     {
-        Path tempLog = Files.createTempFile(base, "crawler", ".log");
-        try (WorkLog cleanLog = new WorkLog(tempLog)) {
+        Path newLogWorkPath = Files.createTempFile(base, "crawler", ".log");
+
+        try (WorkLog cleanLog = new WorkLog(newLogWorkPath)) {
             for (var entry : entryByDomain.entrySet()) {
                 if (affinityByDomain.getOrDefault(entry.getKey(), -1) == nodeId) {
                     WorkLogEntry logEntry = entry.getValue();
@@ -135,7 +136,10 @@ public class CleanupMigratedDomainsActor extends RecordActorPrototype {
                 }
             }
         }
-        Files.move(tempLog, logPath, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+
+        Path backupPath = logPath.resolveSibling(logPath.getFileName() + ".bak");
+        Files.move(logPath, backupPath, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+        Files.move(newLogWorkPath, logPath, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
     }
 
     private void pruneDomainState(Path base, Iterable<String> domains, Map<String, Integer> affinityByDomain) throws SQLException {
