@@ -47,10 +47,9 @@ public class WideDomainsService {
     }
 
     private Object wideDomainsModel(Request request, Response response) {
-        var wideNode = wideNodeId();
         return Map.of(
-                "roots", listRoots(wideNode.orElse(-1)),
-                "hasWideNode", wideNode.isPresent());
+                "roots", listRoots(),
+                "hasWideNode", wideNodeId().isPresent());
     }
 
     private Object updateRoots(Request request, Response response) {
@@ -117,27 +116,18 @@ public class WideDomainsService {
         }
     }
 
-    private List<WideDomainRoot> listRoots(int wideNodeId) {
-        List<WideDomainRoot> roots = new ArrayList<>();
+    private List<String> listRoots() {
+        List<String> roots = new ArrayList<>();
 
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                    SELECT WIDE_DOMAIN_ROOTS.DOMAIN_TOP,
-                           COUNT(EC_DOMAIN.ID) AS TOTAL,
-                           COALESCE(SUM(EC_DOMAIN.NODE_AFFINITY = ?), 0) AS ON_WIDE
+                    SELECT DOMAIN_TOP
                     FROM WIDE_DOMAIN_ROOTS
-                    LEFT JOIN EC_DOMAIN ON EC_DOMAIN.DOMAIN_TOP = WIDE_DOMAIN_ROOTS.DOMAIN_TOP
-                    GROUP BY WIDE_DOMAIN_ROOTS.DOMAIN_TOP
-                    ORDER BY WIDE_DOMAIN_ROOTS.DOMAIN_TOP
+                    ORDER BY DOMAIN_TOP
                     """)) {
-            stmt.setInt(1, wideNodeId);
-
             var rs = stmt.executeQuery();
             while (rs.next()) {
-                roots.add(new WideDomainRoot(
-                        rs.getString("DOMAIN_TOP"),
-                        rs.getInt("TOTAL"),
-                        rs.getInt("ON_WIDE")));
+                roots.add(rs.getString("DOMAIN_TOP"));
             }
         }
         catch (SQLException ex) {
@@ -146,6 +136,4 @@ public class WideDomainsService {
 
         return roots;
     }
-
-    public record WideDomainRoot(String domainTop, int totalDomains, int onWideNode) {}
 }
