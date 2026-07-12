@@ -19,6 +19,8 @@ import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -48,6 +50,8 @@ public class MigrateDomainsActor extends RecordActorPrototype {
     private final ServiceEventLog eventLog;
     private final ServiceHeartbeat heartbeat;
     private final int nodeId;
+
+    private static final Logger logger = LoggerFactory.getLogger(MigrateDomainsActor.class);
 
     @Resume(behavior = ActorResumeBehavior.ERROR)
     public record Initial() implements ActorStep {}
@@ -103,8 +107,7 @@ public class MigrateDomainsActor extends RecordActorPrototype {
                                         workLog.setJobToFinished(domain.name(), localSlop.toString(), logEntry.cnt());
                                     }
                                     else {
-                                        eventLog.logEvent(getClass().getSimpleName(),
-                                                "No crawl data for " + domain.name() + " on node " + sourceNode + ", adopting without data");
+                                        logger.info("No crawl data for {} on node {}", domain.name() , sourceNode);
                                     }
                                 }
 
