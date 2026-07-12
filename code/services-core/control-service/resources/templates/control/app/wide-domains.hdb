@@ -58,14 +58,10 @@
         <table class="table">
             <tr>
                 <th>Top Domain</th>
-                <th>Subdomains</th>
-                <th>On Wide Node</th>
             </tr>
             {{#each roots}}
             <tr>
-                <td>{{domainTop}}</td>
-                <td>{{totalDomains}}</td>
-                <td>{{onWideNode}}</td>
+                <td>{{.}}</td>
             </tr>
             {{/each}}
         </table>
