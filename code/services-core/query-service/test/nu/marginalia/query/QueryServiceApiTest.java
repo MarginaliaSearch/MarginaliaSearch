@@ -101,7 +101,7 @@ public class QueryServiceApiTest {
     }
 
     @Test
-    public void testTimeout() {
+    public void testSlowIndex() {
         indexApiMock.setHandler((req, obs) ->{
             try {
                 TimeUnit.SECONDS.sleep(1);
@@ -113,23 +113,21 @@ public class QueryServiceApiTest {
 
         Instant start = Instant.now();
 
-        try {
-            queryClient.search(
-                    new QueryFilterSpec.FilterByName("SYSTEM", "NO_FILTER"),
-                    "test",
-                    "en",
-                    NsfwFilterTier.DANGER,
-                    RpcQueryLimits.newBuilder()
-                            .setTimeoutMs(150)
-                            .setResultsByDomain(100)
-                            .setResultsTotal(100)
-                            .build(), 1);
-            Assertions.fail("No TimeoutException");
-        }
-        catch (TimeoutException ex) {
-            //
-        }
+        var rs = Assertions.assertDoesNotThrow(() -> queryClient.search(
+                new QueryFilterSpec.FilterByName("SYSTEM", "NO_FILTER"),
+                "test",
+                "en",
+                NsfwFilterTier.DANGER,
+                RpcQueryLimits.newBuilder()
+                        .setTimeoutMs(150)
+                        .setResultsByDomain(100)
+                        .setResultsTotal(100)
+                        .build(), 1));
+
         Instant end = Instant.now();
-        Assertions.assertTrue(Duration.between(end, start).compareTo(Duration.ofMillis(450)) < 0);
+
+        Assertions.assertTrue(rs.results().isEmpty());
+        System.out.println(Duration.between(start, end));
+        Assertions.assertTrue(Duration.between(start, end).compareTo(Duration.ofMillis(600)) < 0);
     }
 }

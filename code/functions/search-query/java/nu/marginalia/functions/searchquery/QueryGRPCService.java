@@ -3,9 +3,11 @@ package nu.marginalia.functions.searchquery;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.grpc.Context;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
+import io.prometheus.metrics.core.metrics.Counter;
 import io.prometheus.metrics.core.metrics.Histogram;
 import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.CompiledSearchFilterSpec;
@@ -38,6 +40,11 @@ public class QueryGRPCService
             .labelNames("timeout", "count")
             .classicLinearUpperBounds(0.05, 0.05, 15)
             .help("QS-side query time (GRPC endpoint)")
+            .register();
+
+    private static final Counter wmsa_qs_queries_shed = Counter.builder()
+            .name("wmsa_qs_queries_shed")
+            .help("Queries rejected before query construction due to client saturation")
             .register();
 
 
@@ -125,6 +132,19 @@ public class QueryGRPCService
     public void query(RpcQsQuery request,
                             StreamObserver<RpcQsResponse> responseObserver) {
         try {
+            if (Context.current().isCancelled()) {
+                responseObserver.onError(Status.CANCELLED.asRuntimeException());
+                return;
+            }
+
+            if (!indexClient.hasAvailableCapacity()) {
+                wmsa_qs_queries_shed.inc();
+                responseObserver.onError(Status.RESOURCE_EXHAUSTED
+                        .withDescription("Too many concurrent queries in flight")
+                        .asRuntimeException());
+                return;
+            }
+
             wmsa_qs_query_time_grpc
                     .labelValues(Integer.toString(request.getQueryLimits().getTimeoutMs()),
                             Integer.toString(request.getQueryLimits().getResultsTotal()))

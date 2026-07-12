@@ -3,6 +3,8 @@ package nu.marginalia.index.api;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.grpc.Context;
+import io.grpc.Deadline;
 import io.grpc.ManagedChannel;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -37,11 +39,6 @@ public class IndexClient {
     private final NsfwDomainFilter nsfwDomainFilter;
     private final NsfwDocumentFilter nsfwDocumentFilter;
 
-    Counter wmsa_index_query_count = Counter.builder()
-            .name("wmsa_nsfw_filter_result_count")
-            .labelNames("tier")
-            .help("Count of results filtered by NSFW tier")
-            .register();
 
 
     private static final boolean useLoom = Boolean.getBoolean("system.experimentalUseLoom");
@@ -51,6 +48,11 @@ public class IndexClient {
     private static final int maxConcurrentQueries = Integer.getInteger("index.query.maxConcurrentQueries", 256);
     private final Semaphore queryThrottle = new Semaphore(maxConcurrentQueries);
 
+    private static final Counter wmsa_index_query_count = Counter.builder()
+            .name("wmsa_nsfw_filter_result_count")
+            .labelNames("tier")
+            .help("Count of results filtered by NSFW tier")
+            .register();
     private static final Gauge wmsa_index_query_inflight = Gauge.builder()
             .name("wmsa_index_query_inflight")
             .help("Index queries currently executing")
@@ -58,6 +60,14 @@ public class IndexClient {
     private static final Counter wmsa_index_query_rejected = Counter.builder()
             .name("wmsa_index_query_rejected")
             .help("Index queries rejected")
+            .register();
+    private static final Counter wmsa_index_query_cancelled = Counter.builder()
+            .name("wmsa_index_query_cancelled")
+            .help("Index queries abandoned by the caller before completion")
+            .register();
+    private static final Counter wmsa_index_query_node_overloaded = Counter.builder()
+            .name("wmsa_index_query_node_overloaded")
+            .help("Index queries rejected by an index partition reporting overload")
             .register();
 
     @Inject
@@ -93,11 +103,30 @@ public class IndexClient {
                                          int totalResults
                                      ) {}
 
+    public boolean hasAvailableCapacity() {
+        return queryThrottle.availablePermits() > 0;
+    }
+
+    private static long clampToRequestDeadline(long budgetMs, long reservedMs) {
+        Deadline deadline = Context.current().getDeadline();
+        if (deadline == null) {
+            return budgetMs;
+        }
+        return Math.min(budgetMs, deadline.timeRemaining(TimeUnit.MILLISECONDS) - reservedMs);
+    }
+
     /** Execute a query on the index partitions and return the combined results. */
     public AggregateQueryResponse executeQueries(RpcIndexQuery indexRequest, Pagination pagination) {
         boolean acquired = false;
         try {
-            acquired = queryThrottle.tryAcquire(indexRequest.getQueryLimits().getTimeoutMs()/2, TimeUnit.MILLISECONDS);
+            if (Context.current().isCancelled()) {
+                wmsa_index_query_cancelled.inc();
+                throw Status.CANCELLED.withDescription("Request abandoned by caller").asRuntimeException();
+            }
+
+            long queueBudgetMs = clampToRequestDeadline(indexRequest.getQueryLimits().getTimeoutMs() / 2, 0);
+
+            acquired = queryThrottle.tryAcquire(Math.max(0, queueBudgetMs), TimeUnit.MILLISECONDS);
             if (!acquired) {
                 wmsa_index_query_rejected.inc();
                 throw Status.RESOURCE_EXHAUSTED
@@ -122,8 +151,16 @@ public class IndexClient {
     private AggregateQueryResponse executeQueriesInternal(RpcIndexQuery indexRequest, Pagination pagination) {
 
         int filterTier = indexRequest.getNsfwFilterTierValue();
+        long timeoutMs = indexRequest.getQueryLimits().getTimeoutMs();
 
-        Instant bailInstant  = Instant.now().plusMillis((int) (2 * indexRequest.getQueryLimits().getTimeoutMs()));
+        long fanOutBudgetMs = clampToRequestDeadline(2 * timeoutMs, 50);
+
+        if (fanOutBudgetMs <= 0 || Context.current().isCancelled()) {
+            wmsa_index_query_cancelled.inc();
+            throw Status.CANCELLED.withDescription("Request abandoned by caller").asRuntimeException();
+        }
+
+        Instant bailInstant = Instant.now().plusMillis(fanOutBudgetMs);
 
         List<RpcDecoratedResultItem> results = new ArrayList<>();
         List<Map.Entry<GrpcSingleNodeChannelPool.ConnectionHolder, ListenableFuture<RpcIndexQueryResponse>>> futures
@@ -146,7 +183,7 @@ public class IndexClient {
 
             var fut = IndexApiGrpc.newFutureStub(channel)
                             .withExecutor(executor)
-                            .withDeadlineAfter(Duration.ofMillis((int) (1.5 * indexRequest.getQueryLimits().getTimeoutMs())))
+                            .withDeadlineAfter(Duration.ofMillis(Math.min((long) (1.5 * timeoutMs), fanOutBudgetMs)))
                         .query(indexRequest);
 
             futures.add(Map.entry(holder, fut));
@@ -158,7 +195,7 @@ public class IndexClient {
             try {
                 Instant now = Instant.now();
                 if (now.isAfter(bailInstant)) {
-                    if (future.isDone()) {
+                    if (future.state() == Future.State.SUCCESS) {
                         results.addAll(future.resultNow().getResultsList());
                     }
                     else {
@@ -178,6 +215,12 @@ public class IndexClient {
                             holder.flagError();
                         }
                         case INTERNAL -> logger.warn("Internal Error in index: {}", sre);
+                        case RESOURCE_EXHAUSTED -> {
+                            logger.warn("Index partition overloaded: {}", sre.getMessage());
+                            wmsa_index_query_node_overloaded.inc();
+                            holder.flagError();
+                        }
+                        case CANCELLED -> wmsa_index_query_cancelled.inc();
                         default -> logger.error("Error while fetching results", ex.getCause());
                     }
                 }
