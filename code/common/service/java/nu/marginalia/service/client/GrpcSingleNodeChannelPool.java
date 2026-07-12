@@ -304,6 +304,10 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
 
                 errorCounter.labelValues(serviceKeyStr).inc();
 
+                if (e instanceof StatusRuntimeException sre && !isInstanceSpecificFailure(sre)) {
+                    throw sre;
+                }
+
                 exceptions.add(e);
             }
         }
@@ -357,6 +361,10 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
         }
 
         return ret;
+    }
+
+    private static boolean isInstanceSpecificFailure(StatusRuntimeException e) {
+        return e.getStatus().getCode() == Status.Code.UNAVAILABLE;
     }
 
     private boolean shouldFlagAsError(Exception e) {
