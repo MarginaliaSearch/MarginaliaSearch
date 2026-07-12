@@ -25,7 +25,7 @@ public class WideCrawlActor extends RecordActorPrototype {
     private final FileStorageService storageService;
     private final ActorProcessWatcher processWatcher;
 
-    public record Initial() implements ActorStep {}
+    public record Initial(FileStorageId fid) implements ActorStep {}
 
     @Resume(behavior = ActorResumeBehavior.RETRY)
     public record Crawl(long messageId, FileStorageId fid) implements ActorStep {}
@@ -33,11 +33,16 @@ public class WideCrawlActor extends RecordActorPrototype {
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
         return switch (self) {
-            case Initial() -> {
-                var existing = storageService.getOnlyActiveFileStorage(FileStorageType.CRAWL_DATA);
-                FileStorageId fid = existing.isPresent()
-                        ? existing.get()
-                        : storageService.allocateStorage(FileStorageType.CRAWL_DATA, "crawl-data", "Crawl data").id();
+            case Initial(FileStorageId fid) when fid.id() < 0 -> {
+                var dataArea = storageService.allocateStorage(FileStorageType.CRAWL_DATA, "crawl-data", "Crawl data");
+
+                yield new Initial(dataArea.id());
+            }
+            case Initial(FileStorageId fid) -> {
+                var crawlStorage = storageService.getStorage(fid);
+
+                if (crawlStorage == null) yield new Error("Bad storage id");
+                if (crawlStorage.type() != FileStorageType.CRAWL_DATA) yield new Error("Bad storage type " + crawlStorage.type());
 
                 long msgId = mqCrawlerOutbox.sendAsync(CrawlRequest.forFullCrawl(fid));
 

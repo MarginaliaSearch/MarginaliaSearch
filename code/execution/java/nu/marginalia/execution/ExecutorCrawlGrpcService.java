@@ -9,10 +9,15 @@ import nu.marginalia.actor.task.ConvertActor;
 import nu.marginalia.actor.task.ConvertAndLoadActor;
 import nu.marginalia.actor.task.CrawlActor;
 import nu.marginalia.actor.task.RecrawlSingleDomainActor;
+import nu.marginalia.actor.task.WideCrawlActor;
 import nu.marginalia.functions.execution.api.*;
+import nu.marginalia.nodecfg.NodeConfigurationService;
+import nu.marginalia.nodecfg.model.NodeProfile;
+import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.service.server.DiscoverableService;
 import nu.marginalia.storage.model.FileStorageId;
 
+import java.sql.SQLException;
 import java.util.stream.Collectors;
 
 public class ExecutorCrawlGrpcService
@@ -20,18 +25,30 @@ public class ExecutorCrawlGrpcService
         implements DiscoverableService
 {
     private final ExecutorActorControlService actorControlService;
+    private final NodeProfile nodeProfile;
 
     @Inject
-    public ExecutorCrawlGrpcService(ExecutorActorControlService actorControlService)
+    public ExecutorCrawlGrpcService(ExecutorActorControlService actorControlService,
+                                    ServiceConfiguration serviceConfiguration,
+                                    NodeConfigurationService nodeConfigurationService) throws SQLException
     {
         this.actorControlService = actorControlService;
+        this.nodeProfile = nodeConfigurationService.get(serviceConfiguration.node()).profile();
     }
 
     @Override
     public void triggerCrawl(RpcFileStorageId request, StreamObserver<Empty> responseObserver) {
         try {
-            actorControlService.startFrom(ExecutorActor.CRAWL,
-                    new CrawlActor.Initial(FileStorageId.of(request.getFileStorageId()), false));
+            FileStorageId fid = FileStorageId.of(request.getFileStorageId());
+
+            if (nodeProfile == NodeProfile.WIDE_DOMAINS) {
+                actorControlService.startFrom(ExecutorActor.WIDE_CRAWL,
+                        new WideCrawlActor.Initial(fid));
+            }
+            else {
+                actorControlService.startFrom(ExecutorActor.CRAWL,
+                        new CrawlActor.Initial(fid, false));
+            }
 
             responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();

@@ -13,6 +13,7 @@ import nu.marginalia.actor.task.ExportFeedsActor;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.nodecfg.NodeConfigurationService;
+import nu.marginalia.nodecfg.model.NodeConfiguration;
 import nu.marginalia.nodecfg.model.NodeProfile;
 import nu.marginalia.schedule.ActorScheduleRow;
 import nu.marginalia.schedule.ActorScheduleService;
@@ -161,7 +162,7 @@ public class ScheduledMaintenanceActor extends RecordActorPrototype {
                 yield new Wait(nextTimeslot());
             }
             case Task_FetchRSSFeeds() -> {
-                if (!executorStateMachines.get(ExecutorActor.CRAWL).getState().isFinal()) {
+                if (!isCrawlerIdle(nodeConfiguration)) {
                     eventLog.logEvent("MAIN-TASK-SKIPPED", taskName);
                     yield new Wait(nextTimeslot());
                 }
@@ -194,6 +195,14 @@ public class ScheduledMaintenanceActor extends RecordActorPrototype {
             }
             default -> new Error("Unknown actor step: " + self);
         };
+    }
+
+    public boolean isCrawlerIdle(NodeConfiguration nodeConfiguration) {
+        var crawlActor = nodeConfiguration.profile() == NodeProfile.WIDE_DOMAINS
+                ? ExecutorActor.WIDE_CRAWL
+                : ExecutorActor.CRAWL;
+
+        return executorStateMachines.get(crawlActor).getState().isFinal();
     }
 
     private long createTrackingTokenMsg(String task, int node, Duration ttl) throws Exception {
