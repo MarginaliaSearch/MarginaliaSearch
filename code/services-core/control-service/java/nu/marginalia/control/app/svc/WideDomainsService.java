@@ -43,7 +43,6 @@ public class WideDomainsService {
         Spark.get("/wide-domains", this::wideDomainsModel, renderer::render);
         Spark.post("/wide-domains", this::updateRoots, new Redirects.HtmlRedirect("/wide-domains"));
         Spark.post("/wide-domains/migrate", this::triggerMigration, new Redirects.HtmlRedirect("/wide-domains"));
-        Spark.post("/wide-domains/crawl", this::triggerWideCrawl, new Redirects.HtmlRedirect("/wide-domains"));
         Spark.post("/wide-domains/cleanup", this::triggerCleanup, new Redirects.HtmlRedirect("/wide-domains"));
     }
 
@@ -73,11 +72,6 @@ public class WideDomainsService {
 
     private Object triggerMigration(Request request, Response response) {
         wideNodeId().ifPresent(nodeId -> executorClient.startFsm(nodeId, "MIGRATE_DOMAINS"));
-        return "";
-    }
-
-    private Object triggerWideCrawl(Request request, Response response) {
-        wideNodeId().ifPresent(nodeId -> executorClient.startFsm(nodeId, "WIDE_CRAWL"));
         return "";
     }
 

@@ -176,7 +176,7 @@ public class MigrateDomainsActor extends RecordActorPrototype {
             stmt.setInt(2, nodeId);
             int affected = stmt.executeUpdate();
             if (affected > 0) {
-                eventLog.logEvent(getClass().getSimpleName(), "Enqueued wide-domain subdomains for migration");
+                eventLog.logEvent(getClass().getSimpleName(), "Enqueued " + affected + " wide-domain subdomains for migration");
             }
         }
     }
