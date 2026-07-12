@@ -3,6 +3,7 @@ package nu.marginalia.index;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import io.prometheus.metrics.core.metrics.Counter;
 import io.prometheus.metrics.core.metrics.Histogram;
@@ -130,8 +131,10 @@ public class IndexGrpcService
 
                         }
                         catch (IndexQueryExecution.TooManySimultaneousQueriesException ex) {
-                            logger.error("Rejected request execution due to overload");
-                            return List.of();
+                            logger.warn("Rejected request execution due to overload");
+                            throw Status.RESOURCE_EXHAUSTED
+                                    .withDescription("Too many simultaneous queries in index partition")
+                                    .asRuntimeException();
                         }
                         catch (Exception ex) {
                             logger.error("Error in handling request", ex);
@@ -150,6 +153,9 @@ public class IndexGrpcService
                             .build());
 
             responseObserver.onCompleted();
+        }
+        catch (StatusRuntimeException ex) {
+            responseObserver.onError(ex);
         }
         catch (Exception ex) {
             logger.error("Error in handling request", ex);
