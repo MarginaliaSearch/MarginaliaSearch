@@ -25,10 +25,11 @@ import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.StringJoiner;
+import java.util.Set;
 import java.util.stream.Stream;
 
 @Singleton
@@ -76,11 +77,11 @@ public class CleanupMigratedDomainsActor extends RecordActorPrototype {
                     domainByFilename.put(entry.fileName(), entry.id());
                 }
 
-                Map<String, Integer> affinityByDomain = loadAffinities(entryByDomain.keySet());
+                Set<String> domainsAssignedHere = loadDomainsAssignedHere(entryByDomain.keySet());
 
-                int deleted = deleteForeignFiles(base, domainByFilename, affinityByDomain);
-                pruneDomainState(base, entryByDomain.keySet(), affinityByDomain);
-                rewriteCrawlerLog(base, logPath, entryByDomain, affinityByDomain);
+                int deleted = deleteForeignFiles(base, domainByFilename, domainsAssignedHere);
+                pruneDomainState(base, entryByDomain.keySet(), domainsAssignedHere);
+                rewriteCrawlerLog(base, logPath, entryByDomain, domainsAssignedHere);
 
                 eventLog.logEvent(getClass().getSimpleName(),
                         "Cleanup complete, deleted " + deleted + " foreign crawl data files");
@@ -95,7 +96,7 @@ public class CleanupMigratedDomainsActor extends RecordActorPrototype {
      */
     private int deleteForeignFiles(Path base,
                                    Map<String, String> domainByFilename,
-                                   Map<String, Integer> affinityByDomain) throws IOException
+                                   Set<String> domainsAssignedHere) throws IOException
     {
         List<Path> slopFiles = new ArrayList<>();
         try (Stream<Path> paths = Files.walk(base)) {
@@ -108,7 +109,7 @@ public class CleanupMigratedDomainsActor extends RecordActorPrototype {
         try (var hb = heartbeat.createServiceAdHocTaskHeartbeat("Cleaning crawl data")) {
             for (var file : hb.wrap("cleanup", slopFiles)) {
                 String domain = domainByFilename.get(file.getFileName().toString());
-                boolean assignedHere = domain != null && affinityByDomain.getOrDefault(domain, -1) == nodeId;
+                boolean assignedHere = domain != null && domainsAssignedHere.contains(domain.toLowerCase());
                 if (!assignedHere) {
                     Files.delete(file);
                     deleted++;
@@ -124,13 +125,13 @@ public class CleanupMigratedDomainsActor extends RecordActorPrototype {
     private void rewriteCrawlerLog(Path base,
                                    Path logPath,
                                    Map<String, WorkLogEntry> entryByDomain,
-                                   Map<String, Integer> affinityByDomain) throws IOException
+                                   Set<String> domainsAssignedHere) throws IOException
     {
         Path newLogWorkPath = Files.createTempFile(base, "crawler", ".log");
 
         try (WorkLog cleanLog = new WorkLog(newLogWorkPath)) {
             for (var entry : entryByDomain.entrySet()) {
-                if (affinityByDomain.getOrDefault(entry.getKey(), -1) == nodeId) {
+                if (domainsAssignedHere.contains(entry.getKey().toLowerCase())) {
                     WorkLogEntry logEntry = entry.getValue();
                     cleanLog.setJobToFinished(logEntry.id(), logEntry.path(), logEntry.cnt());
                 }
@@ -142,7 +143,7 @@ public class CleanupMigratedDomainsActor extends RecordActorPrototype {
         Files.move(newLogWorkPath, logPath, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
     }
 
-    private void pruneDomainState(Path base, Iterable<String> domains, Map<String, Integer> affinityByDomain) throws SQLException {
+    private void pruneDomainState(Path base, Iterable<String> domains, Set<String> domainsAssignedHere) throws SQLException {
         Path stateDbPath = base.resolve("domainstate.db");
         if (!Files.exists(stateDbPath)) {
             return;
@@ -150,41 +151,31 @@ public class CleanupMigratedDomainsActor extends RecordActorPrototype {
 
         try (DomainStateDb stateDb = new DomainStateDb(stateDbPath)) {
             for (String domain : domains) {
-                if (affinityByDomain.getOrDefault(domain, -1) != nodeId) {
+                if (!domainsAssignedHere.contains(domain.toLowerCase())) {
                     stateDb.deleteDomain(domain);
                 }
             }
         }
     }
 
-    private Map<String, Integer> loadAffinities(Iterable<String> domains) throws SQLException {
-        Map<String, Integer> affinityByDomain = new HashMap<>();
-
-        List<String> domainList = new ArrayList<>();
-        domains.forEach(domainList::add);
-        if (domainList.isEmpty()) {
-            return affinityByDomain;
-        }
-
-        StringJoiner placeholders = new StringJoiner(",", "(", ")");
-        for (int i = 0; i < domainList.size(); i++) {
-            placeholders.add("?");
-        }
+    private Set<String> loadDomainsAssignedHere(Set<String> candidates) throws SQLException {
+        Set<String> domainsAssignedHere = new HashSet<>();
 
         try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareStatement(
-                     "SELECT DOMAIN_NAME, NODE_AFFINITY FROM EC_DOMAIN WHERE DOMAIN_NAME IN " + placeholders))
+             var stmt = conn.prepareStatement("SELECT DOMAIN_NAME FROM EC_DOMAIN WHERE NODE_AFFINITY = ?"))
         {
-            for (int i = 0; i < domainList.size(); i++) {
-                stmt.setString(i + 1, domainList.get(i));
-            }
+            stmt.setFetchSize(10_000);
+            stmt.setInt(1, nodeId);
             var rs = stmt.executeQuery();
             while (rs.next()) {
-                affinityByDomain.put(rs.getString("DOMAIN_NAME"), rs.getInt("NODE_AFFINITY"));
+                String domain = rs.getString("DOMAIN_NAME");
+                if (candidates.contains(domain)) {
+                    domainsAssignedHere.add(domain.toLowerCase());
+                }
             }
         }
 
-        return affinityByDomain;
+        return domainsAssignedHere;
     }
 
     @Override
