@@ -168,7 +168,7 @@ public class MigrateDomainsActor extends RecordActorPrototype {
                     SELECT EC_DOMAIN.ID, ?
                     FROM EC_DOMAIN
                     JOIN WIDE_DOMAIN_ROOTS ON EC_DOMAIN.DOMAIN_TOP = WIDE_DOMAIN_ROOTS.DOMAIN_TOP
-                    WHERE EC_DOMAIN.NODE_AFFINITY <> ?
+                    WHERE EC_DOMAIN.NODE_AFFINITY <> ? AND EC_DOMAIN.NODE_AFFINITY>=0
                     ON DUPLICATE KEY UPDATE DEST_NODE = VALUES(DEST_NODE)
                     """))
         {
