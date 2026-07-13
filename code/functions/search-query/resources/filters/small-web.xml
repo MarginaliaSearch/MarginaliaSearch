@@ -2,6 +2,6 @@
 <filter>
     <search-set>SMALLWEB</search-set>
     <limit param="size" type="lt" value="500"/>
-    <limit param="type" type="lt" value="5" />
+    <limit param="quality" type="lt" value="5" />
     <limit param="year" type="gt" value="2015"/>
 </filter>
