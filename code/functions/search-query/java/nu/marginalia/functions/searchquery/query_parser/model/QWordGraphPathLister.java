@@ -12,6 +12,11 @@ import java.util.Set;
  * in a way that avoids this risk.
  * */
 public class QWordGraphPathLister {
+
+    // Legitimate queries produce at most a handful of paths, but long adversarial queries
+    // have been observed to produce enough paths to run the service out of memory
+    static final int MAX_PATHS = 16;
+
     private final QWordGraph graph;
 
     public QWordGraphPathLister(QWordGraph graph) {
@@ -34,6 +39,9 @@ public class QWordGraphPathLister {
                            QWord start,
                            QWord end)
     {
+        if (acc.size() >= MAX_PATHS)
+            return;
+
         boolean isStopword = WordPatterns.isStopWord(start.word());
         if (!isStopword)
             stack.addLast(start);

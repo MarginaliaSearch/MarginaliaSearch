@@ -140,6 +140,25 @@ public class QueryFactoryTest {
     }
 
     @Test
+    public void testLongQuotedQueryIsRejected() {
+        // A quoted phrase parses as a single token, so it slips past the token count limit
+        StringBuilder monsterQuery = new StringBuilder("\"");
+        for (int i = 0; i < 50; i++) {
+            monsterQuery.append("word").append(i).append(' ');
+        }
+        monsterQuery.append("\"");
+
+        var query = parse(monsterQuery.toString());
+        Assertions.assertTrue(query.indexQuery.getTerms().getTermsQueryList().isEmpty());
+    }
+
+    @Test
+    public void testQuotedQueryOfReasonableLength() {
+        var query = parse("\"to be or not to be that is the question\"");
+        Assertions.assertFalse(query.indexQuery.getTerms().getTermsQueryList().isEmpty());
+    }
+
+    @Test
     public void testParseYearEq() {
         var year = parseAndGetQuery("year=2000").getYear();
         assertEquals(RpcSpecLimit.TYPE.EQUALS, year.getType());

@@ -65,6 +65,11 @@ public class QueryFactory {
             basicQuery.clear();
         }
 
+        if (countWords(basicQuery) > MAX_QUERY_WORDS) {
+            problems.add("Your search query is too long");
+            basicQuery.clear();
+        }
+
         SearchQuery.SearchQueryBuilder queryBuilder = SearchQuery.builder();
 
         SpecificationLimit qualityLimit = searchFilter.quality();
@@ -244,6 +249,16 @@ public class QueryFactory {
 
 
         return new ProcessedQuery(indexQueryBuilder.build(), searchTermsHuman, domain, request.getLangIsoCode());
+    }
+
+    private static final int MAX_QUERY_WORDS = 32;
+
+    private static int countWords(List<QueryToken> tokens) {
+        int words = 0;
+        for (QueryToken t : tokens) {
+            words += 1 + StringUtils.countMatches(t.str(), '_');
+        }
+        return words;
     }
 
     private void analyzeSearchTerm(List<String> problems, String str, String displayStr) {
