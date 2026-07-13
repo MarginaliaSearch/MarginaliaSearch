@@ -13,9 +13,15 @@ def distServices = [
 ]
 
 // unambiguous pointer back to the source tree
-def gitVersion = providers.exec {
+def gitCommit = providers.exec {
     commandLine 'git', '-C', rootProject.projectDir.toString(), 'log', '-1', '--format=%cd-%h', '--date=format:%Y-%m-%d'
 }.standardOutput.asText.map { it.trim() }
+
+def gitBranch = providers.exec {
+    commandLine 'git', '-C', rootProject.projectDir.toString(), 'rev-parse', '--abbrev-ref', 'HEAD'
+}.standardOutput.asText.map { it.trim() }
+
+def gitVersion = gitCommit.zip(gitBranch) { commit, branch -> commit + '-' + branch }
 
 tasks.register('installAggregateDist', Sync) {
     group = 'distribution'
