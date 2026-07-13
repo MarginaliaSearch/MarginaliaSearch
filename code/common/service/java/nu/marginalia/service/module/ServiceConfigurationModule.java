@@ -117,12 +117,19 @@ public class ServiceConfigurationModule extends AbstractModule {
     }
 
     public static String getLocalNetworkIP() throws IOException {
+        // Overrride for when the namespace holds several site-local addresses
+        String preferredInterface = System.getProperty("system.multiFaceInterface");
+
         Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
 
         while (nets.hasMoreElements()) {
             NetworkInterface netif = nets.nextElement();
             logger.info("Considering network interface {}:  Up? {},  Loopback? {}", netif.getDisplayName(), netif.isUp(), netif.isLoopback());
             if (!netif.isUp() || netif.isLoopback()) {
+                continue;
+            }
+
+            if (preferredInterface != null && !Objects.equals(preferredInterface, netif.getName())) {
                 continue;
             }
 
