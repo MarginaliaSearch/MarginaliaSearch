@@ -52,11 +52,14 @@ public class ChromeDriverManager {
         baseOptions.setBinary(CHROME_PATH);
         baseOptions.addArguments(
                 "--headless=new",
-                "--no-sandbox",
                 "--disable-dev-shm-usage",
                 "--disable-gpu",
                 "--user-agent=" + WmsaHome.getUserAgent().uaString()
         );
+
+        if (!Boolean.parseBoolean(System.getenv("CHROME_SANDBOX"))) {
+            baseOptions.addArguments("--no-sandbox");
+        }
 
         screenshotOptions = new ChromeOptions().merge(baseOptions).addArguments("--window-size=1024,768");
         extensionOptions = new ChromeOptions().merge(baseOptions).addArguments("--load-extension=/dom-export");
