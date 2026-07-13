@@ -1,6 +1,7 @@
 package nu.marginalia.array.pool;
 
 import nu.marginalia.ffi.LinuxSystemCalls;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,38 +69,42 @@ public class BufferPool implements AutoCloseable {
         }
 
         this.poolLru = new PoolLru(pages);
+        this.monitorThread = Thread.ofPlatform().start(this::statsThread);
+    }
 
-        monitorThread = Thread.ofPlatform().start(() -> {
-            int diskReadOld = 0;
-            int cacheReadOld = 0;
+    private void statsThread() {
+        if (!Boolean.getBoolean("index.printPoolStats")) {
+            return;
+        }
 
-            while (running) {
-                try {
-                    TimeUnit.SECONDS.sleep(30);
-                } catch (InterruptedException e) {
-                    logger.info("Sleep interrupted", e);
-                    break;
-                }
+        int diskReadOld = 0;
+        int cacheReadOld = 0;
 
-                long diskRead = diskReadCount.get();
-                long cacheRead = cacheReadCount.get();
-                int heldCount = 0;
-                for (var page : pages) {
-                    if (page.isHeld()) {
-                        heldCount++;
-                    }
-                }
+        while (running) {
+            try {
+                TimeUnit.SECONDS.sleep(30);
+            } catch (InterruptedException e) {
+                logger.info("Sleep interrupted", e);
+                break;
+            }
 
-                if (diskRead != diskReadOld || cacheRead != cacheReadOld) {
-                    logger.info("[#{}:{}] Disk/Cached: {}/{}, heldCount={}/{}, fqs={}, rcc={}",
-                            hashCode(), pageSizeBytes,
-                            diskRead, cacheRead,
-                            heldCount, pages.length,
-                            poolLru.getFreeQueueSize(), poolLru.getReclaimCycles());
+            long diskRead = diskReadCount.get();
+            long cacheRead = cacheReadCount.get();
+            int heldCount = 0;
+            for (var page : pages) {
+                if (page.isHeld()) {
+                    heldCount++;
                 }
             }
-        });
 
+            if (diskRead != diskReadOld || cacheRead != cacheReadOld) {
+                logger.info("[#{}:{}] Disk/Cached: {}/{}, heldCount={}/{}, fqs={}, rcc={}",
+                        hashCode(), pageSizeBytes,
+                        diskRead, cacheRead,
+                        heldCount, pages.length,
+                        poolLru.getFreeQueueSize(), poolLru.getReclaimCycles());
+            }
+        }
     }
 
     public void close() {
