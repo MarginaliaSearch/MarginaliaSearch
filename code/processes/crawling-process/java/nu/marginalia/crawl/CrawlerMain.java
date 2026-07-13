@@ -26,6 +26,7 @@ import nu.marginalia.io.CrawlerOutputFile;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.nodecfg.NodeConfigurationService;
+import nu.marginalia.nodecfg.model.NodeProfile;
 import nu.marginalia.process.ProcessConfiguration;
 import nu.marginalia.process.ProcessConfigurationModule;
 import nu.marginalia.process.ProcessMainClass;
@@ -98,7 +99,6 @@ public class CrawlerMain extends ProcessMainClass {
     private static final int MIN_URLS_PER_DOMAIN = Integer.getInteger("crawler.minUrlsPerDomain", 100);
     private static final int MID_URLS_PER_DOMAIN = Integer.getInteger("crawler.midUrlsPerDomain", 2_000);
     private static final int MAX_URLS_PER_DOMAIN = Integer.getInteger("crawler.maxUrlsPerDomain", 10_000);
-
 
     @Inject
     public CrawlerMain(UserAgent userAgent,
@@ -225,21 +225,10 @@ public class CrawlerMain extends ProcessMainClass {
     public void runForDatabaseDomains(Path outputDir) throws Exception {
         heartbeat.start();
 
-        boolean wideNode = nodeConfigurationService.get(node).profile().isWideDomains();
+        NodeProfile profile = nodeConfigurationService.get(node).profile();
+        RunType runType = RunType.forProfile(profile);
 
-        @Nullable
-        Duration maxRuntime;
-        if (wideNode) {
-            maxRuntime =
-                    Optional.ofNullable(Integer.getInteger("crawler.maxRunTimeSeconds"))
-                        .map(Duration::ofSeconds)
-                        .orElse(Duration.ofDays(7));
-        }
-        else {
-            maxRuntime = null;
-        }
-
-        DomainsToCrawl work = loadDomainsToCrawl(wideNode);
+        DomainsToCrawl work = loadDomainsToCrawl(profile);
 
         if (work.specs().isEmpty()) {
             // This is an error state, and we should make noise about it
@@ -248,7 +237,7 @@ public class CrawlerMain extends ProcessMainClass {
         logger.info("Queued {} crawl tasks, let's go", work.specs().size());
 
         try {
-            crawl(outputDir, work, maxRuntime);
+            crawl(outputDir, work, runType);
         }
         catch (Exception ex) {
             logger.warn("Exception in crawler", ex);
@@ -261,7 +250,7 @@ public class CrawlerMain extends ProcessMainClass {
     /** Load the domains assigned to this node that should be crawled, dropping blacklisted and
      * unreachable ones.
      */
-    private DomainsToCrawl loadDomainsToCrawl(boolean wideNode) throws SQLException {
+    private DomainsToCrawl loadDomainsToCrawl(NodeProfile profile) throws SQLException {
         logger.info("Loading domains to be crawled");
 
         List<CrawlSpecRecord> crawlSpecRecords = new ArrayList<>();
@@ -270,7 +259,7 @@ public class CrawlerMain extends ProcessMainClass {
         try (var conn = dataSource.getConnection()) {
             // Claim unassigned domains for this node now, before crawling, so that concurrent crawl runs
             // don't race to crawl the same domain.
-            if (wideNode) {
+            if (profile.isWideDomains()) {
                 try (var stmt = conn.prepareStatement("""
                         UPDATE EC_DOMAIN SET NODE_AFFINITY=?
                         WHERE NODE_AFFINITY=0 AND DOMAIN_TOP IN (SELECT DOMAIN_TOP FROM WIDE_DOMAIN_ROOTS)
@@ -388,25 +377,27 @@ public class CrawlerMain extends ProcessMainClass {
 
     /** Run the loaded domains through the crawl pool.
      */
-    private void crawl(Path outputDir, DomainsToCrawl work, @Nullable Duration maxRuntime) throws Exception {
+    private void crawl(Path outputDir, DomainsToCrawl work, RunType runType) throws Exception {
         List<CrawlSpecRecord> specs = work.specs();
-        boolean partialPass = maxRuntime != null;
 
         try (WorkLog workLog = new WorkLog(outputDir.resolve("crawler.log"));
              DomainStateDb domainStateDb = new DomainStateDb(outputDir.resolve("domainstate.db"));
              WarcArchiverIf warcArchiver = warcArchiverFactory.get(outputDir);
              AnchorTagsSource anchorTagsSource = anchorTagsSourceFactory.create(work.domains())
         ) {
-            // Stop starting new domains once this deadline passes.
-            Instant deadline = partialPass ? Instant.now().plus(maxRuntime) : null;
 
-            specs.sort(partialPass
-                    ? leastRecentlyCrawledFirst(domainStateDb.getLastFullCrawlTimes())
-                    : crawlSpecArrangement(specs));
+            specs.sort(
+                    switch(runType) {
+                        case BatchRun() -> crawlSpecArrangement(specs);
+                        case TimedRun(_,_) -> leastRecentlyCrawledFirst(domainStateDb.getLastFullCrawlTimes());
+                    }
+            );
 
             // A partial pass recrawls everything it reaches, so it starts its progress count from zero
             // rather than resuming from the work log.
-            tasksDone.set(partialPass ? 0 : workLog.countFinishedJobs());
+            if (runType.isWorkLogDriven()) {
+                tasksDone.set(workLog.countFinishedJobs());
+            }
 
             // List of deferred tasks used to ensure beneficial scheduling of domains with regard to DomainLocks,
             // merely shuffling the domains tends to lead to a lot of threads being blocked waiting for a semaphore,
@@ -414,15 +405,15 @@ public class CrawlerMain extends ProcessMainClass {
             List<CrawlTask> taskList = new ArrayList<>();
 
             for (CrawlSpecRecord crawlSpec : specs) {
-                if (deadline != null && Instant.now().isAfter(deadline))
+                if (runType.isPastDeadline())
                     break;
 
                 // A partial pass does not rotate the work log, so it must recrawl domains a previous
                 // run already finished rather than skip them.
-                if (!partialPass && workLog.isJobFinished(crawlSpec.domain))
+                if (runType.isWorkLogDriven() && workLog.isJobFinished(crawlSpec.domain))
                     continue;
 
-                var task = new CrawlTask(crawlSpec, anchorTagsSource, outputDir, warcArchiver, domainStateDb, workLog);
+                var task = new CrawlTask(crawlSpec, anchorTagsSource, outputDir, warcArchiver, domainStateDb, workLog, runType);
 
                 // Try to run immediately, to avoid unnecessarily keeping the entire work set in RAM
                 if (!trySubmitDeferredTask(task)) {
@@ -436,7 +427,7 @@ public class CrawlerMain extends ProcessMainClass {
 
             // Schedule viable tasks for execution until the list is empty or the deadline passes
             for (int emptyRuns = 0; emptyRuns < 300;) {
-                if (deadline != null && Instant.now().isAfter(deadline))
+                if (runType.isPastDeadline())
                     break;
 
                 boolean hasTasks = !taskList.isEmpty();
@@ -466,7 +457,9 @@ public class CrawlerMain extends ProcessMainClass {
             awaitCrawlCompletion();
         }
 
-        if (partialPass) {
+        if (!runType.isWorkLogDriven()) {
+            // Ensure the crawler.log has a sane shape for downstream consumers of crawl data
+            // even if the run itself doesn't rely on it
             compactCrawlerLog(outputDir.resolve("crawler.log"));
         }
     }
@@ -581,7 +574,7 @@ public class CrawlerMain extends ProcessMainClass {
              AnchorTagsSource anchorTagsSource = anchorTagsSourceFactory.create(List.of(new EdgeDomain(targetDomainName)))
         ) {
             var spec = new CrawlSpecRecord(targetDomainName, 1000, List.of());
-            var task = new CrawlTask(spec, anchorTagsSource, outputDir, warcArchiver, domainStateDb, workLog);
+            var task = new CrawlTask(spec, anchorTagsSource, outputDir, warcArchiver, domainStateDb, workLog, new BatchRun());
             task.run();
         }
         catch (Exception ex) {
@@ -604,13 +597,15 @@ public class CrawlerMain extends ProcessMainClass {
         private final WarcArchiverIf warcArchiver;
         private final DomainStateDb domainStateDb;
         private final WorkLog workLog;
+        private final RunType runType;
 
         CrawlTask(CrawlSpecRecord specification,
                   AnchorTagsSource anchorTagsSource,
                   Path outputDir,
                   WarcArchiverIf warcArchiver,
                   DomainStateDb domainStateDb,
-                  WorkLog workLog)
+                  WorkLog workLog,
+                  RunType runType)
         {
             this.specification = specification;
             this.anchorTagsSource = anchorTagsSource;
@@ -618,6 +613,7 @@ public class CrawlerMain extends ProcessMainClass {
             this.warcArchiver = warcArchiver;
             this.domainStateDb = domainStateDb;
             this.workLog = workLog;
+            this.runType = runType;
 
             this.domain = specification.domain();
             this.id = Integer.toHexString(domain.hashCode());
@@ -632,8 +628,9 @@ public class CrawlerMain extends ProcessMainClass {
         @Override
         public void run() throws Exception {
 
-            if (workLog.isJobFinished(domain)) { // No-Op
+            if (isJobFinished()) { // No-Op
                 logger.info("Omitting task {}, as it is already run", domain);
+                pendingCrawlTasks.remove(domain);
                 return;
             }
 
@@ -739,6 +736,14 @@ public class CrawlerMain extends ProcessMainClass {
             }
         }
 
+        private boolean isJobFinished() {
+            if (!runType.isWorkLogDriven())
+                return false;
+
+            // Full batch passes use the work log instead
+            return workLog.isJobFinished(domain);
+        }
+
         private CrawlDataReference getReference() {
             try {
                 Path slopPath = CrawlerOutputFile.getSlopPath(outputDir, id, domain);
@@ -818,4 +823,54 @@ enum DomainAvailability {
     REACHABLE,
     FLAKEY,
     MISSING
+}
+
+
+sealed interface RunType permits BatchRun, TimedRun {
+    static RunType forProfile(NodeProfile nodeProfile) {
+        if (nodeProfile.isWideDomains()) {
+            return new TimedRun(Optional.ofNullable(Integer.getInteger("crawler.maxRunTimeSeconds"))
+                    .map(Duration::ofSeconds)
+                    .orElse(Duration.ofDays(7)));
+        }
+        else if (nodeProfile.isBatchCrawl()) {
+            return new BatchRun();
+        }
+        else {
+            throw new IllegalArgumentException("Nodes of type " + nodeProfile + " should not be running a crawler");
+        }
+    }
+
+    boolean isPastDeadline();
+
+    /** Should the WorkLog be an authority on whether a task is completed? */
+    boolean isWorkLogDriven();
+}
+
+record BatchRun() implements RunType {
+    public boolean isPastDeadline() {
+        return false;
+    }
+
+    public boolean isWorkLogDriven() {
+        return true;
+    }
+}
+
+record TimedRun(Duration runTime, Instant deadline) implements RunType {
+    public TimedRun(Duration runTime) {
+        this(runTime, Instant.now().plus(runTime));
+    }
+
+    @Override
+    public boolean isPastDeadline() {
+        return Instant.now().isAfter(deadline);
+    }
+
+    // Timed runs can not be driven by the crawler.log, and instead use domainstatedb timings to ensure a crawl order
+    // where we don't repeat work
+    public boolean isWorkLogDriven() {
+        return false;
+    }
+
 }
