@@ -22,6 +22,10 @@
                             </h2>
 
                             <div class="text-sm mt-1">
+                                @if(result.getFirst().hasDisplayDate())
+                                   ${result.getFirst().getDisplayDate()} &middot;
+                                @endif
+
                                 @if ("PDF".equals(result.first.format))
                                     <i title="PDF" class="fas fa-file-pdf text-red-500"></i>
                                 @endif
@@ -75,11 +79,6 @@
                 <span>
                 <a class="text-liteblue dark:text-blue-200 underline" href="${parameters.renderUrlWithSiteFocus(result.getDomain())}">${result.remainingCount()} more</a>
                 </span>
-            @endif
-
-            @if(result.getFirst().hasDisplayDate())
-                <span class="px-1 bg-gray-100 text-gray-700 dark:border dark:border-gray-600 dark:text-gray-400 dark:bg-black rounded"
-                      title="Publication date">${result.getFirst().getDisplayDate()}</span>
             @endif
 
             <div class="grow"></div>
