@@ -76,12 +76,12 @@ public class ForwardIndexReader {
             return;
         }
 
-        logger.info("Switching forward index");
-
         ids = loadIds(idsFile);
         data = loadData(dataFile);
 
         version = ForwardIndexParameters.decodeVersion(data.get(data.size() - 1));
+
+        logger.info("Switching forward index, version {}", version);
 
         domainRankings = new DomainRankings();
         domainRankings.load(dataFile.getParent());
