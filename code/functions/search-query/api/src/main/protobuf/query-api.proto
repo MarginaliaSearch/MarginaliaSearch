@@ -150,13 +150,14 @@ message RpcDecoratedResultItem {
   double urlQuality = 5;
   string format = 6;
   int32 features = 7; // bitmask encoding features of the document
-  int32 pubYear = 8;
+  int32 pubYear = 8; // possibly a guesstimate, epoch is 1995
   int64 dataHash = 9;
   int32 wordsTotal = 10;
   double rankingScore = 11; // The ranking score of this search result item, lower is better
   int64 bestPositions = 12;
   RpcResultRankingDetails rankingDetails = 13; // optional, only present if exportDebugData is true in RpcResultRankingParameters
   int32 resultsFromDomain = 14;
+  int32 pubDate = 15; // day-precision date as days since 1989-03-12, 0 = unknown
 }
 
 /** A raw index-service view of a search result */

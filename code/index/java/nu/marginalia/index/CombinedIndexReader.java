@@ -302,6 +302,10 @@ public class CombinedIndexReader {
         return forwardIndexReader.getDocumentSize(docId);
     }
 
+    public int getDocPubDate(long docId) {
+        return forwardIndexReader.getDocPubDate(docId);
+    }
+
     /** Retrieves the document spans for the specified documents */
 
     @Nullable
