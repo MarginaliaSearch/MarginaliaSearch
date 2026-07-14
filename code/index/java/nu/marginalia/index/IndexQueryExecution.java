@@ -196,7 +196,9 @@ public class IndexQueryExecution {
             if (docData == null)
                 continue;
 
-            converter.convert(rankingContext, doc, docData)
+            int pubDate = currentIndex.getDocPubDate(doc.item.combinedId);
+
+            converter.convert(rankingContext, doc, docData, pubDate)
                     .ifPresent(ret::add);
         }
 
@@ -481,12 +483,9 @@ public class IndexQueryExecution {
         }
     }
 
-
     public int itemsProcessed() {
         return resultHeap.getItemsProcessed();
     }
-
-
 
     /** Rank the results again, gathering detailed ranking information */
     private void performDebugRanking(SearchContext searchContext, List<RankableDocument> results) {
@@ -512,7 +511,8 @@ public class IndexQueryExecution {
         @Nullable
         public Optional<RpcDecoratedResultItem> convert(SearchContext rankingContext,
                                                  RankableDocument doc,
-                                                 DocdbUrlDetail docData) {
+                                                 DocdbUrlDetail docData,
+                                                 int pubDate) {
             SearchResultItem resultItem = doc.item;
 
             // Filter out duplicates by content
@@ -553,6 +553,7 @@ public class IndexQueryExecution {
             if (docData.pubYear() != null) {
                 decoratedBuilder.setPubYear(docData.pubYear());
             }
+            decoratedBuilder.setPubDate(pubDate);
 
             if (resultItem.debugRankingFactors != null) {
                 decoratedBuilder.setRankingDetails(createDebugInformation(rankingContext, resultItem));
