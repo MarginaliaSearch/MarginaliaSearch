@@ -146,7 +146,7 @@ public class ForwardIndexConverter {
             }
 
             docFileData.set(docFileData.size() - 1,
-                    ForwardIndexParameters.encodeFooter(V2026_04__1)
+                    ForwardIndexParameters.encodeFooter(V2026_07__1)
             );
 
             progress.progress(TaskSteps.FORCE);

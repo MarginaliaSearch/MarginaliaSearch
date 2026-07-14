@@ -12,7 +12,7 @@ public class ForwardIndexParameters {
 
     public enum ForwardIndexVersion {
         VERSION_LEGACY,
-        V2026_04__1 // split 32 bit 'size' part of features into 16 bits for size, 16 bits for pub date
+        V2026_07__1 // split 32 bit 'size' part of features into 16 bits for size, 16 bits for pub date
     }
 
     public static long encodeFooter(ForwardIndexVersion version) {
