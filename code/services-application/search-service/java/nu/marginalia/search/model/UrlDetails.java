@@ -71,10 +71,16 @@ public class UrlDetails implements Comparable<UrlDetails> {
         return resultsFromSameDomain > 1;
     }
 
+    public boolean hasDisplayDate() {
+        return pubDate > 0;
+    }
+
     public String getDisplayDate() {
         if (pubDate <= 0) return null;
         LocalDate date = PubDate.fromDateShort(pubDate);
-        if (date == null) return null;
+
+        // date is nullable iff pubDate is <= 0
+
         return DISPLAY_DATE_FORMAT.format(date);
     }
 

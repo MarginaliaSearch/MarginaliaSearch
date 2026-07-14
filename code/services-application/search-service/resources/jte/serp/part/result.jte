@@ -77,7 +77,7 @@
                 </span>
             @endif
 
-            @if(result.getFirst().getDisplayDate() != null)
+            @if(result.getFirst().hasDisplayDate())
                 <span class="px-1 bg-gray-100 text-gray-700 dark:border dark:border-gray-600 dark:text-gray-400 dark:bg-black rounded"
                       title="Publication date">${result.getFirst().getDisplayDate()}</span>
             @endif
