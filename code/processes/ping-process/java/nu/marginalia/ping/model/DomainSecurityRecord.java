@@ -367,7 +367,10 @@ public record DomainSecurityRecord(
         private Boolean isCertDateValid;
 
 
-        private static Instant MAX_UNIX_TIMESTAMP = Instant.ofEpochSecond(Integer.MAX_VALUE);
+        // Clamp with a margin below the TIMESTAMP column's 2038-01-19 03:14:07 UTC ceiling,
+        // since the JDBC driver serializes timestamps in the JVM's timezone and a mismatch
+        // with the database session timezone can push an exact clamp out of range.
+        private static Instant MAX_UNIX_TIMESTAMP = Instant.parse("2038-01-01T00:00:00Z");
 
         public Builder() {
             // Default values for boolean fields
