@@ -118,6 +118,14 @@ public class ExecutorClient {
         return msgId;
     }
 
+    public void triggerNewDomainsDiscovery(int node, int goal) {
+        channelPool.call(ExecutorApiBlockingStub::triggerNewDomainsDiscovery)
+                .forNode(node)
+                .run(RpcNewDomainsDiscovery.newBuilder()
+                        .setGoal(goal)
+                        .build());
+    }
+
     public ActorRunStates getActorStates(int node) {
         try {
             var rs = channelPool.call(ExecutorApiBlockingStub::getActorStates)

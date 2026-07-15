@@ -2,6 +2,7 @@ package nu.marginalia.control.sys.svc;
 
 import com.google.inject.Inject;
 import nu.marginalia.control.ControlRendererFactory;
+import nu.marginalia.control.ControlValidationError;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.control.actor.ControlActor;
 import nu.marginalia.control.actor.ControlActorService;
@@ -11,6 +12,7 @@ import nu.marginalia.executor.client.ExecutorExportClient;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.nodecfg.NodeConfigurationService;
+import nu.marginalia.nodecfg.model.NodeConfiguration;
 import nu.marginalia.service.ServiceId;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.storage.FileStorageService;
@@ -68,6 +70,7 @@ public class ControlSysActionsService {
 
             Spark.get("/actions", this::actionsModel, actionsView::render);
             Spark.post("/actions/recalculate-adjacencies-graph", this::calculateAdjacencies, Redirects.redirectToOverview);
+            Spark.post("/actions/discover-new-domains", this::discoverNewDomains, Redirects.redirectToOverview);
             Spark.post("/actions/export-all", this::exportAll, Redirects.redirectToOverview);
             Spark.post("/actions/reindex-all", this::reindexAll, Redirects.redirectToOverview);
             Spark.post("/actions/reprocess-all", this::reprocessAll, Redirects.redirectToOverview);
@@ -119,11 +122,46 @@ public class ControlSysActionsService {
                 eligibleNodes.add(properties);
             }
 
-            return Map.of("precessionNodes", eligibleNodes);
+            List<NodeConfiguration> ndpNodes = new ArrayList<>();
+            for (var node : nodeConfigurationService.getAll()) {
+                if (node.disabled())
+                    continue;
+                if (!node.profile().permitDomainDiscovery())
+                    continue;
+
+                ndpNodes.add(node);
+            }
+
+            return Map.of(
+                    "precessionNodes", eligibleNodes,
+                    "ndpNodes", ndpNodes);
         }
         catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public Object discoverNewDomains(Request request, Response response) throws Exception {
+        int node;
+        int goal;
+
+        try {
+            node = Integer.parseInt(request.queryParams("node"));
+            goal = Integer.parseInt(request.queryParams("goal"));
+        }
+        catch (NumberFormatException e) {
+            throw new ControlValidationError("Bad parameters", "Node and goal must both be numeric", "/actions");
+        }
+
+        if (goal <= 0) {
+            throw new ControlValidationError("Bad goal", "The domain count goal must be a positive number", "/actions");
+        }
+
+        eventLog.logEvent("USER-ACTION", "DISCOVER-NEW-DOMAINS");
+
+        executorClient.triggerNewDomainsDiscovery(node, goal);
+
+        return "";
     }
 
     public Object reloadBlogsList(Request request, Response response) throws Exception {

@@ -20,6 +20,8 @@ service ExecutorApi {
 
   rpc updateNsfwFilters(RpcUpdateNsfwFilters) returns (Empty) {}
 
+  rpc triggerNewDomainsDiscovery(RpcNewDomainsDiscovery) returns (Empty) {}
+
   rpc restartExecutorService(Empty) returns (Empty) {}
 
   rpc fetchCrawlDataSample(RpcCrawlDataSampleReq) returns (RpcCrawlDataSampleRsp) {}
@@ -73,6 +75,9 @@ message RpcExportRequest {
 }
 message RpcUpdateNsfwFilters {
   int64 msgId = 1;
+}
+message RpcNewDomainsDiscovery {
+  int32 goal = 1;
 }
 message RpcFileStorageIdWithDomainName {
   int64 fileStorageId = 1;

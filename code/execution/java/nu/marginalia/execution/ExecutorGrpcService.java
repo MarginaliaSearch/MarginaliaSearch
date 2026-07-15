@@ -14,6 +14,7 @@ import nu.marginalia.actor.ExecutorActor;
 import nu.marginalia.actor.ExecutorActorControlService;
 import nu.marginalia.actor.state.ActorStateInstance;
 import nu.marginalia.actor.task.DownloadSampleActor;
+import nu.marginalia.actor.task.NdpActor;
 import nu.marginalia.actor.task.RestoreBackupActor;
 import nu.marginalia.actor.task.TriggerAdjacencyCalculationActor;
 import nu.marginalia.actor.task.UpdateNsfwFiltersActor;
@@ -293,6 +294,36 @@ public class ExecutorGrpcService
         }
         catch (Exception e) {
             logger.error("Failed to update nsfw filters", e);
+            responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
+        }
+    }
+
+    @Override
+    public void triggerNewDomainsDiscovery(RpcNewDomainsDiscovery request, StreamObserver<Empty> responseObserver) {
+        try {
+            var actorStates = actorControlService.getActorStates();
+
+            if (!actorStates.containsKey(ExecutorActor.NDP)) {
+                responseObserver.onError(Status.FAILED_PRECONDITION
+                        .withDescription("Domain discovery is not available on this node's profile")
+                        .asRuntimeException());
+                return;
+            }
+
+            // The NDP spawner actor is not started by default, but must be running
+            // for the discovery request to be picked up off the message queue
+            var spawnerState = actorStates.get(ExecutorActor.PROC_NDP_SPAWNER);
+            if (spawnerState == null || spawnerState.isFinal()) {
+                actorControlService.start(ExecutorActor.PROC_NDP_SPAWNER);
+            }
+
+            actorControlService.startFrom(ExecutorActor.NDP,
+                    new NdpActor.Initial(request.getGoal()));
+
+            responseObserver.onNext(Empty.getDefaultInstance());
+            responseObserver.onCompleted();
+        }
+        catch (Exception e) {
             responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
         }
     }

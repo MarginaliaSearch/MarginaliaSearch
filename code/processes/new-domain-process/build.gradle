@@ -13,8 +13,8 @@ java {
 }
 
 application {
-    mainClass = 'nu.marginalia.ping.PingMain'
-    applicationName = 'ping-process'
+    mainClass = 'nu.marginalia.ndp.NdpMain'
+    applicationName = 'ndp-process'
 }
 
 tasks.distZip.enabled = false

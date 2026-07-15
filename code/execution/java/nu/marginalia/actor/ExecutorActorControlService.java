@@ -50,6 +50,7 @@ public class ExecutorActorControlService {
                                        RestoreBackupActor restoreBackupActor,
                                        ConverterMonitorActor converterMonitorFSM,
                                        NdpMonitorActor ndpMonitorActor,
+                                       NdpActor ndpActor,
                                        PingMonitorActor pingMonitorActor,
                                        CrawlerMonitorActor crawlerMonitorActor,
                                        LiveCrawlerMonitorActor liveCrawlerMonitorActor,
@@ -109,6 +110,7 @@ public class ExecutorActorControlService {
         register(ExecutorActor.PROC_LIVE_CRAWL_SPAWNER, liveCrawlerMonitorActor);
         register(ExecutorActor.PROC_EXPORT_TASKS_SPAWNER, exportTasksMonitorActor);
         register(ExecutorActor.PROC_NDP_SPAWNER, ndpMonitorActor);
+        register(ExecutorActor.NDP, ndpActor);
         register(ExecutorActor.MONITOR_PROCESS_LIVENESS, processMonitorFSM);
         register(ExecutorActor.MONITOR_FILE_STORAGE, fileStorageMonitorActor);
 

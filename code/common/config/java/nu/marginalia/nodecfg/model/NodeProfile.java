@@ -27,4 +27,6 @@ public enum NodeProfile {
         return isBatchCrawl() || isMixed() || isWideDomains();
     }
     public boolean permitSideload() {  return isSideload() || isMixed(); }
+
+    public boolean permitDomainDiscovery() { return isMixed() || isRealtime(); }
 }
