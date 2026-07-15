@@ -253,12 +253,12 @@ public class PingJobScheduler {
 
                     switch(ref) {
                         case RootDomainReference.ByIdAndName(long id, String name) -> {
-                            domainName = oldRecord.rootDomainName();
                             oldRecord = Objects.requireNonNull(pingDao.getDomainDnsRecord(id));
+                            domainName = oldRecord.rootDomainName();
                         }
                         case RootDomainReference.ByName(String name) -> {
-                            domainName = name;
                             oldRecord = pingDao.getDomainDnsRecord(name);
+                            domainName = name;
                         }
                     };
 
