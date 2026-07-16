@@ -174,17 +174,7 @@ public class PingMonitorActor extends RecordActorPrototype {
     }
 
     private boolean hasOngoingProcess() throws SQLException {
-        boolean requestInFlight = false;
-
-        for (;;) {
-            for (var message : persistence.eavesdrop(inboxName, 32)) {
-                if (message.state() == MqMessageState.ACK) {
-                    requestInFlight = true;
-                }
-            }
-
-            return requestInFlight;
-        }
+        return persistence.eavesdrop(inboxName, 32).stream().anyMatch(msg -> msg.state() == MqMessageState.ACK);
     }
 
     /** Sets the message to dead in the database to avoid
