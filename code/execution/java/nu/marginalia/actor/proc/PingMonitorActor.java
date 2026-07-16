@@ -133,6 +133,14 @@ public class PingMonitorActor extends RecordActorPrototype {
 
                 Thread.sleep(Duration.between(Instant.now(), start));
 
+                // Only send a new request if the previous one isn't still being worked on,
+                // as would be the case when the actor is restarted while the ping process
+                // keeps running.
+
+                if (hasOngoingProcess()) {
+                    yield new Monitor(0);
+                }
+
                 PingRequest request = new PingRequest(end);
                 persistence.sendNewMessage(inboxName, null, null,
                         "PingRequest",
@@ -163,6 +171,20 @@ public class PingMonitorActor extends RecordActorPrototype {
         this.scheduleService = scheduleService;
         this.inboxName = ProcessInboxNames.PING_INBOX + ":" + node;
         this.processId = ProcessSpawnerService.ProcessId.PING;
+    }
+
+    private boolean hasOngoingProcess() throws SQLException {
+        boolean requestInFlight = false;
+
+        for (;;) {
+            for (var message : persistence.eavesdrop(inboxName, 32)) {
+                if (message.state() == MqMessageState.ACK) {
+                    requestInFlight = true;
+                }
+            }
+
+            return requestInFlight;
+        }
     }
 
     /** Sets the message to dead in the database to avoid
