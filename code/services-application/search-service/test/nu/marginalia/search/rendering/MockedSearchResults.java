@@ -53,6 +53,7 @@ public class MockedSearchResults {
                 DomainIndexingState.ACTIVE,
                 0.5,
                 8,
+                0,
                 "",
                 mockPositionsMask(),
                 2,
