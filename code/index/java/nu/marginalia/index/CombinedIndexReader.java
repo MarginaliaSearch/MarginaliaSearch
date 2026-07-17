@@ -25,7 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.CheckReturnValue;
-import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -203,6 +202,82 @@ public class CombinedIndexReader {
                 .toList();
     }
 
+
+
+    public List<IndexQuery> createUnrankedQueries(UnrankedSearchContext context) {
+
+        if (!isLoaded()) {
+            logger.warn("Index reader not ready");
+            return Collections.emptyList();
+        }
+
+        final IndexLanguageContext languageContext = context.languageContext;
+
+        final long[] termSortOrder = context.sortedDistinctIncludes((a,b) -> Long.compare(
+                numHits(languageContext, a),
+                numHits(languageContext, b)
+        ));
+
+        LongList searchTerms = new LongArrayList(context.termIdsRequireUnique);
+
+        // Sort in order of size in the index
+        searchTerms.sort((a, b) -> {
+            for (long l : termSortOrder) {
+                if (l == a)
+                    return -1;
+                if (l == b)
+                    return 1;
+            }
+            return 0;
+        });
+
+        Long2ObjectOpenHashMap<String> termIdToString = context.termIdToString;
+
+        IndexQueryBuilder head;
+
+        long firstTermId = searchTerms.getLong(0);
+        String firstTerm = termIdToString.getOrDefault(firstTermId, "???");
+
+        if (context.afterCombinedDocId != 0)
+            head = findFullWord(languageContext,
+                    getDocumentRangesAfterDocId(context.afterCombinedDocId),
+                    firstTerm,
+                    firstTermId);
+        else
+            head = findFullWord(languageContext,
+                    null,
+                    firstTerm,
+                    firstTermId);
+
+        if (head.isNoOp()) {
+            return List.of();
+        }
+
+        if (!context.excludedDomainIds.isEmpty())
+            head.rejectingDomains(getDocumentRangesForDomains(context.excludedDomainIds));
+        if (!context.mandatoryDomainIds.isEmpty())
+            head.requiringDomains(getDocumentRangesForDomains(context.mandatoryDomainIds));
+
+        if (!context.termIdsDomain.isEmpty()) {
+            List<String> domainTerms = new ArrayList<>(context.termIdsDomain.size());
+            for (long id : context.termIdsDomain) {
+                domainTerms.add(termIdToString.getOrDefault(id, "???"));
+            }
+
+            head.addInclusionFilter(hasAnyWordFull(languageContext, domainTerms, context.termIdsDomain, context.budget));
+        }
+
+        for (long termId : context.termIdsRequire) {
+            head = head.also(termIdToString.getOrDefault(termId, "???"), termId, context.budget);
+        }
+
+        for (long termId : context.termIdsExcludes) {
+            head = head.not(termIdToString.getOrDefault(termId, "???"), termId, context.budget);
+        }
+
+        return List.of(head.build());
+    }
+
     private Predicate<LongSet> containsAll(long[] permitted) {
         LongSet permittedTerms = new LongOpenHashSet(permitted);
         return permittedTerms::containsAll;
@@ -265,6 +340,14 @@ public class CombinedIndexReader {
         return new SkipListValueRanges(rangesStarts, rangesEnds);
     }
 
+    private SkipListValueRanges getDocumentRangesAfterDocId(long combinedDocId) {
+
+        long start = combinedDocId + 1;
+        long end = Long.MAX_VALUE;
+
+        return new SkipListValueRanges(new long[] { start }, new long[] { end });
+    }
+
     /** Creates a parameter matching filter step for the provided parameters */
     public QueryFilterStepIf filterForParams(QueryParams params) {
         return new ParamMatchingQueryFilter(params, forwardIndexReader);
@@ -283,8 +366,8 @@ public class CombinedIndexReader {
     }
 
     /** Retrieves the document metadata for the specified document */
-    public long getDocumentMetadata(long docId) {
-        return forwardIndexReader.getDocMeta(docId);
+    public long getDocumentMetadata(long combinedDocId) {
+        return forwardIndexReader.getDocMeta(combinedDocId);
     }
 
     /** Returns the total number of documents in the index */
@@ -293,8 +376,8 @@ public class CombinedIndexReader {
     }
 
     /** Retrieves the HTML features for the specified document */
-    public int getHtmlFeatures(long docId) {
-        return forwardIndexReader.getHtmlFeatures(docId);
+    public int getHtmlFeatures(long combinedDocId) {
+        return forwardIndexReader.getHtmlFeatures(combinedDocId);
     }
 
     /** Retrieves the HTML features for the specified document */
