@@ -91,8 +91,16 @@ public class PingMain extends ProcessMainClass {
         var instructions = main.fetchInstructions(PingRequest.class);
 
         try {
-            main.run(Instant.parse(instructions.value().endTs()));
-            instructions.ok();
+            String endTs = instructions.value().endTs();
+
+            if (endTs == null) {
+                logger.warn("Ignoring malformed PingRequest without endTs");
+                instructions.err();
+            }
+            else {
+                main.run(Instant.parse(endTs));
+                instructions.ok();
+            }
         }
         catch (Throwable ex) {
             logger.error("Error running ping process", ex);

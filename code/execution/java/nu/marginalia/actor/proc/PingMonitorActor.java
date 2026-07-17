@@ -79,15 +79,14 @@ public class PingMonitorActor extends RecordActorPrototype {
                 for (;;) {
                     var messages = persistence.eavesdrop(inboxName, 1);
 
-                    if (messages.isEmpty() && !processSpawnerService.isRunning(processId)) {
+                    if (messages.isEmpty()) {
+                        if (!processSpawnerService.isRunning(processId)) {
+                            yield new Wait(nextTimeslot());
+                        }
+
                         synchronized (processId) {
                             processId.wait(5000);
                         }
-
-                        if (errorAttempts > 0) { // Reset the error counter if there is silence in the inbox
-                            yield new Monitor(0);
-                        }
-                        // else continue
                     } else {
                         // Special: Associate this thread with the message so that we can get tracking
                         MqMessageHandlerRegistry.register(messages.getFirst().msgId());
@@ -135,13 +134,12 @@ public class PingMonitorActor extends RecordActorPrototype {
 
                 Thread.sleep(Duration.between(Instant.now(), start));
 
-                // Only send a new request if the previous one isn't still being worked on,
-                // as would be the case when the actor is restarted while the ping process
-                // keeps running.
-
-                if (cleanOldRequests()) {
+                // If the process is already running, we don't need to do anything and can skip to Monitor
+                if (processSpawnerService.isRunning(processId)) {
                     yield new Monitor(0);
                 }
+
+                cleanOldRequests();
 
                 PingRequest request = new PingRequest(end);
                 persistence.sendNewMessage(inboxName, null, null,
@@ -175,17 +173,13 @@ public class PingMonitorActor extends RecordActorPrototype {
         this.processId = ProcessSpawnerService.ProcessId.PING;
     }
 
-    private boolean cleanOldRequests() throws SQLException {
-        boolean hasAcknowledgedRequest = false;
+    private void cleanOldRequests() throws SQLException {
+        var messages = persistence.eavesdrop(inboxName, 32);
 
-        for (var message: persistence.eavesdrop(inboxName, 32)) {
-            if (message.state() == MqMessageState.NEW)
-                persistence.updateMessageState(message.msgId(), MqMessageState.DEAD);
-            else if (message.state() == MqMessageState.ACK)
-                hasAcknowledgedRequest = true;
+        for (var message: messages) { // state = ACK, NEW implicitly
+            logger.info("Flagging stale ping request {} as dead", message.msgId());
+            persistence.updateMessageState(message.msgId(), MqMessageState.DEAD);
         }
-
-        return hasAcknowledgedRequest;
     }
 
     /** Sets the message to dead in the database to avoid
