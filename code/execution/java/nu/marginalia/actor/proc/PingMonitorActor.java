@@ -9,6 +9,7 @@ import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
 import nu.marginalia.actor.state.Terminal;
+import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.persistence.MqMessageHandlerRegistry;
 import nu.marginalia.mq.persistence.MqPersistence;
@@ -23,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.time.*;
+import java.util.EnumSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -137,7 +139,7 @@ public class PingMonitorActor extends RecordActorPrototype {
                 // as would be the case when the actor is restarted while the ping process
                 // keeps running.
 
-                if (hasOngoingProcess()) {
+                if (cleanOldRequests()) {
                     yield new Monitor(0);
                 }
 
@@ -173,8 +175,17 @@ public class PingMonitorActor extends RecordActorPrototype {
         this.processId = ProcessSpawnerService.ProcessId.PING;
     }
 
-    private boolean hasOngoingProcess() throws SQLException {
-        return persistence.eavesdrop(inboxName, 32).stream().anyMatch(msg -> msg.state() == MqMessageState.ACK);
+    private boolean cleanOldRequests() throws SQLException {
+        boolean hasAcknowledgedRequest = false;
+
+        for (var message: persistence.eavesdrop(inboxName, 32)) {
+            if (message.state() == MqMessageState.NEW)
+                persistence.updateMessageState(message.msgId(), MqMessageState.DEAD);
+            else if (message.state() == MqMessageState.ACK)
+                hasAcknowledgedRequest = true;
+        }
+
+        return hasAcknowledgedRequest;
     }
 
     /** Sets the message to dead in the database to avoid
