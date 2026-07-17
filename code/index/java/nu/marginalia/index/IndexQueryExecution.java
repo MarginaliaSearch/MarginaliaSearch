@@ -47,8 +47,6 @@ import java.util.concurrent.locks.Lock;
 /** Performs an index query */
 public class IndexQueryExecution {
 
-    private static final Logger logger = LoggerFactory.getLogger(IndexQueryExecution.class);
-
     private static final boolean printDebugSummary = Boolean.getBoolean("index.printDebugSummary");
     private static final boolean disableViabilityPrecheck = Boolean.getBoolean("index.disableViabilityPrecheck");
 
@@ -58,8 +56,6 @@ public class IndexQueryExecution {
     private static final int lookupBatchSize = 512;
 
     private static final ExecutorService threadPool = Executors.newCachedThreadPool();
-
-    private static final Logger log = LoggerFactory.getLogger(IndexQueryExecution.class);
 
     private final DocumentDbReader documentDbReader;
     private final String nodeName;

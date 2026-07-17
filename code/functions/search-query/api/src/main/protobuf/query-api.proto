@@ -8,8 +8,10 @@ service QueryApi {
   rpc query(RpcQsQuery) returns (RpcQsResponse) {}
   rpc invalidateFilterCache(RpcQsInvalidateFilter) returns (Empty) {}
 }
+
 service IndexApi {
   rpc query(RpcIndexQuery) returns (RpcIndexQueryResponse) {}
+  rpc unrankedQuery(RpcIndexUnrankedQuery) returns (RpcIndexQueryResponse) {}
 }
 
 message Empty {}
@@ -99,6 +101,21 @@ message RpcTemporalBias {
   Bias bias = 1;
 }
 
+message RpcIndexUnrankedQuery {
+  repeated string termsRequired = 1;
+  repeated string termsExcluded = 2;
+
+  repeated int32 requiredDomainIds = 10;     // (optional) A list of domain IDs to consider
+  repeated int32 excludedDomainIds = 11;
+
+  string searchSetIdentifier = 12; // (optional) A named set of domains to consider
+  string humanQuery = 13;          // The search query as the user entered it
+  RpcQueryLimits queryLimits = 14;
+  int64 afterId = 15;
+
+  string langIsoCode = 20;
+}
+
 /* Index service query request */
 message RpcIndexQuery {
   RpcQueryTerms terms = 1;
@@ -120,13 +137,14 @@ message RpcIndexQuery {
   repeated int32 priorityDomainIds = 16;
   repeated float priorityDomainIdsWeights = 17;
 
-  enum NSFW_FILTER_TIER {
-    NONE = 0;
-    DANGER = 1;
-    PORN_AND_GAMBLING = 2;
-  };
+
 }
 
+enum NSFW_FILTER_TIER {
+  NONE = 0;
+  DANGER = 1;
+  PORN_AND_GAMBLING = 2;
+};
 
 /* A tagged union encoding some limit on a field */
 message RpcSpecLimit {
