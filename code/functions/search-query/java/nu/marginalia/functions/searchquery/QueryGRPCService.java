@@ -42,7 +42,12 @@ public class QueryGRPCService
             .classicLinearUpperBounds(0.05, 0.05, 15)
             .help("QS-side query time (GRPC endpoint)")
             .register();
-
+    private static final Histogram wmsa_qs_query_unranked_time_grpc = Histogram.builder()
+            .name("wmsa_qs_query_unranked_time_grpc")
+            .labelNames("timeout", "count")
+            .classicLinearUpperBounds(0.05, 0.05, 15)
+            .help("QS-side unranked query time (GRPC endpoint)")
+            .register();
     private static final Counter wmsa_qs_queries_shed = Counter.builder()
             .name("wmsa_qs_queries_shed")
             .help("Queries rejected before query construction due to client saturation")
@@ -146,43 +151,42 @@ public class QueryGRPCService
                 return;
             }
 
-            wmsa_qs_query_time_grpc
-                    .labelValues(Integer.toString(request.getQueryLimits().getTimeoutMs()),
-                            Integer.toString(request.getQueryLimits().getResultsTotal()))
-                    .time(() -> {
+            IndexClient.Pagination pagination = new IndexClient.Pagination(request.getPagination());
 
-                        IndexClient.Pagination pagination = new IndexClient.Pagination(request.getPagination());
+            Optional<ProcessedQuery> maybeQuery = createQuery(request);
+            if (maybeQuery.isEmpty()) {
+                responseObserver.onError(Status.NOT_FOUND.asRuntimeException());
+                return;
+            }
 
-                        Optional<ProcessedQuery> maybeQuery = createQuery(request);
-                        if (maybeQuery.isEmpty()) {
-                            responseObserver.onError(Status.NOT_FOUND.asRuntimeException());
-                            return;
-                        }
+            ProcessedQuery query = maybeQuery.get();
 
-                        ProcessedQuery query = maybeQuery.get();
+            // Execute the query on the index partitions
+            IndexClient.AggregateQueryResponse response =
+                    wmsa_qs_query_time_grpc
+                            .labelValues(Integer.toString(request.getQueryLimits().getTimeoutMs()),
+                                    Integer.toString(request.getQueryLimits().getResultsTotal()))
+                            .time(() -> indexClient.executeQueries(query.indexQuery, pagination));
 
-                        // Execute the query on the index partitions
-                        IndexClient.AggregateQueryResponse response = indexClient.executeQueries(query.indexQuery, pagination);
+            // Convert results to response and send it back
+            var responseBuilder = RpcQsResponse.newBuilder()
+                    .addAllResults(response.results())
+                    .setPagination(
+                            RpcQsResultPagination.newBuilder()
+                                    .setPage(pagination.page())
+                                    .setPageSize(pagination.pageSize())
+                                    .setTotalResults(response.totalResults())
+                    )
+                    .setSpecs(query.indexQuery)
+                    .addAllSearchTermsHuman(query.searchTermsHuman);
 
-                        // Convert results to response and send it back
-                        var responseBuilder = RpcQsResponse.newBuilder()
-                                .addAllResults(response.results())
-                                .setPagination(
-                                        RpcQsResultPagination.newBuilder()
-                                                .setPage(pagination.page())
-                                                .setPageSize(pagination.pageSize())
-                                                .setTotalResults(response.totalResults())
-                                )
-                                .setSpecs(query.indexQuery)
-                                .addAllSearchTermsHuman(query.searchTermsHuman);
+            if (query.domain != null) {
+                responseBuilder.setDomain(query.domain);
+            }
 
-                        if (query.domain != null) {
-                            responseBuilder.setDomain(query.domain);
-                        }
+            responseObserver.onNext(responseBuilder.build());
+            responseObserver.onCompleted();
 
-                        responseObserver.onNext(responseBuilder.build());
-                        responseObserver.onCompleted();
-                    });
         } catch (StatusRuntimeException e) {
             responseObserver.onError(e);
         } catch (Exception e) {
@@ -205,6 +209,7 @@ public class QueryGRPCService
                     .asRuntimeException());
             return;
         }
+
 
 
         RpcIndexUnrankedQuery unrankedQueryPrototype = RpcIndexUnrankedQuery.newBuilder()
@@ -232,7 +237,9 @@ public class QueryGRPCService
         }
 
         try {
-            var response = indexClient.executeQueries(unrankedQueryPrototype, cursor);
+            var response = wmsa_qs_query_unranked_time_grpc
+                    .labelValues(Integer.toString(request.getQueryLimits().getTimeoutMs()), Integer.toString(request.getQueryLimits().getResultsTotal()))
+                    .time(() -> indexClient.executeQueries(unrankedQueryPrototype, cursor));
 
             responseObserver.onNext(RpcQsUnrankedResponse.newBuilder()
                     .setEncodedCursor(response.cursor().encode())
