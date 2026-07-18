@@ -73,9 +73,9 @@
 @endfor
 
 <!-- Pagination -->
-@if (!"FIN".equals(docs.cursorNext()))
+@if (!"FIN".equals(docs.cursorNext()) && !docs.results().isEmpty())
     <div class="mt-8 flex justify-center space-x-2 font-mono text-sm">
-        <a href="?view=docs&cursor=${docs.cursorNext()}" class="px-2 py-1 bg-white border dark:border-gray-600 border-gray-300 hover:bg-gray-100 dark:bg-gray-800 hover:bg-gray-900">More</a>
+        <a href="?view=docs&cursor=${docs.cursorNext()}&sst=${docs.sst()}" class="px-2 py-1 bg-white border dark:border-gray-600 border-gray-300 hover:bg-gray-100 dark:bg-gray-800 hover:bg-gray-900">More</a>
     </div>
 @endif
 
