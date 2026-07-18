@@ -1,24 +1,38 @@
 package nu.marginalia.search;
 
 import com.google.inject.Inject;
+import io.jooby.Context;
+import io.jooby.Cookie;
+import io.jooby.Jooby;
+import io.jooby.SessionStore;
 import io.prometheus.metrics.core.metrics.Counter;
 import io.prometheus.metrics.core.metrics.Histogram;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.search.svc.*;
 import nu.marginalia.service.server.BaseServiceParams;
-import nu.marginalia.service.server.SparkService;
+import nu.marginalia.service.server.JoobyService;
 import nu.marginalia.service.server.StaticResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.*;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
-public class SearchService extends SparkService {
+public class SearchService extends JoobyService {
 
     private final WebsiteUrl websiteUrl;
     private final StaticResources staticResources;
+    @org.jetbrains.annotations.NotNull
+    private final SearchFrontPageService frontPageService;
+    private final SearchErrorPageService errorPageService;
+    @org.jetbrains.annotations.NotNull
+    private final SearchAddToCrawlQueueService addToCrawlQueueService;
+    @org.jetbrains.annotations.NotNull
+    private final SearchSiteInfoService siteInfoService;
+    @org.jetbrains.annotations.NotNull
+    private final SearchCrosstalkService crosstalkService;
+    private final SearchQueryService searchQueryService;
 
     private static final Logger logger = LoggerFactory.getLogger(SearchService.class);
     private static final Histogram wmsa_search_service_request_time = Histogram.builder()
@@ -45,94 +59,47 @@ public class SearchService extends SparkService {
                          SearchQueryService searchQueryService)
     throws Exception
     {
-        super(params);
+        super(params, List.of(), List.of());
 
         this.websiteUrl = websiteUrl;
         this.staticResources = staticResources;
+        this.frontPageService = frontPageService;
+        this.errorPageService = errorPageService;
+        this.addToCrawlQueueService = addToCrawlQueueService;
+        this.siteInfoService = siteInfoService;
+        this.crosstalkService = crosstalkService;
+        this.searchQueryService = searchQueryService;
+    }
 
-        Spark.staticFiles.expireTime(600);
+    public void startJooby(Jooby jooby) {
+        super.startJooby(jooby);
 
-        Spark.before("/search", this::denyPrefetch);
-        Spark.before("/site/:site", this::denyPrefetch);
+        jooby.setSessionStore(SessionStore.memory(Cookie.session("marginalia-session")));
 
-        SearchServiceMetrics.get("/search", searchQueryService::pathSearch);
-
-        SearchServiceMetrics.get("/", frontPageService::render);
-        SearchServiceMetrics.get("/news.xml", frontPageService::renderNewsFeed);
-        SearchServiceMetrics.get("/:resource", this::serveStatic);
-
-        SearchServiceMetrics.post("/site/suggest/", addToCrawlQueueService::suggestCrawling);
-
-        SearchServiceMetrics.get("/site-search/:site/*", this::siteSearchRedir);
-
-        SearchServiceMetrics.get("/site/:site", siteInfoService::handle);
-        SearchServiceMetrics.post("/site/:site", siteInfoService::handlePost);
-
-        SearchServiceMetrics.get("/crosstalk/", crosstalkService::handle);
-
-        Spark.exception(Exception.class, (e,p,q) -> {
-            logger.error("Error during processing", e);
-            wmsa_search_service_error_count.labelValues(p.pathInfo(), p.requestMethod()).inc();
-            errorPageService.serveError(p, q);
+        jooby.get("/search", searchQueryService::pathSearch);
+        jooby.get("/news.xml", frontPageService::renderNewsFeed);
+        jooby.get("/", frontPageService::render);
+        jooby.post("/site", siteInfoService::handlePost);
+        jooby.get("/site/{site}", siteInfoService::handle);
+        jooby.post("/site/suggest/", addToCrawlQueueService::suggestCrawling);
+        jooby.get("/site-search/{site}/{query}", this::siteSearchRedir);
+        jooby.get("/crosstalk/", crosstalkService::handle);
+        jooby.error((ctx,err, c) -> {
+            logger.error("Error {}", err);
+            errorPageService.serveError(ctx);
         });
 
-        Spark.awaitInitialization();
     }
 
+    private Object siteSearchRedir(Context ctx) {
+        final String site = ctx.path("site").value("");
 
-    private void denyPrefetch(Request request, Response response) {
-        if (request.headers().contains("Sec-Purpose"))
-            Spark.halt(400);
-    }
-
-
-    /** Wraps a route with a timer and a counter */
-    private static class SearchServiceMetrics implements Route {
-        private final Route delegatedRoute;
-
-        static void get(String path, Route route) {
-            Spark.get(path, new SearchServiceMetrics(route));
-        }
-        static void post(String path, Route route) {
-            Spark.post(path, new SearchServiceMetrics(route));
-        }
-
-        private SearchServiceMetrics(Route delegatedRoute) {
-            this.delegatedRoute = delegatedRoute;
-        }
-
-        @Override
-        public Object handle(Request request, Response response) throws Exception {
-            return wmsa_search_service_request_time
-                    .labelValues(request.matchedPath(), request.requestMethod())
-                    .time(() -> {
-                        try {
-                            return delegatedRoute.handle(request, response);
-                        } catch (Exception e) {
-                            logger.error("Error", e);
-                            throw new RuntimeException(e);
-                        }
-                    });
-        }
-    }
-
-    private Object serveStatic(Request request, Response response) {
-        String resource = request.params("resource");
-        staticResources.serveStatic("search", resource, request, response);
-        return "";
-    }
-
-    private Object siteSearchRedir(Request request, Response response) {
-        final String site = request.params("site");
-        final String searchTerms;
-
-        if (request.splat().length == 0) searchTerms = "";
-        else searchTerms = request.splat()[0];
+        final String searchTerms = ctx.path("site").value("");
 
         final String query = URLEncoder.encode(String.format("%s site:%s", searchTerms, site), StandardCharsets.UTF_8).trim();
-        final String profile = request.queryParamOrDefault("profile", "yolo");
+        final String profile = ctx.query("profile").value("yolo");
 
-        response.redirect(websiteUrl.withPath("search?query="+query+"&profile="+profile));
+        ctx.sendRedirect(websiteUrl.withPath("search?query="+query+"&profile="+profile));
 
         return "";
     }

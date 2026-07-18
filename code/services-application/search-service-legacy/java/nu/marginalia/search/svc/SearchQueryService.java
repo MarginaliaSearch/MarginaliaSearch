@@ -1,6 +1,7 @@
 package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
+import io.jooby.Context;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.search.ScrapeStopperInterceptor;
@@ -10,8 +11,6 @@ import nu.marginalia.search.exceptions.RedirectException;
 import nu.marginalia.service.server.RateLimiter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
 
 import java.io.IOException;
 
@@ -39,39 +38,47 @@ public class SearchQueryService {
         this.scrapeStopperInterceptor = scrapeStopperInterceptor;
     }
 
-    public Object pathSearch(Request request, Response response) {
+    public Object pathSearch(Context ctx) {
 
-        SearchParameters params = parseParameters(request);
+        // Deny prefetch on query endpoint
+        if (ctx.header("Sec-Purpose").isPresent()) {
+            ctx.setResponseCode(400);
+            return "";
+        }
 
-        var intercept = scrapeStopperInterceptor.intercept("S", params.query(), rateLimiter, request, response);
+        ctx.setResponseType("text/html");
+
+        SearchParameters params = parseParameters(ctx);
+
+        var intercept = scrapeStopperInterceptor.intercept("S", params.query(), rateLimiter, ctx);
         if (intercept instanceof ScrapeStopperInterceptor.InterceptRedirect redir)
             return redir.result();
 
         try {
-            return searchCommandEvaulator.eval(response,
+            return searchCommandEvaulator.eval(ctx,
                     params.withSst(intercept.sst())
             );
         }
         catch (RedirectException ex) {
-            response.redirect(ex.newUrl);
+            ctx.sendRedirect(ex.newUrl);
         }
         catch (Exception ex) {
             logger.error("Error", ex);
-            errorPageService.serveError(request, response);
+            errorPageService.serveError(ctx);
         }
 
         return "";
     }
 
-    private SearchParameters parseParameters(Request request) {
+    private SearchParameters parseParameters(Context ctx) {
         try {
-            final String queryParam = request.queryParams("query");
+            final var queryParam = ctx.query("query");
 
-            if (null == queryParam || queryParam.isBlank()) {
+            if (queryParam.isMissing() || queryParam.value().isBlank()) {
                 throw new RedirectException(websiteUrl.url());
             }
 
-            return new SearchParameters(queryParam.trim(), request);
+            return new SearchParameters(queryParam.value().trim(), ctx);
         }
         catch (Exception ex) {
             // Bots keep sending bad requests, suppress the error otherwise it will

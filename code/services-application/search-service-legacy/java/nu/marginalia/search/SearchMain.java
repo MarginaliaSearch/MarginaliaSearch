@@ -3,6 +3,9 @@ package nu.marginalia.search;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import io.jooby.ExecutionMode;
+import io.jooby.Jooby;
+import io.jooby.Server;
 import nu.marginalia.service.MainClass;
 import nu.marginalia.service.discovery.ServiceRegistryIf;
 import nu.marginalia.service.module.ServiceConfiguration;
@@ -11,7 +14,6 @@ import nu.marginalia.service.ServiceId;
 import nu.marginalia.service.module.ServiceConfigurationModule;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.service.server.Initialization;
-import spark.Spark;
 
 public class SearchMain extends MainClass {
     private final SearchService service;
@@ -24,8 +26,6 @@ public class SearchMain extends MainClass {
     public static void main(String... args) {
 
         init(ServiceId.Search, args);
-
-        Spark.staticFileLocation("/static/search/");
 
         Injector injector = Guice.createInjector(
                 new SearchModule(),
@@ -40,8 +40,21 @@ public class SearchMain extends MainClass {
         var configuration = injector.getInstance(ServiceConfiguration.class);
         orchestrateBoot(registry, configuration);
 
-        injector.getInstance(SearchMain.class);
+        var main = injector.getInstance(SearchMain.class);
         injector.getInstance(Initialization.class).setReady();
 
+        Jooby.runApp(new String[] { "application.env=prod" }, main.server(), ExecutionMode.WORKER, () -> new Jooby() {
+            {
+                main.start(this);
+            }
+        });
+    }
+
+    public Server server() {
+        return service.createServer();
+    }
+
+    public void start(Jooby jooby) {
+        service.startJooby(jooby);
     }
 }

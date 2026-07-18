@@ -1,6 +1,7 @@
 package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
+import io.jooby.Context;
 import nu.marginalia.api.domains.DomainInfoClient;
 import nu.marginalia.api.domains.model.DomainInformation;
 import nu.marginalia.api.domains.model.SimilarDomain;
@@ -20,8 +21,6 @@ import nu.marginalia.search.svc.SearchFlagSiteService.FlagSiteFormData;
 import nu.marginalia.service.server.RateLimiter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -71,15 +70,23 @@ public class SearchSiteInfoService {
         this.scrapeStopperInterceptor = scrapeStopperInterceptor;
     }
 
-    public Object handle(Request request, Response response) throws SQLException, TimeoutException {
-        String domainName = request.params("site");
+    public Object handle(Context ctx) throws SQLException, TimeoutException {
 
-        var intercept = scrapeStopperInterceptor.intercept("I", domainName, rateLimiter, request, response);
+        // Deny prefetch on site info endpoint
+        if (ctx.header("Sec-Purpose").isPresent()) {
+            ctx.setResponseCode(400);
+            return "";
+        }
+        ctx.setResponseType("text/html");
+
+        String domainName = ctx.path("site").value();
+
+        var intercept = scrapeStopperInterceptor.intercept("I", domainName, rateLimiter, ctx);
         if (intercept instanceof ScrapeStopperInterceptor.InterceptRedirect redirect)
             return redirect.result();
 
 
-        String view = request.queryParamOrDefault("view", "info");
+        String view = ctx.query("view").value("info");
 
         if (null == domainName || domainName.isBlank()) {
             return null;
@@ -96,10 +103,12 @@ public class SearchSiteInfoService {
         return renderer.render(model);
     }
 
-    public Object handlePost(Request request, Response response) throws SQLException {
-        String domainName = request.params("site");
-        String view = request.queryParamOrDefault("view", "info");
-        String sst = request.queryParamOrDefault("sst", "");
+    public Object handlePost(Context ctx) throws SQLException {
+        ctx.setResponseType("text/html");
+
+        String domainName = ctx.path("site").value();
+        String view = ctx.query("view").value( "info");
+        String sst = ctx.query("sst").value( "");
 
         if (null == domainName || domainName.isBlank()) {
             return null;
@@ -112,9 +121,9 @@ public class SearchSiteInfoService {
 
         FlagSiteFormData formData = new FlagSiteFormData(
                 domainId,
-                request.queryParams("category"),
-                request.queryParams("description"),
-                request.queryParams("sampleQuery")
+                ctx.form("category").value(""),
+                ctx.form("description").value(""),
+                ctx.form("sampleQuery").value("")
         );
         flagSiteService.insertComplaint(formData);
 

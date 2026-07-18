@@ -2,6 +2,7 @@
 package nu.marginalia.search.command.commands;
 
 import com.google.inject.Inject;
+import io.jooby.Context;
 import nu.marginalia.api.math.MathClient;
 import nu.marginalia.api.math.model.DictionaryResponse;
 import nu.marginalia.renderer.MustacheRenderer;
@@ -10,7 +11,6 @@ import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.renderer.RendererFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Response;
 
 import java.io.IOException;
 import java.util.Map;
@@ -38,7 +38,7 @@ public class DefinitionCommand implements SearchCommandInterface {
     }
 
     @Override
-    public Optional<Object> process(Response response, SearchParameters parameters) {
+    public Optional<Object> process(Context ctx, SearchParameters parameters) {
         if (!queryPatternPredicate.test(parameters.query())) {
             return Optional.empty();
         }
