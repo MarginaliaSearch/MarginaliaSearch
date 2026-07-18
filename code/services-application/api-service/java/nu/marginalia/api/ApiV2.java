@@ -91,6 +91,7 @@ public class ApiV2 implements Extension {
 
         jooby.get("/api/v2/key", this::keyInfo);
         jooby.get("/api/v2/search", this::search);
+        jooby.get("/api/v2/unranked", this::searchUnranked);
 
         jooby.get("/api/v2/filter", this::listFilters);
 
@@ -404,6 +405,115 @@ public class ApiV2 implements Extension {
         return gson.toJson(results);
     }
 
+
+    @NotNull
+    private Object searchUnranked(Context ctx) {
+        Value apiKeyVal = ctx.header("API-Key");
+        if (apiKeyVal.isMissing()) {
+            ctx.setResponseCode(400);
+            return "Missing API-Key header";
+        }
+
+        ApiLicense license;
+        try {
+            license = licenseService.getLicense(apiKeyVal.value());
+        } catch (LicenseService.NoSuchKeyException | IOException ex) {
+            ctx.setResponseCode(StatusCode.UNAUTHORIZED);
+            return "";
+        }
+
+        Value queryVal = ctx.query("query");
+        if (!queryVal.isPresent()) {
+            ctx.setResponseCode(400);
+            return "";
+        }
+        String query = queryVal.value();
+
+        // Voluntary over-billing protection via request header
+        int limitBillableRequestsHeader = ctx.header("API-Limit-Billable-Requests").intValue(-1);
+        if (limitBillableRequestsHeader >= 0
+                && license.hasOption(ApiLicenseOptions.ALLOW_QUERY_DAILY_OVERUSE)
+                && !rateLimiterService.hasRemainingDailyLimit(license))
+        {
+
+            long billableApiUsage = rateLimiterService.estimatedTotalApiUseForPeriod(license);
+
+            if (billableApiUsage + 1 >= limitBillableRequestsHeader) {
+                DailyLimitState limitState = new DailyLimitState.OverLimitBlock();
+
+                ctx.setResponseHeader("API-Remaining-Daily-Capacity", limitState.remaining());
+                ctx.setResponseHeader("API-Event-Type", limitState.name());
+                ctx.setResponseHeader("API-Billable-Requests", billableApiUsage);
+
+                ctx.setResponseCode(429);
+
+                return "API usage exceeds provided API-Limit-Billable-Requests header";
+            }
+        }
+
+        ApiUnrankedSearchResults results = null;
+        DailyLimitState limitState;
+
+
+        if (!rateLimiterService.isAllowedQPM(license)) {
+            ApiMetrics.wmsa_api_timeout_count.labelValues(license.key()).inc();
+            ctx.setResponseCode(429);
+
+            return "QPM Limit Exceeded";
+        }
+
+        if (!rateLimiterService.isAllowedQPD(license)) {
+            ApiMetrics.wmsa_api_timeout_count.labelValues(license.key()).inc();
+            ctx.setResponseCode(429);
+
+            limitState = new DailyLimitState.OverLimitBlock();
+
+            ctx.setResponseHeader("API-Remaining-Daily-Capacity", limitState.remaining());
+            ctx.setResponseHeader("API-Event-Type", limitState.name());
+
+            return "Daily Limit Exceeded";
+        }
+
+        // When no cached response, do the search and cache the result
+
+        try {
+            results = doUnrankedSearch(license, query, ctx);
+            if (results == null) {
+                return "Query Execution Failed";
+            }
+        }
+        catch (RuntimeException ex) {
+            logger.error("Error execuing query {}", ex);
+
+            ctx.setResponseCode(500);
+            return "Query Execution Failed";
+        }
+
+        if (results.getResults().size() > 0) {
+            limitState = rateLimiterService.registerSuccessfulQuery(license);
+        } else {
+            int remaining = rateLimiterService.remainingDailyLimit(license);
+            limitState = new DailyLimitState.NoResults(remaining);
+        }
+
+
+        if (license.hasOption(ApiLicenseOptions.ADUIT_USAGE)) {
+            logger.info(apiUsageMarker, "{} {} {}", license.key(), limitState, ctx.header(realIpHeader));
+        }
+
+        if (license.hasOption(ApiLicenseOptions.ALLOW_QUERY_DAILY_OVERUSE)) {
+            long billableApiUsage = rateLimiterService.estimatedTotalApiUseForPeriod(license);
+            ctx.setResponseHeader("API-Billable-Requests", billableApiUsage);
+        }
+
+        ctx.setResponseType("application/json");
+        ctx.setResponseHeader("API-Remaining-Daily-Capacity", limitState.remaining());
+        ctx.setResponseHeader("API-Event-Type", limitState.name());
+
+        return gson.toJson(results);
+    }
+
+
     @NotNull
     private Object siteInfo(Context ctx) {
         Value apiKeyVal = ctx.header("API-Key");
@@ -659,6 +769,27 @@ public class ApiV2 implements Extension {
         {
             return searchOperator
                     .v2query(query, count, timeout, domainCount, page, filter, nsfwFilterTier, langIsoCode, license);
+        }
+        catch (TimeoutException ex) {
+            context.setResponseCode(504);
+            return null;
+        }
+    }
+
+
+
+    private ApiUnrankedSearchResults doUnrankedSearch(ApiLicense license, String query, Context context) {
+        int count = context.query().get("count").intValue(100);
+        int timeout = context.query().get("timeout").intValue(150);
+        String cursor = context.query().get("cursor").value("");
+        String langIsoCode = context.query("lang").value("en");
+
+        final QueryFilterSpec filter;
+
+        try (var _ = ApiMetrics.wmsa_api_query_time.labelValues(license.key()).startTimer())
+        {
+            return searchOperator
+                    .unrankedQuery(query, count, timeout, cursor, langIsoCode, license);
         }
         catch (TimeoutException ex) {
             context.setResponseCode(504);

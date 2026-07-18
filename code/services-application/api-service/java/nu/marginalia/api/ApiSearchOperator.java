@@ -2,10 +2,7 @@ package nu.marginalia.api;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.api.model.ApiLicense;
-import nu.marginalia.api.model.ApiSearchResult;
-import nu.marginalia.api.model.ApiSearchResultQueryDetails;
-import nu.marginalia.api.model.ApiSearchResults;
+import nu.marginalia.api.model.*;
 import nu.marginalia.api.searchquery.QueryClient;
 import nu.marginalia.api.searchquery.QueryFilterSpec;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
@@ -13,6 +10,7 @@ import nu.marginalia.api.searchquery.model.SearchFilterDefaults;
 import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.model.idx.WordFlags;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -28,6 +26,27 @@ public class ApiSearchOperator {
     @Inject
     public ApiSearchOperator(QueryClient queryClient) {
         this.queryClient = queryClient;
+    }
+
+    public ApiUnrankedSearchResults unrankedQuery(String query, int count, int timeout, String cursor, String langIsoCode, ApiLicense license) throws TimeoutException {
+        var rsp = queryClient.unrankedSearch(
+                List.of(StringUtils.split(query, " ")),
+                langIsoCode,
+                RpcQueryLimits.newBuilder()
+                        .setResultsTotal(Math.min(100, count))
+                        .setTimeoutMs(Math.clamp(timeout, 50, 250))
+                        .build(),
+                cursor);
+
+        return new ApiUnrankedSearchResults(license.license(), query,
+                rsp.encodedCursor(),
+                rsp.results()
+                        .stream()
+                        .map(this::convert)
+                        .sorted(Comparator.comparing(ApiSearchResult::getQuality))
+                        .limit(count)
+                        .collect(Collectors.toList()));
+
     }
 
     public ApiSearchResults v2query(String query,

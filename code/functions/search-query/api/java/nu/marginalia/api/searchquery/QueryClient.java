@@ -60,7 +60,7 @@ public class QueryClient  {
     public UnrankedQueryResponse unrankedSearch(List<String> terms,
                                                 String languageIsoCode,
                                                 RpcQueryLimits limits,
-                                                @Nullable String cursorEncoded) {
+                                                @Nullable String cursorEncoded) throws TimeoutException {
         RpcQsUnrankedQuery.Builder queryBuilder = RpcQsUnrankedQuery.newBuilder();
 
         queryBuilder.setLangIsoCode(languageIsoCode);
