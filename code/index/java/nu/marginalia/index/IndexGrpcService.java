@@ -175,7 +175,11 @@ public class IndexGrpcService
             // Perform the search
             try (StatefulIndex.IndexReference indexReference = statefulIndex.get()) {
                 if (!indexReference.isAvailable()) {
-                    throw Status.FAILED_PRECONDITION.withDescription("Index not available").asRuntimeException();
+                    responseObserver.onNext(RpcIndexQueryResponse.newBuilder()
+                            .setFinished(true)
+                            .build());
+
+                    responseObserver.onCompleted();
                 }
 
                 CombinedIndexReader index = indexReference.get();
