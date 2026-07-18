@@ -6,6 +6,7 @@ option java_multiple_files=true;
 
 service QueryApi {
   rpc query(RpcQsQuery) returns (RpcQsResponse) {}
+  rpc unrankedQuery(RpcQsUnrankedQuery) returns (RpcQsUnrankedResponse) {}
   rpc invalidateFilterCache(RpcQsInvalidateFilter) returns (Empty) {}
 }
 
@@ -18,6 +19,9 @@ message Empty {}
 
 message RpcIndexQueryResponse {
   repeated RpcDecoratedResultItem results = 2;
+
+  int64 lastResultId = 3;
+  bool finished = 4;
 }
 
 
@@ -35,12 +39,21 @@ message RpcQsQuery {
   NSFW_FILTER_TIER nsfwFilterTier = 5;
   RpcQueryLimits queryLimits = 6;
   RpcQsQueryPagination pagination = 7;
+}
 
-  enum NSFW_FILTER_TIER {
-    NONE = 0;
-    DANGER = 1;
-    PORN_AND_GAMBLING = 2;
-  };
+
+message RpcQsUnrankedQuery {
+  repeated string termsRequired = 1;
+  repeated string termsExcluded = 2;
+
+  repeated int32 requiredDomainIds = 10;     // (optional) A list of domain IDs to consider
+  repeated int32 excludedDomainIds = 11;
+
+  RpcQueryLimits queryLimits = 14;
+
+  string encodedCursor = 15;
+
+  string langIsoCode = 20;
 }
 
 message RpcQsFilterIdentifier {
@@ -81,6 +94,11 @@ message RpcQsResponse {
   RpcQsResultPagination pagination = 6;
 }
 
+message RpcQsUnrankedResponse {
+  repeated RpcDecoratedResultItem results = 1;
+  string encodedCursor = 15;
+}
+
 message RpcQsQueryPagination {
   int32 page = 1;
   int32 pageSize = 2;
@@ -108,8 +126,6 @@ message RpcIndexUnrankedQuery {
   repeated int32 requiredDomainIds = 10;     // (optional) A list of domain IDs to consider
   repeated int32 excludedDomainIds = 11;
 
-  string searchSetIdentifier = 12; // (optional) A named set of domains to consider
-  string humanQuery = 13;          // The search query as the user entered it
   RpcQueryLimits queryLimits = 14;
   int64 afterId = 15;
 
@@ -136,8 +152,6 @@ message RpcIndexQuery {
   repeated int32 excludedDomainIds = 15;
   repeated int32 priorityDomainIds = 16;
   repeated float priorityDomainIdsWeights = 17;
-
-
 }
 
 enum NSFW_FILTER_TIER {

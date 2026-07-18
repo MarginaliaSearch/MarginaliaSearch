@@ -30,6 +30,7 @@ dependencies {
     }
     implementation libs.bundles.protobuf
     implementation libs.fastutil
+    implementation libs.commons.lang3
     implementation libs.javax.annotation
     implementation libs.bundles.gson
     implementation libs.guava

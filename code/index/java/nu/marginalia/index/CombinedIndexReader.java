@@ -258,15 +258,6 @@ public class CombinedIndexReader {
         if (!context.mandatoryDomainIds.isEmpty())
             head.requiringDomains(getDocumentRangesForDomains(context.mandatoryDomainIds));
 
-        if (!context.termIdsDomain.isEmpty()) {
-            List<String> domainTerms = new ArrayList<>(context.termIdsDomain.size());
-            for (long id : context.termIdsDomain) {
-                domainTerms.add(termIdToString.getOrDefault(id, "???"));
-            }
-
-            head.addInclusionFilter(hasAnyWordFull(languageContext, domainTerms, context.termIdsDomain, context.budget));
-        }
-
         for (long termId : context.termIdsRequire) {
             head = head.also(termIdToString.getOrDefault(termId, "???"), termId, context.budget);
         }

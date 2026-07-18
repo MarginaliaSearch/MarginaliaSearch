@@ -277,6 +277,17 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
         return channels.values().stream().sorted().toList();
     }
 
+    public Optional<ConnectionHolder> getBestConnectionHolder() {
+
+        for (var h : getConnectionHolders()) {
+            if (h.hasErrorSince(Duration.ofSeconds(5)))
+                continue;
+            return Optional.of(h);
+        }
+
+        return Optional.empty();
+    }
+
     public <T, I> T call(Function<ManagedChannel, STUB> stubConstructor,
                           BiFunction<STUB, I, T> call,
                           I arg) throws RuntimeException {

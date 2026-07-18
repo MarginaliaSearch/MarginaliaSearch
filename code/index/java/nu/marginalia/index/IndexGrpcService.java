@@ -169,6 +169,8 @@ public class IndexGrpcService
             KeywordHasher hasher = findHasher(request.getLangIsoCode());
 
             List<RpcDecoratedResultItem> results = null;
+            boolean isFinished;
+            long lastId;
 
             // Perform the search
             try (StatefulIndex.IndexReference indexReference = statefulIndex.get()) {
@@ -191,10 +193,15 @@ public class IndexGrpcService
                 IndexUnrankedQueryExecution queryExecution =
                         new IndexUnrankedQueryExecution(index, documentDbReader, rankingService, rankingContext, nodeId);
                 results = queryExecution.run();
+
+                lastId = queryExecution.getLastId();
+                isFinished = queryExecution.isFinished();
             }
 
             responseObserver.onNext(RpcIndexQueryResponse.newBuilder()
                     .addAllResults(results)
+                    .setLastResultId(lastId)
+                    .setFinished(isFinished)
                     .build());
 
             responseObserver.onCompleted();
