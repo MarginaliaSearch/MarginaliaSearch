@@ -184,7 +184,8 @@ public class SearchSiteInfoService {
             Context context,
             @PathParam String domainName,
             @QueryParam String view,
-            @QueryParam Integer page
+            @QueryParam Integer page,
+            @QueryParam String cursor
     ) throws SQLException, ExecutionException, TimeoutException {
 
         if (null == domainName || domainName.isBlank()) {
@@ -213,8 +214,8 @@ public class SearchSiteInfoService {
         String sst = interceptResult.sst();
 
         SiteInfoModel model = switch (view) {
-            case "links" -> listLinks(domainName, sst, page);
-            case "docs" -> listDocs(domainName, sst, page);
+            case "links" -> listLinks(domainName, sst, cursor);
+            case "docs" -> listDocs(domainName, sst, cursor);
             case "info" -> listInfo(context, domainName, sst);
             case "traffic" -> listSiteRequests(context, domainName, sst);
             case "availability" -> listAvailabilityEvents(context, domainName, sst);
@@ -310,13 +311,14 @@ public class SearchSiteInfoService {
     }
 
 
-    private Backlinks listLinks(String domainName, String sst, int page) throws TimeoutException {
-        var results = searchOperator.doBacklinkSearch(domainName, page);
+    private Backlinks listLinks(String domainName, String sst, String cursor) throws TimeoutException {
+        var results = searchOperator.doBacklinkSearch(domainName, cursor);
+
         return new Backlinks(domainName,
                 sst,
                 domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),
                 GroupedUrlDetails.groupResults(results.results),
-                results.resultPages
+                results.cursor
         );
     }
 
@@ -368,7 +370,7 @@ public class SearchSiteInfoService {
             sampleResults = List.of();
         }
         else {
-            sampleResults = searchOperator.doSiteSearch(domainName, domainId, 5, 1).results;
+            sampleResults = searchOperator.doSiteSearch(domainName, 5, "").results;
         }
 
         if (!sampleResults.isEmpty()) {
@@ -466,15 +468,15 @@ public class SearchSiteInfoService {
                 .build();
     }
 
-    private Docs listDocs(String domainName, String sst, int page) throws TimeoutException {
+    private Docs listDocs(String domainName, String sst, String cursor) throws TimeoutException {
         int domainId = domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1);
-        var results = searchOperator.doSiteSearch(domainName, domainId, 100, page);
+        var results = searchOperator.doSiteSearch(domainName, 100, cursor);
 
         return new Docs(domainName,
                 sst,
                 domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),
                 results.results.stream().sorted(Comparator.comparing(deets -> -deets.topology)).toList(),
-                results.resultPages
+                results.cursor
                 );
     }
 
@@ -784,7 +786,7 @@ public class SearchSiteInfoService {
                        String sst,
                        long domainId,
                        List<UrlDetails> results,
-                       List<ResultsPage> pages) implements SiteInfoModel  {
+                       String cursorNext) implements SiteInfoModel  {
 
         public String focusDomain() { return domain; }
 
@@ -799,7 +801,7 @@ public class SearchSiteInfoService {
                             String sst,
                             long domainId,
                             List<GroupedUrlDetails> results,
-                            List<ResultsPage> pages
+                            String cursorNext
                             ) implements SiteInfoModel
     {
         public String query() { return "links:" + domain; }

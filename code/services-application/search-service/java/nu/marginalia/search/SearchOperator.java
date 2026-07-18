@@ -10,6 +10,7 @@ import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
 import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.QueryResponse;
+import nu.marginalia.api.searchquery.model.query.UnrankedQueryResponse;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.bbpc.BrailleBlockPunchCards;
 import nu.marginalia.db.DbDomainQueries;
@@ -80,38 +81,42 @@ public class SearchOperator {
         this.searchVisitorCount = searchVisitorCount;
     }
 
-    public SimpleSearchResults doSiteSearch(String domain,
-                                        int domainId,
-                                        int count,
-                                        int page) throws TimeoutException {
-        var queryResponse = queryClient.search(
-                QueryFilterSpec.FilterAdHoc.builder().domainsInclude(IntList.of(domainId)).build(),
-                "site:"+domain,
+    public UnrankedSearchResults doSiteSearch(String domain, int count, String cursor) throws TimeoutException {
+
+        var rs =  queryClient.unrankedSearch(
+                List.of("site:"+domain),
                 "en",
-                NsfwFilterTier.DANGER,
                 RpcQueryLimits.newBuilder()
                         .setResultsTotal(count)
-                        .setResultsByDomain(count)
                         .setTimeoutMs(100)
                         .build(),
-                page
+                cursor
         );
 
-        return getResultsFromQuery(queryResponse);
+        List<UrlDetails> details = rs.results().stream()
+                .map(SearchOperator::createDetails)
+                .toList();
+
+        return new UnrankedSearchResults(details, rs.encodedCursor());
     }
 
-    public SimpleSearchResults doBacklinkSearch(String domain, int page) throws TimeoutException {
+    public UnrankedSearchResults doBacklinkSearch(String domain, String cursor) throws TimeoutException {
 
-        var queryResponse = queryClient.search(
-                new QueryFilterSpec.NoFilter(),
-                "links:"+domain,
+        var rs =  queryClient.unrankedSearch(
+                List.of("links:"+domain),
                 "en",
-                NsfwFilterTier.DANGER,
-                shallowLimit,
-                page
+                RpcQueryLimits.newBuilder()
+                        .setResultsTotal(10)
+                        .setTimeoutMs(100)
+                        .build(),
+                cursor
         );
 
-        return getResultsFromQuery(queryResponse);
+        List<UrlDetails> details = rs.results().stream()
+                .map(SearchOperator::createDetails)
+                .toList();
+
+        return new UnrankedSearchResults(details, rs.encodedCursor());
     }
 
     public SimpleSearchResults doLinkSearch(String source, String dest) throws TimeoutException {

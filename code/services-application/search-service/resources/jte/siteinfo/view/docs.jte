@@ -73,15 +73,9 @@
 @endfor
 
 <!-- Pagination -->
-@if (docs.pages().size() > 1)
+@if (!"FIN".equals(docs.cursorNext()))
     <div class="mt-8 flex justify-center space-x-2 font-mono text-sm">
-        @for(ResultsPage page : docs.pages())
-            @if (page.current())
-                <a href="?view=docs&page=${page.number()}" class="px-2 py-1 border dark:border-gray-600 border-gray-300 bg-gray-100 dark:bg-gray-900">${page.number()}</a>
-            @else
-                <a href="?view=docs&page=${page.number()}" class="px-2 py-1 bg-white dark:bg-gray-800 dark:text-white border dark:border-gray-600 border-gray-300 hover:bg-gray-100 dark:bg-gray-800 hover:bg-gray-900">${page.number()}</a>
-            @endif
-        @endfor
+        <a href="?view=docs&cursor=${docs.cursorNext()}" class="px-2 py-1 bg-white border dark:border-gray-600 border-gray-300 hover:bg-gray-100 dark:bg-gray-800 hover:bg-gray-900">More</a>
     </div>
 @endif
 

@@ -43,15 +43,9 @@
 @endfor
 
 <!-- Pagination -->
-@if (backlinks.pages().size() > 1)
+@if (!"FIN".equals(backlinks.cursorNext()))
     <div class="mt-8 flex justify-center space-x-2 font-mono text-sm">
-        @for(ResultsPage page : backlinks.pages())
-            @if (page.current())
-                <a href="?view=links&page=${page.number()}" class="px-2 py-1 border dark:border-gray-600 border-gray-300 bg-gray-100 dark:bg-gray-900">${page.number()}</a>
-            @else
-                <a href="?view=links&page=${page.number()}" class="px-2 py-1 bg-white border dark:border-gray-600 border-gray-300 hover:bg-gray-100 dark:bg-gray-800 hover:bg-gray-900">${page.number()}</a>
-            @endif
-        @endfor
+        <a href="?view=links&cursor=${backlinks.cursorNext()}" class="px-2 py-1 bg-white border dark:border-gray-600 border-gray-300 hover:bg-gray-100 dark:bg-gray-800 hover:bg-gray-900">More</a>
     </div>
 @endif
 </div>
