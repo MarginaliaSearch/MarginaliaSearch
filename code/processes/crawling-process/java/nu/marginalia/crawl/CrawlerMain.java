@@ -303,7 +303,6 @@ public class CrawlerMain extends ProcessMainClass {
 
                     domainsToCrawl.add(new EdgeDomain(domainName));
                     crawlSpecRecords.add(CrawlSpecRecord.growExistingDomain(domainName, existingUrls));
-                    totalTasks++;
                 }
             }
 
@@ -316,6 +315,9 @@ public class CrawlerMain extends ProcessMainClass {
         int sizeOriginal = domainsToCrawl.size();
         domainsToCrawl.removeIf(domain -> availabilityData.get(domain) == DomainAvailability.MISSING);
         crawlSpecRecords.removeIf(spec -> availabilityData.get(new EdgeDomain(spec.domain)) == DomainAvailability.MISSING);
+
+        totalTasks = domainsToCrawl.size();
+
         if (domainsToCrawl.size() != sizeOriginal) {
             logger.info("Removed {} crawl tasks for unreachable domains", (sizeOriginal - domainsToCrawl.size()));
         }
