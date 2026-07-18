@@ -1,9 +1,10 @@
 package nu.marginalia.index;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
-import it.unimi.dsi.fastutil.longs.LongList;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import nu.marginalia.api.searchquery.*;
+import nu.marginalia.api.searchquery.RpcDecoratedResultItem;
+import nu.marginalia.api.searchquery.RpcRawResultItem;
+import nu.marginalia.api.searchquery.RpcResultKeywordScore;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.model.RankableDocument;
@@ -20,10 +21,6 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 
 /** Performs an index query */
 public class IndexUnrankedQueryExecution {
@@ -41,10 +38,21 @@ public class IndexUnrankedQueryExecution {
 
     private final int limitTotal;
 
+    private boolean finished = false;
+    private long lastId = 0;
+
+    public boolean isFinished() {
+        return finished;
+    }
+    public long getLastId() {
+        return lastId;
+    }
+
+
     public IndexUnrankedQueryExecution(CombinedIndexReader currentIndex,
                                        DocumentDbReader documentDbReader,
                                        IndexResultRankingService rankingService,
-                                       UnrankedSearchContext rankingContext,
+                                       UnrankedSearchContext searchContext,
                                        int serviceNode)
     {
         this.currentIndex = currentIndex;
@@ -52,10 +60,11 @@ public class IndexUnrankedQueryExecution {
         this.nodeName = Integer.toString(serviceNode);
         this.rankingService = rankingService;
 
-        budget = rankingContext.budget;
-        limitTotal = rankingContext.limitTotal;
+        this.lastId = searchContext.afterCombinedDocId;
+        budget = searchContext.budget;
+        limitTotal = searchContext.limitTotal;
 
-        queries = currentIndex.createUnrankedQueries(rankingContext);
+        queries = currentIndex.createUnrankedQueries(searchContext);
     }
 
     public List<RpcDecoratedResultItem> run() throws InterruptedException, SQLException {
@@ -93,6 +102,8 @@ public class IndexUnrankedQueryExecution {
                         buffer.rejectAndAdvance(); // cheaper than retain fwiw
                     }
                 }
+
+                finished = !buffer.hasMore() && !query.hasMore();
             }
         }
         finally {
@@ -100,6 +111,10 @@ public class IndexUnrankedQueryExecution {
         }
 
         results.sort(Comparator.naturalOrder());
+
+        if (!results.isEmpty()) {
+            lastId = results.getLast().combinedDocumentId;
+        }
 
         Map<Long, DocdbUrlDetail> detailsById = documentDbReader.getUrlDetails(new LongArrayList(seenDocIds));
         ResultConverter converter = new ResultConverter();

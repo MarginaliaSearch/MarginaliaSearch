@@ -16,6 +16,7 @@ import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.ProcessedQuery;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.functions.searchquery.searchfilter.SearchFilterStore;
+import nu.marginalia.index.UnrankedCursor;
 import nu.marginalia.index.api.IndexClient;
 import nu.marginalia.nsfw.domain.NsfwDomainFilter;
 import nu.marginalia.functions.searchquery.searchfilter.SearchFilterCache;
@@ -187,6 +188,65 @@ public class QueryGRPCService
         } catch (Exception e) {
             logger.error("Exception", e);
             responseObserver.onError(Status.INTERNAL.withCause(e).asRuntimeException());
+        }
+    }
+
+    @Override
+    public void unrankedQuery(RpcQsUnrankedQuery request, StreamObserver<RpcQsUnrankedResponse> responseObserver) {
+        if (Context.current().isCancelled()) {
+            responseObserver.onError(Status.CANCELLED.asRuntimeException());
+            return;
+        }
+
+        if (!indexClient.hasAvailableCapacity()) {
+            wmsa_qs_queries_shed.inc();
+            responseObserver.onError(Status.RESOURCE_EXHAUSTED
+                    .withDescription("Too many concurrent queries in flight")
+                    .asRuntimeException());
+            return;
+        }
+
+
+        RpcIndexUnrankedQuery unrankedQueryPrototype = RpcIndexUnrankedQuery.newBuilder()
+                .addAllTermsExcluded(request.getTermsExcludedList())
+                .addAllTermsRequired(request.getTermsRequiredList())
+                .addAllRequiredDomainIds(request.getRequiredDomainIdsList())
+                .addAllExcludedDomainIds(request.getExcludedDomainIdsList())
+                .setQueryLimits(request.getQueryLimits())
+                .setLangIsoCode(request.getLangIsoCode())
+                .build();
+
+        UnrankedCursor cursor;
+
+        try {
+            cursor = UnrankedCursor.parse(request.getEncodedCursor());
+        } catch (NumberFormatException e) {
+            responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("Invalid cursor").asRuntimeException());
+            return;
+        }
+
+        if (cursor instanceof UnrankedCursor.Terminal) {
+            responseObserver.onNext(RpcQsUnrankedResponse.newBuilder().setEncodedCursor(request.getEncodedCursor()).build());
+            responseObserver.onCompleted();
+            return;
+        }
+
+        try {
+            var response = indexClient.executeQueries(unrankedQueryPrototype, cursor);
+
+            responseObserver.onNext(RpcQsUnrankedResponse.newBuilder()
+                    .setEncodedCursor(response.cursor().encode())
+                    .addAllResults(response.results())
+                    .build());
+
+            responseObserver.onCompleted();
+        }
+        catch (StatusRuntimeException ex) {
+            responseObserver.onError(ex);
+        }
+        catch (Exception ex) {
+            logger.error("Exception", ex);
+            responseObserver.onError(Status.INTERNAL.withCause(ex).asRuntimeException());
         }
     }
 
