@@ -17,6 +17,15 @@ import java.util.Map;
 
 public class QueryProtobufCodec {
 
+    public static UnrankedQueryResponse convertQueryResponse(RpcQsUnrankedResponse rsp) {
+        var results = new ArrayList<DecoratedSearchResultItem>(rsp.getResultsCount());
+
+        for (int i = 0; i < rsp.getResultsCount(); i++) {
+            results.add(convertDecoratedResult(rsp.getResults(i)));
+        }
+
+        return new UnrankedQueryResponse(results, rsp.getEncodedCursor());
+    }
 
     public static QueryResponse convertQueryResponse(RpcQsResponse rsp) {
         var results = new ArrayList<DecoratedSearchResultItem>(rsp.getResultsCount());

@@ -245,10 +245,7 @@ public class MockedSearchResults {
                                 )
                         )
                 ),
-                List.of(
-                        new ResultsPage(1, true, "#"),
-                        new ResultsPage(2, false, "#")
-                        )
+                "CUR"
         );
     }
 
@@ -262,10 +259,7 @@ public class MockedSearchResults {
                         mockUrlDetails("https://www.example.com/", "dolor sit"),
                         mockUrlDetails("https://www.example.com/", "amet quia")
                 ),
-                List.of(
-                        new ResultsPage(1, true, "#"),
-                        new ResultsPage(2, false, "#")
-                )
+                "CUR"
         );
     }
 

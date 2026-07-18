@@ -6,6 +6,7 @@ import io.grpc.ManagedChannel;
 import io.prometheus.metrics.core.metrics.Summary;
 import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.QueryResponse;
+import nu.marginalia.api.searchquery.model.query.UnrankedQueryResponse;
 import nu.marginalia.service.client.GrpcChannelPoolFactoryIf;
 import nu.marginalia.service.client.GrpcSingleNodeChannelPool;
 import nu.marginalia.service.discovery.property.ServiceKey;
@@ -15,8 +16,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.CheckReturnValue;
+import javax.annotation.Nullable;
 import java.time.Duration;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.*;
 
 @Singleton
@@ -29,7 +32,10 @@ public class QueryClient  {
             .name("wmsa_qs_api_search_time")
             .help("query service search time")
             .register();
-
+    private static final Summary wmsa_qs_api_search_unranked_time = Summary.builder()
+            .name("wmsa_qs_api_search_unranked_time")
+            .help("query service unranked search time")
+            .register();
     private final GrpcSingleNodeChannelPool<QueryApiGrpc.QueryApiBlockingStub> queryApiPool;
 
     @Inject
@@ -49,6 +55,28 @@ public class QueryClient  {
                 throw new RuntimeException(e);
             }
         });
+    }
+
+    public UnrankedQueryResponse unrankedSearch(List<String> terms,
+                                                String languageIsoCode,
+                                                RpcQueryLimits limits,
+                                                @Nullable String cursorEncoded) {
+        RpcQsUnrankedQuery.Builder queryBuilder = RpcQsUnrankedQuery.newBuilder();
+
+        queryBuilder.setLangIsoCode(languageIsoCode);
+        queryBuilder.addAllTermsRequired(terms);
+        queryBuilder.setQueryLimits(limits);
+        queryBuilder.setEncodedCursor(Objects.requireNonNullElse(cursorEncoded, ""));
+
+        try (var _ = wmsa_qs_api_search_unranked_time.startTimer()) {
+            RpcQsUnrankedResponse rsp = queryApiPool.call(
+                    channel -> QueryApiGrpc.newBlockingStub(channel)
+                            .withDeadlineAfter(Duration.ofMillis(limits.getTimeoutMs() * 2)),
+                    QueryApiGrpc.QueryApiBlockingStub::unrankedQuery,
+                    queryBuilder.build());
+
+            return QueryProtobufCodec.convertQueryResponse(rsp);
+        }
     }
 
     @CheckReturnValue
