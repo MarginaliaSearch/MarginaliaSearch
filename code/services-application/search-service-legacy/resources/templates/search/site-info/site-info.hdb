@@ -34,6 +34,9 @@
         Showing search results with links to {{domain}}.
     </div>
     {{#each results}}{{>search/parts/search-result}}{{/each}}
+    {{#if hasNext}}
+        <p><a href="?view=links&cursor={{cursorNext}}&sst={{sst}}">More results</a></p>
+    {{/if}}
 {{/if}}
 
 {{#if view.docs}}
@@ -42,6 +45,9 @@
     </div>
 
     {{#each results}}{{>search/parts/search-result}}{{/each}}
+    {{#if hasNext}}
+        <p><a href="?view=docs&cursor={{cursorNext}}&sst={{sst}}">More results</a></p>
+    {{/if}}
 {{/if}}
 
 {{#if view.report}}

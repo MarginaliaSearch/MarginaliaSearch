@@ -80,14 +80,15 @@ public class SearchSiteInfoService {
 
 
         String view = request.queryParamOrDefault("view", "info");
+        String cursor = request.queryParamOrDefault("cursor", "");
 
         if (null == domainName || domainName.isBlank()) {
             return null;
         }
 
         var model = switch (view) {
-            case "links" -> listLinks(domainName, intercept.sst());
-            case "docs" -> listDocs(domainName, intercept.sst());
+            case "links" -> listLinks(domainName, intercept.sst(), cursor);
+            case "docs" -> listDocs(domainName, intercept.sst(), cursor);
             case "info" -> listInfo(domainName, intercept.sst());
             case "report" -> reportSite(domainName, intercept.sst());
             default -> listInfo(domainName, intercept.sst());
@@ -138,11 +139,13 @@ public class SearchSiteInfoService {
     }
 
 
-    private Backlinks listLinks(String domainName, String sst) throws TimeoutException {
+    private Backlinks listLinks(String domainName, String sst, String cursor) throws TimeoutException {
+        var results = searchOperator.doBacklinkSearch(domainName, cursor);
         return new Backlinks(domainName,
                 sst,
                 domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),
-                searchOperator.doBacklinkSearch(domainName));
+                results.results,
+                results.cursor);
     }
 
     private SiteInfoWithContext listInfo(String domainName, String sst) throws TimeoutException {
@@ -177,7 +180,7 @@ public class SearchSiteInfoService {
             feedItemsFuture = feedsClient.getFeed(domainId);
         }
 
-        List<UrlDetails> sampleResults = searchOperator.doSiteSearch(domainName, domainId,5);
+        List<UrlDetails> sampleResults = searchOperator.doSiteSearch(domainName, 5, "").results;
         if (!sampleResults.isEmpty()) {
             url = sampleResults.getFirst().url.withPathAndParam("/", null).toString();
         }
@@ -257,38 +260,53 @@ public class SearchSiteInfoService {
                     .build();
     }
 
-    private Docs listDocs(String domainName, String sst) throws TimeoutException {
-        int domainId = domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1);
+    private Docs listDocs(String domainName, String sst, String cursor) throws TimeoutException {
+        var results = searchOperator.doSiteSearch(domainName, 100, cursor);
         return new Docs(domainName,
                 sst,
                 domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),
-                searchOperator.doSiteSearch(domainName, domainId, 100));
+                results.results,
+                results.cursor);
     }
 
     public record Docs(Map<String, Boolean> view,
                        String domain,
                        String sst,
                        long domainId,
-                       List<UrlDetails> results) {
-        public Docs(String domain, String sst, long domainId, List<UrlDetails> results) {
-            this(Map.of("docs", true), domain, sst, domainId, results);
+                       List<UrlDetails> results,
+                       String cursorNext) {
+        public Docs(String domain, String sst, long domainId, List<UrlDetails> results, String cursorNext) {
+            this(Map.of("docs", true), domain, sst, domainId, results, cursorNext);
         }
 
         public String focusDomain() { return domain; }
 
         public String query() { return "site:" + domain; }
 
+        public boolean hasNext() {
+            return !"FIN".equals(cursorNext) && !results.isEmpty();
+        }
+
         public boolean isKnown() {
             return domainId > 0;
         }
     }
 
-    public record Backlinks(Map<String, Boolean> view, String domain, String sst, long domainId, List<UrlDetails> results) {
-        public Backlinks(String domain, String sst, long domainId, List<UrlDetails> results) {
-            this(Map.of("links", true), domain, sst, domainId, results);
+    public record Backlinks(Map<String, Boolean> view,
+                            String domain,
+                            String sst,
+                            long domainId,
+                            List<UrlDetails> results,
+                            String cursorNext) {
+        public Backlinks(String domain, String sst, long domainId, List<UrlDetails> results, String cursorNext) {
+            this(Map.of("links", true), domain, sst, domainId, results, cursorNext);
         }
 
         public String query() { return "links:" + domain; }
+
+        public boolean hasNext() {
+            return !"FIN".equals(cursorNext) && !results.isEmpty();
+        }
 
         public boolean isKnown() {
             return domainId > 0;
