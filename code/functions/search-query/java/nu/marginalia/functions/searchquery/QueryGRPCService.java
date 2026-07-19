@@ -15,9 +15,11 @@ import nu.marginalia.api.searchquery.model.SearchFilterDefaults;
 import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.ProcessedQuery;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
+import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.functions.searchquery.searchfilter.SearchFilterStore;
 import nu.marginalia.index.UnrankedCursor;
 import nu.marginalia.index.api.IndexClient;
+import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.nsfw.domain.NsfwDomainFilter;
 import nu.marginalia.functions.searchquery.searchfilter.SearchFilterCache;
 import nu.marginalia.service.server.DiscoverableService;
@@ -26,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.ExecutionException;
 
 @Singleton
@@ -57,18 +60,21 @@ public class QueryGRPCService
     private final QueryFactory queryFactory;
     private final NsfwDomainFilter nsfwDomainFilter;
     private final IndexClient indexClient;
+    private final DbDomainQueries domainQueries;
     private final SearchFilterCache searchFilterCache;
 
     @Inject
     public QueryGRPCService(QueryFactory queryFactory,
                             NsfwDomainFilter nsfwDomainFilter,
                             IndexClient indexClient,
+                            DbDomainQueries domainQueries,
                             SearchFilterStore searchFilterStore,
                             SearchFilterCache searchFilterCache)
     {
         this.queryFactory = queryFactory;
         this.nsfwDomainFilter = nsfwDomainFilter;
         this.indexClient = indexClient;
+        this.domainQueries = domainQueries;
         this.searchFilterCache = searchFilterCache;
         searchFilterStore.loadDefaultConfigs();
     }
@@ -212,14 +218,34 @@ public class QueryGRPCService
 
 
 
-        RpcIndexUnrankedQuery unrankedQueryPrototype = RpcIndexUnrankedQuery.newBuilder()
+        RpcIndexUnrankedQuery.Builder unrankedQueryPrototype = RpcIndexUnrankedQuery.newBuilder()
                 .addAllTermsExcluded(request.getTermsExcludedList())
                 .addAllTermsRequired(request.getTermsRequiredList())
                 .addAllRequiredDomainIds(request.getRequiredDomainIdsList())
                 .addAllExcludedDomainIds(request.getExcludedDomainIdsList())
                 .setQueryLimits(request.getQueryLimits())
-                .setLangIsoCode(request.getLangIsoCode())
-                .build();
+                .setLangIsoCode(request.getLangIsoCode());
+
+
+        // Simplified version of site term logic from query factory
+        for (var term: request.getTermsRequiredList()) {
+            if (term.startsWith("site:*.")) {
+                unrankedQueryPrototype.addTermsRequired("site:" + term.substring("site:*.".length()));
+            }
+            else if (term.startsWith("site:")) {
+                String siteName = term.substring("site:".length());
+                OptionalInt domainId = domainQueries.tryGetDomainId(new EdgeDomain(siteName));
+                if (domainId.isPresent()) {
+                    unrankedQueryPrototype.addRequiredDomainIds(domainId.getAsInt());
+                }
+
+                // Still add the term regardless, so we have at least one keyword to search for
+                unrankedQueryPrototype.addTermsRequired(term);
+            }
+            else {
+                unrankedQueryPrototype.addTermsRequired(term);
+            }
+        }
 
         UnrankedCursor cursor;
 
@@ -239,7 +265,7 @@ public class QueryGRPCService
         try {
             var response = wmsa_qs_query_unranked_time_grpc
                     .labelValues(Integer.toString(request.getQueryLimits().getTimeoutMs()), Integer.toString(request.getQueryLimits().getResultsTotal()))
-                    .time(() -> indexClient.executeQueries(unrankedQueryPrototype, cursor));
+                    .time(() -> indexClient.executeQueries(unrankedQueryPrototype.build(), cursor));
 
             responseObserver.onNext(RpcQsUnrankedResponse.newBuilder()
                     .setEncodedCursor(response.cursor().encode())
