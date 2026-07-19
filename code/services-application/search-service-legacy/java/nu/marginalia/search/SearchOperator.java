@@ -109,7 +109,7 @@ public class SearchOperator {
                 List.of("links:"+domain),
                 "en",
                 RpcQueryLimits.newBuilder()
-                        .setResultsTotal(100)
+                        .setResultsTotal(10)
                         .setTimeoutMs(100)
                         .build(),
                 cursor
