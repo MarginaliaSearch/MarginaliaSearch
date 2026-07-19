@@ -56,10 +56,16 @@ public class SearchCrosstalkService {
             parts[i] = parts[i].trim();
         }
 
-        var resAtoB = searchOperator.doLinkSearch(parts[0], parts[1]);
-        var resBtoA = searchOperator.doLinkSearch(parts[1], parts[0]);
+        String cursorA = request.queryParamOrDefault("cursorA", "");
+        String cursorB = request.queryParamOrDefault("cursorB", "");
 
-        var model = new CrosstalkResult(intercept.sst(), parts[0], parts[1], resAtoB, resBtoA);
+        var resAtoB = searchOperator.doLinkSearch(parts[0], parts[1], cursorA);
+        var resBtoA = searchOperator.doLinkSearch(parts[1], parts[0], cursorB);
+
+        var model = new CrosstalkResult(intercept.sst(),
+                parts[0], parts[1],
+                resAtoB.results, resBtoA.results,
+                resAtoB.cursor, resBtoA.cursor);
 
         return renderer.render(model);
     }
@@ -70,7 +76,9 @@ public class SearchCrosstalkService {
                                    String domainA,
                                    String domainB,
                                    List<UrlDetails> forward,
-                                   List<UrlDetails> backward)
+                                   List<UrlDetails> backward,
+                                   String cursorNextA,
+                                   String cursorNextB)
     {
 
         public boolean isFocusDomain() {
@@ -78,6 +86,10 @@ public class SearchCrosstalkService {
         }
         public boolean hasBoth() {
             return !forward.isEmpty() && !backward.isEmpty();
+        }
+        public boolean hasNext() {
+            return (!"FIN".equals(cursorNextA) && !forward.isEmpty())
+                || (!"FIN".equals(cursorNextB) && !backward.isEmpty());
         }
 
     }

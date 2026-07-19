@@ -5,9 +5,7 @@ import com.google.inject.Singleton;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.api.math.MathClient;
 import nu.marginalia.api.searchquery.QueryClient;
-import nu.marginalia.api.searchquery.QueryFilterSpec;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
-import nu.marginalia.api.searchquery.model.query.NsfwFilterTier;
 import nu.marginalia.api.searchquery.model.query.QueryResponse;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.bbpc.BrailleBlockPunchCards;
@@ -53,12 +51,6 @@ public class SearchOperator {
     private final WebsiteUrl websiteUrl;
     private final SearchUnitConversionService searchUnitConversionService;
     private final SearchQueryCountService searchVisitorCount;
-
-    static final RpcQueryLimits shallowLimit = RpcQueryLimits.newBuilder()
-            .setResultsTotal(100)
-            .setResultsByDomain(100)
-            .setTimeoutMs(100)
-            .build();
 
     static final RpcQueryLimits defaultLimits = RpcQueryLimits.newBuilder()
             .setResultsTotal(100)
@@ -122,17 +114,23 @@ public class SearchOperator {
         return new UnrankedSearchResults(details, rs.encodedCursor());
     }
 
-    public List<UrlDetails> doLinkSearch(String source, String dest) throws TimeoutException {
-        var queryResponse = queryClient.search(
-                new QueryFilterSpec.NoFilter(),
-                "site:" + source + " links:" + dest,
+    public UnrankedSearchResults doLinkSearch(String source, String dest, String cursor) throws TimeoutException {
+
+        var rs = queryClient.unrankedSearch(
+                List.of("site:"+source, "links:"+dest),
                 "en",
-                NsfwFilterTier.DANGER,
-                shallowLimit,
-                1
+                RpcQueryLimits.newBuilder()
+                        .setResultsTotal(100)
+                        .setTimeoutMs(100)
+                        .build(),
+                cursor
         );
 
-        return getResultsFromQuery(queryResponse);
+        List<UrlDetails> details = rs.results().stream()
+                .map(SearchOperator::createDetails)
+                .toList();
+
+        return new UnrankedSearchResults(details, rs.encodedCursor());
     }
 
     public DecoratedSearchResults doSearch(SearchParameters userParams) throws InterruptedException, TimeoutException {

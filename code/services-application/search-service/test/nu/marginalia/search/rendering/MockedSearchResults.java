@@ -303,10 +303,13 @@ public class MockedSearchResults {
 
     public static Object mockCrosstalkModel() throws URISyntaxException {
         return new SearchCrosstalkService.CrosstalkResult(
+                "SST",
                 "www.example.com",
                 "other.example.com",
                 List.of(mockUrlDetails("https://www.example.com/some-incredibly-long-address-that-goes-on-and-on", "One document")),
-                List.of(mockUrlDetails("https://other.example.com/", "Other document")));
+                List.of(mockUrlDetails("https://other.example.com/", "Other document")),
+                "CUR",
+                "FIN");
     }
 
     public static Object mockAvailabilityData() {

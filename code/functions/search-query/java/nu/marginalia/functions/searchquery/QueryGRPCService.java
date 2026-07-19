@@ -220,7 +220,6 @@ public class QueryGRPCService
 
         RpcIndexUnrankedQuery.Builder unrankedQueryPrototype = RpcIndexUnrankedQuery.newBuilder()
                 .addAllTermsExcluded(request.getTermsExcludedList())
-                .addAllTermsRequired(request.getTermsRequiredList())
                 .addAllRequiredDomainIds(request.getRequiredDomainIdsList())
                 .addAllExcludedDomainIds(request.getExcludedDomainIdsList())
                 .setQueryLimits(request.getQueryLimits())

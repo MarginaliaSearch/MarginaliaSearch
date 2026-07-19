@@ -33,6 +33,9 @@
     </div>
 </div>
 
+{{#if hasNext}}
+    <p><a href="?domains={{domainA}},{{domainB}}&cursorA={{cursorNextA}}&cursorB={{cursorNextB}}&sst={{sst}}">More results</a></p>
+{{/if}}
 
 {{>search/parts/search-footer}}
 </body>
