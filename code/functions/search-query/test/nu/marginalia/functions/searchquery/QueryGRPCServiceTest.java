@@ -74,6 +74,7 @@ class QueryGRPCServiceTest {
                 ),
                 new NsfwDomainFilter(dataSource, List.of(), List.of()),
                 null,
+                domainQueries,
                 filterStore,
                 new SearchFilterCache(filterStore, domainQueries)
         );
