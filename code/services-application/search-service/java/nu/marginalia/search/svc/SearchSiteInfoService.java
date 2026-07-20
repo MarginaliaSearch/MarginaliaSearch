@@ -455,7 +455,6 @@ public class SearchSiteInfoService {
         try {
             return future.get(250, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
-            logger.info("Failed to get domain data: {}", e.getMessage());
             return fallback.get();
         }
     }
