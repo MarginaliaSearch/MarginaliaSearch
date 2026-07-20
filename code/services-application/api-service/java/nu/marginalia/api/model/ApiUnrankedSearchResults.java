@@ -17,6 +17,7 @@ public class ApiUnrankedSearchResults {
         this.license = license;
         this.query = query;
         this.results = results;
+        this.cursorNext  = cursorNext;
     }
 
     public String getLicense() {
