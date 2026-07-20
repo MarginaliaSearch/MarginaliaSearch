@@ -90,7 +90,7 @@ public class SearchQueryService {
             Context context
     ) {
         SearchParameters parameters = new SearchParameters(websiteUrl,
-                query,
+                Objects.requireNonNullElse(query, ""),
                 SearchProfile.getSearchProfile(profile),
                 SearchJsParameter.parse(js),
                 SearchRecentParameter.parse(recent),
