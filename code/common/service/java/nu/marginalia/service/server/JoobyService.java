@@ -7,6 +7,7 @@ import io.grpc.StatusRuntimeException;
 import io.jooby.*;
 import io.jooby.exception.MethodNotAllowedException;
 import io.jooby.exception.MissingValueException;
+import io.jooby.exception.NotFoundException;
 import io.jooby.handler.AssetSource;
 import io.jooby.jte.JteModule;
 import io.jooby.netty.NettyServer;
@@ -182,6 +183,12 @@ public class JoobyService {
             ctx.setResponseCode(StatusCode.BAD_REQUEST);
             ctx.setResponseType(MediaType.TEXT);
             ctx.send("Bad request\n" + cause.getMessage());
+        });
+
+        jooby.error(NotFoundException.class, (ctx, cause, code) -> {
+            ctx.setResponseCode(StatusCode.NOT_FOUND);
+            ctx.setResponseType(MediaType.TEXT);
+            ctx.send("Not found");
         });
 
         jooby.error(StatusRuntimeException.class, (ctx, cause, code) -> {
