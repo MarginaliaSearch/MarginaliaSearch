@@ -3,6 +3,7 @@ package nu.marginalia.service.server;
 import gg.jte.ContentType;
 import gg.jte.TemplateEngine;
 import io.jooby.*;
+import io.jooby.exception.MethodNotAllowedException;
 import io.jooby.handler.AssetSource;
 import io.jooby.jte.JteModule;
 import io.jooby.netty.NettyServer;
@@ -20,6 +21,7 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
 import java.io.IOException;
+import java.nio.charset.MalformedInputException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -146,6 +148,7 @@ public class JoobyService {
                 config.externalAddress());
 
         configureStaticResources(jooby);
+        configureErrorHandling(jooby);
 
         jooby.get("/internal/ping", ctx -> "pong");
         jooby.get("/internal/started", this::isInitialized);
@@ -157,6 +160,20 @@ public class JoobyService {
 
         jooby.before(this::auditRequestIn);
         jooby.after(this::auditRequestOut);
+    }
+
+    public static void configureErrorHandling(Jooby jooby) {
+        jooby.error(MalformedInputException.class, (ctx, cause, code) -> {
+            ctx.setResponseCode(StatusCode.BAD_REQUEST);
+            ctx.setResponseType(MediaType.TEXT);
+            ctx.send("Bad request");
+        });
+
+        jooby.error(MethodNotAllowedException.class, (ctx, cause, code) -> {
+            ctx.setResponseCode(StatusCode.METHOD_NOT_ALLOWED);
+            ctx.setResponseType(MediaType.TEXT);
+            ctx.send("Method not allowed");
+        });
     }
 
     /** Set up serving of jte templates and static resources.  In docker, the jib image build
@@ -217,7 +234,6 @@ public class JoobyService {
         }
 
         if (failure != null) {
-            logger.error("Request failed " + ctx.getMethod() + " " + ctx.getRequestURL(), failure);
             request_counter_err.labelValues(serviceName, Integer.toString(node)).inc();
         }
     }
