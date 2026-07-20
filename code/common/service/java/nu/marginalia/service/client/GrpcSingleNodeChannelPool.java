@@ -56,8 +56,6 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
                         .factory()
             );
 
-    private final ScheduledFuture<?> healthCheckJob;
-
     public GrpcSingleNodeChannelPool(ServiceRegistryIf serviceRegistryIf,
                                      ServiceKey<? extends PartitionTraits.Unicast> serviceKey,
                                      Function<InstanceAddress, ManagedChannel> channelConstructor,
@@ -72,21 +70,6 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
 
         serviceRegistryIf.registerMonitor(this);
 
-        onChange();
-
-        healthCheckJob = connectionPoolScheduledJobExecutor.scheduleAtFixedRate(
-                this::checkConnectionHealth, 300, 30, TimeUnit.SECONDS);
-    }
-
-    private synchronized void checkConnectionHealth() {
-
-        for (var channel : channels.values()) {
-            if (!channel.hasRecentError()) {
-                return;
-            }
-        }
-
-        logger.warn(grpcMarker, "Connection pool {} is degraded, attempting to repair", serviceKey);
         onChange();
     }
 
@@ -119,7 +102,6 @@ public class GrpcSingleNodeChannelPool<STUB> extends ServiceChangeMonitor {
         for (var channel : channels.values()) {
             channel.closeHard();
         }
-        healthCheckJob.cancel(true);
         channels.clear();
     }
 
