@@ -6,6 +6,7 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.jooby.*;
 import io.jooby.exception.MethodNotAllowedException;
+import io.jooby.exception.MissingValueException;
 import io.jooby.handler.AssetSource;
 import io.jooby.jte.JteModule;
 import io.jooby.netty.NettyServer;
@@ -175,6 +176,12 @@ public class JoobyService {
             ctx.setResponseCode(StatusCode.METHOD_NOT_ALLOWED);
             ctx.setResponseType(MediaType.TEXT);
             ctx.send("Method not allowed");
+        });
+
+        jooby.error(MissingValueException.class, (ctx, cause, code) -> {
+            ctx.setResponseCode(StatusCode.BAD_REQUEST);
+            ctx.setResponseType(MediaType.TEXT);
+            ctx.send("Bad request\n" + cause.getMessage());
         });
 
         jooby.error(StatusRuntimeException.class, (ctx, cause, code) -> {
