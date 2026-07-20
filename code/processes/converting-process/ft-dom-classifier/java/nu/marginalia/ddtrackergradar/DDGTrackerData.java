@@ -16,14 +16,24 @@ import java.util.*;
  *  data itself CC-BY-NC-SA 4.0
  * */
 public class DDGTrackerData {
-    private final Map<String, DDGTDomain> topDomains = new HashMap<>();
-    private final Map<String, DDGTDomain> domains = new HashMap<>();
+    private volatile Map<String, DDGTDomain> topDomains = Map.of();
+    private volatile Map<String, DDGTDomain> domains = Map.of();
+    private volatile boolean isLoaded = false;
 
     private final Gson gson = GsonFactory.get();
 
     private static final Logger logger = LoggerFactory.getLogger(DDGTrackerData.class);
 
     public DDGTrackerData() {
+        Thread.ofPlatform().daemon().name("DDGTrackerData Loader").start(this::loadData);
+    }
+
+
+    public boolean isLoaded() {
+        return isLoaded;
+    }
+
+    private void loadData() {
 
         // Data is assumed to be in ${WMSA_HOME}/data/tracker-radar
         // ... do a shallow clone of the repo
@@ -35,8 +45,19 @@ public class DDGTrackerData {
             return;
         }
 
+        long startTime = System.currentTimeMillis();
+
+        Map<String, DDGTDomain> newTopDomains = new HashMap<>();
+        Map<String, DDGTDomain> newDomains = new HashMap<>();
+
         try (var sources = Files.list(dataDir.resolve("domains"))) {
-            sources.filter(Files::isDirectory).forEach(this::loadDomainDir);
+            sources.filter(Files::isDirectory).forEach(dir -> loadDomainDir(dir, newTopDomains, newDomains));
+
+            topDomains = newTopDomains;
+            domains = newDomains;
+            isLoaded = true;
+
+            logger.info("Loaded tracker-radar data in {} ms", System.currentTimeMillis() - startTime);
         }
         catch (IOException e) {
             logger.error("Failed to read tracker radar data dir", e);
@@ -53,18 +74,33 @@ public class DDGTrackerData {
 
     /** public for testing */
     public void loadDomainDir(Path dir) {
+        Map<String, DDGTDomain> newTopDomains = new HashMap<>(topDomains);
+        Map<String, DDGTDomain> newDomains = new HashMap<>(domains);
+
+        loadDomainDir(dir, newTopDomains, newDomains);
+
+        topDomains = newTopDomains;
+        domains = newDomains;
+        isLoaded = true;
+    }
+
+    private void loadDomainDir(Path dir,
+                               Map<String, DDGTDomain> topDomains,
+                               Map<String, DDGTDomain> domains) {
         try (var dirContent = Files.list(dir)) {
             dirContent
                     .filter(Files::isRegularFile)
                     .filter(path -> path.toString().endsWith(".json"))
-                    .forEach(this::loadDomainModel);
+                    .forEach(file -> loadDomainModel(file, topDomains, domains));
         }
         catch (IOException e) {
             logger.error("Error while loading DDGT tracker data", e);
         }
     }
 
-    void loadDomainModel(Path jsonFile) {
+    private void loadDomainModel(Path jsonFile,
+                                 Map<String, DDGTDomain> topDomains,
+                                 Map<String, DDGTDomain> domains) {
         try {
             var model = gson.fromJson(Files.readString(jsonFile), DDGTDomain.class);
 
