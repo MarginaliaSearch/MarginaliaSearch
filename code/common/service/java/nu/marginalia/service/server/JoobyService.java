@@ -2,6 +2,8 @@ package nu.marginalia.service.server;
 
 import gg.jte.ContentType;
 import gg.jte.TemplateEngine;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.jooby.*;
 import io.jooby.exception.MethodNotAllowedException;
 import io.jooby.handler.AssetSource;
@@ -173,6 +175,33 @@ public class JoobyService {
             ctx.setResponseCode(StatusCode.METHOD_NOT_ALLOWED);
             ctx.setResponseType(MediaType.TEXT);
             ctx.send("Method not allowed");
+        });
+
+        jooby.error(StatusRuntimeException.class, (ctx, cause, code) -> {
+            var sre = (StatusRuntimeException) cause;
+
+            switch (sre.getStatus().getCode()) {
+                case Status.Code.RESOURCE_EXHAUSTED -> {
+                    ctx.setResponseCode(StatusCode.FAILED_DEPENDENCY);
+                    ctx.setResponseType(MediaType.TEXT);
+                    ctx.send("Service overloaded");
+                }
+                case Status.Code.UNAVAILABLE -> {
+                    ctx.setResponseCode(StatusCode.SERVICE_UNAVAILABLE);
+                    ctx.setResponseType(MediaType.TEXT);
+                    ctx.send("Service unavailable");
+                }
+                case Status.Code.FAILED_PRECONDITION -> {
+                    ctx.setResponseCode(StatusCode.BAD_REQUEST);
+                    ctx.setResponseType(MediaType.TEXT);
+                    ctx.send("Bad request");
+                }
+                default -> {
+                    ctx.setResponseCode(StatusCode.SERVER_ERROR);
+                    ctx.setResponseType(MediaType.TEXT);
+                    ctx.send("Server error");
+                }
+            }
         });
     }
 
