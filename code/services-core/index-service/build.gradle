@@ -39,6 +39,8 @@ dependencies {
     implementation project(':code:index:live-capture:api')
 
     implementation project(':code:libraries:domain-lock')
+    implementation project(':code:libraries:message-queue')
+    implementation project(':code:processes:process-mq-api')
 
     implementation project(':code:index')
     implementation project(':code:functions:link-graph:partition')
