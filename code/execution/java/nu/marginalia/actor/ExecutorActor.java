@@ -40,6 +40,7 @@ public enum ExecutorActor {
     MONITOR_PROCESS_LIVENESS(NodeProfile.BATCH_CRAWL, NodeProfile.REALTIME, NodeProfile.MIXED, NodeProfile.SIDELOAD, NodeProfile.WIDE_DOMAINS),
     MONITOR_FILE_STORAGE(NodeProfile.BATCH_CRAWL, NodeProfile.REALTIME, NodeProfile.MIXED, NodeProfile.SIDELOAD, NodeProfile.WIDE_DOMAINS),
     PROC_INDEX_CONSTRUCTOR_SPAWNER(NodeProfile.BATCH_CRAWL, NodeProfile.REALTIME, NodeProfile.MIXED, NodeProfile.SIDELOAD, NodeProfile.WIDE_DOMAINS),
+    PROC_RANKING_CONSTRUCTOR_SPAWNER(NodeProfile.BATCH_CRAWL, NodeProfile.REALTIME, NodeProfile.MIXED, NodeProfile.SIDELOAD, NodeProfile.WIDE_DOMAINS),
 
     LIVE_CRAWL(NodeProfile.REALTIME),
     PROC_LIVE_CRAWL_SPAWNER(NodeProfile.REALTIME),

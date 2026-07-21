@@ -13,7 +13,6 @@ import nu.marginalia.WmsaHome;
 import nu.marginalia.api.domsample.DomSampleClient;
 import nu.marginalia.db.DomainTypes;
 import nu.marginalia.index.journal.IndexJournalSlopWriter;
-import nu.marginalia.index.searchset.DomainRankings;
 import nu.marginalia.index.searchset.SearchSetAny;
 import nu.marginalia.index.searchset.SearchSetsService;
 import nu.marginalia.language.config.LanguageConfigLocation;
@@ -96,7 +95,6 @@ public class IntegrationTestModule extends AbstractModule {
 
             SearchSetsService setsServiceMock = Mockito.mock(SearchSetsService.class);
             when(setsServiceMock.getSearchSetByName("NONE")).thenReturn(new SearchSetAny());
-            when(setsServiceMock.getDomainRankings()).thenReturn(new DomainRankings());
             bind(SearchSetsService.class).toInstance(setsServiceMock);
 
             DomainTypes domainTypes = Mockito.mock(DomainTypes.class);

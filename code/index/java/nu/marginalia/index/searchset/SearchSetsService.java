@@ -2,94 +2,35 @@ package nu.marginalia.index.searchset;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import gnu.trove.list.TIntList;
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import nu.marginalia.db.DomainRankingSetsService;
-import nu.marginalia.db.DomainTypes;
-import nu.marginalia.domainranking.PageRankDomainRanker;
-import nu.marginalia.domainranking.accumulator.RankingResultHashMapAccumulator;
-import nu.marginalia.domainranking.accumulator.RankingResultHashSetAccumulator;
-import nu.marginalia.domaingraph.GraphSource;
-import nu.marginalia.domaingraph.LinkGraphSource;
-import nu.marginalia.domaingraph.SimilarityGraphSource;
 import nu.marginalia.index.IndexFactory;
-import nu.marginalia.index.searchset.connectivity.ConnectivitySets;
-import nu.marginalia.index.searchset.connectivity.ConnectivityView;
-import nu.marginalia.service.control.ServiceEventLog;
-import nu.marginalia.service.module.ServiceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.sql.SQLException;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
+/** Query-side access to the ranking search sets.  The sets themselves are calculated by the
+ * ranking constructor process, this service only loads the persisted results from disk.
+ */
 @Singleton
 public class SearchSetsService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final DomainTypes domainTypes;
     private final IndexFactory indexFactory;
-    private final ServiceEventLog eventLog;
     private final DomainRankingSetsService domainRankingSetsService;
-    private final ConnectivitySets connectivitySets;
-    private final DbUpdateRanks dbUpdateRanks;
-    private final GraphSource similarityDomains;
-    private final GraphSource linksDomains;
 
     private final ConcurrentHashMap<String, SearchSet> rankingSets = new ConcurrentHashMap<>();
     // Below are binary indices that are used to constrain a search
     private final SearchSet anySet = new SearchSetAny();
-    private final int nodeId;
-
-    // The ranking value of the domains used in sorting the domains
-    private volatile DomainRankings domainRankings = new DomainRankings();
-
-    private static final String primaryRankingSet = "RANK";
 
     @Inject
-    public SearchSetsService(DomainTypes domainTypes,
-                             ServiceConfiguration serviceConfiguration,
-                             LinkGraphSource rankingDomains,
-                             SimilarityGraphSource similarityDomains,
-                             IndexFactory indexFactory,
-                             ServiceEventLog eventLog,
-                             DomainRankingSetsService domainRankingSetsService,
-                             ConnectivitySets connectivitySets,
-                             DbUpdateRanks dbUpdateRanks) throws IOException {
-        this.nodeId = serviceConfiguration.node();
-        this.domainTypes = domainTypes;
+    public SearchSetsService(IndexFactory indexFactory,
+                             DomainRankingSetsService domainRankingSetsService) throws IOException {
         this.indexFactory = indexFactory;
-        this.eventLog = eventLog;
         this.domainRankingSetsService = domainRankingSetsService;
-        this.connectivitySets = connectivitySets;
 
-        this.dbUpdateRanks = dbUpdateRanks;
-
-        if (similarityDomains.isAvailable()) {
-            this.similarityDomains = similarityDomains;
-            this.linksDomains = rankingDomains;
-        }
-        else {
-            // on test environments the cosine similarity graph may not be present
-            logger.info("Domain similarity is not present, falling back on link graph");
-            this.similarityDomains = rankingDomains;
-            this.linksDomains = rankingDomains;
-        }
-
-        for (DomainRankingSetsService.DomainRankingSet rankingSet : domainRankingSetsService.getAll()) {
-            rankingSets.put(rankingSet.name(),
-                    new RankingSearchSet(rankingSet.name(),
-                            rankingSet.fileName(indexFactory.getSearchSetsBase())
-                    )
-            );
-        }
-    }
-
-    public DomainRankings getDomainRankings() {
-        return domainRankings;
+        loadSets();
     }
 
     public SearchSet getSearchSetByName(String searchSetIdentifier) {
@@ -104,143 +45,21 @@ public class SearchSetsService {
         return Objects.requireNonNull(rankingSets.get(searchSetIdentifier), "Unknown search set");
     }
 
-    /** Recalculates the primary ranking set.  This gets baked into the identifiers in the index, effectively
-     * changing their sort order, so it's important to run this _before_ reconstructing the indices. */
-    public void recalculatePrimaryRank() {
-        try {
-            connectivitySets.recalculate();
+    /** Reload the search sets from disk, after the ranking constructor process has written
+     * new versions. */
+    public void reload() throws IOException {
+        loadSets();
 
-            domainRankingSetsService.get(primaryRankingSet).ifPresent(this::updateMainDomainRankings);
-
-            eventLog.logEvent("RANKING-SET-RECALCULATED", primaryRankingSet);
-        } catch (SQLException e) {
-            logger.warn("Failed to primary ranking set", e);
-        }
+        logger.info("Reloaded {} search sets", rankingSets.size());
     }
 
-    public void recalculateSecondary() {
-        for (var rankingSet : domainRankingSetsService.getAll()) {
-            if (primaryRankingSet.equals(rankingSet.name())) { // Skip the primary ranking set
-                continue;
-            }
-
-            try {
-                if (rankingSet.isSpecial()) {
-                    switch (rankingSet.name()) {
-                        case "BLOGS" -> recalculateSpecialSetSet(rankingSet, DomainTypes.Type.BLOG);
-                        case "SMALL" -> recalculateSpecialSetSet(rankingSet, DomainTypes.Type.SMALL);
-                        case "NONE" -> {} // No-op
-                    }
-                } else {
-                    recalculateNormal(rankingSet);
-                }
-            }
-            catch (Exception ex) {
-                logger.warn("Failed to recalculate ranking set {}", rankingSet.name(), ex);
-            }
-            eventLog.logEvent("RANKING-SET-RECALCULATED", rankingSet.name());
+    private void loadSets() throws IOException {
+        for (DomainRankingSetsService.DomainRankingSet rankingSet : domainRankingSetsService.getAll()) {
+            rankingSets.put(rankingSet.name(),
+                    new RankingSearchSet(rankingSet.name(),
+                            rankingSet.fileName(indexFactory.getSearchSetsBase())
+                    )
+            );
         }
-
-    }
-
-    private void recalculateNormal(DomainRankingSetsService.DomainRankingSet rankingSet) {
-        List<String> domains = List.of(rankingSet.domains());
-
-        GraphSource source;
-
-        // Similarity ranking does not behave well with an empty set of domains
-        if (domains.isEmpty()) source = linksDomains;
-        else source = similarityDomains;
-
-        var data = PageRankDomainRanker
-                .forDomainNames(source, domains)
-                .calculate(rankingSet.depth(), RankingResultHashSetAccumulator::new);
-
-        var set = new RankingSearchSet(rankingSet.name(), rankingSet.fileName(indexFactory.getSearchSetsBase()), data);
-        rankingSets.put(rankingSet.name(), set);
-
-        try {
-            set.write();
-        }
-        catch (IOException ex) {
-            logger.warn("Failed to write search set", ex);
-        }
-    }
-
-
-
-    private void recalculateSpecialSetSet(DomainRankingSetsService.DomainRankingSet rankingSet, DomainTypes.Type type) throws SQLException, IOException {
-        TIntList knownDomains = domainTypes.getKnownDomainsByType(type);
-
-        if (knownDomains.isEmpty()) {
-            // FIXME: We don't want to reload the entire list every time, but we do want to do it sometimes. Actor maybe?
-            domainTypes.reloadDomainsList(type);
-            knownDomains = domainTypes.getKnownDomainsByType(type);
-        }
-
-        synchronized (this) {
-            var specialSet = new RankingSearchSet(
-                    rankingSet.name(),
-                    rankingSet.fileName(indexFactory.getSearchSetsBase()),
-                    new IntOpenHashSet(knownDomains.toArray()));
-            rankingSets.put(rankingSet.name(), specialSet);
-            specialSet.write();
-        }
-    }
-
-    private void updateMainDomainRankings(DomainRankingSetsService.DomainRankingSet rankingSet) {
-
-        ConnectivityView connectivityView = connectivitySets.getView();
-
-        if (!connectivityView.isEmpty()) {
-            // If connectivity data is available, use it for ranking as well
-
-            var connectivityData = connectivityView.emulateRankData();
-            useMainDomainRankings(connectivityData);
-
-            if (nodeId == 1) {
-                // The EC_DOMAIN table has a field that reflects the rank, this needs to be set for search result ordering to
-                // make sense, but only do this on the primary node to avoid excessive db locks
-
-                var pageRankData = getMainDomainRankings(rankingSet);
-                dbUpdateRanks.execute(pageRankData);
-            }
-        }
-        else {
-            // Connectivity unavailable, use pagerank-style ranking
-
-            var pageRankData = getMainDomainRankings(rankingSet);
-            useMainDomainRankings(pageRankData);
-
-            if (nodeId == 1) {
-                // The EC_DOMAIN table has a field that reflects the rank, this needs to be set for search result ordering to
-                // make sense, but only do this on the primary node to avoid excessive db locks
-                dbUpdateRanks.execute(pageRankData);
-            }
-        }
-    }
-
-    private Int2IntOpenHashMap getMainDomainRankings(DomainRankingSetsService.DomainRankingSet rankingSet) {
-        List<String> domains = List.of(rankingSet.domains());
-
-        final GraphSource source;
-
-        if (domains.isEmpty()) {
-            // Similarity ranking does not behave well with an empty set of domains
-            source = linksDomains;
-        } else {
-            source = similarityDomains;
-        }
-
-        return PageRankDomainRanker
-                .forDomainNames(source, domains)
-                .calculate(rankingSet.depth(), () -> new RankingResultHashMapAccumulator(rankingSet.depth()));
-    }
-
-    private void useMainDomainRankings(Int2IntOpenHashMap data) {
-        synchronized (this) {
-            domainRankings = new DomainRankings(data);
-        }
-        domainRankings.save(indexFactory.getSearchSetsBase());
     }
 }
