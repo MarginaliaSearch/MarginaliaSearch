@@ -77,6 +77,8 @@ public class RankingsCalculator {
      * changing their sort order, so it's important to run this _before_ reconstructing the indices. */
     public void calculatePrimary() {
         try {
+            reloadDomainsLists();
+
             ConnectivityView connectivityView = connectivitySetsCalculator.recalculate();
 
             domainRankingSetsService.get(primaryRankingSet)
@@ -136,14 +138,21 @@ public class RankingsCalculator {
         }
     }
 
+    /** Refresh the special set domain lists from their configured sources.  A failed download
+     * leaves the previous list in place. */
+    private void reloadDomainsLists() {
+        for (var type : List.of(DomainTypes.Type.BLOG, DomainTypes.Type.SMALL)) {
+            try {
+                domainTypes.reloadDomainsList(type);
+            }
+            catch (IOException | SQLException ex) {
+                logger.warn("Failed to reload domains list for type {}", type, ex);
+            }
+        }
+    }
+
     private void recalculateSpecialSetSet(DomainRankingSetsService.DomainRankingSet rankingSet, DomainTypes.Type type) throws SQLException, IOException {
         TIntList knownDomains = domainTypes.getKnownDomainsByType(type);
-
-        if (knownDomains.isEmpty()) {
-            // FIXME: We don't want to reload the entire list every time, but we do want to do it sometimes. Actor maybe?
-            domainTypes.reloadDomainsList(type);
-            knownDomains = domainTypes.getKnownDomainsByType(type);
-        }
 
         var specialSet = new RankingSearchSet(
                 rankingSet.name(),

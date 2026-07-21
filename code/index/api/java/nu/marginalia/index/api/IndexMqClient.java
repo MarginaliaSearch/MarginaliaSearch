@@ -3,8 +3,12 @@ package nu.marginalia.index.api;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.outbox.MqOutbox;
+import nu.marginalia.mqapi.ProcessInboxNames;
+import nu.marginalia.mqapi.ranking.CreateRankingsRequest;
+import nu.marginalia.mqapi.ranking.RankingsName;
 import nu.marginalia.service.ServiceId;
 
 import java.util.UUID;
@@ -33,17 +37,9 @@ public class IndexMqClient {
 
     public long triggerRepartition(int node) throws Exception {
         return messageQueueFactory.sendSingleShotRequest(
-                ServiceId.Index.withNode(node),
-                IndexMqEndpoints.INDEX_REPARTITION,
-                null
-        );
-    }
-
-    public long triggerRerank(int node) throws Exception {
-        return messageQueueFactory.sendSingleShotRequest(
-                ServiceId.Index.withNode(node),
-                IndexMqEndpoints.INDEX_RERANK,
-                null
+                ProcessInboxNames.RANKING_CONSTRUCTOR_INBOX + ":" + node,
+                CreateRankingsRequest.class.getSimpleName(),
+                GsonFactory.get().toJson(new CreateRankingsRequest(RankingsName.SECONDARY))
         );
     }
 }

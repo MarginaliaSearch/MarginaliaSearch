@@ -2,15 +2,6 @@ package nu.marginalia.index;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.actor.task.ActorProcessWatcher;
-import nu.marginalia.index.searchset.SearchSetsService;
-import nu.marginalia.index.searchset.connectivity.ConnectivitySets;
-import nu.marginalia.mq.MqMessageState;
-import nu.marginalia.mq.outbox.MqOutbox;
-import nu.marginalia.mqapi.ranking.CreateRankingsRequest;
-import nu.marginalia.mqapi.ranking.RankingsName;
-import nu.marginalia.process.ProcessOutboxes;
-import nu.marginalia.process.ProcessSpawnerService;
 
 import javax.annotation.CheckReturnValue;
 import java.util.Optional;
@@ -22,60 +13,14 @@ public class IndexOpsService {
     private final ReentrantLock opsLock = new ReentrantLock();
 
     private final StatefulIndex index;
-    private final SearchSetsService searchSetService;
-    private final ConnectivitySets connectivitySets;
-    private final ActorProcessWatcher processWatcher;
-    private final MqOutbox rankingConstructorOutbox;
 
     @Inject
-    public IndexOpsService(StatefulIndex index,
-                           SearchSetsService searchSetService,
-                           ConnectivitySets connectivitySets,
-                           ActorProcessWatcher processWatcher,
-                           ProcessOutboxes processOutboxes) {
+    public IndexOpsService(StatefulIndex index) {
         this.index = index;
-        this.searchSetService = searchSetService;
-        this.connectivitySets = connectivitySets;
-        this.processWatcher = processWatcher;
-        this.rankingConstructorOutbox = processOutboxes.getRankingConstructorOutbox();
     }
 
     public boolean isBusy() {
         return opsLock.isLocked();
-    }
-
-    public boolean rerank() throws Exception {
-        return run(() -> {
-            constructRankings(RankingsName.PRIMARY);
-
-            // The primary rank calculation also refreshes the connectivity map,
-            // which the index service holds in memory
-            connectivitySets.reload();
-
-            return true;
-        }).isPresent();
-    }
-
-    public boolean repartition() throws Exception {
-        return run(() -> {
-            constructRankings(RankingsName.SECONDARY);
-
-            searchSetService.reload();
-
-            return true;
-        }).isPresent();
-    }
-
-    private void constructRankings(RankingsName rankingsName) throws Exception {
-        long msgId = rankingConstructorOutbox.sendAsync(new CreateRankingsRequest(rankingsName));
-
-        var rsp = processWatcher.waitResponse(rankingConstructorOutbox,
-                ProcessSpawnerService.ProcessId.RANKING_CONSTRUCTOR,
-                msgId);
-
-        if (rsp.state() != MqMessageState.OK) {
-            throw new IllegalStateException("Ranking constructor process failed with message state " + rsp.state());
-        }
     }
 
     /** @return true if the index was switched

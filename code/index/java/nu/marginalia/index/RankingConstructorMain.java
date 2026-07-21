@@ -2,6 +2,7 @@ package nu.marginalia.index;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
+import nu.marginalia.index.api.IndexMqEndpoints;
 import nu.marginalia.index.searchset.construction.RankingsCalculator;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.mq.MessageQueueFactory;
@@ -11,6 +12,7 @@ import nu.marginalia.process.ProcessConfiguration;
 import nu.marginalia.process.ProcessConfigurationModule;
 import nu.marginalia.process.ProcessMainClass;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
+import nu.marginalia.service.ServiceId;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.service.module.ServiceDiscoveryModule;
 import org.slf4j.Logger;
@@ -21,6 +23,8 @@ import java.util.concurrent.TimeUnit;
 public class RankingConstructorMain extends ProcessMainClass {
     private final ProcessHeartbeatImpl heartbeat;
     private final RankingsCalculator rankingsCalculator;
+    private final MessageQueueFactory messageQueueFactory;
+    private final int node;
 
     private static final Logger logger = LoggerFactory.getLogger(RankingConstructorMain.class);
 
@@ -63,15 +67,23 @@ public class RankingConstructorMain extends ProcessMainClass {
 
         this.heartbeat = heartbeat;
         this.rankingsCalculator = rankingsCalculator;
+        this.messageQueueFactory = messageQueueFactory;
+        this.node = processConfiguration.node();
     }
 
-    private void run(CreateRankingsRequest instructions) {
+    private void run(CreateRankingsRequest instructions) throws Exception {
         heartbeat.start();
 
         switch (instructions.rankingsName()) {
             case PRIMARY -> rankingsCalculator.calculatePrimary();
             case SECONDARY -> rankingsCalculator.calculateSecondary();
         }
+
+        // Nudge the index service on this node to pick up the new rankings from disk
+        messageQueueFactory.sendSingleShotRequest(
+                ServiceId.Index.withNode(node),
+                IndexMqEndpoints.INDEX_RELOAD_SEARCH_SETS,
+                null);
 
         heartbeat.shutDown();
     }

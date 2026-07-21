@@ -16,6 +16,8 @@ import nu.marginalia.mqapi.converting.ConvertRequest;
 import nu.marginalia.mqapi.index.CreateIndexRequest;
 import nu.marginalia.mqapi.index.IndexName;
 import nu.marginalia.mqapi.loading.LoadRequest;
+import nu.marginalia.mqapi.ranking.CreateRankingsRequest;
+import nu.marginalia.mqapi.ranking.RankingsName;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.process.ProcessOutboxes;
 import nu.marginalia.process.ProcessSpawnerService;
@@ -44,6 +46,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
     private final MqOutbox mqConverterOutbox;
     private final MqOutbox mqLoaderOutbox;
     private final MqOutbox mqIndexConstructorOutbox;
+    private final MqOutbox mqRankingConstructorOutbox;
     private final MqOutbox indexOutbox;
     private final FileStorageService storageService;
     private final BackupService backupService;
@@ -158,11 +161,12 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
                 yield new Rerank();
             }
             case Rerank(long id) when id < 0 ->
-                    new Rerank(indexOutbox.sendAsync(IndexMqEndpoints.INDEX_RERANK, ""));
+                    new Rerank(mqRankingConstructorOutbox.sendAsync(new CreateRankingsRequest(RankingsName.PRIMARY)));
             case Rerank(long id) -> {
-                var rsp = indexOutbox.waitResponse(id);
+                var rsp = processWatcher.waitResponse(mqRankingConstructorOutbox, ProcessSpawnerService.ProcessId.RANKING_CONSTRUCTOR, id);
+
                 if (rsp.state() != MqMessageState.OK) {
-                    yield new Error("Repartition failed");
+                    yield new Error("Rerank failed");
                 }
 
                 yield new ReindexFwd();
@@ -208,7 +212,12 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
                     Thread.sleep(Duration.between(now, end));
                 }
 
-                indexOutbox.sendNotice(IndexMqEndpoints.INDEX_REPARTITION, when);
+                long id = mqRankingConstructorOutbox.sendAsync(new CreateRankingsRequest(RankingsName.SECONDARY));
+                var rsp = processWatcher.waitResponse(mqRankingConstructorOutbox, ProcessSpawnerService.ProcessId.RANKING_CONSTRUCTOR, id);
+
+                if (rsp.state() != MqMessageState.OK) {
+                    yield new Error("Repartition failed");
+                }
 
                 yield new End();
             }
@@ -253,6 +262,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
         this.mqConverterOutbox = processOutboxes.getConverterOutbox();
         this.mqLoaderOutbox = processOutboxes.getLoaderOutbox();
         this.mqIndexConstructorOutbox = processOutboxes.getIndexConstructorOutbox();
+        this.mqRankingConstructorOutbox = processOutboxes.getRankingConstructorOutbox();
         this.storageService = storageService;
         this.backupService = backupService;
         this.nodeConfigurationService = nodeConfigurationService;
