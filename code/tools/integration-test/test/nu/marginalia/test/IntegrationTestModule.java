@@ -13,7 +13,7 @@ import nu.marginalia.WmsaHome;
 import nu.marginalia.api.domsample.DomSampleClient;
 import nu.marginalia.db.DomainTypes;
 import nu.marginalia.index.journal.IndexJournalSlopWriter;
-import nu.marginalia.ranking.data.SearchSetAny;
+import nu.marginalia.ranking.set.SearchSetAny;
 import nu.marginalia.index.searchset.SearchSetsService;
 import nu.marginalia.language.config.LanguageConfigLocation;
 import nu.marginalia.language.config.LanguageConfiguration;

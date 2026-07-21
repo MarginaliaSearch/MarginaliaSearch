@@ -1,4 +1,4 @@
-package nu.marginalia.domainranking;
+package nu.marginalia.ranking.domains;
 
 
 import com.zaxxer.hikari.HikariConfig;

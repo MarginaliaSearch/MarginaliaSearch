@@ -3,7 +3,7 @@ package nu.marginalia.index.forward;
 import nu.marginalia.index.forward.construction.ForwardIndexConverter;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.journal.IndexJournalSlopWriter;
-import nu.marginalia.ranking.data.DomainRankings;
+import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.processed.SlopDocumentRecord;

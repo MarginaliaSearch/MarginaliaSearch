@@ -1,4 +1,4 @@
-package nu.marginalia.ranking.data;
+package nu.marginalia.ranking.connectivity;
 
 import it.unimi.dsi.fastutil.ints.Int2ByteOpenHashMap;
 

@@ -1,28 +1,15 @@
 package nu.marginalia.index.model;
 
-import it.unimi.dsi.fastutil.floats.FloatArrayList;
-import it.unimi.dsi.fastutil.floats.FloatList;
 import it.unimi.dsi.fastutil.ints.*;
 import it.unimi.dsi.fastutil.longs.*;
 import nu.marginalia.api.searchquery.*;
-import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
-import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
-import nu.marginalia.api.searchquery.model.compiled.CompiledQueryParser;
-import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
-import nu.marginalia.api.searchquery.model.query.QueryStrategy;
-import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
-import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
 import nu.marginalia.index.CombinedIndexReader;
 import nu.marginalia.index.reverse.IndexLanguageContext;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
-import nu.marginalia.ranking.data.SearchSet;
-import nu.marginalia.ranking.data.ConnectivityView;
 import nu.marginalia.language.keywords.KeywordHasher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.List;
 
 import static nu.marginalia.api.searchquery.IndexProtobufCodec.convertSpecLimit;

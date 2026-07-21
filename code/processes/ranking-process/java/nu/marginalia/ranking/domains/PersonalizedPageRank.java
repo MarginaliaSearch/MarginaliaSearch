@@ -1,4 +1,4 @@
-package nu.marginalia.domainranking;
+package nu.marginalia.ranking.domains;
 
 import it.unimi.dsi.fastutil.ints.IntCollection;
 import nu.marginalia.domaingraph.DomainGraph;

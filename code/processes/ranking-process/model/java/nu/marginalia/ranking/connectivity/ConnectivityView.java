@@ -1,9 +1,11 @@
-package nu.marginalia.ranking.data;
+package nu.marginalia.ranking.connectivity;
 
 import it.unimi.dsi.fastutil.ints.Int2ByteOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import org.jetbrains.annotations.Nullable;
 
+/** Read only view for how connected a domain is to a set of known human websites.
+ */
 public class ConnectivityView {
     @Nullable
     private final Int2ByteOpenHashMap connectivity;

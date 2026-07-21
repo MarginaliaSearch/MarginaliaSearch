@@ -4,9 +4,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.db.DomainRankingSetsService;
 import nu.marginalia.index.IndexFactory;
-import nu.marginalia.ranking.data.RankingSearchSet;
-import nu.marginalia.ranking.data.SearchSet;
-import nu.marginalia.ranking.data.SearchSetAny;
+import nu.marginalia.ranking.set.RankingSearchSet;
+import nu.marginalia.ranking.set.SearchSet;
+import nu.marginalia.ranking.set.SearchSetAny;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

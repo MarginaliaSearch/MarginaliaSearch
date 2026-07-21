@@ -4,7 +4,7 @@ import com.google.inject.AbstractModule;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.journal.IndexJournalSlopWriter;
-import nu.marginalia.ranking.data.SearchSetAny;
+import nu.marginalia.ranking.set.SearchSetAny;
 import nu.marginalia.index.searchset.SearchSetsService;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
@@ -20,7 +20,6 @@ import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageBase;
 import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.test.TestUtil;
-import org.apache.curator.framework.CuratorFramework;
 import org.mockito.Mockito;
 
 import java.io.IOException;

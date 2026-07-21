@@ -1,10 +1,8 @@
-package nu.marginalia.domainranking;
+package nu.marginalia.ranking.domains;
 
 import it.unimi.dsi.fastutil.ints.*;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import it.unimi.dsi.fastutil.longs.LongSet;
 import nu.marginalia.array.LongArrayFactory;
-import nu.marginalia.ranking.data.RankingSearchSet;
+import nu.marginalia.ranking.set.RankingSearchSet;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
