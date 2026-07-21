@@ -180,6 +180,7 @@ public class IndexGrpcService
                             .build());
 
                     responseObserver.onCompleted();
+                    return;
                 }
 
                 CombinedIndexReader index = indexReference.get();
