@@ -28,6 +28,7 @@ public interface ProcessSpawnerService {
         CONVERTER(ConverterMain.class, "converter"),
         LOADER(LoaderMain.class, "loader"),
         INDEX_CONSTRUCTOR("nu.marginalia.index.IndexConstructorMain", "index-constructor"),
+        RANKING_CONSTRUCTOR("nu.marginalia.index.RankingConstructorMain", "ranking-constructor"),
         NDP(NdpMain.class, "ndp"),
         EXPORT_TASKS(ExportTasksMain.class, "export-tasks"),
         ;
@@ -55,6 +56,7 @@ public interface ProcessSpawnerService {
                 case PING -> "PING_PROCESS_OPTS";
                 case NDP -> "NDP_PROCESS_OPTS";
                 case INDEX_CONSTRUCTOR -> "INDEX_CONSTRUCTION_PROCESS_OPTS";
+                case RANKING_CONSTRUCTOR -> "RANKING_CONSTRUCTION_PROCESS_OPTS";
                 case EXPORT_TASKS -> "EXPORT_TASKS_PROCESS_OPTS";
             };
             String value = System.getenv(variable);

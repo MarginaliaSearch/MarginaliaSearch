@@ -58,6 +58,7 @@ public class ExecutorActorControlService {
                                        ProcessLivenessMonitorActor processMonitorFSM,
                                        FileStorageMonitorActor fileStorageMonitorActor,
                                        IndexConstructorMonitorActor indexConstructorMonitorActor,
+                                       RankingConstructorMonitorActor rankingConstructorMonitorActor,
                                        TriggerAdjacencyCalculationActor triggerAdjacencyCalculationActor,
                                        ExportDataActor exportDataActor,
                                        ExportDomSampleDataActor exportDomSampleDataActor,
@@ -103,6 +104,7 @@ public class ExecutorActorControlService {
         register(ExecutorActor.CONVERT_AND_LOAD, convertAndLoadActor);
 
         register(ExecutorActor.PROC_INDEX_CONSTRUCTOR_SPAWNER, indexConstructorMonitorActor);
+        register(ExecutorActor.PROC_RANKING_CONSTRUCTOR_SPAWNER, rankingConstructorMonitorActor);
         register(ExecutorActor.PROC_CONVERTER_SPAWNER, converterMonitorFSM);
         register(ExecutorActor.PROC_LOADER_SPAWNER, loaderMonitor);
         register(ExecutorActor.PROC_CRAWLER_SPAWNER, crawlerMonitorActor);

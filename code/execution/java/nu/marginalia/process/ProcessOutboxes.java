@@ -13,6 +13,7 @@ public class ProcessOutboxes {
     private final MqOutbox loaderOutbox;
     private final MqOutbox crawlerOutbox;
     private final MqOutbox indexConstructorOutbox;
+    private final MqOutbox rankingConstructorOutbox;
     private final MqOutbox liveCrawlerOutbox;
     private final MqOutbox exportTasksOutbox;
     private final MqOutbox ndpOutbox;
@@ -42,6 +43,14 @@ public class ProcessOutboxes {
         );
         indexConstructorOutbox = new MqOutbox(persistence,
                 ProcessInboxNames.INDEX_CONSTRUCTOR_INBOX,
+                params.configuration.node(),
+                params.configuration.serviceName(),
+                params.configuration.node(),
+                params.configuration.instanceUuid()
+        );
+
+        rankingConstructorOutbox = new MqOutbox(persistence,
+                ProcessInboxNames.RANKING_CONSTRUCTOR_INBOX,
                 params.configuration.node(),
                 params.configuration.serviceName(),
                 params.configuration.node(),
@@ -87,6 +96,8 @@ public class ProcessOutboxes {
     }
 
     public MqOutbox getIndexConstructorOutbox() { return indexConstructorOutbox; }
+
+    public MqOutbox getRankingConstructorOutbox() { return rankingConstructorOutbox; }
 
     public MqOutbox getLiveCrawlerOutbox() { return liveCrawlerOutbox; }
 

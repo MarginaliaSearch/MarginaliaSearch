@@ -11,4 +11,5 @@ public class ProcessInboxNames {
     public static final String EXPORT_TASK_INBOX = "export-task";
 
     public static final String INDEX_CONSTRUCTOR_INBOX = "index_constructor";
+    public static final String RANKING_CONSTRUCTOR_INBOX = "ranking_constructor";
 }

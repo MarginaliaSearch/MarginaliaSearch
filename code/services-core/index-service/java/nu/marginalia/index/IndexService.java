@@ -120,7 +120,7 @@ public class IndexService extends JoobyService {
     }
 
     @MqRequest(endpoint = IndexMqEndpoints.INDEX_RERANK)
-    public String rerank(String message) {
+    public String rerank(String message) throws Exception {
         if (!opsService.rerank()) {
             throw new IllegalStateException("Ops lock busy");
         }
@@ -128,7 +128,7 @@ public class IndexService extends JoobyService {
     }
 
     @MqRequest(endpoint = IndexMqEndpoints.INDEX_REPARTITION)
-    public String repartition(String message) {
+    public String repartition(String message) throws Exception {
         if (!opsService.repartition()) {
             throw new IllegalStateException("Ops lock busy");
         }
