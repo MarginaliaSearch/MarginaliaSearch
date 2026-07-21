@@ -1,4 +1,4 @@
-package nu.marginalia.index.searchset.connectivity;
+package nu.marginalia.ranking.data;
 
 public enum DomainSetConnectivity {
     // Don't re-order these, they are saved on disk by ordinal

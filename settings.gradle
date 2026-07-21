@@ -86,6 +86,8 @@ include 'code:processes:crawling-process'
 include 'code:processes:crawling-process:model'
 
 include 'code:processes:loading-process'
+include 'code:processes:ranking-process'
+include 'code:processes:ranking-process:model'
 include 'code:processes:test-data'
 
 include 'code:processes:export-task-process'

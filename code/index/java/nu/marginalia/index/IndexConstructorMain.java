@@ -8,7 +8,7 @@ import nu.marginalia.index.forward.construction.ForwardIndexConverter;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.reverse.construction.full.FullIndexConstructor;
 import nu.marginalia.index.reverse.construction.prio.PrioIndexConstructor;
-import nu.marginalia.index.searchset.DomainRankings;
+import nu.marginalia.ranking.data.DomainRankings;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.model.id.UrlIdCodec;

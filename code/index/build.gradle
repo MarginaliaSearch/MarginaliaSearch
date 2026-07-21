@@ -15,7 +15,7 @@ dependencies {
     implementation project(':third-party:commons-codec')
 
     implementation project(':code:index:api')
-    implementation project(':code:functions:link-graph:api')
+    implementation project(':code:processes:ranking-process:model')
 
     implementation project(':code:libraries:array')
     implementation project(':code:libraries:btree')

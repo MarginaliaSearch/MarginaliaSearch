@@ -1,4 +1,4 @@
-package nu.marginalia.index.searchset;
+package nu.marginalia.ranking;
 
 import com.zaxxer.hikari.HikariDataSource;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;

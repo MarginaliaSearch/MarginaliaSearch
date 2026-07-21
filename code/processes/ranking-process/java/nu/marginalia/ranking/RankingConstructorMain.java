@@ -1,9 +1,8 @@
-package nu.marginalia.index;
+package nu.marginalia.ranking;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import nu.marginalia.index.api.IndexMqEndpoints;
-import nu.marginalia.index.searchset.construction.RankingsCalculator;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mqapi.ProcessInboxNames;
@@ -22,7 +21,8 @@ import java.util.concurrent.TimeUnit;
 
 public class RankingConstructorMain extends ProcessMainClass {
     private final ProcessHeartbeatImpl heartbeat;
-    private final RankingsCalculator rankingsCalculator;
+    private final PrimaryRankingsCalculator primaryRankingsCalculator;
+    private final SecondaryRankingsCalculator secondaryRankingsCalculator;
     private final MessageQueueFactory messageQueueFactory;
     private final int node;
 
@@ -61,12 +61,14 @@ public class RankingConstructorMain extends ProcessMainClass {
     public RankingConstructorMain(MessageQueueFactory messageQueueFactory,
                                   ProcessConfiguration processConfiguration,
                                   ProcessHeartbeatImpl heartbeat,
-                                  RankingsCalculator rankingsCalculator) {
+                                  PrimaryRankingsCalculator primaryRankingsCalculator,
+                                  SecondaryRankingsCalculator secondaryRankingsCalculator) {
 
         super(messageQueueFactory, processConfiguration, GsonFactory.get(), ProcessInboxNames.RANKING_CONSTRUCTOR_INBOX);
 
         this.heartbeat = heartbeat;
-        this.rankingsCalculator = rankingsCalculator;
+        this.primaryRankingsCalculator = primaryRankingsCalculator;
+        this.secondaryRankingsCalculator = secondaryRankingsCalculator;
         this.messageQueueFactory = messageQueueFactory;
         this.node = processConfiguration.node();
     }
@@ -75,8 +77,8 @@ public class RankingConstructorMain extends ProcessMainClass {
         heartbeat.start();
 
         switch (instructions.rankingsName()) {
-            case PRIMARY -> rankingsCalculator.calculatePrimary();
-            case SECONDARY -> rankingsCalculator.calculateSecondary();
+            case PRIMARY -> primaryRankingsCalculator.calculate();
+            case SECONDARY -> secondaryRankingsCalculator.calculate();
         }
 
         // Nudge the index service on this node to pick up the new rankings from disk

@@ -4,7 +4,7 @@ import com.google.inject.AbstractModule;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.journal.IndexJournalSlopWriter;
-import nu.marginalia.index.searchset.SearchSetAny;
+import nu.marginalia.ranking.data.SearchSetAny;
 import nu.marginalia.index.searchset.SearchSetsService;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.process.control.FakeProcessHeartbeat;

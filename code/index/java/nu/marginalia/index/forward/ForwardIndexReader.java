@@ -8,7 +8,7 @@ import nu.marginalia.index.config.ForwardIndexParameters;
 import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
 import nu.marginalia.index.forward.spans.SpansCodec;
 import nu.marginalia.index.model.FeaturesCodec;
-import nu.marginalia.index.searchset.DomainRankings;
+import nu.marginalia.ranking.data.DomainRankings;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
