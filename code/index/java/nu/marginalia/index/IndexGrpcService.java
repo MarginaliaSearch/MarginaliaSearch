@@ -3,7 +3,6 @@ package nu.marginalia.index;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.Status;
-import io.grpc.StatusException;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import io.prometheus.metrics.core.metrics.Counter;
@@ -12,11 +11,11 @@ import nu.marginalia.api.searchquery.*;
 import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.model.UnrankedSearchContext;
 import nu.marginalia.index.results.IndexResultRankingService;
-import nu.marginalia.ranking.data.SearchSet;
+import nu.marginalia.ranking.set.SearchSet;
 import nu.marginalia.index.searchset.SearchSetsService;
-import nu.marginalia.ranking.data.SmallSearchSet;
+import nu.marginalia.ranking.set.SmallSearchSet;
 import nu.marginalia.index.searchset.ConnectivitySets;
-import nu.marginalia.ranking.data.ConnectivityView;
+import nu.marginalia.ranking.connectivity.ConnectivityView;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.language.model.LanguageDefinition;
@@ -31,8 +30,6 @@ import org.slf4j.MarkerFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.LockSupport;
 
 @Singleton
 public class IndexGrpcService

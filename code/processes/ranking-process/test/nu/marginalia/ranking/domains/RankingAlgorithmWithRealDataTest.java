@@ -1,6 +1,6 @@
-package nu.marginalia.domainranking;
+package nu.marginalia.ranking.domains;
 
-import nu.marginalia.domainranking.accumulator.RankingResultListAccumulator;
+import nu.marginalia.ranking.domains.accumulator.RankingResultListAccumulator;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 

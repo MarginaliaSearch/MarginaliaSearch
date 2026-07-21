@@ -8,7 +8,7 @@ import nu.marginalia.index.forward.spans.IndexSpansWriter;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.index.model.FeaturesCodec;
-import nu.marginalia.ranking.data.DomainRankings;
+import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.process.control.ProcessHeartbeat;

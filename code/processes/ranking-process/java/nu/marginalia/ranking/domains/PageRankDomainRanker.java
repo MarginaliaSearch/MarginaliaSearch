@@ -1,8 +1,8 @@
-package nu.marginalia.domainranking;
+package nu.marginalia.ranking.domains;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.longs.LongHeapPriorityQueue;
-import nu.marginalia.domainranking.accumulator.RankingResultAccumulator;
+import nu.marginalia.ranking.domains.accumulator.RankingResultAccumulator;
 import nu.marginalia.domaingraph.DomainGraph;
 import nu.marginalia.domaingraph.GraphSource;
 

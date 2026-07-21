@@ -1,4 +1,4 @@
-package nu.marginalia.domainranking.accumulator;
+package nu.marginalia.ranking.domains.accumulator;
 
 import org.roaringbitmap.RoaringBitmap;
 
