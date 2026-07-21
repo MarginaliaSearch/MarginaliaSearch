@@ -10,7 +10,7 @@ import nu.marginalia.execution.*;
 import nu.marginalia.functions.favicon.FaviconGrpcService;
 import nu.marginalia.index.api.IndexMqEndpoints;
 import nu.marginalia.index.searchset.SearchSetsService;
-import nu.marginalia.index.searchset.connectivity.ConnectivitySets;
+import nu.marginalia.index.searchset.ConnectivitySets;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.linkgraph.DomainLinks;
 import nu.marginalia.linkgraph.PartitionLinkGraphService;

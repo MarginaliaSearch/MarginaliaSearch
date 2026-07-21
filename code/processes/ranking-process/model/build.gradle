@@ -1,0 +1,27 @@
+plugins {
+    id 'java'
+
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
+    }
+}
+
+jar.archiveBaseName = 'ranking-process-model'
+
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
+dependencies {
+    implementation project(':code:common:model')
+
+    implementation libs.bundles.slf4j
+
+    implementation libs.notnull
+    implementation libs.fastutil
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+}

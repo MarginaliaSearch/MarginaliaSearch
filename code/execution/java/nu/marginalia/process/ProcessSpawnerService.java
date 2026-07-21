@@ -6,6 +6,7 @@ import nu.marginalia.livecrawler.LiveCrawlerMain;
 import nu.marginalia.loading.LoaderMain;
 import nu.marginalia.ndp.NdpMain;
 import nu.marginalia.ping.PingMain;
+import nu.marginalia.ranking.RankingConstructorMain;
 import nu.marginalia.task.ExportTasksMain;
 
 import java.util.Arrays;
@@ -28,7 +29,7 @@ public interface ProcessSpawnerService {
         CONVERTER(ConverterMain.class, "converter"),
         LOADER(LoaderMain.class, "loader"),
         INDEX_CONSTRUCTOR("nu.marginalia.index.IndexConstructorMain", "index-constructor"),
-        RANKING_CONSTRUCTOR("nu.marginalia.index.RankingConstructorMain", "ranking-constructor"),
+        RANKING_CONSTRUCTOR(RankingConstructorMain.class, "ranking-constructor"),
         NDP(NdpMain.class, "ndp"),
         EXPORT_TASKS(ExportTasksMain.class, "export-tasks"),
         ;

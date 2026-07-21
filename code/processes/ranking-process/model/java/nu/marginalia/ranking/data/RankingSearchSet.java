@@ -1,4 +1,4 @@
-package nu.marginalia.index.searchset;
+package nu.marginalia.ranking.data;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;

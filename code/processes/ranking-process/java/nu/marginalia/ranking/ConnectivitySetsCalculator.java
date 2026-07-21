@@ -1,4 +1,4 @@
-package nu.marginalia.index.searchset.construction;
+package nu.marginalia.ranking;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
@@ -12,10 +12,10 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.api.linkgraph.AggregateLinkGraphClient;
 import nu.marginalia.db.DomainRankingSetsService;
-import nu.marginalia.index.searchset.RankingSearchSet;
-import nu.marginalia.index.searchset.connectivity.ConnectivityMapFile;
-import nu.marginalia.index.searchset.connectivity.ConnectivityView;
-import nu.marginalia.index.searchset.connectivity.DomainSetConnectivity;
+import nu.marginalia.ranking.data.RankingSearchSet;
+import nu.marginalia.ranking.data.ConnectivityMapFile;
+import nu.marginalia.ranking.data.ConnectivityView;
+import nu.marginalia.ranking.data.DomainSetConnectivity;
 import nu.marginalia.storage.FileStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -27,6 +27,7 @@ dependencies {
     implementation project(':code:functions:language-processing')
     implementation project(':code:common:linkdb')
     implementation project(':code:index')
+    implementation project(':code:processes:ranking-process:model')
     implementation project(':third-party:commons-codec')
     implementation project(':code:functions:search-query')
     implementation project(':code:functions:search-query:api')

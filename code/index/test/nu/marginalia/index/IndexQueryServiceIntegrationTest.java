@@ -16,7 +16,7 @@ import nu.marginalia.index.journal.IndexJournalSlopWriter;
 import nu.marginalia.index.reverse.construction.DocIdRewriter;
 import nu.marginalia.index.reverse.construction.full.FullIndexConstructor;
 import nu.marginalia.index.reverse.construction.prio.PrioIndexConstructor;
-import nu.marginalia.index.searchset.DomainRankings;
+import nu.marginalia.ranking.data.DomainRankings;
 import nu.marginalia.index.searchset.SearchSetsService;
 import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.linkdb.docs.DocumentDbReader;

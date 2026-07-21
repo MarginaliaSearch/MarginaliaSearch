@@ -1,0 +1,60 @@
+plugins {
+    id 'java'
+
+    id 'application'
+    id 'com.gradleup.shadow'
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
+    }
+}
+
+application {
+    mainClass = 'nu.marginalia.ranking.RankingConstructorMain'
+    applicationName = 'ranking-process'
+}
+
+tasks.distZip.enabled = false
+
+apply from: "$rootProject.projectDir/srcsets.gradle"
+
+dependencies {
+    implementation project(':code:common:model')
+    implementation project(':code:common:db')
+    implementation project(':code:common:service')
+    implementation project(':code:common:config')
+    implementation project(':code:libraries:message-queue')
+
+    implementation project(':code:functions:link-graph:api')
+    implementation project(':code:index:api')
+    implementation project(':code:processes:process-mq-api')
+    implementation project(':code:processes:ranking-process:model')
+
+    implementation libs.bundles.slf4j
+
+    implementation libs.guava
+    implementation dependencies.create(libs.guice.get()) {
+        exclude group: 'com.google.guava'
+    }
+    implementation libs.trove
+    implementation libs.fastutil
+    implementation libs.roaringbitmap
+    implementation libs.bundles.mariadb
+    implementation libs.bundles.gson
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+    testImplementation libs.commons.lang3
+    testImplementation project(':code:libraries:array')
+    testImplementation project(':code:libraries:test-helpers')
+
+    testImplementation platform('org.testcontainers:testcontainers-bom:1.21.4') {
+        exclude group: 'org.apache.commons'
+    }
+    testImplementation 'org.testcontainers:mariadb:1.21.4'
+    testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
+}

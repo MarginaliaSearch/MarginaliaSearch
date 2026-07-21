@@ -3,7 +3,7 @@ package nu.marginalia.index.model;
 import nu.marginalia.api.searchquery.model.query.QueryStrategy;
 import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
 import nu.marginalia.api.searchquery.model.query.SpecificationLimitType;
-import nu.marginalia.index.searchset.SearchSet;
+import nu.marginalia.ranking.data.SearchSet;
 
 import java.util.Objects;
 

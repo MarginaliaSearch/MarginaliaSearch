@@ -1,10 +1,12 @@
-package nu.marginalia.index.searchset.connectivity;
+package nu.marginalia.index.searchset;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import it.unimi.dsi.fastutil.ints.Int2ByteOpenHashMap;
 import nu.marginalia.db.DomainRankingSetsService;
 import nu.marginalia.index.IndexFactory;
+import nu.marginalia.ranking.data.ConnectivityMapFile;
+import nu.marginalia.ranking.data.ConnectivityView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

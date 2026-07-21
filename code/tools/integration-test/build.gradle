@@ -20,6 +20,7 @@ dependencies {
     implementation project(':code:processes:crawling-process:model')
     implementation project(':code:processes:converting-process:model')
     implementation project(':code:index')
+    implementation project(':code:processes:ranking-process:model')
     implementation project(':code:libraries:array')
     implementation project(':code:libraries:btree')
     implementation project(':code:functions:language-processing')

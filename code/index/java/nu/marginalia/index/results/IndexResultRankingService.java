@@ -16,7 +16,7 @@ import nu.marginalia.index.ScratchIntListPool;
 import nu.marginalia.index.StatefulIndex;
 import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.model.*;
-import nu.marginalia.index.searchset.connectivity.DomainSetConnectivity;
+import nu.marginalia.ranking.data.DomainSetConnectivity;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.model.crawl.HtmlFeature;
