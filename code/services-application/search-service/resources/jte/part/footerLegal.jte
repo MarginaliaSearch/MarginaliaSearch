@@ -9,7 +9,7 @@
             to provide service functionality.
             </span>
             <span>
-            Access logs containing IP-addresses are retained for up to 24 hours,
+            Access logs containing IP-addresses are retained for up to 24 hours;
             anonymized logs with source addresses removed are sometimes kept longer
             to help diagnose bugs.
             </span>
