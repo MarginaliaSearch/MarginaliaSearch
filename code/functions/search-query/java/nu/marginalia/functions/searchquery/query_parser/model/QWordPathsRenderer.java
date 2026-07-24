@@ -33,6 +33,13 @@ public class QWordPathsRenderer {
         return new QWordPathsRenderer(paths).render(reachability);
     }
 
+    private static boolean isTokenAllowed(String str) {
+        if ("(".equals(str) || ")".equals(str)) {
+            return false;
+        }
+        return true;
+    }
+
     /** Render the paths into a human-readable infix-style expression.
      * <p></p>
      * This method is recursive, but the recursion depth is limited by the
@@ -44,6 +51,7 @@ public class QWordPathsRenderer {
             return paths.iterator().next().stream()
                     .sorted(reachability.topologicalComparator())
                     .map(QWord::word)
+                    .filter(QWordPathsRenderer::isTokenAllowed)
                     .collect(Collectors.joining(" "));
         }
 
@@ -153,6 +161,7 @@ public class QWordPathsRenderer {
 
                         return commonWord + " " + branchPart;
                     })
+                    .filter(QWordPathsRenderer::isTokenAllowed)
                     .collect(Collectors.joining(" | ", " ( ", " ) "));
 
             resultJoiner.add(branches);

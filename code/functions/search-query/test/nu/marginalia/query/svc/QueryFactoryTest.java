@@ -368,6 +368,35 @@ public class QueryFactoryTest {
     }
 
     @Test
+    public void testStrayOpenParenthesis() {
+        var subquery = parseAndGetQuery("test \\(");
+
+        System.out.println(subquery);
+    }
+
+    @Test
+    public void testStrayJustOpenParenthesis() {
+        var subquery = parseAndGetQuery("\\(");
+
+        System.out.println(subquery);
+    }
+
+    @Test
+    public void testStrayClosedParenthesis() {
+        var subquery = parseAndGetQuery("test \\)");
+
+        System.out.println(subquery);
+    }
+
+    @Test
+    public void testStrayJustClosedParenthesis() {
+        var subquery = parseAndGetQuery("\\)");
+
+        System.out.println(subquery);
+    }
+
+
+    @Test
     public void testExpansion9() {
         var subquery = parseAndGetQuery("pie recipe");
 
