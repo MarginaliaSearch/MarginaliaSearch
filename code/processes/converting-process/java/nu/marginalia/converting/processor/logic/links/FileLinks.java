@@ -1,5 +1,6 @@
 package nu.marginalia.converting.processor.logic.links;
 
+import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import org.jsoup.nodes.Document;
@@ -51,38 +52,34 @@ public class FileLinks {
     /** Create synthetic keywords for file endings of files linked within the same server.
      * Also generate categorical keywords for the type of file (audio, video, image, document, archive)
      */
-    public static Set<String> createFileEndingKeywords(Document doc) {
+    public static Set<String> createFileEndingKeywords(Set<EdgeUrl> allParsedUrls) {
         Set<String> endings = new HashSet<>();
 
-        doc.getElementsByTag("a").forEach(e -> {
-            var src = e.attr("href");
+        for (var url: allParsedUrls) {
+            String path = url.path.toLowerCase();
 
-            if (src.contains(":")) return;
+            if (!path.contains(".")) continue;
+            if (path.contains("/")) path = path.substring(path.lastIndexOf("/"));
+            if (!path.contains(".")) continue;
 
-            if (src.contains("/")) src = src.substring(src.lastIndexOf("/"));
-            if (src.contains("?")) src = src.split("\\?", 2)[0];
-            if (src.contains("#")) src = src.split("#", 2)[0];
-
-            src = src.toLowerCase();
-
-            if (src.startsWith("www")) return;
-
-            final int firstPeriod = src.indexOf(".");
-            final int lastPeriod = src.lastIndexOf(".");
-
-            if (firstPeriod < 0) return;
-            if (firstPeriod != lastPeriod) return;
-
-            String ending = src.substring(lastPeriod + 1).trim();
-
-            if (ending.contains("_")) return;
-            if (ignoredEndings.contains(ending)) return;
-
-            int endingLength = ending.length();
-            if (endingLength > 1 && endingLength <= 4) {
-                endings.add(ending);
+            // Special handling for these common multi-ending file types
+            if (path.endsWith(".tar.gz")) {
+                endings.add("tar.gz");
             }
-        });
+            else if (path.endsWith(".tar.bz2")) {
+                endings.add("tar.bz2");
+            }
+
+            String ending =  path.substring(path.lastIndexOf(".")+1);
+
+            if (ending.contains("_"))
+                continue;
+
+            if (ignoredEndings.contains(ending))
+                continue;
+
+            endings.add(ending);
+        }
 
         if (endings.isEmpty())
             return endings;

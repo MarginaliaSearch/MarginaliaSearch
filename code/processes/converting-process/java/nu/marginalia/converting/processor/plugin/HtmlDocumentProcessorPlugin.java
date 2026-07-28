@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
@@ -271,6 +272,8 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         EdgeDomain domain = baseUrl.domain;
 
+        Set<EdgeUrl> allParsedUrls = new HashSet<>();
+
         for (var atag : doc.getElementsByTag("a")) {
             var linkOpt = linkParser.parseLinkPermissive(baseUrl, atag);
             if (linkParser.shouldIndexLink(atag)) {
@@ -281,6 +284,8 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
                         .filter(url -> linkParser.hasBinarySuffix(url.path.toLowerCase()))
                         .ifPresent(lp::acceptNonIndexable);
             }
+
+            linkOpt.ifPresent(allParsedUrls::add);
         }
         for (var frame : doc.getElementsByTag("frame")) {
             linkParser.parseFrame(baseUrl, frame).ifPresent(lp::accept);
@@ -293,7 +298,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         }
 
         words.addAllSyntheticTerms(FileLinks.createFileLinkKeywords(lp, domain));
-        words.addAllSyntheticTerms(FileLinks.createFileEndingKeywords(doc));
+        words.addAllSyntheticTerms(FileLinks.createFileEndingKeywords(allParsedUrls));
         words.addAllSyntheticTerms(createLinkKeywords(lp, domain));
     }
 
