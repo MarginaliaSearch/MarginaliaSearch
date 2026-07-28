@@ -5,6 +5,7 @@ import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import org.jsoup.nodes.Document;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -52,8 +53,8 @@ public class FileLinks {
     /** Create synthetic keywords for file endings of files linked within the same server.
      * Also generate categorical keywords for the type of file (audio, video, image, document, archive)
      */
-    public static Set<String> createFileEndingKeywords(Set<EdgeUrl> allParsedUrls) {
-        Set<String> endings = new HashSet<>();
+    public static Set<String> createFileEndingKeywords(Collection<EdgeUrl> allParsedUrls) {
+        final Set<String> endings = new HashSet<>();
 
         for (var url: allParsedUrls) {
             String path = url.path.toLowerCase();
@@ -70,7 +71,7 @@ public class FileLinks {
                 endings.add("tar.bz2");
             }
 
-            String ending =  path.substring(path.lastIndexOf(".")+1);
+            String ending = path.substring(path.lastIndexOf(".")+1);
 
             if (ending.contains("_"))
                 continue;

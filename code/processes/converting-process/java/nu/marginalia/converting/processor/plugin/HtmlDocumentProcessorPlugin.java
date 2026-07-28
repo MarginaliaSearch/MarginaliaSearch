@@ -35,15 +35,13 @@ import nu.marginalia.model.crawldata.CrawledDocument;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import static nu.marginalia.converting.model.DisqualifiedException.DisqualificationReason;
 
@@ -272,28 +270,31 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         EdgeDomain domain = baseUrl.domain;
 
-        Set<EdgeUrl> allParsedUrls = new HashSet<>();
+        List<EdgeUrl> allParsedUrls = new ArrayList<>();
 
-        for (var atag : doc.getElementsByTag("a")) {
+        for (Element atag : doc.getElementsByTag("a")) {
             var linkOpt = linkParser.parseLinkPermissive(baseUrl, atag);
+            if (linkOpt.isEmpty())
+                continue;
+            EdgeUrl link = linkOpt.get();
+
             if (linkParser.shouldIndexLink(atag)) {
-                linkOpt.ifPresent(lp::accept);
+                lp.accept(link);
             }
-            else {
-                linkOpt
-                        .filter(url -> linkParser.hasBinarySuffix(url.path.toLowerCase()))
-                        .ifPresent(lp::acceptNonIndexable);
+            else if (linkParser.hasBinarySuffix(link.path.toLowerCase())) {
+                lp.acceptNonIndexable(link);
             }
 
-            linkOpt.ifPresent(allParsedUrls::add);
+            allParsedUrls.add(link);
         }
-        for (var frame : doc.getElementsByTag("frame")) {
+
+        for (Element frame : doc.getElementsByTag("frame")) {
             linkParser.parseFrame(baseUrl, frame).ifPresent(lp::accept);
         }
-        for (var frame : doc.getElementsByTag("iframe")) {
+        for (Element frame : doc.getElementsByTag("iframe")) {
             linkParser.parseFrame(baseUrl, frame).ifPresent(lp::accept);
         }
-        for (var meta : doc.select("meta[http-equiv=refresh]")) {
+        for (Element meta : doc.select("meta[http-equiv=refresh]")) {
             linkParser.parseMetaRedirect(baseUrl, meta).ifPresent(lp::accept);
         }
 
