@@ -7,5 +7,6 @@ public enum FileStorageType {
     CRAWL_DATA,
     PROCESSED_DATA,
     BACKUP,
-    EXPORT;
+    EXPORT,
+    PERSISTENT_QUERY;
 }

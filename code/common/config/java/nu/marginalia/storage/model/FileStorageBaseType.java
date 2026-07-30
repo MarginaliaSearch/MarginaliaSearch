@@ -9,7 +9,7 @@ public enum FileStorageBaseType {
 
     public static FileStorageBaseType forFileStorageType(FileStorageType type) {
         return switch (type) {
-            case EXPORT, CRAWL_DATA, PROCESSED_DATA, CRAWL_SPEC -> STORAGE;
+            case EXPORT, CRAWL_DATA, PROCESSED_DATA, CRAWL_SPEC, PERSISTENT_QUERY -> STORAGE;
             case BACKUP -> BACKUP;
         };
     }
