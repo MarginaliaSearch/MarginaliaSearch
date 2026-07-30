@@ -21,6 +21,7 @@ dependencies {
     implementation libs.bundles.mariadb
     implementation libs.guava
     implementation libs.guice
+    implementation libs.sqlite
     implementation libs.fastutil
     implementation libs.commons.lang3
 
