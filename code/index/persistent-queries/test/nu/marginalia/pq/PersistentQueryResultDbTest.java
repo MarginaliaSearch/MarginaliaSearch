@@ -33,4 +33,11 @@ class PersistentQueryResultDbTest {
         }
     }
 
+    @Test
+    public void testAddSummary() throws Exception {
+        try (var db = new PersistentQueryResultDb(Files.createTempFile(tempDir, "test", ".db"))) {
+            db.addSummary(Instant.now(), 4);
+        }
+    }
+
 }

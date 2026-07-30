@@ -79,7 +79,8 @@ public class ExecutorActorControlService {
                                        ScheduledMaintenanceActor scheduledMaintenanceActor,
                                        MigrateDomainsActor migrateDomainsActor,
                                        CleanupMigratedDomainsActor cleanupMigratedDomainsActor,
-                                       WideCrawlActor wideCrawlActor
+                                       WideCrawlActor wideCrawlActor,
+                                       PersistentQueryActor persistentQueryActor
                                        ) throws SQLException
     {
         this.messageQueueFactory = messageQueueFactory;
@@ -134,6 +135,7 @@ public class ExecutorActorControlService {
         register(ExecutorActor.SCREENSHOT_ACTOR, screenshotActor);
 
         register(ExecutorActor.UPDATE_NSFW_LISTS, updateNsfwFiltersActor);
+        register(ExecutorActor.PERSISTENT_QUERIES, persistentQueryActor);
 
         if (serviceConfiguration.node() == 1) {
             register(ExecutorActor.PREC_EXPORT_ALL, exportAllPrecessionActor);

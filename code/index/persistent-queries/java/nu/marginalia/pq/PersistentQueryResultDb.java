@@ -13,6 +13,10 @@ import java.util.List;
 public class PersistentQueryResultDb implements AutoCloseable {
     private final Connection connection;
 
+    public PersistentQueryResultDb(Path basePath, PersistentQuerySpec spec) throws SQLException {
+        this(basePath.resolve(spec.publicId() + ".db"));
+    }
+
     public PersistentQueryResultDb(Path sqliteFile) throws SQLException {
         String connStr = "jdbc:sqlite:" + sqliteFile;
 
@@ -27,6 +31,13 @@ public class PersistentQueryResultDb implements AutoCloseable {
                         ID INTEGER PRIMARY KEY AUTOINCREMENT,
                         URL TEXT UNIQUE NOT NULL,
                         ADDED_TS INTEGER NOT NULL
+                    ) STRICT
+                    """);
+
+            stmt.execute("""
+                    CREATE TABLE IF NOT EXISTS SUMMARIES (
+                        RUN_TS INTEGER PRIMARY KEY,
+                        COUNT INTEGER UNIQUE NOT NULL
                     ) STRICT
                     """);
         }
@@ -75,6 +86,19 @@ public class PersistentQueryResultDb implements AutoCloseable {
         }
     }
 
+    /** Add a summary record */
+    public void addSummary(Instant queryTime, int discoveries) throws SQLException {
+        try (var stmt = connection.prepareStatement("""
+                INSERT OR IGNORE INTO SUMMARIES(RUN_TS, COUNT) 
+                VALUES (?,?)
+                """)) {
+
+            stmt.setLong(1, queryTime.getEpochSecond());
+            stmt.setInt(2, discoveries);
+
+            stmt.executeUpdate();
+        }
+    }
 
     public void close()  throws SQLException {
         connection.close();

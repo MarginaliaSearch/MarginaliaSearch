@@ -28,7 +28,8 @@ public class ActorScheduleService {
             "DOM_SAMPLE",   new WindowSchedule("DOM_SAMPLE", 16, 20, "DOM sample capture window"),
             "SCREENGRAB",   new WindowSchedule("SCREENGRAB", 20, 0, "Screenshot capture window"),
             "MAINTENANCE",  new TriggerSchedule("MAINTENANCE", 2, "Maintenance trigger"),
-            "SCRAPE_FEEDS", new IntervalSchedule("SCRAPE_FEEDS", 6, "Feed scraping interval")
+            "SCRAPE_FEEDS", new IntervalSchedule("SCRAPE_FEEDS", 6, "Feed scraping interval"),
+            "PERSISTENT_QUERIES", new TriggerSchedule("PERSISTENT_QUERIES", 7, "Trigger persistent queries")
     );
 
     @Inject

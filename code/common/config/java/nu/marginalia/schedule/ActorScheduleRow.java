@@ -6,7 +6,7 @@ public sealed interface ActorScheduleRow {
     String description();
 
     enum Window { DOMAIN_PING, DOM_SAMPLE, SCREENGRAB }
-    enum Trigger { LIVE_CRAWLER, RSS_FEEDS, MAINTENANCE }
+    enum Trigger { LIVE_CRAWLER, RSS_FEEDS, MAINTENANCE, PERSISTENT_QUERY }
     enum Interval { SCRAPE_FEEDS }
 
     /** Runs continuously during a UTC hour window, e.g. 16:00-20:00.

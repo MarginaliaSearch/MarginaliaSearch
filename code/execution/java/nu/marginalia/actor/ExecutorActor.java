@@ -42,6 +42,8 @@ public enum ExecutorActor {
     PROC_INDEX_CONSTRUCTOR_SPAWNER(NodeProfile.BATCH_CRAWL, NodeProfile.REALTIME, NodeProfile.MIXED, NodeProfile.SIDELOAD, NodeProfile.WIDE_DOMAINS),
     PROC_RANKING_CONSTRUCTOR_SPAWNER(NodeProfile.BATCH_CRAWL, NodeProfile.REALTIME, NodeProfile.MIXED, NodeProfile.SIDELOAD, NodeProfile.WIDE_DOMAINS),
 
+
+    PERSISTENT_QUERIES(NodeProfile.REALTIME),
     LIVE_CRAWL(NodeProfile.REALTIME),
     PROC_LIVE_CRAWL_SPAWNER(NodeProfile.REALTIME),
     SCRAPE_FEEDS(NodeProfile.REALTIME),
