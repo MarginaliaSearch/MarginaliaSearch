@@ -21,8 +21,8 @@ class PersistentQueryResultDbTest {
     public void test() throws IOException, SQLException, URISyntaxException {
         try (var db = new PersistentQueryResultDb(Files.createTempFile(tempDir, "test", ".db"))) {
 
-            Assertions.assertTrue(db.addResult(new EdgeUrl("https://www.marginalia.nu/"), Instant.now()));
-            Assertions.assertFalse(db.addResult(new EdgeUrl("https://www.marginalia.nu/"), Instant.now()));
+            Assertions.assertTrue(db.addResult(new EdgeUrl("https://www.marginalia.nu/"), "testTitle", Instant.now()));
+            Assertions.assertFalse(db.addResult(new EdgeUrl("https://www.marginalia.nu/"), "testTitle", Instant.now()));
 
             var results = db.getResultsSince(Instant.MIN, Integer.MIN_VALUE, 5);
 

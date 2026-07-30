@@ -132,7 +132,7 @@ public class PersistentQueryActor extends RecordActorPrototype {
                     );
 
                     for (var result: res.results()) {
-                        if (db.addResult(result.url, queryTime)) {
+                        if (db.addResult(result.url, result.title, queryTime)) {
                             discoveries++;
                         }
                     }

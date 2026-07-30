@@ -30,6 +30,7 @@ public class PersistentQueryResultDb implements AutoCloseable {
                     CREATE TABLE IF NOT EXISTS RESULTS (
                         ID INTEGER PRIMARY KEY AUTOINCREMENT,
                         URL TEXT UNIQUE NOT NULL,
+                        TITLE TEXT NOT NULL,
                         ADDED_TS INTEGER NOT NULL
                     ) STRICT
                     """);
@@ -44,15 +45,18 @@ public class PersistentQueryResultDb implements AutoCloseable {
     }
 
     public boolean addResult(EdgeUrl url,
+                             String title,
                              Instant discoveryTimestamp
                              ) throws SQLException {
+
         try (var stmt = connection.prepareStatement("""
-                INSERT OR IGNORE INTO RESULTS(URL, ADDED_TS) 
-                VALUES (?,?)
+                INSERT OR IGNORE INTO RESULTS(URL, TITLE, ADDED_TS) 
+                VALUES (?,?,?)
                 """)) {
 
             stmt.setString(1, url.toString());
-            stmt.setLong(2, discoveryTimestamp.getEpochSecond());
+            stmt.setString(2, title.toLowerCase());
+            stmt.setLong(3, discoveryTimestamp.getEpochSecond());
 
             return 1 == stmt.executeUpdate();
         }
@@ -62,7 +66,15 @@ public class PersistentQueryResultDb implements AutoCloseable {
                                                        int afterId,
                                                        int count) throws SQLException {
         try (var query = connection.prepareStatement("""
-                SELECT * FROM RESULTS WHERE ADDED_TS > ? AND ID > ? ORDER BY ADDED_TS, ID
+                SELECT 
+                    ID,
+                    URL,
+                    TITLE,
+                    ADDED_TS 
+                FROM RESULTS 
+                WHERE ADDED_TS > ? 
+                AND ID > ? 
+                ORDER BY ADDED_TS, ID
                 LIMIT ?
                 """)) {
 
@@ -78,6 +90,7 @@ public class PersistentQueryResultDb implements AutoCloseable {
                 results.add(new PersistentQueryResult(
                         rs.getInt("ID"),
                         rs.getString("URL"),
+                        rs.getString("TITLE"),
                         Instant.ofEpochSecond(rs.getLong("ADDED_TS"))
                 ));
             }
