@@ -36,6 +36,7 @@ include 'code:index:index-journal'
 include 'code:index:index-perftest'
 include 'code:index:live-capture'
 include 'code:index:live-capture:api'
+include 'code:index:persistent-queries'
 
 
 include 'code:libraries:array'
