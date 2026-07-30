@@ -122,6 +122,7 @@ public class PersistentQueryActor extends RecordActorPrototype {
                 try {
                     var res = queryClient.unrankedSearch(
                             spec.termsInclude(),
+                            spec.termsExclude(),
                             spec.languageIsoCode(),
                             RpcQueryLimits.newBuilder()
                                     .setResultsTotal(100)

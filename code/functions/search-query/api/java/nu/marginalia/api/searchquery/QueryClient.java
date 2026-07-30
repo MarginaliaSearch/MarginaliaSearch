@@ -79,6 +79,33 @@ public class QueryClient  {
         }
     }
 
+    public UnrankedQueryResponse unrankedSearch(List<String> termsRequired,
+                                                List<String> termsExcluded,
+                                                String languageIsoCode,
+                                                RpcQueryLimits limits,
+                                                @Nullable String cursorEncoded) throws TimeoutException {
+        RpcQsUnrankedQuery.Builder queryBuilder = RpcQsUnrankedQuery.newBuilder();
+
+        queryBuilder.setLangIsoCode(languageIsoCode);
+
+        queryBuilder.addAllTermsRequired(termsRequired);
+        queryBuilder.addAllTermsExcluded(termsExcluded);
+
+        queryBuilder.setQueryLimits(limits);
+        queryBuilder.setEncodedCursor(Objects.requireNonNullElse(cursorEncoded, ""));
+
+        try (var _ = wmsa_qs_api_search_unranked_time.startTimer()) {
+            RpcQsUnrankedResponse rsp = queryApiPool.call(
+                    channel -> QueryApiGrpc.newBlockingStub(channel)
+                            .withDeadlineAfter(Duration.ofMillis(limits.getTimeoutMs() * 2)),
+                    QueryApiGrpc.QueryApiBlockingStub::unrankedQuery,
+                    queryBuilder.build());
+
+            return QueryProtobufCodec.convertQueryResponse(rsp);
+        }
+    }
+
+
     @CheckReturnValue
     public QueryResponse search(QueryFilterSpec filterSpec,
                                 String humanQuery,
