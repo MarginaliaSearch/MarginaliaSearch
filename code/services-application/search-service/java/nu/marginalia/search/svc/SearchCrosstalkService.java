@@ -57,7 +57,7 @@ public class SearchCrosstalkService {
         if (interceptResult instanceof ScrapeStopperInterceptor.InterceptRedirect redir) {
             return new MapModelAndView("siteinfo/ctwait.jte",
                     Map.of("model",
-                            new CrosstalkWait(domains, redir.sst(), redir.waitTime()),
+                            new CrosstalkWait(domains, redir.sst(), redir.waitTime(), redir.redirUrl()),
                             "navbar", NavbarModel.SITEINFO)
             );
         }
@@ -124,7 +124,8 @@ public class SearchCrosstalkService {
 
     public record CrosstalkWait(String domains,
                                 String sst,
-                                Duration waitTime)
+                                Duration waitTime,
+                                String redirUrl)
     {
         public String domainA() {
             return domains.split(",")[0];
@@ -132,10 +133,6 @@ public class SearchCrosstalkService {
 
         public String domainB() {
             return domains.split(",")[1];
-        }
-
-        public String redirUrl() {
-            return String.format("?domains=%s&sst=%s", domains,sst);
         }
     }
 }

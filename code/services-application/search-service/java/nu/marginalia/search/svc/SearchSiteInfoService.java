@@ -184,7 +184,6 @@ public class SearchSiteInfoService {
             Context context,
             @PathParam String domainName,
             @QueryParam String view,
-            @QueryParam Integer page,
             @QueryParam String cursor
     ) throws SQLException, ExecutionException, TimeoutException {
 
@@ -193,8 +192,6 @@ public class SearchSiteInfoService {
             return new MapModelAndView("redirect.jte", Map.of("url", "/site"));
         }
 
-
-        page = Objects.requireNonNullElse(page, 1);
         view = Objects.requireNonNullElse(view, "info");
 
         ScrapeStopperInterceptor.InterceptionResult interceptResult
@@ -203,7 +200,7 @@ public class SearchSiteInfoService {
         if (interceptResult instanceof ScrapeStopperInterceptor.InterceptRedirect redir) {
             return new MapModelAndView("siteinfo/main.jte",
                     Map.of("model",
-                            new ScrapeStopperModel(redir.sst(), redir.waitTime(), domainName, view, page),
+                            new ScrapeStopperModel(redir.sst(), redir.waitTime(), domainName, redir.redirUrl()),
                             "navbar", NavbarModel.SITEINFO)
             );
         }
@@ -772,14 +769,7 @@ public class SearchSiteInfoService {
     public record ScrapeStopperModel(String sst,
                                      Duration waitTime,
                                      String domain,
-                                     String view,
-                                     int page) implements SiteInfoModel {
-
-        public String redirUrl() {
-            return String.format("?view=%s&page=%d&sst=%s", view, page, sst);
-        }
-
-    }
+                                     String redirUrl) implements SiteInfoModel {}
 
     public record Docs(String domain,
                        String sst,

@@ -4,16 +4,16 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.jooby.Context;
 import io.jooby.Cookie;
-import io.jooby.MapModelAndView;
 import io.jooby.SameSite;
 import nu.marginalia.scrapestopper.ScrapeStopper;
-import nu.marginalia.search.model.NavbarModel;
-import nu.marginalia.search.svc.SearchSiteInfoService;
 import nu.marginalia.service.server.RateLimiter;
 import org.jetbrains.annotations.Nullable;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Singleton
@@ -92,7 +92,27 @@ public class ScrapeStopperInterceptor {
         }
 
         return new InterceptRedirect(sst,
-                scrapeStopper.getRemaining(sst).orElseThrow());
+                scrapeStopper.getRemaining(sst).orElseThrow(),
+                constructRedirectQuery(context, sst));
+    }
+
+    private String constructRedirectQuery(Context context, String sst) {
+        StringJoiner queryBuilder = new StringJoiner("&", "?", "");
+
+        for (Map.Entry<String, String> param : context.queryMap().entrySet()) {
+            if ("sst".equalsIgnoreCase(param.getKey()))
+                continue;
+
+            queryBuilder.add(urlEncode(param.getKey()) + "=" + urlEncode(param.getValue()));
+        }
+
+        queryBuilder.add("sst=" + urlEncode(sst));
+
+        return queryBuilder.toString();
+    }
+
+    private static String urlEncode(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 
     public InterceptionResult intercept(String zone,
@@ -108,7 +128,7 @@ public class ScrapeStopperInterceptor {
         String sst();
     }
 
-    public record InterceptRedirect(String sst, Duration waitTime) implements InterceptionResult {}
+    public record InterceptRedirect(String sst, Duration waitTime, String redirUrl) implements InterceptionResult {}
     public record InterceptPass(String sst) implements InterceptionResult {}
     public record InterceptPrefetch(String sst) implements InterceptionResult {}
 }
