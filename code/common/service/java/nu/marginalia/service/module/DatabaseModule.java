@@ -89,10 +89,13 @@ public class DatabaseModule extends AbstractModule {
             config.addDataSourceProperty("prepStmtCacheSize", "250");
             config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
 
+            config.addDataSourceProperty("socketTimeout", String.valueOf(Integer.getInteger("db.socketTimeout", 600_000)));
+
             config.setMaximumPoolSize(Integer.getInteger("db.poolSize", 5));
             config.setMinimumIdle(2);
 
             config.setMaxLifetime(Duration.ofMinutes(9).toMillis());
+            config.setLeakDetectionThreshold(Long.getLong("db.leakDetectionThreshold", 600_000));
 
             return new HikariDataSource(config);
         }
