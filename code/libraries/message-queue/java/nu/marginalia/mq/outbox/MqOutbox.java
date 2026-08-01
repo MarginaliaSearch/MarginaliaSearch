@@ -67,7 +67,12 @@ public class MqOutbox {
     private void poll() {
         try {
             for (long id = 1; run; id++) {
-                pollDb(id);
+                try {
+                    pollDb(id);
+                }
+                catch (Throwable t) {
+                    logger.error("Outbox poll iteration failed", t);
+                }
 
                 TimeUnit.MILLISECONDS.sleep(pollIntervalMs);
             }
