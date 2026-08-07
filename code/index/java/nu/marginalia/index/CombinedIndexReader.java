@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.CheckReturnValue;
+import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -398,6 +399,21 @@ public class CombinedIndexReader {
 
     public long forwardDataOffsetForDoc(long combinedDocId) {
         return forwardIndexReader.dataOffsetForDoc(combinedDocId);
+    }
+
+    /** Mappings of the same files, for the fetch path that reads resident pages
+     *  directly rather than copying them through the file descriptors */
+
+    public MemorySegment mappedForwardData() {
+        return forwardIndexReader.mappedData();
+    }
+
+    public MemorySegment mappedForwardSpans() {
+        return forwardIndexReader.mappedSpans();
+    }
+
+    public MemorySegment mappedPositions() {
+        return reverseIndexFullReader.mappedPositions();
     }
 
     public ForwardIndexParameters.ForwardIndexVersion forwardVersion() {

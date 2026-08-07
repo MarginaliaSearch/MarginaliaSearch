@@ -22,6 +22,8 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.nio.channels.FileChannel;
+import java.nio.file.StandardOpenOption;
 import java.lang.foreign.SegmentAllocator;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
@@ -36,6 +38,11 @@ public class FullReverseIndexReader {
 
     private final LongArray documents;
     private final int positionsFileFd;
+
+    /** Mapping of the positions file, for fetch paths that read resident pages
+     *  directly instead of copying them through the fd above */
+    private final Arena positionsArena;
+    private final MemorySegment positionsSegment;
     private final BufferPool dataPool;
     private final SkipListValueReader valueReader;
     private final String name;
@@ -54,6 +61,8 @@ public class FullReverseIndexReader {
             this.dataPool = null;
             this.valueReader = null;
             this.positionsFileFd = -1;
+            this.positionsArena = null;
+            this.positionsSegment = null;
             this.wordLexiconMap = Map.of();
 
             wordLexicons.forEach(WordLexicon::close);
@@ -65,6 +74,12 @@ public class FullReverseIndexReader {
         this.positionsFileFd = LinuxSystemCalls.openBuffered(positionsFile);
         // Position records are small and randomly accessed, so readahead is all waste
         LinuxSystemCalls.fadviseRandom(positionsFileFd);
+
+        positionsArena = Arena.ofShared();
+        try (FileChannel channel = FileChannel.open(positionsFile, StandardOpenOption.READ)) {
+            positionsSegment = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size(), positionsArena);
+        }
+        LinuxSystemCalls.madviseRandom(positionsSegment);
 
         logger.info("Switching reverse index");
 
@@ -252,6 +267,10 @@ public class FullReverseIndexReader {
         if (positionsFileFd > 0) {
             LinuxSystemCalls.closeFd(positionsFileFd);
         }
+
+        if (positionsArena != null) {
+            positionsArena.close();
+        }
     }
 
     @Nullable
@@ -261,6 +280,10 @@ public class FullReverseIndexReader {
 
     public int positionsFd() {
         return positionsFileFd;
+    }
+
+    public MemorySegment mappedPositions() {
+        return positionsSegment;
     }
 
     public CodedSequence[] getTermPositions(SegmentAllocator allocator, long[] offsets) {
