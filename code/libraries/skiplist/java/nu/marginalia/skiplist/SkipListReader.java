@@ -35,8 +35,29 @@ public class SkipListReader {
 
     private boolean atEnd;
 
-    private long lastDecompressedBlock = -1;
-    private final long[] decompressedData = new long[BLOCK_SIZE];
+    /** Per thread scratch buffer for decompressed doc id blocks, shared between
+     * all readers on the thread.  It is tagged with its current contents, so that
+     * repeat access to the same block skips the decompression. */
+    private static final class DecompressedBlock {
+        final long[] data = new long[BLOCK_SIZE];
+        SkipListReader owner;
+        long block;
+    }
+
+    private static final ThreadLocal<DecompressedBlock> decompressedBlock = ThreadLocal.withInitial(DecompressedBlock::new);
+
+    /** Decompress the current block into the thread's scratch buffer, unless the buffer
+     * already holds it, and return the buffer.  The claim is only valid until another
+     * reader runs on the same thread. */
+    private long[] claimDecompressedBlock(MemoryPage page, int dataOffset, int n) {
+        DecompressedBlock scratch = decompressedBlock.get();
+        if (scratch.owner != this || scratch.block != currentBlock) {
+            DocIdCompressor.decompress(new SegmentCompressorBuffer(page.getMemorySegment(), dataOffset), n, scratch.data);
+            scratch.owner = this;
+            scratch.block = currentBlock;
+        }
+        return scratch.data;
+    }
 
     public SkipListReader(BufferPool indexPool,
                           SkipListValueReader valuesReader,
@@ -96,27 +117,13 @@ public class SkipListReader {
             int dataOffset = pageDataOffset(currentBlockOffset, fc);
 
             long maxVal;
-            long nextBlock;
 
             if (FLAG_COMPRESSED_BLOCK == (flags & FLAG_COMPRESSED_BLOCK)) {
-                if (lastDecompressedBlock != currentBlock) {
-                    SegmentCompressorBuffer buffer = new SegmentCompressorBuffer(page.getMemorySegment(), dataOffset);
-                    DocIdCompressor.decompress(buffer, n, decompressedData);
-                    lastDecompressedBlock = currentBlock;
-                }
-
+                long[] decompressedData = claimDecompressedBlock(page, dataOffset, n);
                 maxVal = decompressedData[n-1];
             }
             else {
                 maxVal = maxValueInBlock(page, fc, n);
-            }
-
-            long nextNeededValue = data.peekValueLt(maxVal);
-            if (nextNeededValue > maxVal) {
-                nextBlock = findNextBlock(page, fc, nextNeededValue);
-            }
-            else {
-                nextBlock = currentBlock + BLOCK_STRIDE;
             }
 
             if (data.currentValue() > maxVal || retainInPage(page, flags, dataOffset, n, data)) {
@@ -125,6 +132,16 @@ public class SkipListReader {
                     while (data.hasMore())
                         data.rejectAndAdvance();
                     return false;
+                }
+
+                // Consuming the block leaves the read pointer on the first value beyond
+                // it, which is the value the forward pointers should be probed with
+                long nextBlock;
+                if (data.hasMore() && data.currentValue() > maxVal) {
+                    nextBlock = findNextBlock(page, fc, data.currentValue());
+                }
+                else {
+                    nextBlock = currentBlock + BLOCK_STRIDE;
                 }
 
                 currentBlockOffset = 0;
@@ -155,7 +172,6 @@ public class SkipListReader {
     }
 
     boolean retainInPage_Plain(MemoryPage page, int dataOffset, int n, LongQueryBuffer data) {
-
 
         while (data.hasMore()
                 && n > (currentBlockIdx = page.binarySearchLong(data.currentValue(), dataOffset, currentBlockIdx, n)))
@@ -188,12 +204,11 @@ public class SkipListReader {
             break;
         }
 
-
         return currentBlockIdx >= n;
     }
 
     boolean retainInPage_Compressed(int n, LongQueryBuffer data) {
-
+        long[] decompressedData = decompressedBlock.get().data;
 
         while (data.hasMore()
                 && n > (currentBlockIdx = binarySearchUB(decompressedData, data.currentValue(), currentBlockIdx, n)))
@@ -226,7 +241,6 @@ public class SkipListReader {
             break;
         }
 
-
         return currentBlockIdx >= n;
     }
 
@@ -248,25 +262,11 @@ public class SkipListReader {
 
             long maxVal;
             if (FLAG_COMPRESSED_BLOCK == (flags & FLAG_COMPRESSED_BLOCK)) {
-                if (lastDecompressedBlock != currentBlock) {
-                    SegmentCompressorBuffer buffer = new SegmentCompressorBuffer(page.getMemorySegment(), dataOffset);
-                    DocIdCompressor.decompress(buffer, n, decompressedData);
-                    lastDecompressedBlock = currentBlock;
-                }
+                long[] decompressedData = claimDecompressedBlock(page, dataOffset, n);
                 maxVal = decompressedData[n-1];
             }
             else {
                 maxVal = maxValueInBlock(page, fc, n);
-            }
-
-            long nextBlock;
-
-            long nextNeededValue = data.peekValueLt(maxVal);
-            if (nextNeededValue > maxVal) {
-                nextBlock = findNextBlock(page, fc, nextNeededValue);
-            }
-            else {
-                nextBlock = currentBlock + BLOCK_STRIDE;
             }
 
             if (data.currentValue() > maxVal || rejectInPage(page, flags, dataOffset, n, data)) {
@@ -275,6 +275,16 @@ public class SkipListReader {
                     while (data.hasMore())
                         data.retainAndAdvance();
                     return false;
+                }
+
+                // Consuming the block leaves the read pointer on the first value beyond
+                // it, which is the value the forward pointers should be probed with
+                long nextBlock;
+                if (data.hasMore() && data.currentValue() > maxVal) {
+                    nextBlock = findNextBlock(page, fc, data.currentValue());
+                }
+                else {
+                    nextBlock = currentBlock + BLOCK_STRIDE;
                 }
 
                 currentBlockOffset = 0;
@@ -295,13 +305,7 @@ public class SkipListReader {
 
     boolean rejectInPage(MemoryPage page, int flags, int dataOffset, int n, LongQueryBuffer data) {
         if (FLAG_COMPRESSED_BLOCK == (flags & FLAG_COMPRESSED_BLOCK)) {
-
-            if (lastDecompressedBlock != currentBlock) {
-                SegmentCompressorBuffer buffer = new SegmentCompressorBuffer(page.getMemorySegment(), dataOffset);
-                DocIdCompressor.decompress(buffer, n, decompressedData);
-                lastDecompressedBlock = currentBlock;
-            }
-
+            claimDecompressedBlock(page, dataOffset, n);
             return rejectInPage_Compressed(n, data);
         }
         else {
@@ -310,7 +314,7 @@ public class SkipListReader {
     }
 
     boolean rejectInPage_Compressed(int n, LongQueryBuffer data) {
-
+        long[] decompressedData = decompressedBlock.get().data;
 
         while (data.hasMore()
                 && n > (currentBlockIdx = binarySearchUB(decompressedData, data.currentValue(), currentBlockIdx, n)))
@@ -347,7 +351,6 @@ public class SkipListReader {
     }
 
     boolean rejectInPage_Plain(MemoryPage page, int dataOffset, int n, LongQueryBuffer data) {
-
 
         while (data.hasMore()
                 && n > (currentBlockIdx = page.binarySearchLong(data.currentValue(), dataOffset, currentBlockIdx, n)))
@@ -412,11 +415,7 @@ public class SkipListReader {
                 int dataOffset = pageDataOffset(currentBlockOffset, fc);
 
                 if (FLAG_COMPRESSED_BLOCK == (flags & FLAG_COMPRESSED_BLOCK)) {
-                    if (lastDecompressedBlock != currentBlock) {
-                        SegmentCompressorBuffer buffer = new SegmentCompressorBuffer(page.getMemorySegment(), dataOffset);
-                        DocIdCompressor.decompress(buffer, n, decompressedData);
-                        lastDecompressedBlock = currentBlock;
-                    }
+                    long[] decompressedData = claimDecompressedBlock(page, dataOffset, n);
                     int nCopied = dest.addData(decompressedData, currentBlockIdx, n - currentBlockIdx);
                     currentBlockIdx += nCopied;
                     totalCopied += nCopied;
@@ -473,11 +472,7 @@ public class SkipListReader {
                 int dataOffset = pageDataOffset(currentBlockOffset, fc);
 
                 if (FLAG_COMPRESSED_BLOCK == (flags & FLAG_COMPRESSED_BLOCK)) {
-                    if (lastDecompressedBlock != currentBlock) {
-                        SegmentCompressorBuffer buffer = new SegmentCompressorBuffer(page.getMemorySegment(), dataOffset);
-                        DocIdCompressor.decompress(buffer, n, decompressedData);
-                        lastDecompressedBlock = currentBlock;
-                    }
+                    long[] decompressedData = claimDecompressedBlock(page, dataOffset, n);
 
                     do {
                         long blockMinValue = decompressedData[currentBlockIdx];
@@ -604,7 +599,6 @@ public class SkipListReader {
             this.inputKeys = inputKeys;
             this.valueOffsets = new long[inputKeys.length];
             this.outValues = new long[inputKeys.length * (RECORD_SIZE-1)];
-
         }
 
         public boolean advance() throws IOException {
@@ -696,12 +690,7 @@ public class SkipListReader {
                         return;
 
                     if (FLAG_COMPRESSED_BLOCK == (flags & FLAG_COMPRESSED_BLOCK)) {
-                        if (lastDecompressedBlock != currentBlock) {
-                            SegmentCompressorBuffer buffer = new SegmentCompressorBuffer(page.getMemorySegment(), dataOffset);
-                            DocIdCompressor.decompress(buffer, n, decompressedData);
-                            lastDecompressedBlock = currentBlock;
-                        }
-
+                        claimDecompressedBlock(page, dataOffset, n);
                         readOffsetsForBlock_Compressed(n, valuesOffset);
                     }
                     else {
@@ -740,28 +729,34 @@ public class SkipListReader {
         }
 
         private void readOffsetsForBlock_Compressed(int n, long valuesOffset) {
-            int searchStart = currentBlockIdx;
-            int remainingToRead = n - currentBlockIdx;
+            long[] decompressedData = decompressedBlock.get().data;
 
-            outer:
-            while (offsetPos < inputKeys.length) {
+            int searchStart = currentBlockIdx;
+
+            while (offsetPos < inputKeys.length && currentBlockIdx < n) {
                 long kv = inputKeys[offsetPos];
 
-                for (; currentBlockIdx < searchStart + remainingToRead; currentBlockIdx++) {
-                    long pv = decompressedData[currentBlockIdx];
-                    if (kv < pv) {
-                        offsetPos++;
-                        valueOffsets[vLen++] = -1;
-                        continue outer;
-                    } else if (kv == pv) {
-                        long val = valuesOffset + 8L * (currentBlockIdx - searchStart) * (RECORD_SIZE - 1);
-                        valueOffsets[vLen++] = val;
-                        offsetPos++;
+                if (decompressedData[currentBlockIdx] < kv) {
+                    int lo = currentBlockIdx;
+                    int step = 1;
+                    while (lo + step < n && decompressedData[lo + step] < kv) {
+                        lo += step;
+                        step <<= 1;
+                    }
 
-                        continue outer;
+                    currentBlockIdx = binarySearchUB(decompressedData, kv, lo, Math.min(n, lo + step));
+                    if (currentBlockIdx >= n) {
+                        break;
                     }
                 }
-                break;
+
+                if (decompressedData[currentBlockIdx] == kv) {
+                    valueOffsets[vLen++] = valuesOffset + 8L * (currentBlockIdx - searchStart) * (RECORD_SIZE - 1);
+                }
+                else {
+                    valueOffsets[vLen++] = -1;
+                }
+                offsetPos++;
             }
         }
 
@@ -851,11 +846,7 @@ public class SkipListReader {
                 int searchStart = currentBlockIdx;
 
                 if (FLAG_COMPRESSED_BLOCK == (flags & FLAG_COMPRESSED_BLOCK)) {
-                    if (lastDecompressedBlock != currentBlock) {
-                        SegmentCompressorBuffer buffer = new SegmentCompressorBuffer(page.getMemorySegment(), dataOffset);
-                        DocIdCompressor.decompress(buffer, n, decompressedData);
-                        lastDecompressedBlock = currentBlock;
-                    }
+                    long[] decompressedData = claimDecompressedBlock(page, dataOffset, n);
                     outer:
                     while (pos < keys.length) {
                         long kv = keys[pos];
