@@ -22,9 +22,26 @@ public class DocumentSpan {
         this.startsEnds = null;
     }
 
+    /** The raw interlaced start and end positions, or null when the span is
+     *  empty.  Exposed for the benchmark data sampler. */
+    public IntList startsEnds() {
+        return startsEnds;
+    }
+
+    /** Both list shapes are Pareto distributed, and which side dominates decides
+     *  the cheaper loop orientation.  Sampled ranking inputs put the median term
+     *  at one or two positions, while common words carry positions lists up to
+     *  the extractor's cap of 512 against span lists that are typically a single
+     *  span or a handful. */
+    private static final int SEARCH_ORIENTATION_CUTOFF = 8;
+
     public int countIntersections(IntList positions) {
         if (null == startsEnds || startsEnds.isEmpty() || positions.size() == 0) {
             return 0;
+        }
+
+        if (positions.size() >= SEARCH_ORIENTATION_CUTOFF * startsEnds.size()) {
+            return countIntersectionsBySearch(positions);
         }
 
         int sei = 0;
@@ -55,6 +72,42 @@ public class DocumentSpan {
         }
 
         return cnt;
+    }
+
+    /** Count by summing, for each span, the width of the window of positions
+     *  inside it, located with binary searches.  O(spans log positions) where
+     *  the merge is O(spans + positions). */
+    private int countIntersectionsBySearch(IntList positions) {
+        int cnt = 0;
+        int from = 0;
+        int limit = positions.size();
+
+        for (int sei = 0; sei < startsEnds.size(); sei += 2) {
+            int lo = firstPositionAtOrAbove(positions, startsEnds.getInt(sei), from, limit);
+            if (lo == limit)
+                break;
+
+            int hi = firstPositionAtOrAbove(positions, startsEnds.getInt(sei + 1), lo, limit);
+
+            cnt += hi - lo;
+            from = hi;
+        }
+
+        return cnt;
+    }
+
+    /** First index in [from, limit) whose position is at or above key */
+    private static int firstPositionAtOrAbove(IntList positions, int key, int from, int limit) {
+        int lo = from;
+        int hi = limit;
+
+        while (lo < hi) {
+            int mid = (lo + hi) >>> 1;
+            if (positions.getInt(mid) < key) lo = mid + 1;
+            else hi = mid;
+        }
+
+        return lo;
     }
 
     public boolean containsPosition(int position) {
