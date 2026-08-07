@@ -34,8 +34,6 @@ public class NativeAlgos {
     private final MethodHandle decompressDocIds;
     private final MethodHandle decompressMatch;
     private final MethodHandle decodeVarintBatch;
-    private final MethodHandle findFirstGe;
-    private final MethodHandle findFirstGeScalar;
 
     public static final NativeAlgos instance;
 
@@ -85,20 +83,6 @@ public class NativeAlgos {
         handle = libraryLookup.findOrThrow("ms_decompress_docids");
         decompressDocIds = nativeLinker.downcallHandle(handle,
                 FunctionDescriptor.of(JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_INT, ADDRESS),
-                Linker.Option.critical(true));
-
-        // Scanning a sorted list for the first value at or above a target, the
-        // step the sequence kernels advance a list with.  A scalar twin of the
-        // vectorised entry point is bound too, so a benchmark can tell the cost
-        // of the call apart from the gain of the vectorisation.
-        handle = libraryLookup.findOrThrow("ms_find_first_ge");
-        findFirstGe = nativeLinker.downcallHandle(handle,
-                FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT, JAVA_INT),
-                Linker.Option.critical(true));
-
-        handle = libraryLookup.findOrThrow("ms_find_first_ge_scalar");
-        findFirstGeScalar = nativeLinker.downcallHandle(handle,
-                FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT, JAVA_INT),
                 Linker.Option.critical(true));
 
         handle = libraryLookup.findOrThrow("ms_decode_varint_batch");
@@ -161,8 +145,6 @@ public class NativeAlgos {
     private static final MethodHandle DECOMPRESS_DOC_IDS = isAvailable ? instance.decompressDocIds : null;
     private static final MethodHandle DECOMPRESS_MATCH = isAvailable ? instance.decompressMatch : null;
     private static final MethodHandle DECODE_VARINT_BATCH = isAvailable ? instance.decodeVarintBatch : null;
-    private static final MethodHandle FIND_FIRST_GE = isAvailable ? instance.findFirstGe : null;
-    private static final MethodHandle FIND_FIRST_GE_SCALAR = isAvailable ? instance.findFirstGeScalar : null;
 
     /** Decompress n doc ids from the compressed representation in the input segment,
      *  starting at position pos, into the output array.  Returns the input position
@@ -170,29 +152,6 @@ public class NativeAlgos {
     public static long decompressDocIds(MemorySegment input, long pos, int n, long[] output) {
         try {
             return (long) DECOMPRESS_DOC_IDS.invokeExact(input.address(), pos, input.byteSize(), n, MemorySegment.ofArray(output));
-        }
-        catch (Throwable t) {
-            throw new RuntimeException("Failed to invoke native function", t);
-        }
-    }
-
-    /** Index of the first element of data[0:n] that is at least target, or n if
-     *  there is none.  The array must be sorted ascending and hold non negative
-     *  values. */
-    public static int findFirstGe(int[] data, int n, int target) {
-        try {
-            return (int) FIND_FIRST_GE.invokeExact(MemorySegment.ofArray(data), n, target);
-        }
-        catch (Throwable t) {
-            throw new RuntimeException("Failed to invoke native function", t);
-        }
-    }
-
-    /** As {@link #findFirstGe(int[], int, int)} without the vectorisation, for
-     *  telling the cost of the call apart from the gain of the vectorisation */
-    public static int findFirstGeScalar(int[] data, int n, int target) {
-        try {
-            return (int) FIND_FIRST_GE_SCALAR.invokeExact(MemorySegment.ofArray(data), n, target);
         }
         catch (Throwable t) {
             throw new RuntimeException("Failed to invoke native function", t);

@@ -10,7 +10,7 @@ LIBURING_PATH=`./findliburing.sh`
 CXX=c++
 
 HEADERS=src/config.h
-SOURCES=src/sort.cc src/unix.cc src/uring.cc src/decompress.cc src/varint.cc src/scan.cc
+SOURCES=src/sort.cc src/unix.cc src/uring.cc src/decompress.cc src/varint.cc
 
 all: resources/libcpp.so
 
