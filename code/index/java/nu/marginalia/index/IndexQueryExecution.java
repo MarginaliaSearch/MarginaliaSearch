@@ -241,9 +241,20 @@ public class IndexQueryExecution {
 
 
     private class DeduplicateStage implements BufferPipe.IntermediateFunction<CombinedDocIdList, CombinedDocIdList> {
-        // we generally expect at most about 100k items per partition per query, so this should avoid resizing
-        // while not using too much memory (~11MB at the default load factor)
-        private final LongOpenHashSet seen = new LongOpenHashSet(1_000_000);
+        private static final ConcurrentLinkedQueue<LongOpenHashSet> setPool = new ConcurrentLinkedQueue<>();
+
+        private final LongOpenHashSet seen;
+
+        DeduplicateStage() {
+            LongOpenHashSet pooled = setPool.poll();
+            seen = pooled != null ? pooled : new LongOpenHashSet(100_000);
+        }
+
+        @Override
+        public void cleanUp() {
+            seen.clear();
+            setPool.add(seen);
+        }
 
         @Override
         public void process(CombinedDocIdList input, PipeDrain<CombinedDocIdList> output) {
