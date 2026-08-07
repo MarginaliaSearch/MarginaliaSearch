@@ -10,7 +10,6 @@ import java.io.FileOutputStream;
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.nio.file.Path;
-import java.util.List;
 
 import static java.lang.foreign.ValueLayout.*;
 
@@ -25,16 +24,12 @@ public class IoUring {
 
     private static boolean useIoUring = !Boolean.getBoolean("system.disableIoUring");
 
-    public final MethodHandle uringInitRegisteredFd;
-    public final MethodHandle uringInitUnregistered;
-    public final MethodHandle uringClose;
+    private final MethodHandle uringInitRegisteredFd;
+    private final MethodHandle uringClose;
 
-    public final MethodHandle uringJustPoll;
-    public final MethodHandle uringReadAndPoll;
-
-    private final MethodHandle uringReadBuffered;
-    private final MethodHandle uringReadDirect;
-    private final MethodHandle uringReadSubstitute;
+    private final MethodHandle uringReadBufferedRaw;
+    private final MethodHandle uringRegisterBufferRaw;
+    private final MethodHandle uringReadFixedRaw;
 
     public static final IoUring instance;
 
@@ -58,59 +53,30 @@ public class IoUring {
 
 
         if (useIoUring) {
-
+            // The raw address bindings avoid a session acquire on every argument as
+            // well as per call marshalling allocations.  The caller owns and reuses
+            // the argument arrays.
             handle = libraryLookup.findOrThrow("uring_read_buffered");
-            uringReadBuffered = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT, ADDRESS, ADDRESS, ADDRESS));
+            uringReadBufferedRaw = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, JAVA_LONG, JAVA_INT, JAVA_LONG, JAVA_LONG, JAVA_LONG));
 
-            handle = libraryLookup.findOrThrow("uring_read_direct");
-            uringReadDirect = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT, ADDRESS, ADDRESS, ADDRESS));
+            handle = libraryLookup.findOrThrow("uring_register_buffer");
+            uringRegisterBufferRaw = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, JAVA_LONG, JAVA_LONG, JAVA_LONG));
 
-            handle = libraryLookup.findOrThrow("uring_read_submit_and_poll");
-
-            uringReadAndPoll = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(
-                    JAVA_INT,
-                    ADDRESS,  // io_uring* ring
-                    ADDRESS,  // long* result_ids
-                    JAVA_INT, // int in_flight_requests
-                    JAVA_INT, // int read_count
-                    ADDRESS,  // long* read_batch_ids
-                    ADDRESS,  // int* read_fds
-                    ADDRESS,  // void** read_buffers
-                    ADDRESS,  // unsigned int** read_sizes
-                    ADDRESS  // long* read_offsets
-            ));
-            handle = libraryLookup.findOrThrow("uring_poll");
-
-            uringJustPoll = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(
-                    JAVA_INT,
-                    ADDRESS,  // io_uring* ring
-                    ADDRESS   // long* result_ids
-            ));
+            handle = libraryLookup.findOrThrow("uring_read_fixed");
+            uringReadFixedRaw = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, JAVA_LONG, JAVA_INT, JAVA_LONG, JAVA_LONG, JAVA_LONG));
 
             handle = libraryLookup.findOrThrow("initialize_uring_single_file");
             uringInitRegisteredFd = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(ADDRESS, JAVA_INT, JAVA_INT));
 
-            handle = libraryLookup.findOrThrow("initialize_uring_unregistered");
-            uringInitUnregistered = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(ADDRESS, JAVA_INT));
-
-
             handle = libraryLookup.findOrThrow("close_uring");
             uringClose = nativeLinker.downcallHandle(handle, FunctionDescriptor.ofVoid(ADDRESS));
-
-            handle = libraryLookup.findOrThrow("substitute_uring_read");
-            uringReadSubstitute = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS, ADDRESS, ADDRESS));
         }
         else {
             uringInitRegisteredFd = null;
-            uringInitUnregistered = null;
             uringClose = null;
-            uringReadDirect = null;
-            uringReadBuffered = null;
-            uringReadAndPoll = null;
-            uringJustPoll = null;
-
-            handle = libraryLookup.findOrThrow("substitute_uring_read");
-            uringReadSubstitute = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS, ADDRESS, ADDRESS));
+            uringReadBufferedRaw = null;
+            uringRegisterBufferRaw = null;
+            uringReadFixedRaw = null;
         }
     }
 
@@ -150,24 +116,70 @@ public class IoUring {
         }
 
         instance = ioUringI;
-        isAvailable = instance != null;
+        isAvailable = instance != null && useIoUring;
     }
 
-    public static IoUring instance() {
-        return instance;
+    // Kept in a static final so the JIT can constant fold the handle and inline the downcall
+    private static final MethodHandle URING_READ_BUFFERED_RAW =
+            (instance != null) ? instance.uringReadBufferedRaw : null;
+    private static final MethodHandle URING_READ_FIXED_RAW =
+            (instance != null) ? instance.uringReadFixedRaw : null;
+
+    /** Submit n buffered reads in one syscall and wait for all of them.  All pointer
+     *  arguments are raw addresses to caller owned arrays of length n: buffer
+     *  addresses, read sizes, and file offsets.  The ring must be used by one thread
+     *  at a time and have capacity for n requests. */
+    public static int readBatchRaw(UringQueue ring, int n, long buffersAddr, long sizesAddr, long offsetsAddr) {
+        try {
+            return (int) URING_READ_BUFFERED_RAW.invokeExact(ring.pointer().address(), n, buffersAddr, sizesAddr, offsetsAddr);
+        } catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+    }
+
+    /** Register a buffer with the ring for use with readFixedBatchRaw.  All reads
+     *  through that entry point must target memory within the registered buffer.
+     *  Registered buffers are pinned and count against RLIMIT_MEMLOCK, so this can
+     *  fail with -ENOMEM under default service limits.  Callers should treat
+     *  registration as an optimization and fall back to unregistered reads. */
+    public static void registerBuffer(UringQueue ring, long bufferAddr, long bufferLen) {
+        int ret;
+        try {
+            ret = (int) instance.uringRegisterBufferRaw.invokeExact(ring.pointer().address(), bufferAddr, bufferLen);
+        } catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+        if (ret != 0) {
+            throw new IllegalStateException("io_uring_register_buffers failed: " + ret + (ret == -12 ? " (ENOMEM, likely RLIMIT_MEMLOCK)" : ""));
+        }
+    }
+
+    /** Like readBatchRaw, but the reads skip per operation buffer import against
+     *  the ring's registered buffer. */
+    public static int readFixedBatchRaw(UringQueue ring, int n, long buffersAddr, long sizesAddr, long offsetsAddr) {
+        try {
+            return (int) URING_READ_FIXED_RAW.invokeExact(ring.pointer().address(), n, buffersAddr, sizesAddr, offsetsAddr);
+        } catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
     }
 
     public static UringQueue uringOpen(int fd, int queueSize) {
-        if (useIoUring) {
-            try {
-                return new UringQueue((MemorySegment) instance.uringInitRegisteredFd.invoke(queueSize, fd), fd);
-            } catch (Throwable t) {
-                throw new RuntimeException("Failed to invoke native function", t);
-            }
+        if (!useIoUring) {
+            throw new IllegalStateException("io_uring is not available");
         }
-        else {
-            return new UringQueue(null, fd);
+
+        MemorySegment ring;
+        try {
+            ring = (MemorySegment) instance.uringInitRegisteredFd.invoke(queueSize, fd);
+        } catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
         }
+
+        if (ring == null || ring.address() == 0) {
+            throw new IllegalStateException("io_uring initialization failed");
+        }
+        return new UringQueue(ring, fd);
     }
 
     public static void uringClose(UringQueue ring) {
@@ -177,46 +189,6 @@ public class IoUring {
             } catch (Throwable t) {
                 throw new RuntimeException("Failed to invoke native function", t);
             }
-        }
-    }
-
-    public static int uringReadBatch(int fd, UringQueue ring, List<MemorySegment> dest, List<Long> offsets, boolean direct) {
-        if (offsets.isEmpty()) {
-            throw new IllegalArgumentException("Empty offset list in  uringRead");
-        }
-
-        try {
-            MemorySegment bufferList = Arena.ofAuto().allocate(8L * offsets.size(), 8);
-            MemorySegment sizeList = Arena.ofAuto().allocate(4L * offsets.size(), 8);
-            MemorySegment offsetList = Arena.ofAuto().allocate(8L * offsets.size(), 8);
-
-            if (dest.size() != offsets.size()) {
-                throw new IllegalStateException();
-            }
-
-            for (int i = 0; i < offsets.size(); i++) {
-                var buffer = dest.get(i);
-                bufferList.setAtIndex(JAVA_LONG, i, buffer.address());
-                sizeList.setAtIndex(JAVA_INT, i, (int) buffer.byteSize());
-                offsetList.setAtIndex(JAVA_LONG, i, offsets.get(i));
-            }
-
-            if (useIoUring
-                    && offsets.size() > 5) // fall back to sequential pread operations if the list is too small
-            {
-                if (direct) {
-                    return (Integer) instance.uringReadDirect.invoke(ring.pointer(), dest.size(), bufferList, sizeList, offsetList);
-                } else {
-                    return (Integer) instance.uringReadBuffered.invoke(ring.pointer(), dest.size(), bufferList, sizeList, offsetList);
-                }
-            }
-            else {
-                // do a sequential pread operation as a fallback
-                return (Integer) instance.uringReadSubstitute.invoke(fd, dest.size(), bufferList, sizeList, offsetList);
-            }
-        }
-        catch (Throwable t) {
-            throw new RuntimeException("Failed to invoke native function", t);
         }
     }
 

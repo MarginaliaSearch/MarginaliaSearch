@@ -3,17 +3,15 @@ package nu.marginalia.uring;
 import nu.marginalia.ffi.IoUring;
 
 import java.lang.foreign.MemorySegment;
-import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
+/** A registered-file io_uring, obtained via {@link IoUring#uringOpen}.  Reads are
+ *  submitted in batches through the raw entry points in {@link IoUring}.  These
+ *  provide no synchronization, so a ring must only be used by one thread at a time.
+ */
 public final class UringQueue {
     private final MemorySegment pointer;
     private final int fd;
-    private final Lock  lock = new ReentrantLock(true);
 
     public UringQueue(MemorySegment pointer, int fd) {
         this.pointer = pointer;
@@ -22,44 +20,6 @@ public final class UringQueue {
 
     public static UringQueue open(int fd, int size) {
         return IoUring.uringOpen(fd, size);
-    }
-
-    public int readBatch(List<MemorySegment> dest, List<Long> offsets, long timeout, boolean direct)
-            throws TimeoutException {
-        try {
-            if (!lock.tryLock(timeout, TimeUnit.MILLISECONDS))
-                throw new TimeoutException();
-
-            try {
-                return IoUring.uringReadBatch(fd, this, dest, offsets, direct);
-            }
-            finally {
-                lock.unlock();
-            }
-        }
-        catch (InterruptedException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    public int readBatch(List<MemorySegment> dest, List<Long> offsets, boolean direct) {
-        try {
-            if (!lock.tryLock(10, TimeUnit.MILLISECONDS))
-                throw new RuntimeException("io_uring slow, likely backpressure!");
-
-            try {
-                return IoUring.uringReadBatch(fd, this, dest, offsets, direct);
-            }
-            finally {
-                lock.unlock();
-            }
-        }
-        catch (RuntimeException ex) {
-            throw ex;
-        }
-        catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
     }
 
     public void close() {
@@ -87,13 +47,4 @@ public final class UringQueue {
     public int hashCode() {
         return Objects.hash(pointer, fd);
     }
-
-    @Override
-    public String toString() {
-        return "UringQueue[" +
-                "pointer=" + pointer + ", " +
-                "fd=" + fd + ']';
-    }
-
-
 }
