@@ -8,16 +8,22 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 
 public abstract class AbstractPipeStage<T> implements PipeStage<T> {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
+
+    /** Park with exponential backoff between these bounds when idle.  Parked
+     *  threads are unparked when work or space appears, so the backoff only
+     *  bounds the staleness of a missed wakeup, not the handoff latency. */
+    private static final long MIN_PARK_NANOS = 20_000;
+    private static final long MAX_PARK_NANOS = 2_000_000;
 
     public final String stageName;
 
@@ -25,7 +31,7 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
     private final ExecutorService executorService;
     private final AtomicBoolean stopped = new AtomicBoolean();
 
-    private final AtomicReference<Thread> idleSubmitter = new AtomicReference<>(null);
+    private final ConcurrentLinkedQueue<Thread> idleSubmitters = new ConcurrentLinkedQueue<>();
     private final AtomicInteger idleRunnerCount = new AtomicInteger();
 
     private final List<Thread> runnerThreads = new CopyOnWriteArrayList<>();
@@ -97,22 +103,13 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
 
         for (int iter = 0; iter < 128; iter++) {
             if (inputBuffer.putNP(val)) {
+                rouseIdleExecutors();
                 return true;
             }
             Thread.onSpinWait();
         }
 
-        for (int iter = 0; iter < 1024; iter++) {
-            if (inputBuffer.putNP(val)) {
-                rouseExecutors();
-                return true;
-            }
-            if (inputBuffer.isClosed())
-                return false;
-
-            Thread.yield();
-        }
-
+        long parkTime = MIN_PARK_NANOS;
         for (;;) {
             if (inputBuffer.putNP(val)) {
                 rouseExecutors();
@@ -126,8 +123,11 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
             if (inputBuffer.isClosed() || stopped.getAcquire())
                 return false;
 
-            idleSubmitter.compareAndSet(null, Thread.currentThread());
-            LockSupport.parkNanos(10_000);
+            Thread self = Thread.currentThread();
+            idleSubmitters.add(self);
+            LockSupport.parkNanos(parkTime);
+            idleSubmitters.remove(self);
+            parkTime = Math.min(2 * parkTime, MAX_PARK_NANOS);
         }
     }
 
@@ -138,24 +138,15 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
 
         for (int iter = 0; iter < 128; iter++) {
             if (inputBuffer.putNP(val)) {
+                rouseIdleExecutors();
                 return true;
             }
             Thread.onSpinWait();
         }
 
-        for (int iter = 0; iter < 1024; iter++) {
-            if (inputBuffer.putNP(val)) {
-                rouseExecutors();
-                return true;
-            }
-            if (inputBuffer.isClosed() || stopped.get())
-                return false;
-
-            Thread.yield();
-        }
-
         long timeoutNs = timeout.toNanos();
 
+        long parkTime = MIN_PARK_NANOS;
         for (;;) {
             if (inputBuffer.putNP(val)) {
                 rouseExecutors();
@@ -170,8 +161,11 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
             if (System.nanoTime() - startTimeNanos > maxRunDurationNanos)
                 stopped.set(true);
 
-            idleSubmitter.compareAndSet(null, Thread.currentThread());
-            LockSupport.parkNanos(10_000);
+            Thread self = Thread.currentThread();
+            idleSubmitters.add(self);
+            LockSupport.parkNanos(parkTime);
+            idleSubmitters.remove(self);
+            parkTime = Math.min(2 * parkTime, MAX_PARK_NANOS);
         }
     }
 
@@ -204,20 +198,10 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
 
                 if (stopped.getAcquire()) return;
 
-                for (int iter = 0; iter < 1024; iter++) {
-                    T val = inputBuffer.tryTakeNC();
-                    if (val != null) {
-                        rouseSubmitter();
-                        stage.accept(val);
-                        continue outer;
-                    }
-                    Thread.yield();
-                }
-
-
                 try {
                     idleRunnerCount.incrementAndGet();
 
+                    long parkTime = MIN_PARK_NANOS;
                     for (; ; ) {
                         T val = inputBuffer.tryTakeNC();
                         if (val != null) {
@@ -232,7 +216,8 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
 
                         if (stopped.getAcquire()) return;
 
-                        LockSupport.parkNanos(10_000);
+                        LockSupport.parkNanos(parkTime);
+                        parkTime = Math.min(2 * parkTime, MAX_PARK_NANOS);
 
                         // Check if the input is closed and we should pack up shop
                         if (inputBuffer.isClosed() && inputBuffer.peek() == null)
@@ -268,15 +253,23 @@ public abstract class AbstractPipeStage<T> implements PipeStage<T> {
     }
 
     protected void rouseSubmitter() {
-        Thread thread = idleSubmitter.getAcquire();
+        Thread thread = idleSubmitters.poll();
         if (thread != null) {
             LockSupport.unpark(thread);
-            idleSubmitter.weakCompareAndSetRelease(thread, null);
         }
     }
 
     protected void rouseExecutors() {
         runnerThreads.forEach(LockSupport::unpark);
+    }
+
+    /** As rouseExecutors, but only when a runner is in its park loop.  The offer
+     *  fast path takes this branch, so the check must stay a cheap read in the
+     *  common case where all runners are busy. */
+    private void rouseIdleExecutors() {
+        if (idleRunnerCount.getAcquire() > 0) {
+            rouseExecutors();
+        }
     }
 
 
