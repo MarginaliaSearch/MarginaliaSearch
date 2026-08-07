@@ -1,10 +1,43 @@
 package nu.marginalia.sequence;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import org.junit.jupiter.api.Test;
+
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class VarintCodedSequenceTest {
+
+    /** Round trips sequences whose deltas span all encoded byte widths, so both the
+     *  wide load fast path and the byte loop tail near the buffer limit are hit */
+    @Test
+    public void testDecodeFuzz() {
+        for (int seed = 0; seed < 10_000; seed++) {
+            Random r = new Random(seed);
+            int n = r.nextInt(1, 50);
+
+            int[] values = new int[n];
+            int val = 0;
+            for (int i = 0; i < n; i++) {
+                int deltaBits = 1 + r.nextInt(28);
+                val += 1 + r.nextInt(1 << deltaBits);
+                values[i] = val;
+            }
+
+            var sequence = VarintCodedSequence.generate(values);
+
+            var decoded = sequence.values();
+            assertEquals(new IntArrayList(values), decoded, "values() mismatch for seed " + seed);
+
+            var iter = sequence.iterator();
+            for (int i = 0; i < n; i++) {
+                assertTrue(iter.hasNext(), "iterator ended early for seed " + seed);
+                assertEquals(values[i], iter.nextInt(), "iterator mismatch at " + i + " for seed " + seed);
+            }
+            assertFalse(iter.hasNext(), "iterator overran for seed " + seed);
+        }
+    }
 
     @Test
     public void testSimple() {

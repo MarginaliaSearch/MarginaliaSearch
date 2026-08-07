@@ -8,6 +8,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -580,6 +582,130 @@ class SequenceOperationsTest {
         int[] offsets = {0, 0};
         int result = SequenceOperations.minDistance(positions, offsets);
         assertEquals(1, result, "Zero offsets should be same as no offsets");
+    }
+
+    @Test
+    public void testMinDistance_CountLimited() {
+        IntList[] positions = {
+                IntArrayList.wrap(new int[]{1, 5, 10}),
+                IntArrayList.wrap(new int[]{2, 6, 11}),
+                null
+        };
+        int[] offsets = {0, 0, 0};
+        assertEquals(1, SequenceOperations.minDistance(positions, offsets, 2),
+                "Entries beyond the count must be ignored");
+        assertEquals(0, SequenceOperations.minDistance(positions, offsets, 1));
+        assertEquals(0, SequenceOperations.minDistance(positions, offsets, 0));
+    }
+
+    // ========== findIntersections fuzz vs reference ==========
+
+    /** Compare findIntersections, which picks between a merge walk and a probing
+     *  strategy based on the list shapes, against the shape-oblivious merge
+     *  implementation it replaced.  The size distribution is skewed so that both
+     *  strategies are exercised.
+     */
+    @Test
+    public void testFindIntersectionsFuzzAgainstReference() {
+        Random rng = new Random(1);
+
+        for (int round = 0; round < 100_000; round++) {
+            int k = 1 + rng.nextInt(4);
+
+            IntList[] positions = new IntList[k];
+            int[] offsets = new int[k];
+
+            for (int i = 0; i < k; i++) {
+                int size = switch (rng.nextInt(4)) {
+                    case 0 -> rng.nextInt(3);
+                    case 1 -> 1 + rng.nextInt(8);
+                    case 2 -> 1 + rng.nextInt(64);
+                    default -> 1 + rng.nextInt(512);
+                };
+
+                int[] values = new int[size];
+                int v = rng.nextInt(8);
+                for (int j = 0; j < size; j++) {
+                    values[j] = v;
+                    v += 1 + rng.nextInt(4);
+                }
+                positions[i] = IntArrayList.wrap(values);
+                offsets[i] = -rng.nextInt(5);
+            }
+
+            int n = switch (rng.nextInt(3)) {
+                case 0 -> Integer.MAX_VALUE;
+                case 1 -> 64;
+                default -> rng.nextInt(4);
+            };
+
+            IntList expected = refFindIntersections(new IntArrayList(), positions, offsets, n);
+            IntList actual = SequenceOperations.findIntersections(new IntArrayList(), positions, offsets, n);
+
+            assertEquals(expected, actual,
+                    "Mismatch in round " + round + " for " + Arrays.toString(positions)
+                            + " offsets " + Arrays.toString(offsets) + " n " + n);
+        }
+    }
+
+    /** The merge walk formerly used unconditionally by findIntersections, kept
+     *  verbatim as the reference, including its quirk of overshooting the limit
+     *  n by one element. */
+    private static IntList refFindIntersections(IntArrayList ret, IntList[] positions, int[] offsets, int n) {
+        if (positions.length < 1) {
+            return ret;
+        }
+
+        int[] indexes = new int[positions.length];
+        int[] values = new int[positions.length];
+        int largestValue = Integer.MAX_VALUE;
+
+        for (int i = 0; i < positions.length; i++) {
+            if (indexes[i] < positions[i].size())
+                values[i] = positions[i].getInt(indexes[i]++) + offsets[i];
+            else
+                return IntList.of();
+
+            largestValue = Math.min(largestValue, positions[i].getInt(positions[i].size() - 1) + offsets[i]);
+        }
+
+        int currentMax = Integer.MIN_VALUE;
+        int listMatches = 0;
+        int foundIntersections = 0;
+
+        outer:
+        for (int i = 0; currentMax <= largestValue; i = (i + 1) % positions.length)
+        {
+            if (listMatches == positions.length) {
+                ret.add(currentMax);
+                if (++foundIntersections > n) return ret;
+
+                listMatches = 1;
+
+                if (indexes[i] < positions[i].size()) {
+                    values[i] = positions[i].getInt(indexes[i]++) + offsets[i];
+                    currentMax = Math.max(currentMax, values[i]);
+                } else {
+                    break;
+                }
+            } else if (values[i] == currentMax) {
+                listMatches++;
+            } else {
+                listMatches = 1;
+
+                while (values[i] < currentMax) {
+                    if (indexes[i] < positions[i].size()) {
+                        values[i] = positions[i].getInt(indexes[i]++) + offsets[i];
+                    } else {
+                        break outer;
+                    }
+                }
+
+                currentMax = Math.max(currentMax, values[i]);
+            }
+        }
+
+        return ret;
     }
 
 }
