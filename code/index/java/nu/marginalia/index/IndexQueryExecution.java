@@ -1,10 +1,6 @@
 package nu.marginalia.index;
 
-import gnu.trove.list.TLongList;
-import gnu.trove.list.array.TLongArrayList;
 import io.prometheus.metrics.core.metrics.Gauge;
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongList;
@@ -17,7 +13,6 @@ import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
 import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.model.CombinedDocIdList;
-import nu.marginalia.index.model.DocIdList;
 import nu.marginalia.index.model.RankableDocument;
 import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.results.IndexResultRankingService;
@@ -25,22 +20,23 @@ import nu.marginalia.index.reverse.query.IndexQuery;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.linkdb.model.DocdbUrlDetail;
-import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.WordFlags;
-import nu.marginalia.piping.*;
+import nu.marginalia.piping.BufferPipe;
+import nu.marginalia.piping.PipeDrain;
 import nu.marginalia.sequence.CodedSequence;
-import nu.marginalia.skiplist.SkipListConstants;
 import nu.marginalia.skiplist.SkipListReader;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
 /** Performs an index query */
@@ -48,6 +44,11 @@ public class IndexQueryExecution {
 
     private static final boolean printDebugSummary = Boolean.getBoolean("index.printDebugSummary");
     private static final boolean disableViabilityPrecheck = Boolean.getBoolean("index.disableViabilityPrecheck");
+
+    private static final int rankingBatchSize = Integer.getInteger("index.rankingBatchSize", 32);
+
+    private static final int preparationConcurrency = Integer.getInteger("index.preparationConcurrency", 4);
+    private static final int rankingConcurrency = Integer.getInteger("index.rankingConcurrency", 8);
 
     private static final int maxSimultaneousQueries = Integer.getInteger("index.maxSimultaneousQueries", 8);
     private static final Semaphore simultaneousRequests = new Semaphore(maxSimultaneousQueries);
@@ -122,8 +123,8 @@ public class IndexQueryExecution {
         try (BufferPipe<IndexQuery> processingPipe = BufferPipe.<IndexQuery>builder(threadPool, Duration.ofSeconds(1))
                 .addStage("Lookup", 32, queries.size(), LookupStage::new)
                 .addStage("Deduplicate", 16, 1, DeduplicateStage::new)
-                .addStage("Processing", 16, 4, PreparationStage::new)
-                .finalStage("Ranking", 16, 8, RankingStage::new))
+                .addStage("Processing", 16, preparationConcurrency, PreparationStage::new)
+                .finalStage("Ranking", 16, rankingConcurrency, RankingStage::new))
         {
 
             for (IndexQuery query : queries) {
@@ -277,7 +278,7 @@ public class IndexQueryExecution {
     }
 
 
-    private class PreparationStage implements BufferPipe.IntermediateFunction<CombinedDocIdList, RankableDocument> {
+    private class PreparationStage implements BufferPipe.IntermediateFunction<CombinedDocIdList, RankableDocument[]> {
         // Slabs are pooled and bounded by peak stage concurrency, so they can be
         // sized generously to keep allocations out of the overflow path
         private static final ScratchSegmentAllocatorFactory allocatorFactory
@@ -287,7 +288,15 @@ public class IndexQueryExecution {
 
         private final Lock indexLock = currentIndex.useLock();
 
+        final BitSet[] priorityTermsPresentDocWise = new BitSet[rankingContext.termIdsPriority.size()];
+        final long[] termIds = rankingContext.termIdsAll.array;
+        final SkipListReader.ValueReader[] readers = new SkipListReader.ValueReader[termIds.length];
+
+        final long[] positionOffsets = new long[termIds.length];
+        final long[] metadata = new long[termIds.length];
+
         public PreparationStage() {
+
             if (!indexLock.tryLock()) {
                 throw new IllegalStateException("Index lock could not be acquired");
             }
@@ -297,43 +306,35 @@ public class IndexQueryExecution {
 
 
         @Override
-        public void process(CombinedDocIdList docIds, PipeDrain<RankableDocument> output) throws IOException {
+        public void process(CombinedDocIdList docIds, PipeDrain<RankableDocument[]> output) throws IOException {
 
 
             /** Create bit sets for the priority terms */
-
-            BitSet[] priorityTermsPresentDocWise = new BitSet[rankingContext.termIdsPriority.size()];
             for (int i = 0; i < rankingContext.termIdsPriority.size(); i++) {
                 priorityTermsPresentDocWise[i] = currentIndex
                         .getValuePresence(rankingContext, rankingContext.termIdsPriority.getLong(i), docIds);
             }
 
-            long[] termIds = rankingContext.termIdsAll.array;
 
             /** Create value readers for the regular terms */
-
-            SkipListReader.ValueReader[] readers = new SkipListReader.ValueReader[termIds.length];
-            SkipListReader.ValueReader firstViableReader = null;
-
+            SkipListReader.ValueReader anyReader = null;
             for (int i = 0; i < termIds.length; i++) {
                 if (null != (readers[i] = currentIndex.getValueReader(rankingContext, segmentAllocator, termIds[i], docIds))) {
-                    firstViableReader = readers[i];
+                    anyReader = readers[i];
                 }
             }
 
-            if (firstViableReader == null) {
+            if (anyReader == null) {
                 // No viable readers, we can do nothing with this docIds list
                 return;
             }
 
             try {
+                RankableDocument[] batch = new RankableDocument[rankingBatchSize];
+                int batchLen = 0;
+
                 for (;;) {
-                    /** Fetch data */
-
-                    long[] positionOffsets = new long[termIds.length];
-                    long[] metadata = new long[termIds.length];
-
-                    boolean hasViableReader = false;
+                    boolean hasData = false;
 
                     for (int i = 0; i < readers.length; i++) {
                         if (readers[i] == null || !readers[i].advance()) {
@@ -341,14 +342,15 @@ public class IndexQueryExecution {
                             continue;
                         }
 
-                        hasViableReader = true;
+                        hasData = true;
+                        anyReader = readers[i];
                         positionOffsets[i] = readers[i].getValue(0);
                         metadata[i] = readers[i].getValue(1);
                     }
 
-                    if (!hasViableReader) break;
+                    if (!hasData) break;
 
-                    int docIdx = firstViableReader.getIndex();
+                    int docIdx = anyReader.getIndex();
                     long docId = docIds.at(docIdx);
 
                     if (!isViable(metadata))
@@ -363,8 +365,9 @@ public class IndexQueryExecution {
                         metadata[i] &= 0xFFL;
                     }
 
-                    item.positionOffsets = positionOffsets;
-                    item.termFlags = metadata;
+                    item.positionOffsets = Arrays.copyOf(positionOffsets, positionOffsets.length);
+                    item.termFlags = Arrays.copyOf(metadata,  metadata.length);
+
                     item.priorityTermsPresent = new boolean[rankingContext.termIdsPriority.size()];
 
                     for (int i = 0; i < rankingContext.termIdsPriority.size(); i++) {
@@ -372,8 +375,18 @@ public class IndexQueryExecution {
                             item.priorityTermsPresent[i] = true;
                     }
 
-                    if (!output.accept(item))
-                        break;
+                    batch[batchLen++] = item;
+                    if (batchLen == batch.length) {
+                        if (!output.accept(batch)) {
+                            return;
+                        }
+                        batch = new RankableDocument[rankingBatchSize];
+                        batchLen = 0;
+                    }
+                }
+
+                if (batchLen > 0) {
+                    output.accept(Arrays.copyOf(batch, batchLen));
                 }
             }
             finally {
@@ -428,7 +441,7 @@ public class IndexQueryExecution {
         }
     }
 
-    private class RankingStage implements BufferPipe.FinalFunction<RankableDocument> {
+    private class RankingStage implements BufferPipe.FinalFunction<RankableDocument[]> {
 
         private static final ScratchSegmentAllocatorFactory allocatorFactory
                 = new ScratchSegmentAllocatorFactory("Ranking", 1 << 20);
@@ -449,28 +462,40 @@ public class IndexQueryExecution {
         }
 
         @Override
-        public void process(RankableDocument rankableDocument) {
-            try {
-                IntList[] positions = getPositions(rankableDocument.positionOffsets);
-                @Nullable
-                DocumentSpans spans = getSpans(rankableDocument.combinedDocumentId);
-
-                if (null == spans) return;
-
-                rankableDocument.documentSpans = spans;
-                rankableDocument.positions = positions;
-
-                SearchResultItem resultItem = rankingService.calculateScore(
-                        null, pool, currentIndex, rankingContext, rankableDocument);
-
-                if (null != resultItem) {
-                    rankableDocument.item = resultItem;
-                    localResults.add(rankableDocument);
+        public void process(RankableDocument[] batch) {
+            for (RankableDocument rankableDocument : batch) {
+                try {
+                    fetchSerially(rankableDocument);
+                    scoreDocument(rankableDocument);
+                }
+                finally {
+                    pool.reset();
+                    segmentAllocator.reset();
                 }
             }
-            finally {
-                pool.reset();
-                segmentAllocator.reset();
+        }
+
+        private void fetchSerially(RankableDocument rankableDocument) {
+            DocumentSpans spans = getSpans(rankableDocument.combinedDocumentId);
+            if (spans == null) {
+                return;
+            }
+
+            rankableDocument.documentSpans = spans;
+            rankableDocument.positions = getPositions(rankableDocument.positionOffsets);
+        }
+
+        private void scoreDocument(RankableDocument rankableDocument) {
+            if (rankableDocument.documentSpans == null) {
+                return;
+            }
+
+            SearchResultItem resultItem = rankingService.calculateScore(
+                    null, pool, currentIndex, rankingContext, rankableDocument);
+
+            if (null != resultItem) {
+                rankableDocument.item = resultItem;
+                localResults.add(rankableDocument);
             }
         }
 
