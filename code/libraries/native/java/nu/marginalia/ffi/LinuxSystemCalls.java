@@ -25,7 +25,11 @@ public class LinuxSystemCalls {
     private final MethodHandle readAtFd;
     private final MethodHandle fadviseRandom;
     private final MethodHandle fadviseWillneed;
+    private final MethodHandle fadviseWillneedRange;
     private final MethodHandle madviseRandom;
+    private final MethodHandle madviseNormal;
+    private final MethodHandle madviseWillneed;
+    private final MethodHandle pageResident;
 
     public static final LinuxSystemCalls instance;
 
@@ -48,9 +52,21 @@ public class LinuxSystemCalls {
         handle = libraryLookup.findOrThrow("fadvise_willneed");
         fadviseWillneed = nativeLinker.downcallHandle(handle, FunctionDescriptor.ofVoid(JAVA_INT));
 
+        handle = libraryLookup.findOrThrow("fadvise_willneed_range");
+        fadviseWillneedRange = nativeLinker.downcallHandle(handle, FunctionDescriptor.ofVoid(JAVA_INT, JAVA_LONG, JAVA_LONG));
+
         handle = libraryLookup.findOrThrow("madvise_random");
         madviseRandom = nativeLinker.downcallHandle(handle, FunctionDescriptor.ofVoid(ADDRESS, JAVA_LONG));
 
+        handle = libraryLookup.findOrThrow("madvise_normal");
+        madviseNormal = nativeLinker.downcallHandle(handle, FunctionDescriptor.ofVoid(ADDRESS, JAVA_LONG));
+
+        // Bound with a raw address for the same reason as read_at below
+        handle = libraryLookup.findOrThrow("madvise_willneed");
+        madviseWillneed = nativeLinker.downcallHandle(handle, FunctionDescriptor.ofVoid(JAVA_LONG, JAVA_LONG));
+
+        handle = libraryLookup.findOrThrow("page_resident");
+        pageResident = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
         handle = libraryLookup.findOrThrow("close_fd");
         closeFd = nativeLinker.downcallHandle(handle, FunctionDescriptor.ofVoid(JAVA_INT));
 
@@ -101,8 +117,10 @@ public class LinuxSystemCalls {
         isAvailable = instance != null;
     }
 
-    // Kept in a static final so the JIT can constant fold the handle and inline the downcall
+    // Kept in static finals so the JIT can constant fold the handles and inline the downcalls
     private static final MethodHandle READ_AT = isAvailable ? instance.readAtFd : null;
+    private static final MethodHandle MADVISE_WILLNEED = isAvailable ? instance.madviseWillneed : null;
+    private static final MethodHandle PAGE_RESIDENT = isAvailable ? instance.pageResident : null;
 
     public static int openDirect(Path filename) {
         try (var arena = Arena.ofConfined()) {
@@ -146,9 +164,44 @@ public class LinuxSystemCalls {
         }
     }
 
+    public static void fadviseWillneed(int fd, long offset, long size) {
+        try {
+            instance.fadviseWillneedRange.invoke(fd, offset, size);
+        } catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+    }
+    /** Hint the kernel to read ahead the mapped range.  Address and length should
+     *  be page aligned, and the caller must keep the mapping alive for the call. */
+    public static void madviseWillneed(long address, long size) {
+        try {
+            MADVISE_WILLNEED.invokeExact(address, size);
+        } catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+    }
+
+    /** True if the page holding the mapped address is resident in the page
+     *  cache.  The caller must keep the mapping alive for the call. */
+    public static boolean isPageResident(long address) {
+        try {
+            return (int) PAGE_RESIDENT.invokeExact(address) > 0;
+        } catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+    }
+
     public static void madviseRandom(MemorySegment segment) {
         try {
             instance.madviseRandom.invoke(segment, segment.byteSize());
+        } catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+    }
+
+    public static void madviseNormal(MemorySegment segment) {
+        try {
+            instance.madviseNormal.invoke(segment, segment.byteSize());
         } catch (Throwable t) {
             throw new RuntimeException("Failed to invoke native function", t);
         }
