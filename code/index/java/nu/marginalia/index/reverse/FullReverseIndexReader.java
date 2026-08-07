@@ -224,7 +224,8 @@ public class FullReverseIndexReader {
     public SkipListReader.ValueReader getValueReader(SearchContext searchContext,
                                                      SegmentAllocator allocator,
                                                      long termId,
-                                                     CombinedDocIdList keys) {
+                                                     CombinedDocIdList keys,
+                                                     @Nullable ValueBatchContext batchContext) {
         WordLexicon lexicon = searchContext.languageContext.wordLexiconFull;
         if (null == lexicon) {
             return null;
@@ -234,7 +235,22 @@ public class FullReverseIndexReader {
         if (offset < 0)
             return null;
 
-        return getReader(offset).getValueReader(allocator, keys.array());
+        return getReader(offset).getValueReader(allocator, keys.array(), batchContext);
+    }
+
+    /** Create a context for batched value block reads, or null if this index has
+     *  no value reader to open one against */
+    @Nullable
+    public ValueBatchContext createValueBatchContext() {
+        if (valueReader == null) {
+            return null;
+        }
+        return valueReader.createBatchContext();
+    }
+
+    @Nullable
+    public SkipListValueReader valueReaderIdentity() {
+        return valueReader;
     }
 
     public BitSet getValuePresence(SearchContext searchContext, long termId, CombinedDocIdList keys) {

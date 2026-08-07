@@ -26,6 +26,7 @@ import nu.marginalia.piping.BufferPipe;
 import nu.marginalia.piping.PipeDrain;
 import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.skiplist.SkipListReader;
+import nu.marginalia.skiplist.ValueBatchContext;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +62,11 @@ public class IndexQueryExecution {
      *  rather than serial mmap and pread accesses per document */
     private static final boolean useUringFetch = IoUring.isAvailable
             && !Boolean.getBoolean("index.disableUringFetch");
+
+    /** Read the value blocks a preparation batch needs in one io_uring submission
+     *  rather than one blocking pread per block */
+    private static final boolean useBatchValueReads = IoUring.isAvailable
+            && Boolean.parseBoolean(System.getProperty("index.batchValueReads", "true"));
 
     private static final int maxSimultaneousQueries = Integer.getInteger("index.maxSimultaneousQueries", 8);
     private static final Semaphore simultaneousRequests = new Semaphore(maxSimultaneousQueries);
@@ -296,7 +302,16 @@ public class IndexQueryExecution {
         private static final ScratchSegmentAllocatorFactory allocatorFactory
                 = new ScratchSegmentAllocatorFactory("Preparation", 1 << 20);
 
+        /** Contexts hold a ring on the value file, so they outlive the stage and
+         *  are pooled, and are discarded when the index they were opened against
+         *  is swapped out */
+        private static final ConcurrentLinkedQueue<ValueBatchContext> batchContextPool = new ConcurrentLinkedQueue<>();
+        private static final AtomicBoolean warnedBatchContextFailure = new AtomicBoolean();
+
         private final ScratchSegmentAllocator segmentAllocator;
+
+        @Nullable
+        private final ValueBatchContext batchContext;
 
         private final Lock indexLock = currentIndex.useLock();
 
@@ -314,6 +329,31 @@ public class IndexQueryExecution {
             }
 
             segmentAllocator = allocatorFactory.createAllocator();
+            batchContext = useBatchValueReads ? claimBatchContext() : null;
+        }
+
+        /** Contexts are tied to the value file's descriptor, so a pooled one built
+         *  against a swapped out index must be discarded.  Returns null if none can
+         *  be had, in which case value blocks are read one at a time. */
+        @Nullable
+        private ValueBatchContext claimBatchContext() {
+            ValueBatchContext pooled;
+            while ((pooled = batchContextPool.poll()) != null) {
+                if (pooled.owner() == currentIndex.valueReaderIdentity()) {
+                    return pooled;
+                }
+                pooled.close();
+            }
+
+            try {
+                return currentIndex.createValueBatchContext();
+            }
+            catch (RuntimeException e) {
+                if (!warnedBatchContextFailure.getAndSet(true)) {
+                    logger.warn("Failed to create value batch context, using serial reads", e);
+                }
+                return null;
+            }
         }
 
 
@@ -331,7 +371,7 @@ public class IndexQueryExecution {
             /** Create value readers for the regular terms */
             SkipListReader.ValueReader anyReader = null;
             for (int i = 0; i < termIds.length; i++) {
-                if (null != (readers[i] = currentIndex.getValueReader(rankingContext, segmentAllocator, termIds[i], docIds))) {
+                if (null != (readers[i] = currentIndex.getValueReader(rankingContext, segmentAllocator, termIds[i], docIds, batchContext))) {
                     anyReader = readers[i];
                 }
             }
@@ -445,11 +485,15 @@ public class IndexQueryExecution {
         @Override
         public void cleanUp() {
             try {
+                if (batchContext != null) {
+                    batchContextPool.add(batchContext);
+                }
                 indexLock.unlock();
             }
             finally {
                 segmentAllocator.close();
             }
+
         }
     }
 

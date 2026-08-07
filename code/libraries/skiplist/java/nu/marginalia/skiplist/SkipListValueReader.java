@@ -15,6 +15,13 @@ public class SkipListValueReader implements AutoCloseable {
         LinuxSystemCalls.fadviseRandom(fd);
     }
 
+    /** Create a context for reading value blocks in batches.  A context holds a
+     *  ring on this reader's descriptor, so it must be closed before the reader
+     *  is, and may only be used by one thread at a time. */
+    public ValueBatchContext createBatchContext() {
+        return new ValueBatchContext(this, fd);
+    }
+
     public void read(MemorySegment dest, long offset) throws IOException {
         assert dest.address() != 0;
 

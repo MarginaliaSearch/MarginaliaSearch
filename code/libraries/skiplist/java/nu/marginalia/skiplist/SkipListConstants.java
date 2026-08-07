@@ -6,6 +6,10 @@ import nu.marginalia.skiplist.compression.input.CompressorInput;
 public class SkipListConstants {
     public static final int BLOCK_SIZE = Integer.getInteger("index.documentsSkipListBlockSize", 8192);
 
+    /** Values are written in blocks of this size, and read a whole block at a
+     *  time since a block usually holds several of the records being read */
+    public static final int VALUE_BLOCK_SIZE = 4096;
+
     static final int DATA_BLOCK_HEADER_SIZE = 16;
 
     static final int RECORD_SIZE = 3;

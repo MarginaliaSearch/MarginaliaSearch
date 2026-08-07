@@ -8,6 +8,7 @@ import nu.marginalia.array.pool.MemoryPage;
 import nu.marginalia.skiplist.compression.DocIdCompressor;
 import nu.marginalia.skiplist.compression.output.SegmentCompressorBuffer;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.lang.foreign.Arena;
@@ -572,11 +573,23 @@ public class SkipListReader {
 
 
     public class ValueReader {
-        private static final int VALUE_BLOCK_SIZE = 4096;
 
         private final int entrySize = (SkipListConstants.RECORD_SIZE - 1);
 
         private final MemorySegment valueSegment;
+
+        /** Set when value blocks are to be fetched a batch at a time */
+        @Nullable
+        private final ValueBatchContext batchContext;
+
+        private final SegmentAllocator allocator;
+
+        /** Destination for a batch of value blocks, allocated on the first batched
+         *  read since most readers never make one */
+        private MemorySegment batchSlab;
+        private final long[] batchBlocks;
+        private int batchCount;
+        private int batchCursor;
 
         private final long[] inputKeys;
         private int iPos = -1;
@@ -595,12 +608,18 @@ public class SkipListReader {
             valueOffsets = new long[0];
             outValues = new long[0];
             valueSegment = null;
+            batchContext = null;
+            allocator = null;
+            batchBlocks = null;
         }
 
-        ValueReader(SegmentAllocator allocator, long[] inputKeys) {
+        ValueReader(SegmentAllocator allocator, long[] inputKeys, @Nullable ValueBatchContext batchContext) {
             this.inputKeys = inputKeys;
             this.valueOffsets = new long[inputKeys.length];
             this.outValues = new long[inputKeys.length * (RECORD_SIZE-1)];
+            this.batchContext = batchContext;
+            this.allocator = allocator;
+            this.batchBlocks = batchContext == null ? null : new long[ValueBatchContext.BATCH_BLOCKS];
             valueSegment = allocator.allocate(VALUE_BLOCK_SIZE, 8);
         }
 
@@ -634,6 +653,73 @@ public class SkipListReader {
             return iPos;
         }
 
+        /** The contents of a value block.  With a batch context the blocks the
+         *  rest of this window needs are read together on the first miss, since
+         *  their offsets are all known by then. */
+        private MemorySegment fetchBlock(long valBlock) throws IOException {
+            if (batchContext != null) {
+                MemorySegment block = heldBlock(valBlock);
+                if (block == null) {
+                    readBatch();
+                    block = heldBlock(valBlock);
+                }
+                if (block != null) {
+                    return block;
+                }
+            }
+
+            valuesReader.read(valueSegment, valBlock);
+            return valueSegment;
+        }
+
+        /** The block if this reader's last batch holds it.  Blocks are consumed in
+         *  the order they were read, so the search only moves forward. */
+        private MemorySegment heldBlock(long valBlock) {
+            for (int i = batchCursor; i < batchCount; i++) {
+                if (batchBlocks[i] == valBlock) {
+                    batchCursor = i;
+                    return batchSlab.asSlice((long) VALUE_BLOCK_SIZE * i, VALUE_BLOCK_SIZE);
+                }
+            }
+            return null;
+        }
+
+        /** Read the distinct blocks the rest of this offset window points at */
+        private void readBatch() throws IOException {
+            batchCount = 0;
+            batchCursor = 0;
+
+            long previous = Long.MIN_VALUE;
+            for (int i = vPos; i < vLen && batchCount < batchBlocks.length; i++) {
+                if (valueOffsets[i] < 0) {
+                    continue;
+                }
+
+                long block = valueOffsets[i] & -(long) VALUE_BLOCK_SIZE;
+                if (block != previous) {
+                    batchBlocks[batchCount++] = block;
+                    previous = block;
+                }
+            }
+
+            if (batchCount == 0) {
+                return;
+            }
+
+            if (batchSlab == null) {
+                batchSlab = allocator.allocate((long) VALUE_BLOCK_SIZE * batchBlocks.length, 8);
+            }
+
+            if (batchCount == 1) {
+                // A single block has nothing to overlap with, and a submission
+                // costs more than the read it would carry
+                valuesReader.read(batchSlab.asSlice(0, VALUE_BLOCK_SIZE), batchBlocks[0]);
+            }
+            else {
+                batchContext.readBlocks(batchSlab, batchBlocks, batchCount, VALUE_BLOCK_SIZE);
+            }
+        }
+
         private void copyValuesFromBlock() throws IOException {
             while (vPos < vLen && oLen == 0) {
                 if (valueOffsets[vPos] < 0) {
@@ -644,7 +730,7 @@ public class SkipListReader {
                 else {
                     long valBlock = valueOffsets[vPos] & -VALUE_BLOCK_SIZE;
 
-                    valuesReader.read(valueSegment, valBlock);
+                    MemorySegment block = fetchBlock(valBlock);
 
                     for (; vPos < vLen; vPos++) {
                         if (valueOffsets[vPos] < 0) {
@@ -659,7 +745,7 @@ public class SkipListReader {
 
                             int offsetBase = (int) (valueOffsets[vPos] & (VALUE_BLOCK_SIZE - 1));
                             for (int j = 0; j < RECORD_SIZE - 1; j++) {
-                                outValues[oLen + j] = valueSegment.get(ValueLayout.JAVA_LONG, offsetBase + 8*j);
+                                outValues[oLen + j] = block.get(ValueLayout.JAVA_LONG, offsetBase + 8*j);
                             }
                             oLen+=entrySize;
                         }
@@ -793,7 +879,11 @@ public class SkipListReader {
     }
 
     public ValueReader getValueReader(SegmentAllocator segmentAllocator, long[] keys) {
-        return new ValueReader(segmentAllocator, keys);
+        return new ValueReader(segmentAllocator, keys, null);
+    }
+
+    public ValueReader getValueReader(SegmentAllocator segmentAllocator, long[] keys, @Nullable ValueBatchContext batchContext) {
+        return new ValueReader(segmentAllocator, keys, batchContext);
     }
 
     public ValueReader getEmptyValueReader() {
