@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.longs.LongList;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.array.pool.BufferPool;
 import nu.marginalia.array.pool.MemoryPage;
+import nu.marginalia.ffi.NativeAlgos;
 import nu.marginalia.skiplist.compression.DocIdCompressor;
 import nu.marginalia.skiplist.compression.output.SegmentCompressorBuffer;
 import org.jetbrains.annotations.NotNull;
@@ -47,6 +48,11 @@ public class SkipListReader {
     }
 
     private static final ThreadLocal<DecompressedBlock> decompressedBlock = ThreadLocal.withInitial(DecompressedBlock::new);
+
+    /** Merge keys against compressed blocks with a fused native decode and match,
+     *  without materializing the decoded block. */
+    private static final boolean useFusedMatch = NativeAlgos.isAvailable
+            && Boolean.parseBoolean(System.getProperty("index.fusedMatch", "true"));
 
     /** Decompress the current block into the thread's scratch buffer, unless the buffer
      * already holds it, and return the buffer.  The claim is only valid until another
@@ -779,8 +785,19 @@ public class SkipListReader {
                         return;
 
                     if (FLAG_COMPRESSED_BLOCK == (flags & FLAG_COMPRESSED_BLOCK)) {
-                        claimDecompressedBlock(page, dataOffset, n);
-                        readOffsetsForBlock_Compressed(n, valuesOffset);
+                        if (useFusedMatch && currentBlockIdx == 0) {
+                            long packed = NativeAlgos.decompressMatch(page.getMemorySegment(), dataOffset, n,
+                                    inputKeys, offsetPos, valuesOffset, 8L * (RECORD_SIZE - 1), valueOffsets, vLen);
+
+                            currentBlockIdx = (int) (packed >>> 32);
+                            int newOffsetPos = (int) packed;
+                            vLen += newOffsetPos - offsetPos;
+                            offsetPos = newOffsetPos;
+                        }
+                        else {
+                            claimDecompressedBlock(page, dataOffset, n);
+                            readOffsetsForBlock_Compressed(n, valuesOffset);
+                        }
                     }
                     else {
                         readOffsetsForBlock_Plain(page, n, dataOffset, valuesOffset);
