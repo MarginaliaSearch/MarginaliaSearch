@@ -42,10 +42,10 @@ public class EncyclopediaConverter {
             BiConsumer<String, String> handleArticle = (url, html) -> {
                 pool.submitQuietly(() -> {
                     int sz = size.incrementAndGet();
-                    if (sz % 1000 == 0) {
-                        System.out.printf("\u001b[2K\r%d", sz);
-                    }
-                    asw.add(wc.cleanWikiJunk(url, html));
+
+                    var article = wc.cleanWikiJunk(url, html);
+                    if (article != null)
+                        asw.add(article);
                 });
             };
 
