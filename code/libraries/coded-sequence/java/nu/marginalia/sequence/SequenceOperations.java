@@ -123,6 +123,25 @@ public class SequenceOperations {
             return ret;
         }
 
+        // Lists are typically bimodal shaped, a couple of positions for most terms
+        // with the odd outlier list in the hundreds.
+        int minIdx = 0;
+        int totalSize = 0;
+        for (int i = 0; i < positions.length; i++) {
+            int size = positions[i].size();
+            if (size == 0)
+                return IntList.of();
+
+            totalSize += size;
+            if (size < positions[minIdx].size())
+                minIdx = i;
+        }
+
+        int minSize = positions[minIdx].size();
+        if (totalSize - minSize >= PROBE_ORIENTATION_CUTOFF * minSize * (positions.length - 1)) {
+            return findIntersectionsByProbe(ret, positions, offsets, n, minIdx);
+        }
+
         int[] indexes = new int[positions.length];
         // Initialize values and find the maximum value
         int[] values = new int[positions.length];
@@ -150,7 +169,7 @@ public class SequenceOperations {
         ret.ensureCapacity(Math.min(n, Math.max(1, minLength)));
 
         outer:
-        for (int i = 0; currentMax <= largestValue; i = (i + 1) % positions.length)
+        for (int i = 0; currentMax <= largestValue; i = (i + 1 == positions.length) ? 0 : i + 1)
         {
             if (listMatches == positions.length) {
                 ret.add(currentMax);
@@ -189,6 +208,61 @@ public class SequenceOperations {
         return ret;
     }
 
+    /** Ratio between the smallest list and the average of the others at which
+     *  findIntersections switches from the merge walk to probing.  Calibrated
+     *  against sampled ranking data. */
+    private static final int PROBE_ORIENTATION_CUTOFF = 8;
+
+    /** Intersect by walking the smallest list and binary searching the other
+     *  lists for each of its values.  Search windows start at the previous hit
+     *  since the probed values are ascending. */
+    private static IntList findIntersectionsByProbe(IntArrayList ret, IntList[] positions, int[] offsets, int n, int minIdx) {
+        IntList driver = positions[minIdx];
+        int driverOffset = offsets[minIdx];
+        int driverSize = driver.size();
+
+        int[] fronts = new int[positions.length];
+        int found = 0;
+
+        ret.ensureCapacity(Math.min(n, driverSize));
+
+        outer:
+        for (int di = 0; di < driverSize; di++) {
+            int value = driver.getInt(di) + driverOffset;
+
+            for (int i = 0; i < positions.length; i++) {
+                if (i == minIdx)
+                    continue;
+
+                int target = value - offsets[i];
+                int idx = firstIndexAtOrAbove(positions[i], target, fronts[i]);
+                if (idx == positions[i].size())
+                    break outer;
+
+                fronts[i] = idx;
+                if (positions[i].getInt(idx) != target)
+                    continue outer;
+            }
+
+            ret.add(value);
+            if (++found > n)
+                return ret;
+        }
+
+        return ret;
+    }
+
+    private static int firstIndexAtOrAbove(IntList list, int key, int from) {
+        int lo = from;
+        int hi = list.size();
+        while (lo < hi) {
+            int mid = (lo + hi) >>> 1;
+            if (list.getInt(mid) < key) lo = mid + 1;
+            else hi = mid;
+        }
+        return lo;
+    }
+
     /** Given each set of positions, one from each list, find the set with the smallest distance between them
      * and return that distance.  If any of the lists are empty, return 0.
      * */
@@ -203,17 +277,22 @@ public class SequenceOperations {
      * @param offsets the offsets to apply to each position
      */
     public static int minDistance(IntList[] positions, int[] offsets) {
-        if (positions.length <= 1)
-            return 0;
-        if (positions.length == 1)
+        return minDistance(positions, offsets, positions.length);
+    }
+
+    /** As {@link #minDistance(IntList[], int[])}, considering only the first k
+     *  entries of each array.  Lets callers that filter their inputs reuse a
+     *  partially filled array. */
+    public static int minDistance(IntList[] positions, int[] offsets, int k) {
+        if (k <= 1)
             return 0;
 
-        int[] values = new int[positions.length];
-        int[] indexes = new int[positions.length];
+        int[] values = new int[k];
+        int[] indexes = new int[k];
 
         int largestValue = Integer.MAX_VALUE;
 
-        for (int i = 0; i < positions.length; i++) {
+        for (int i = 0; i < k; i++) {
             // if any of the lists are empty, return MAX_VALUE
 
             if (positions[i].isEmpty()) {
@@ -230,7 +309,7 @@ public class SequenceOperations {
         int maxI = 0;
 
         // Find the maximum value in values[] and its index in positions[]
-        for (int i = 0; i < positions.length; i++) {
+        for (int i = 0; i < k; i++) {
             if (values[i] > maxVal) {
                 maxVal = values[i];
                 maxI = i;
@@ -239,8 +318,8 @@ public class SequenceOperations {
 
         do {
             // For all the other indexes except maxI, update values[] with the largest value smaller than maxVal
-            for (int idx = 1; idx < positions.length; idx++) {
-                int i = (maxI + idx) % positions.length;
+            for (int idx = 1; idx < k; idx++) {
+                int i = (maxI + idx) % k;
 
                 // Update values[i] to the largest value smaller than maxVal
 
@@ -273,7 +352,7 @@ public class SequenceOperations {
             // which is the next target value
             maxVal = Integer.MAX_VALUE;
 
-            for (int i = 0; i < positions.length; i++) {
+            for (int i = 0; i < k; i++) {
                 int index = indexes[i];
                 if (index >= positions[i].size()) { // no more values in this list, skip
                     continue;
