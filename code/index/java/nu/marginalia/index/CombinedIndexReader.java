@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.CheckReturnValue;
-import java.lang.foreign.Arena;
+import java.lang.foreign.SegmentAllocator;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
@@ -347,9 +347,10 @@ public class CombinedIndexReader {
     @Nullable
     @CheckReturnValue
     public SkipListReader.ValueReader getValueReader(SearchContext searchContext,
+                                                     SegmentAllocator allocator,
                                                      long termId,
                                                      CombinedDocIdList keys) {
-        return reverseIndexFullReader.getValueReader(searchContext, termId, keys);
+        return reverseIndexFullReader.getValueReader(searchContext, allocator, termId, keys);
     }
 
     public BitSet getValuePresence(SearchContext searchContext, long termId, CombinedDocIdList keys) {
@@ -383,12 +384,12 @@ public class CombinedIndexReader {
     /** Retrieves the document spans for the specified documents */
 
     @Nullable
-    public DecodableDocumentSpans getDocumentSpans(Arena arena, long documentId) {
-        return forwardIndexReader.getDocumentSpans(arena, documentId);
+    public DecodableDocumentSpans getDocumentSpans(SegmentAllocator allocator, long documentId) {
+        return forwardIndexReader.getDocumentSpans(allocator, documentId);
     }
 
-    public CodedSequence[] getTermPositions(Arena arena, long[] codedOffsets) {
-        return reverseIndexFullReader.getTermPositions(arena, codedOffsets);
+    public CodedSequence[] getTermPositions(SegmentAllocator allocator, long[] codedOffsets) {
+        return reverseIndexFullReader.getTermPositions(allocator, codedOffsets);
     }
 
     /** Close the indexes.  This blocks the calling thread until all users are finished.

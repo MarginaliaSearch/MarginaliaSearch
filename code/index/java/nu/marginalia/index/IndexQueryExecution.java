@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.lang.foreign.Arena;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.*;
@@ -268,6 +267,12 @@ public class IndexQueryExecution {
 
 
     private class PreparationStage implements BufferPipe.IntermediateFunction<CombinedDocIdList, RankableDocument> {
+        // Slabs are pooled and bounded by peak stage concurrency, so they can be
+        // sized generously to keep allocations out of the overflow path
+        private static final ScratchSegmentAllocatorFactory allocatorFactory
+                = new ScratchSegmentAllocatorFactory("Preparation", 1 << 20);
+
+        private final ScratchSegmentAllocator segmentAllocator;
 
         private final Lock indexLock = currentIndex.useLock();
 
@@ -275,6 +280,8 @@ public class IndexQueryExecution {
             if (!indexLock.tryLock()) {
                 throw new IllegalStateException("Index lock could not be acquired");
             }
+
+            segmentAllocator = allocatorFactory.createAllocator();
         }
 
 
@@ -298,7 +305,7 @@ public class IndexQueryExecution {
             SkipListReader.ValueReader firstViableReader = null;
 
             for (int i = 0; i < termIds.length; i++) {
-                if (null != (readers[i] = currentIndex.getValueReader(rankingContext, termIds[i], docIds))) {
+                if (null != (readers[i] = currentIndex.getValueReader(rankingContext, segmentAllocator, termIds[i], docIds))) {
                     firstViableReader = readers[i];
                 }
             }
@@ -308,53 +315,58 @@ public class IndexQueryExecution {
                 return;
             }
 
-            for (;;) {
-                /** Fetch data */
+            try {
+                for (;;) {
+                    /** Fetch data */
 
-                long[] positionOffsets = new long[termIds.length];
-                long[] metadata = new long[termIds.length];
+                    long[] positionOffsets = new long[termIds.length];
+                    long[] metadata = new long[termIds.length];
 
-                boolean hasViableReader = false;
+                    boolean hasViableReader = false;
 
-                for (int i = 0; i < readers.length; i++) {
-                    if (readers[i] == null || !readers[i].advance()) {
-                        positionOffsets[i] = metadata[i] = 0L;
-                        continue;
+                    for (int i = 0; i < readers.length; i++) {
+                        if (readers[i] == null || !readers[i].advance()) {
+                            positionOffsets[i] = metadata[i] = 0L;
+                            continue;
+                        }
+
+                        hasViableReader = true;
+                        positionOffsets[i] = readers[i].getValue(0);
+                        metadata[i] = readers[i].getValue(1);
                     }
 
-                    hasViableReader = true;
-                    positionOffsets[i] = readers[i].getValue(0);
-                    metadata[i] = readers[i].getValue(1);
+                    if (!hasViableReader) break;
+
+                    int docIdx = firstViableReader.getIndex();
+                    long docId = docIds.at(docIdx);
+
+                    if (!isViable(metadata))
+                        continue;
+
+                    /** Create rankable document */
+
+                    RankableDocument item = new RankableDocument(docId);
+
+                    // strip to term flags
+                    for (int i = 0; i < metadata.length; i++) {
+                        metadata[i] &= 0xFFL;
+                    }
+
+                    item.positionOffsets = positionOffsets;
+                    item.termFlags = metadata;
+                    item.priorityTermsPresent = new boolean[rankingContext.termIdsPriority.size()];
+
+                    for (int i = 0; i < rankingContext.termIdsPriority.size(); i++) {
+                        if (priorityTermsPresentDocWise[i].get(docIdx))
+                            item.priorityTermsPresent[i] = true;
+                    }
+
+                    if (!output.accept(item))
+                        break;
                 }
-
-                if (!hasViableReader) break;
-
-                int docIdx = firstViableReader.getIndex();
-                long docId = docIds.at(docIdx);
-
-                if (!isViable(metadata))
-                    continue;
-
-                /** Create rankable document */
-
-                RankableDocument item = new RankableDocument(docId);
-
-                // strip to term flags
-                for (int i = 0; i < metadata.length; i++) {
-                    metadata[i] &= 0xFFL;
-                }
-
-                item.positionOffsets = positionOffsets;
-                item.termFlags = metadata;
-                item.priorityTermsPresent = new boolean[rankingContext.termIdsPriority.size()];
-
-                for (int i = 0; i < rankingContext.termIdsPriority.size(); i++) {
-                    if (priorityTermsPresentDocWise[i].get(docIdx))
-                        item.priorityTermsPresent[i] = true;
-                }
-
-                if (!output.accept(item))
-                    break;
+            }
+            finally {
+                segmentAllocator.reset();
             }
 
         }
@@ -396,14 +408,23 @@ public class IndexQueryExecution {
 
         @Override
         public void cleanUp() {
-            indexLock.unlock();
+            try {
+                indexLock.unlock();
+            }
+            finally {
+                segmentAllocator.close();
+            }
         }
     }
 
     private class RankingStage implements BufferPipe.FinalFunction<RankableDocument> {
 
+        private static final ScratchSegmentAllocatorFactory allocatorFactory
+                = new ScratchSegmentAllocatorFactory("Ranking", 1 << 20);
+
         // per-thread instances
         private final ScratchIntListPool pool = new ScratchIntListPool(64);
+        private final ScratchSegmentAllocator segmentAllocator;
         private final ResultPriorityQueue localResults = new ResultPriorityQueue(rankingContext.limitTotal, rankingContext.limitByDomain);
 
         private final Lock indexLock = currentIndex.useLock();
@@ -412,14 +433,16 @@ public class IndexQueryExecution {
             if (!indexLock.tryLock()) {
                 throw new IllegalStateException("Index lock could not be acquired");
             }
+
+            segmentAllocator = allocatorFactory.createAllocator();
         }
 
         @Override
         public void process(RankableDocument rankableDocument) {
-            try (var arena = Arena.ofConfined()) {
-                IntList[] positions = getPositions(arena, rankableDocument.positionOffsets);
+            try {
+                IntList[] positions = getPositions(rankableDocument.positionOffsets);
                 @Nullable
-                DocumentSpans spans = getSpans(arena, rankableDocument.combinedDocumentId);
+                DocumentSpans spans = getSpans(rankableDocument.combinedDocumentId);
 
                 if (null == spans) return;
 
@@ -436,12 +459,13 @@ public class IndexQueryExecution {
             }
             finally {
                 pool.reset();
+                segmentAllocator.reset();
             }
         }
 
         @Nullable
-        private DocumentSpans getSpans(Arena arena, long combinedDocumentId) {
-            DecodableDocumentSpans codedSpans = currentIndex.getDocumentSpans(arena, combinedDocumentId);
+        private DocumentSpans getSpans(long combinedDocumentId) {
+            DecodableDocumentSpans codedSpans = currentIndex.getDocumentSpans(segmentAllocator, combinedDocumentId);
 
             if (codedSpans == null)
                 return null;
@@ -450,8 +474,8 @@ public class IndexQueryExecution {
         }
 
         @NotNull
-        private IntList[] getPositions(Arena arena, long[] positionOffsets) {
-            CodedSequence[] codedPositions = currentIndex.getTermPositions(arena, positionOffsets);
+        private IntList[] getPositions(long[] positionOffsets) {
+            CodedSequence[] codedPositions = currentIndex.getTermPositions(segmentAllocator, positionOffsets);
             IntList[] ret = new IntList[codedPositions.length];
 
             for (int i = 0; i < ret.length; i++) {
@@ -474,7 +498,12 @@ public class IndexQueryExecution {
                 }
             }
             finally {
-                indexLock.unlock();
+                try {
+                    segmentAllocator.close();
+                }
+                finally {
+                    indexLock.unlock();
+                }
             }
         }
     }

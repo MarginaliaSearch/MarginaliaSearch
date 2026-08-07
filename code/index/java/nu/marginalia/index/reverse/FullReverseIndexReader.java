@@ -22,6 +22,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.SegmentAllocator;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -204,8 +205,9 @@ public class FullReverseIndexReader {
     @Nullable
     @CheckReturnValue
     public SkipListReader.ValueReader getValueReader(SearchContext searchContext,
-                                                               long termId,
-                                                               CombinedDocIdList keys) {
+                                                     SegmentAllocator allocator,
+                                                     long termId,
+                                                     CombinedDocIdList keys) {
         WordLexicon lexicon = searchContext.languageContext.wordLexiconFull;
         if (null == lexicon) {
             return null;
@@ -215,7 +217,7 @@ public class FullReverseIndexReader {
         if (offset < 0)
             return null;
 
-        return getReader(offset).getValueReader(keys.array());
+        return getReader(offset).getValueReader(allocator, keys.array());
     }
 
     public BitSet getValuePresence(SearchContext searchContext, long termId, CombinedDocIdList keys) {
@@ -255,7 +257,7 @@ public class FullReverseIndexReader {
         return wordLexiconMap.get(languageIsoCode);
     }
 
-    public CodedSequence[] getTermPositions(Arena arena, long[] offsets) {
+    public CodedSequence[] getTermPositions(SegmentAllocator allocator, long[] offsets) {
         MemorySegment[] segments = new MemorySegment[offsets.length];
 
         for (int i = 0; i < offsets.length; i++) {
@@ -265,7 +267,7 @@ public class FullReverseIndexReader {
             int size = PositionCodec.decodeSize(encodedOffset);
             long offest = PositionCodec.decodeOffset(encodedOffset);
 
-            var segment = arena.allocate(size, 8);
+            var segment = allocator.allocate(size, 8);
             segments[i] = segment;
 
             LinuxSystemCalls.readAt(positionsFileFd, segment, offest);

@@ -24,6 +24,12 @@ tasks.register('fastTests', Test) {
     }
 }
 
+tasks.withType(Test).configureEach {
+    // Back scratch allocator slabs with collectable arenas, so that tests that create
+    // allocator factories do not accumulate permanent global arena allocations
+    systemProperty 'system.scratchAllocatorAutoArena', 'true'
+}
+
 if (project.plugins.hasPlugin('application')) {
     if (!application.mainClass.isPresent() || !application.applicationName.endsWith("-service")) {
         tasks.shadowJar.enabled = false
