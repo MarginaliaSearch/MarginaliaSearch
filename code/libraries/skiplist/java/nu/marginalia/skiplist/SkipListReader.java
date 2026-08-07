@@ -38,9 +38,6 @@ public class SkipListReader {
     private long lastDecompressedBlock = -1;
     private final long[] decompressedData = new long[BLOCK_SIZE];
 
-    public int[] __stats_match_histo_retain = new int[512];
-    public int[] __stats_match_histo_reject = new int[512];
-
     public SkipListReader(BufferPool indexPool,
                           SkipListValueReader valuesReader,
                           long blockStart) {
@@ -159,7 +156,6 @@ public class SkipListReader {
 
     boolean retainInPage_Plain(MemoryPage page, int dataOffset, int n, LongQueryBuffer data) {
 
-        int matches = 0;
 
         while (data.hasMore()
                 && n > (currentBlockIdx = page.binarySearchLong(data.currentValue(), dataOffset, currentBlockIdx, n)))
@@ -169,7 +165,6 @@ public class SkipListReader {
             }
             else {
                 data.retainAndAdvance();
-                matches++;
                 break;
             }
         }
@@ -186,7 +181,6 @@ public class SkipListReader {
                 }
                 else if (bv == pv) {
                     data.retainAndAdvance();
-                    matches++;
                     currentBlockIdx++;
                     continue outer;
                 }
@@ -194,14 +188,12 @@ public class SkipListReader {
             break;
         }
 
-        __stats_match_histo_retain[Math.min(matches, __stats_match_histo_retain.length-1)]++;
 
         return currentBlockIdx >= n;
     }
 
     boolean retainInPage_Compressed(int n, LongQueryBuffer data) {
 
-        int matches = 0;
 
         while (data.hasMore()
                 && n > (currentBlockIdx = binarySearchUB(decompressedData, data.currentValue(), currentBlockIdx, n)))
@@ -211,7 +203,6 @@ public class SkipListReader {
             }
             else {
                 data.retainAndAdvance();
-                matches++;
                 break;
             }
         }
@@ -228,7 +219,6 @@ public class SkipListReader {
                 }
                 else if (bv == pv) {
                     data.retainAndAdvance();
-                    matches++;
                     currentBlockIdx++;
                     continue outer;
                 }
@@ -236,7 +226,6 @@ public class SkipListReader {
             break;
         }
 
-        __stats_match_histo_retain[Math.min(matches, __stats_match_histo_retain.length-1)]++;
 
         return currentBlockIdx >= n;
     }
@@ -322,7 +311,6 @@ public class SkipListReader {
 
     boolean rejectInPage_Compressed(int n, LongQueryBuffer data) {
 
-        int matches = 0;
 
         while (data.hasMore()
                 && n > (currentBlockIdx = binarySearchUB(decompressedData, data.currentValue(), currentBlockIdx, n)))
@@ -332,7 +320,6 @@ public class SkipListReader {
             }
             else {
                 data.rejectAndAdvance();
-                matches++;
                 break;
             }
         }
@@ -349,7 +336,6 @@ public class SkipListReader {
                 }
                 else if (bv == pv) {
                     data.rejectAndAdvance();
-                    matches++;
                     currentBlockIdx++;
                     continue outer;
                 }
@@ -357,13 +343,11 @@ public class SkipListReader {
             break;
         }
 
-        __stats_match_histo_reject[Math.min(matches, __stats_match_histo_reject.length-1)]++;
         return currentBlockIdx >= n;
     }
 
     boolean rejectInPage_Plain(MemoryPage page, int dataOffset, int n, LongQueryBuffer data) {
 
-        int matches = 0;
 
         while (data.hasMore()
                 && n > (currentBlockIdx = page.binarySearchLong(data.currentValue(), dataOffset, currentBlockIdx, n)))
@@ -373,7 +357,6 @@ public class SkipListReader {
             }
             else {
                 data.rejectAndAdvance();
-                matches++;
                 break;
             }
         }
@@ -390,7 +373,6 @@ public class SkipListReader {
                 }
                 else if (bv == pv) {
                     data.rejectAndAdvance();
-                    matches++;
                     currentBlockIdx++;
                     continue outer;
                 }
@@ -398,7 +380,6 @@ public class SkipListReader {
             break;
         }
 
-        __stats_match_histo_reject[Math.min(matches, __stats_match_histo_reject.length-1)]++;
         return currentBlockIdx >= n;
     }
 
