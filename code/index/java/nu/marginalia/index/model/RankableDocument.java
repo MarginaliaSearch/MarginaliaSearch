@@ -13,6 +13,11 @@ public class RankableDocument implements Comparable<RankableDocument> {
     public long[] termFlags;
     public boolean[] priorityTermsPresent;
 
+    /** Forward index entry data, populated batchwise before scoring */
+    public long docMetadata;
+    public int htmlFeatures;
+    public int docSize;
+
     public long[] positionOffsets;
 
     public DocumentSpans documentSpans;

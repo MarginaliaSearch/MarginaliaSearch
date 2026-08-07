@@ -63,6 +63,8 @@ public class FullReverseIndexReader {
 
         this.wordLexiconMap = wordLexicons.stream().collect(Collectors.toUnmodifiableMap(lexicon -> lexicon.languageIsoCode, v->v));
         this.positionsFileFd = LinuxSystemCalls.openBuffered(positionsFile);
+        // Position records are small and randomly accessed, so readahead is all waste
+        LinuxSystemCalls.fadviseRandom(positionsFileFd);
 
         logger.info("Switching reverse index");
 
@@ -255,6 +257,10 @@ public class FullReverseIndexReader {
     @Nullable
     public WordLexicon getWordLexicon(String languageIsoCode) {
         return wordLexiconMap.get(languageIsoCode);
+    }
+
+    public int positionsFd() {
+        return positionsFileFd;
     }
 
     public CodedSequence[] getTermPositions(SegmentAllocator allocator, long[] offsets) {

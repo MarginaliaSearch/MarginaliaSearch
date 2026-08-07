@@ -40,6 +40,7 @@ public class ForwardIndexReader {
 
     private final DomainRankings domainRankings;
 
+    private final int dataFd;
     private final int spansFd;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -54,6 +55,7 @@ public class ForwardIndexReader {
             ids = null;
             data = null;
             domainRankings = null;
+            dataFd = -1;
             spansFd = -1;
             version = null;
             return;
@@ -63,6 +65,7 @@ public class ForwardIndexReader {
             ids = null;
             data = null;
             domainRankings = null;
+            dataFd = -1;
             spansFd = -1;
             version = null;
             return;
@@ -72,6 +75,7 @@ public class ForwardIndexReader {
             ids = null;
             data = null;
             domainRankings = null;
+            dataFd = -1;
             spansFd = -1;
             version = null;
             return;
@@ -90,8 +94,12 @@ public class ForwardIndexReader {
         LinuxSystemCalls.madviseRandom(data.getMemorySegment());
         LinuxSystemCalls.madviseRandom(ids.getMemorySegment());
 
+        dataFd = LinuxSystemCalls.openBuffered(dataFile);
+        LinuxSystemCalls.fadviseRandom(dataFd);
+
         spansFd = LinuxSystemCalls.openBuffered(spansFile);
         LinuxSystemCalls.fadviseWillneed(spansFd);
+        LinuxSystemCalls.fadviseRandom(spansFd);
 
         Thread.ofPlatform().start(this::createIdsMap);
     }
@@ -222,7 +230,43 @@ public class ForwardIndexReader {
         return (int) ids.size();
     }
 
+    /** True when the in-memory id lookup table has finished building.  Until then
+     *  lookups fall back to a binary search over the mmapped ids file. */
+    public boolean isIdsMapReady() {
+        return idsMap != null;
+    }
+
+    /** Byte offset of the document's entry in the data file, or -1 if the
+     *  document is not in the index */
+    public long dataOffsetForDoc(long combinedDocId) {
+        long idx = idxForDoc(combinedDocId);
+        if (idx < 0) {
+            return -1;
+        }
+        return 8L * ENTRY_SIZE * idx;
+    }
+
+    public int dataFd() {
+        return dataFd;
+    }
+
+    public int spansFd() {
+        return spansFd;
+    }
+
+    public ForwardIndexVersion version() {
+        return version;
+    }
+
     public void close() {
+        try {
+            if (dataFd >= 0)
+                LinuxSystemCalls.closeFd(dataFd);
+        }
+        catch (RuntimeException ex) {
+            logger.error("Error closing 'dataFd'", ex);
+        }
+
         try {
             if (spansFd >= 0)
                 LinuxSystemCalls.closeFd(spansFd);

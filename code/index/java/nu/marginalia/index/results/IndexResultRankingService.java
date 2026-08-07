@@ -93,10 +93,10 @@ public class IndexResultRankingService {
         }
 
         long docId = UrlIdCodec.removeRank(combinedId);
-        long docMetadata = index.getDocumentMetadata(combinedId);
-        int htmlFeatures = index.getHtmlFeatures(combinedId);
+        long docMetadata = document.docMetadata;
+        int htmlFeatures = document.htmlFeatures;
 
-        int docSize = index.getDocumentSize(combinedId);
+        int docSize = document.docSize;
         if (docSize <= 0) docSize = 5000;
 
         var params = rankingContext.params;

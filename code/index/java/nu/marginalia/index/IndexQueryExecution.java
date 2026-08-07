@@ -10,6 +10,7 @@ import nu.marginalia.api.searchquery.model.compiled.CqDataLong;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.api.searchquery.model.results.debug.DebugRankingFactors;
 import nu.marginalia.array.page.LongQueryBuffer;
+import nu.marginalia.ffi.IoUring;
 import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
 import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.model.CombinedDocIdList;
@@ -26,13 +27,17 @@ import nu.marginalia.piping.PipeDrain;
 import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.skiplist.SkipListReader;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.lang.foreign.MemorySegment;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -42,6 +47,8 @@ import java.util.concurrent.locks.Lock;
 /** Performs an index query */
 public class IndexQueryExecution {
 
+    private static final Logger logger = LoggerFactory.getLogger(IndexQueryExecution.class);
+
     private static final boolean printDebugSummary = Boolean.getBoolean("index.printDebugSummary");
     private static final boolean disableViabilityPrecheck = Boolean.getBoolean("index.disableViabilityPrecheck");
 
@@ -49,6 +56,11 @@ public class IndexQueryExecution {
 
     private static final int preparationConcurrency = Integer.getInteger("index.preparationConcurrency", 4);
     private static final int rankingConcurrency = Integer.getInteger("index.rankingConcurrency", 8);
+
+    /** Fetch per document data for the ranking stage with batched io_uring reads
+     *  rather than serial mmap and pread accesses per document */
+    private static final boolean useUringFetch = IoUring.isAvailable
+            && !Boolean.getBoolean("index.disableUringFetch");
 
     private static final int maxSimultaneousQueries = Integer.getInteger("index.maxSimultaneousQueries", 8);
     private static final Semaphore simultaneousRequests = new Semaphore(maxSimultaneousQueries);
@@ -445,10 +457,13 @@ public class IndexQueryExecution {
 
         private static final ScratchSegmentAllocatorFactory allocatorFactory
                 = new ScratchSegmentAllocatorFactory("Ranking", 1 << 20);
+        private static final ConcurrentLinkedQueue<RankingBatchFetcher> fetcherPool = new ConcurrentLinkedQueue<>();
+        private static final AtomicBoolean warnedFetcherFailure = new AtomicBoolean();
 
         // per-thread instances
         private final ScratchIntListPool pool = new ScratchIntListPool(64);
         private final ScratchSegmentAllocator segmentAllocator;
+        private final RankingBatchFetcher fetcher;
         private final ResultPriorityQueue localResults = new ResultPriorityQueue(rankingContext.limitTotal, rankingContext.limitByDomain);
 
         private final Lock indexLock = currentIndex.useLock();
@@ -459,23 +474,88 @@ public class IndexQueryExecution {
             }
 
             segmentAllocator = allocatorFactory.createAllocator();
+            fetcher = useUringFetch ? claimFetcher() : null;
+        }
+
+        /** Fetchers hold rings on the index files, so pooled instances built
+         *  against a swapped out index must be discarded, not reused.  Returns null
+         *  if a fetcher cannot be constructed, in which case the stage falls back
+         *  to the serial fetch path. */
+        @Nullable
+        private RankingBatchFetcher claimFetcher() {
+            RankingBatchFetcher pooled;
+            while ((pooled = fetcherPool.poll()) != null) {
+                if (pooled.owner() == currentIndex) {
+                    return pooled;
+                }
+                pooled.close();
+            }
+
+            try {
+                return new RankingBatchFetcher(currentIndex);
+            }
+            catch (RuntimeException e) {
+                if (!warnedFetcherFailure.getAndSet(true)) {
+                    logger.warn("Failed to create batch fetcher, using serial reads", e);
+                }
+                return null;
+            }
         }
 
         @Override
         public void process(RankableDocument[] batch) {
-            for (RankableDocument rankableDocument : batch) {
-                try {
-                    fetchSerially(rankableDocument);
-                    scoreDocument(rankableDocument);
-                }
-                finally {
-                    pool.reset();
-                    segmentAllocator.reset();
+            if (fetcher != null) {
+                processBatched(batch);
+            }
+            else {
+                for (RankableDocument rankableDocument : batch) {
+                    try {
+                        fetchSerially(rankableDocument);
+                        scoreDocument(rankableDocument);
+                    }
+                    finally {
+                        pool.reset();
+                        segmentAllocator.reset();
+                    }
                 }
             }
         }
 
+        /** All reads for the batch happen in three batched submissions, then the
+         *  documents are scored without touching the index files */
+        private void processBatched(RankableDocument[] batch) {
+            try {
+                long[] spansEncoded = fetcher.fetchEntries(batch);
+                DecodableDocumentSpans[] codedSpans = fetcher.fetchSpans(spansEncoded, segmentAllocator);
+                MemorySegment[][] positionSegments = fetcher.fetchPositionSegments(batch, segmentAllocator);
+
+                fetcher.positionsDecoder().decodeBatch(positionSegments);
+
+                for (int i = 0; i < batch.length; i++) {
+                    RankableDocument rankableDocument = batch[i];
+                    try {
+                        if (codedSpans[i] == null) continue;
+
+                        rankableDocument.documentSpans = codedSpans[i].decode(pool::get);
+                        rankableDocument.positions = fetcher.positionsDecoder().positionsForDocument(positionSegments[i], i, pool);
+
+                        scoreDocument(rankableDocument);
+                    }
+                    finally {
+                        pool.reset();
+                    }
+                }
+            }
+            finally {
+                segmentAllocator.reset();
+            }
+        }
+
         private void fetchSerially(RankableDocument rankableDocument) {
+            rankableDocument.docMetadata = currentIndex.getDocumentMetadata(rankableDocument.combinedDocumentId);
+            rankableDocument.htmlFeatures = currentIndex.getHtmlFeatures(rankableDocument.combinedDocumentId);
+            rankableDocument.docSize = currentIndex.getDocumentSize(rankableDocument.combinedDocumentId);
+
             DocumentSpans spans = getSpans(rankableDocument.combinedDocumentId);
             if (spans == null) {
                 return;
@@ -535,6 +615,9 @@ public class IndexQueryExecution {
             }
             finally {
                 try {
+                    if (fetcher != null) {
+                        fetcherPool.add(fetcher);
+                    }
                     segmentAllocator.close();
                 }
                 finally {
