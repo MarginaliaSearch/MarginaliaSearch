@@ -19,7 +19,7 @@ public class SegmentMemoryPage implements MemoryPage, AutoCloseable {
     /** Pin count is used as a read-write condition.
      * <p></p>
      * When the pin count is 0, the page is free.
-     * When it is -1, it is held for writing.
+     * When it is WRITE_LOCKED (plus possible transient reader increments), it is held for writing.
      * When it is greater than 0, it is held for reading.
      */
     private final AtomicInteger pinCount = new AtomicInteger(0);
@@ -39,7 +39,7 @@ public class SegmentMemoryPage implements MemoryPage, AutoCloseable {
 
     @Override
     public void increaseClock(int val) {
-        clock.addAndGet(val);
+        clock.setOpaque(clock.getOpaque() + val);
     }
     @Override
     public void touchClock(int val) {
@@ -128,7 +128,7 @@ public class SegmentMemoryPage implements MemoryPage, AutoCloseable {
 
     @Override
     public boolean acquireForWriting(long intendedAddress) {
-        if (pinCount.compareAndSet(0, -1)) {
+        if (pinCount.compareAndSet(0, WRITE_LOCKED)) {
             pageAddress = intendedAddress;
             dirty = true;
             return true;
@@ -139,18 +139,17 @@ public class SegmentMemoryPage implements MemoryPage, AutoCloseable {
 
     @Override
     public boolean acquireAsReader(long expectedAddress) {
-        int pinCountVal;
-
-        while ((pinCountVal = pinCount.get()) >= 0) {
-            if (pinCount.compareAndSet(pinCountVal, pinCountVal+1)) {
-                if (pageAddress != expectedAddress) {
-                    pinCount.decrementAndGet();
-                    return false;
-                }
-                return true;
+        // Pin with a wait free getAndIncrement rather than a CAS loop, which
+        // contends badly when many readers hit the same hot page
+        if (pinCount.getAndIncrement() >= 0) {
+            if (pageAddress != expectedAddress) {
+                pinCount.decrementAndGet();
+                return false;
             }
+            return true;
         }
 
+        pinCount.decrementAndGet();
         return false;
     }
 

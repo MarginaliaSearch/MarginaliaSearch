@@ -1,9 +1,9 @@
 package nu.marginalia.array.pool;
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.StampedLock;
@@ -14,7 +14,7 @@ public class PoolLru {
     private static final Logger logger = LoggerFactory.getLogger(PoolLru.class);
 
     private final int maxSize;
-    private final LinkedHashMap<Long, MemoryPage> backingMap;
+    private final Long2ObjectLinkedOpenHashMap<MemoryPage> backingMap;
     private final MemoryPage[] pages;
 
     private final int[] freeQueue;
@@ -28,7 +28,7 @@ public class PoolLru {
     private volatile boolean running = true;
 
     public PoolLru(MemoryPage[] pages) {
-        backingMap = new LinkedHashMap<>(pages.length, 0.75f);
+        backingMap = new Long2ObjectLinkedOpenHashMap<>(pages.length, 0.75f);
         this.pages = pages;
         // Pre-assign all entries with nonsense memory locations
         for (int i = 0; i < pages.length; i++) {
@@ -87,7 +87,7 @@ public class PoolLru {
             buffer.touchClock(1);
             // Evict the last entry if we've exceeded the
             while (backingMap.size() >= maxSize) {
-                backingMap.pollFirstEntry();
+                backingMap.remove(backingMap.firstLongKey());
             }
         }
         finally {
@@ -98,7 +98,10 @@ public class PoolLru {
     public void deregister(MemoryPage buffer) {
         long stamp = lock.writeLock();
         try {
-            backingMap.remove(buffer.pageAddress(), buffer);
+            long address = buffer.pageAddress();
+            if (backingMap.get(address) == buffer) {
+                backingMap.remove(address);
+            }
         }
         finally {
             lock.unlockWrite(stamp);
@@ -114,9 +117,10 @@ public class PoolLru {
             var readIdx = clockReadIdx.get();
             var writeIdx = clockWriteIdx.get();
 
-            if (writeIdx - readIdx == freeQueue.length / 4) {
+            if (writeIdx - readIdx <= freeQueue.length / 4) {
                 LockSupport.unpark(reclaimThread);
-            } else if (readIdx == writeIdx) {
+            }
+            if (readIdx == writeIdx) {
                 if ((iter % 10000) == 0) {
                     if (!running) {
                         // This shouldn't be possible, but just in case we encounter this state,
@@ -148,7 +152,9 @@ public class PoolLru {
             int queueSize = (int) (writeIdx - readIdx);
 
             if (queueSize >= targetQueueSize) {
-                LockSupport.parkNanos(10_000);
+                // Consumers unpark us when the queue runs low, so this bounds
+                // wakeup staleness rather than polling for work
+                LockSupport.parkNanos(10_000_000);
                 continue;
             }
 

@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.LockSupport;
 
 public class BufferPool implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(BufferPool.class);
@@ -193,7 +194,7 @@ public class BufferPool implements AutoCloseable {
         poolLru.register(buffer);
         populateBuffer(buffer);
 
-        if (!buffer.pinCount().compareAndSet(-1, 1)) {
+        if (buffer.pinCount().getAndAdd(1 - MemoryPage.WRITE_LOCKED) >= 0) {
             throw new IllegalStateException("Panic! Write lock was not held during write!");
         }
         diskReadCount.incrementAndGet();
@@ -220,10 +221,20 @@ public class BufferPool implements AutoCloseable {
     }
 
     private void waitForPageWrite(MemoryPage page) {
-        while (page.dirty()) {
-            Thread.yield();
+        // The writer offers no wakeup signal, so briefly spin for the common
+        // case of a nearly finished write, then poll with a bounded park
+        for (int iter = 0; iter < 128; iter++) {
+            if (!page.dirty()) {
+                return;
+            }
+            Thread.onSpinWait();
         }
 
+        long parkTime = 5_000;
+        while (page.dirty()) {
+            LockSupport.parkNanos(parkTime);
+            parkTime = Math.min(2 * parkTime, 50_000);
+        }
     }
 
 }

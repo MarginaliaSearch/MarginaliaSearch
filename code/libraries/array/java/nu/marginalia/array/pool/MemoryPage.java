@@ -4,6 +4,8 @@ import java.lang.foreign.MemorySegment;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public interface MemoryPage extends AutoCloseable {
+    int WRITE_LOCKED = Integer.MIN_VALUE / 2;
+
     boolean isHeld();
 
     MemorySegment getMemorySegment();
