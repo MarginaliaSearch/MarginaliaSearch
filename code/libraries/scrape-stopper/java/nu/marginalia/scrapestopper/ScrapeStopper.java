@@ -99,7 +99,7 @@ public class ScrapeStopper {
         if (null == (token = tokens.remove(sst)))
             return Optional.empty();
 
-        tokensByIpZone.remove(token.remoteIp);
+        tokensByIpZone.remove(token.remoteIp + "-" + zone, token);
 
         return Optional.of(assignSst(zone, token));
     }
@@ -214,7 +214,14 @@ class Token {
     }
 
     public Duration timeUntilValid() {
-        return Duration.between(Instant.now(), validAfter);
+        // assignSst may hand out a token that is already past validAfter,
+        // so clamp to zero to avoid reporting a negative wait
+        Duration remaining = Duration.between(Instant.now(), validAfter);
+
+        if (remaining.isNegative())
+            return Duration.ZERO;
+
+        return remaining;
     }
 
     public boolean isExpired() {
