@@ -50,11 +50,16 @@ public class LinuxSystemCalls {
 
         handle = libraryLookup.findOrThrow("madvise_random");
         madviseRandom = nativeLinker.downcallHandle(handle, FunctionDescriptor.ofVoid(ADDRESS, JAVA_LONG));
+
         handle = libraryLookup.findOrThrow("close_fd");
         closeFd = nativeLinker.downcallHandle(handle, FunctionDescriptor.ofVoid(JAVA_INT));
 
+        // The buffer is passed as a raw address rather than a segment.  Acquiring the
+        // session of a shared or global arena segment contends on a single counter
+        // between all query threads, and readAt runs for every ranked document.
+        // The caller must keep the segment alive across the call.
         handle = libraryLookup.findOrThrow("read_at");
-        readAtFd = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, JAVA_INT, JAVA_LONG));
+        readAtFd = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_LONG, JAVA_INT, JAVA_LONG));
     }
 
     static {
@@ -96,6 +101,9 @@ public class LinuxSystemCalls {
         isAvailable = instance != null;
     }
 
+    // Kept in a static final so the JIT can constant fold the handle and inline the downcall
+    private static final MethodHandle READ_AT = isAvailable ? instance.readAtFd : null;
+
     public static int openDirect(Path filename) {
         try (var arena = Arena.ofConfined()) {
             MemorySegment filenameCStr = arena.allocateFrom(filename.toString());
@@ -116,7 +124,7 @@ public class LinuxSystemCalls {
 
     public static int readAt(int fd, MemorySegment dest, long offset) {
         try {
-            return (Integer) instance.readAtFd.invoke(fd, dest, (int) dest.byteSize(), offset);
+            return (int) READ_AT.invokeExact(fd, dest.address(), (int) dest.byteSize(), offset);
         } catch (Throwable t) {
             throw new RuntimeException("Failed to invoke native function", t);
         }
@@ -137,6 +145,7 @@ public class LinuxSystemCalls {
             throw new RuntimeException("Failed to invoke native function", t);
         }
     }
+
     public static void madviseRandom(MemorySegment segment) {
         try {
             instance.madviseRandom.invoke(segment, segment.byteSize());
