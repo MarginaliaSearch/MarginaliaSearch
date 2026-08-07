@@ -1,6 +1,7 @@
 package nu.marginalia.skiplist.compression;
 
 import it.unimi.dsi.fastutil.longs.LongList;
+import nu.marginalia.ffi.NativeAlgos;
 import nu.marginalia.skiplist.compression.input.CompressorInput;
 import nu.marginalia.skiplist.compression.output.ReadableCompressorBufferIf;
 import nu.marginalia.skiplist.compression.output.SegmentCompressorBuffer;
@@ -10,6 +11,9 @@ import nu.marginalia.skiplist.compression.output.WritableCompressorBufferIf;
  * allowing for 3 bits per value to encode their byte sizes with (1-8).
  * */
 public class DocIdCompressor {
+
+    private static final boolean useNativeDecompression = NativeAlgos.isAvailable
+            && !Boolean.getBoolean("index.disableNativeDecompress");
 
     /** Given a max capacity, calculate how much of the input array would fit */
     public static int calcMaxEntries(CompressorInput input, int capacity) {
@@ -85,6 +89,17 @@ public class DocIdCompressor {
 
     /** Decompress n items from the provided input to the array */
     public static void decompress(SegmentCompressorBuffer input, int n, long[] output) {
+        if (useNativeDecompression) {
+            input.setPos(NativeAlgos.decompressDocIds(input.segment(), input.getPos(), n, output));
+        }
+        else {
+            decompressJava(input, n, output);
+        }
+    }
+
+    /** Pure Java implementation of {@link #decompress(SegmentCompressorBuffer, int, long[])},
+     *  also used as a reference for testing and benchmarking the native implementation */
+    public static void decompressJava(SegmentCompressorBuffer input, int n, long[] output) {
         int outIdx = 0;
         long val = 0L;
         while (outIdx < n) {
