@@ -6,6 +6,7 @@ import nu.marginalia.encyclopedia.model.Article;
 import nu.marginalia.encyclopedia.model.Link;
 import nu.marginalia.encyclopedia.model.LinkList;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -20,6 +21,8 @@ import java.util.Set;
 public class WikiCleaner {
 
     private static final String licenseFooter = "This article is issued from Wikipedia. The text is licensed under Creative Commons - Attribution - Sharealike. Additional terms may apply for the media files.";
+
+    @Nullable
     public ArticleData cleanWikiJunk(String url, String html) {
         return cleanWikiJunk(url, Jsoup.parse(html));
     }
@@ -36,6 +39,7 @@ public class WikiCleaner {
         return false;
     }
 
+    @Nullable
     public ArticleData cleanWikiJunk(String url, Document doc) {
 
         if (doc.getElementById("content") == null) {
