@@ -31,6 +31,11 @@ public class NativeAlgos {
     private final MethodHandle mergeArrays1;
     private final MethodHandle mergeArrays2;
     private final MethodHandle mergeArrays3;
+    private final MethodHandle decompressDocIds;
+    private final MethodHandle decompressMatch;
+    private final MethodHandle decodeVarintBatch;
+    private final MethodHandle findFirstGe;
+    private final MethodHandle findFirstGeScalar;
 
     public static final NativeAlgos instance;
 
@@ -71,6 +76,44 @@ public class NativeAlgos {
         handle = libraryLookup.findOrThrow("merge_arrays_1");
         mergeArrays1 = nativeLinker.downcallHandle(handle,
                 FunctionDescriptor.of(JAVA_LONG, ADDRESS, ADDRESS, ADDRESS, JAVA_LONG, JAVA_LONG));
+
+        // The critical linker option skips the thread state transition, and permits passing
+        // heap segments such as the output array without copying.  The input is passed as
+        // a raw address rather than a segment, as acquiring the session of a shared arena
+        // segment on every call contends badly between query threads.  The caller must
+        // keep the segment alive across the call.
+        handle = libraryLookup.findOrThrow("ms_decompress_docids");
+        decompressDocIds = nativeLinker.downcallHandle(handle,
+                FunctionDescriptor.of(JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_INT, ADDRESS),
+                Linker.Option.critical(true));
+
+        // Scanning a sorted list for the first value at or above a target, the
+        // step the sequence kernels advance a list with.  A scalar twin of the
+        // vectorised entry point is bound too, so a benchmark can tell the cost
+        // of the call apart from the gain of the vectorisation.
+        handle = libraryLookup.findOrThrow("ms_find_first_ge");
+        findFirstGe = nativeLinker.downcallHandle(handle,
+                FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT, JAVA_INT),
+                Linker.Option.critical(true));
+
+        handle = libraryLookup.findOrThrow("ms_find_first_ge_scalar");
+        findFirstGeScalar = nativeLinker.downcallHandle(handle,
+                FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT, JAVA_INT),
+                Linker.Option.critical(true));
+
+        handle = libraryLookup.findOrThrow("ms_decode_varint_batch");
+        decodeVarintBatch = nativeLinker.downcallHandle(handle,
+                FunctionDescriptor.of(JAVA_LONG, ADDRESS, ADDRESS, JAVA_INT, ADDRESS, ADDRESS),
+                Linker.Option.critical(true));
+
+        handle = libraryLookup.findOrThrow("ms_decompress_match");
+        decompressMatch = nativeLinker.downcallHandle(handle,
+                FunctionDescriptor.of(JAVA_LONG,
+                        JAVA_LONG, JAVA_LONG, JAVA_LONG, JAVA_INT,
+                        ADDRESS, JAVA_INT, JAVA_INT,
+                        JAVA_LONG, JAVA_LONG,
+                        ADDRESS, JAVA_INT),
+                Linker.Option.critical(true));
     }
 
     static {
@@ -110,6 +153,95 @@ public class NativeAlgos {
 
         instance = nativeAlgosI;
         isAvailable = instance != null;
+    }
+
+    // Kept in static finals so the JIT can constant fold the handles and inline the
+    // downcalls, which an instance field load defeats.  The generic dispatch dominates
+    // the call cost for the small blocks typical of query execution.
+    private static final MethodHandle DECOMPRESS_DOC_IDS = isAvailable ? instance.decompressDocIds : null;
+    private static final MethodHandle DECOMPRESS_MATCH = isAvailable ? instance.decompressMatch : null;
+    private static final MethodHandle DECODE_VARINT_BATCH = isAvailable ? instance.decodeVarintBatch : null;
+    private static final MethodHandle FIND_FIRST_GE = isAvailable ? instance.findFirstGe : null;
+    private static final MethodHandle FIND_FIRST_GE_SCALAR = isAvailable ? instance.findFirstGeScalar : null;
+
+    /** Decompress n doc ids from the compressed representation in the input segment,
+     *  starting at position pos, into the output array.  Returns the input position
+     *  after the last consumed byte. */
+    public static long decompressDocIds(MemorySegment input, long pos, int n, long[] output) {
+        try {
+            return (long) DECOMPRESS_DOC_IDS.invokeExact(input.address(), pos, input.byteSize(), n, MemorySegment.ofArray(output));
+        }
+        catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+    }
+
+    /** Index of the first element of data[0:n] that is at least target, or n if
+     *  there is none.  The array must be sorted ascending and hold non negative
+     *  values. */
+    public static int findFirstGe(int[] data, int n, int target) {
+        try {
+            return (int) FIND_FIRST_GE.invokeExact(MemorySegment.ofArray(data), n, target);
+        }
+        catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+    }
+
+    /** As {@link #findFirstGe(int[], int, int)} without the vectorisation, for
+     *  telling the cost of the call apart from the gain of the vectorisation */
+    public static int findFirstGeScalar(int[] data, int n, int target) {
+        try {
+            return (int) FIND_FIRST_GE_SCALAR.invokeExact(MemorySegment.ofArray(data), n, target);
+        }
+        catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+    }
+
+    /** Decode the compressed doc id run at pos and merge it against the sorted keys,
+     *  writing a value offset or -1 per consumed key into outOffsets starting at outIdx.
+     *  Returns the record index in the high 32 bits and the key index in the low. */
+    public static long decompressMatch(MemorySegment input, long pos, int n,
+                                       long[] keys, int keyIdx,
+                                       long valuesOffset, long offsetStride,
+                                       long[] outOffsets, int outIdx) {
+        try {
+            return (long) DECOMPRESS_MATCH.invokeExact(input.address(), pos, input.byteSize(), n,
+                    MemorySegment.ofArray(keys), keys.length, keyIdx,
+                    valuesOffset, offsetStride,
+                    MemorySegment.ofArray(outOffsets), outIdx);
+        }
+        catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+    }
+
+    /** Decode a batch of varint coded position sequences located at addrs[i]
+     *  with byte lengths lens[i], writing all values sequentially into out and
+     *  each sequence's value count into counts.  Returns the total number of
+     *  values written.  The out array must have room for the worst case of one
+     *  value per input byte, and the caller must keep the sequence memory alive
+     *  across the call. */
+    public static long decodeVarintBatch(long[] addrs, int[] lens, int n, int[] out, int[] counts) {
+        return decodeVarintBatch(addrs, lens, 0, n, out, 0, counts);
+    }
+
+    /** Like {@link #decodeVarintBatch(long[], int[], int, int[], int[])}, reading
+     *  n sequences starting at index from, and writing values from out[outOffset]
+     *  and counts from counts[from]. */
+    public static long decodeVarintBatch(long[] addrs, int[] lens, int from, int n, int[] out, long outOffset, int[] counts) {
+        try {
+            return (long) DECODE_VARINT_BATCH.invokeExact(
+                    MemorySegment.ofArray(addrs).asSlice(8L * from),
+                    MemorySegment.ofArray(lens).asSlice(4L * from),
+                    n,
+                    MemorySegment.ofArray(out).asSlice(4L * outOffset),
+                    MemorySegment.ofArray(counts).asSlice(4L * from));
+        }
+        catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
     }
 
     public static void sort(MemorySegment ms, long start, long end) {

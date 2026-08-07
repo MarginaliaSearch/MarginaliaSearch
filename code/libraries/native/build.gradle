@@ -24,7 +24,7 @@ apply from: "$rootProject.projectDir/srcsets.gradle"
 // with a shellscript as gradle's c++ tasks are kind of insufferable
 
 tasks.register('compileCpp', Exec) {
-    inputs.files('Makefile', 'src/sort.cc', 'src/unix.cc', 'src/uring.cc', 'src/config.h')
+    inputs.files('Makefile', 'src/sort.cc', 'src/unix.cc', 'src/uring.cc', 'src/decompress.cc', 'src/varint.cc', 'src/scan.cc', 'src/config.h')
     outputs.files('resources/libcpp.so', 'resources/liburing.so')
 
     commandLine 'make', 'all'
