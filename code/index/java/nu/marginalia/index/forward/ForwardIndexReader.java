@@ -18,8 +18,10 @@ import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 import static nu.marginalia.index.config.ForwardIndexParameters.*;
 
@@ -43,6 +45,11 @@ public class ForwardIndexReader {
     private final int dataFd;
     private final int spansFd;
 
+    /** Mapping of the spans file, for fetch paths that read resident pages
+     *  directly instead of copying them through the fds above */
+    private final Arena spansArena;
+    private final MemorySegment spansSegment;
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private static ForwardIndexVersion version;
@@ -57,6 +64,8 @@ public class ForwardIndexReader {
             domainRankings = null;
             dataFd = -1;
             spansFd = -1;
+            spansArena = null;
+            spansSegment = null;
             version = null;
             return;
         }
@@ -67,6 +76,8 @@ public class ForwardIndexReader {
             domainRankings = null;
             dataFd = -1;
             spansFd = -1;
+            spansArena = null;
+            spansSegment = null;
             version = null;
             return;
         }
@@ -77,6 +88,8 @@ public class ForwardIndexReader {
             domainRankings = null;
             dataFd = -1;
             spansFd = -1;
+            spansArena = null;
+            spansSegment = null;
             version = null;
             return;
         }
@@ -91,7 +104,7 @@ public class ForwardIndexReader {
         domainRankings = new DomainRankings();
         domainRankings.load(dataFile.getParent());
 
-        LinuxSystemCalls.madviseRandom(data.getMemorySegment());
+        LinuxSystemCalls.madviseNormal(data.getMemorySegment());
         LinuxSystemCalls.madviseRandom(ids.getMemorySegment());
 
         dataFd = LinuxSystemCalls.openBuffered(dataFile);
@@ -100,6 +113,12 @@ public class ForwardIndexReader {
         spansFd = LinuxSystemCalls.openBuffered(spansFile);
         LinuxSystemCalls.fadviseWillneed(spansFd);
         LinuxSystemCalls.fadviseRandom(spansFd);
+
+        spansArena = Arena.ofShared();
+        try (FileChannel channel = FileChannel.open(spansFile, StandardOpenOption.READ)) {
+            spansSegment = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size(), spansArena);
+        }
+        LinuxSystemCalls.madviseNormal(spansSegment);
 
         Thread.ofPlatform().start(this::createIdsMap);
     }
@@ -254,6 +273,14 @@ public class ForwardIndexReader {
         return spansFd;
     }
 
+    public MemorySegment mappedData() {
+        return data.getMemorySegment();
+    }
+
+    public MemorySegment mappedSpans() {
+        return spansSegment;
+    }
+
     public ForwardIndexVersion version() {
         return version;
     }
@@ -273,6 +300,14 @@ public class ForwardIndexReader {
         }
         catch (RuntimeException ex) {
             logger.error("Error closing 'spansFd'", ex);
+        }
+
+        try {
+            if (spansArena != null)
+                spansArena.close();
+        }
+        catch (RuntimeException ex) {
+            logger.error("Error closing 'spansArena'", ex);
         }
 
         try {
