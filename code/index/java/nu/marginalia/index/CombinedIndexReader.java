@@ -19,6 +19,8 @@ import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.skiplist.SkipListReader;
+import nu.marginalia.skiplist.SkipListValueReader;
+import nu.marginalia.skiplist.ValueBatchContext;
 import nu.marginalia.skiplist.SkipListValueRanges;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -351,8 +353,21 @@ public class CombinedIndexReader {
     public SkipListReader.ValueReader getValueReader(SearchContext searchContext,
                                                      SegmentAllocator allocator,
                                                      long termId,
-                                                     CombinedDocIdList keys) {
-        return reverseIndexFullReader.getValueReader(searchContext, allocator, termId, keys);
+                                                     CombinedDocIdList keys,
+                                                     @Nullable ValueBatchContext batchContext) {
+        return reverseIndexFullReader.getValueReader(searchContext, allocator, termId, keys, batchContext);
+    }
+
+    @Nullable
+    public ValueBatchContext createValueBatchContext() {
+        return reverseIndexFullReader.createValueBatchContext();
+    }
+
+    /** The value reader a batch context would be opened against, for checking
+     *  whether a pooled context still belongs to the live index */
+    @Nullable
+    public SkipListValueReader valueReaderIdentity() {
+        return reverseIndexFullReader.valueReaderIdentity();
     }
 
     public BitSet getValuePresence(SearchContext searchContext, long termId, CombinedDocIdList keys) {
