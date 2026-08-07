@@ -57,6 +57,82 @@ public class SkipListReaderTest {
         return LongArrayFactory.wrap(ms);
     }
 
+    /** Sequential doc ids compress to single byte deltas, so a compressed block
+     *  holds far more than MAX_RECORDS_PER_BLOCK records.  This exercises the
+     *  decompression scratch buffer at its worst case record count. */
+    @Test
+    public void testDenseCompressedBlocks() throws IOException {
+        long[] keys = LongStream.range(1, 30_000).toArray();
+        long[] vals = LongStream.range(1, 30_000).map(v -> -v).toArray();
+
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
+            writer.writeList(createArray(keys, vals), keys.length);
+        }
+
+        try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+             var valueReader = new SkipListValueReader(valuesFile)) {
+            var reader = new SkipListReader(indexPool, valueReader, 0);
+
+            LongList actual = new LongArrayList(keys.length);
+            LongQueryBuffer lqb = new LongQueryBuffer(512);
+            while (!reader.atEnd()) {
+                reader.getKeys(lqb);
+                for (int i = 0; i < lqb.end; i++) {
+                    actual.add(lqb.data.get(i));
+                }
+                lqb.zero();
+            }
+
+            Assertions.assertArrayEquals(keys, actual.toLongArray());
+        }
+    }
+
+    /** Two readers alternating on the same thread must not see each other's data
+     *  through the shared decompression scratch buffer */
+    @Test
+    public void testInterleavedReadersOnSameThread() throws IOException {
+        long[] keysA = LongStream.range(1, 20_000).toArray();
+        long[] keysB = LongStream.range(1, 20_000).map(v -> 3*v).toArray();
+        long[] vals = new long[keysA.length];
+
+        long offsetA;
+        long offsetB;
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
+            offsetA = writer.writeList(createArray(keysA, vals), keysA.length);
+            offsetB = writer.writeList(createArray(keysB, vals), keysB.length);
+        }
+
+        try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+             var valueReader = new SkipListValueReader(valuesFile)) {
+            var readerA = new SkipListReader(indexPool, valueReader, offsetA);
+            var readerB = new SkipListReader(indexPool, valueReader, offsetB);
+
+            LongList actualA = new LongArrayList(keysA.length);
+            LongList actualB = new LongArrayList(keysB.length);
+
+            LongQueryBuffer lqb = new LongQueryBuffer(512);
+            while (!readerA.atEnd() || !readerB.atEnd()) {
+                if (!readerA.atEnd()) {
+                    readerA.getKeys(lqb);
+                    for (int i = 0; i < lqb.end; i++) {
+                        actualA.add(lqb.data.get(i));
+                    }
+                    lqb.zero();
+                }
+                if (!readerB.atEnd()) {
+                    readerB.getKeys(lqb);
+                    for (int i = 0; i < lqb.end; i++) {
+                        actualB.add(lqb.data.get(i));
+                    }
+                    lqb.zero();
+                }
+            }
+
+            Assertions.assertArrayEquals(keysA, actualA.toLongArray());
+            Assertions.assertArrayEquals(keysB, actualB.toLongArray());
+        }
+    }
+
     @Test
     public void testGetKeysWithRange__sunny_day() throws IOException {
         long[] keys = LongStream.range(0, 1000).toArray();
