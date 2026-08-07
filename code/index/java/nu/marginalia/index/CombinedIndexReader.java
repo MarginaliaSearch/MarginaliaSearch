@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.longs.*;
 import nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQueryAggregates;
 import nu.marginalia.api.searchquery.model.query.SpecificationLimitType;
 import nu.marginalia.array.page.LongQueryBuffer;
+import nu.marginalia.index.config.ForwardIndexParameters;
 import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
 import nu.marginalia.index.model.*;
@@ -379,6 +380,28 @@ public class CombinedIndexReader {
 
     public int getDocPubDate(long docId) {
         return forwardIndexReader.getDocPubDate(docId);
+    }
+
+    /** File descriptors and entry offsets for the batched ranking fetch path */
+
+    public int forwardDataFd() {
+        return forwardIndexReader.dataFd();
+    }
+
+    public int forwardSpansFd() {
+        return forwardIndexReader.spansFd();
+    }
+
+    public int positionsFd() {
+        return reverseIndexFullReader.positionsFd();
+    }
+
+    public long forwardDataOffsetForDoc(long combinedDocId) {
+        return forwardIndexReader.dataOffsetForDoc(combinedDocId);
+    }
+
+    public ForwardIndexParameters.ForwardIndexVersion forwardVersion() {
+        return forwardIndexReader.version();
     }
 
     /** Retrieves the document spans for the specified documents */
