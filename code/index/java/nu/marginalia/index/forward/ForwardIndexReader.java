@@ -17,6 +17,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.SegmentAllocator;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -198,7 +199,7 @@ public class ForwardIndexReader {
     }
 
     @Nullable
-    public DecodableDocumentSpans getDocumentSpans(Arena arena, long documentId) {
+    public DecodableDocumentSpans getDocumentSpans(SegmentAllocator allocator, long documentId) {
 
         long fwdIdxOffset = idxForDoc(documentId);
         if (fwdIdxOffset < 0) {
@@ -210,7 +211,7 @@ public class ForwardIndexReader {
         long readOffset = SpansCodec.decodeStartOffset(encodedOffset);
         int readSize = SpansCodec.decodeSize(encodedOffset);
 
-        MemorySegment segment = arena.allocate(readSize, 8);
+        MemorySegment segment = allocator.allocate(readSize, 8);
 
         LinuxSystemCalls.readAt(spansFd, segment, readOffset);
 

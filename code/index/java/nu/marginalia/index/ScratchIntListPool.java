@@ -1,21 +1,19 @@
 package nu.marginalia.index;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-
 /** Resettable pool for IntArrays
  * */
 public class ScratchIntListPool {
-    private final IntArrayList[] pool;
+    private final ScratchIntList[] pool;
     private int pos = 0;
 
     public ScratchIntListPool(int size) {
-        this.pool = new IntArrayList[size];
+        this.pool = new ScratchIntList[size];
     }
 
-    public IntArrayList get(int size) {
+    public ScratchIntList get(int size) {
         if (pos < pool.length) {
             if (pool[pos] == null) {
-                pool[pos] = new IntArrayList(size);
+                pool[pos] = new ScratchIntList(size);
             }
             else {
                 pool[pos].ensureCapacity(size);
@@ -24,10 +22,10 @@ public class ScratchIntListPool {
             return pool[pos++];
         }
 
-        return new IntArrayList(size);
+        return new ScratchIntList(size);
     }
 
-    public IntArrayList get() {
+    public ScratchIntList get() {
         return get(8);
     }
 

@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.SegmentAllocator;
 import java.lang.foreign.ValueLayout;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -575,7 +576,7 @@ public class SkipListReader {
 
         private final int entrySize = (SkipListConstants.RECORD_SIZE - 1);
 
-        private final MemorySegment valueSegment = Arena.ofAuto().allocate(VALUE_BLOCK_SIZE, 8);
+        private final MemorySegment valueSegment;
 
         private final long[] inputKeys;
         private int iPos = -1;
@@ -593,12 +594,14 @@ public class SkipListReader {
             inputKeys = new long[0];
             valueOffsets = new long[0];
             outValues = new long[0];
+            valueSegment = null;
         }
 
-        ValueReader(long[] inputKeys) {
+        ValueReader(SegmentAllocator allocator, long[] inputKeys) {
             this.inputKeys = inputKeys;
             this.valueOffsets = new long[inputKeys.length];
             this.outValues = new long[inputKeys.length * (RECORD_SIZE-1)];
+            valueSegment = allocator.allocate(VALUE_BLOCK_SIZE, 8);
         }
 
         public boolean advance() throws IOException {
@@ -789,8 +792,8 @@ public class SkipListReader {
 
     }
 
-    public ValueReader getValueReader(long[] keys) {
-        return new ValueReader(keys);
+    public ValueReader getValueReader(SegmentAllocator segmentAllocator, long[] keys) {
+        return new ValueReader(segmentAllocator, keys);
     }
 
     public ValueReader getEmptyValueReader() {
@@ -805,7 +808,7 @@ public class SkipListReader {
      * the result array will look like [ 1, 2, 3, 4, ..., 1, 2, 3, 4, ... ]
      * */
     public long[] getAllValues(long[] keys) throws IOException {
-        var reader = getValueReader(keys);
+        var reader = getValueReader(Arena.ofAuto(), keys);
         long[] vals = new long[keys.length * (RECORD_SIZE-1)];
 
         while (reader.advance()) {
