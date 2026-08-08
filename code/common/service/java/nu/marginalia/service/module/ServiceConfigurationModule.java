@@ -2,14 +2,11 @@ package nu.marginalia.service.module;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
+import nu.marginalia.NetworkConfiguration;
 import nu.marginalia.service.ServiceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.util.Enumeration;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -26,7 +23,7 @@ public class ServiceConfigurationModule extends AbstractModule {
 
         var configObject = new ServiceConfiguration(id,
                 node,
-                getBindAddress(),
+                NetworkConfiguration.getBindAddress(),
                 getExternalHost(),
                 getPrometheusPort(),
                 UUID.randomUUID()
@@ -75,7 +72,7 @@ public class ServiceConfigurationModule extends AbstractModule {
 
         if (Boolean.getBoolean("system.multiFace")) {
             try {
-                String localNetworkIp = getLocalNetworkIP();
+                String localNetworkIp = NetworkConfiguration.getLocalNetworkIP();
                 if (null != localNetworkIp) {
                     return localNetworkIp;
                 }
@@ -92,57 +89,6 @@ public class ServiceConfigurationModule extends AbstractModule {
         // If we've not been told about a host, and we're not in docker, we'll fall back to localhost
         // and hope the operator's remembered to enable random port assignment via zookeeper
         return "127.0.0.1";
-    }
-
-    /** Get the bind address for the service. This is the address that the service will listen on.
-     */
-    private String getBindAddress() {
-        String configuredValue = System.getProperty("service.bind-address");
-        if (configuredValue != null) {
-            logger.info("Using configured bind address {}", configuredValue);
-            return configuredValue;
-        }
-
-        if (Boolean.getBoolean("system.multiFace")) {
-            try {
-                return Objects.requireNonNullElse(getLocalNetworkIP(), "0.0.0.0");
-            } catch (Exception ex) {
-                logger.warn("Failed to get local network IP, falling back to bind to 0.0.0.0", ex);
-                return "0.0.0.0";
-            }
-        }
-        else {
-            return "0.0.0.0";
-        }
-    }
-
-    public static String getLocalNetworkIP() throws IOException {
-        // Overrride for when the namespace holds several site-local addresses
-        String preferredInterface = System.getProperty("system.multiFaceInterface");
-
-        Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
-
-        while (nets.hasMoreElements()) {
-            NetworkInterface netif = nets.nextElement();
-            logger.info("Considering network interface {}:  Up? {},  Loopback? {}", netif.getDisplayName(), netif.isUp(), netif.isLoopback());
-            if (!netif.isUp() || netif.isLoopback()) {
-                continue;
-            }
-
-            if (preferredInterface != null && !Objects.equals(preferredInterface, netif.getName())) {
-                continue;
-            }
-
-            Enumeration<InetAddress> inetAddresses = netif.getInetAddresses();
-            while (inetAddresses.hasMoreElements()) {
-                InetAddress addr = inetAddresses.nextElement();
-                logger.info("Considering address {}: SiteLocal? {}, Loopback? {}", addr.getHostAddress(), addr.isSiteLocalAddress(), addr.isLoopbackAddress());
-                if (addr.isSiteLocalAddress() && !addr.isLoopbackAddress()) {
-                    return addr.getHostAddress();
-                }
-            }
-        }
-        return null;
     }
 
 }

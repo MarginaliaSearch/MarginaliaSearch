@@ -2,9 +2,9 @@ package nu.marginalia.livecapture;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import nu.marginalia.NetworkConfiguration;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.domsample.db.DomSampleDb;
-import nu.marginalia.service.module.ServiceConfigurationModule;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
@@ -59,7 +59,7 @@ public class HeadlessClientTest {
         wireMockServer.start();
         wireMockServer.stubFor(get("/").willReturn(aResponse().withStatus(200).withBody("Ok")));
 
-        localIp = ServiceConfigurationModule.getLocalNetworkIP();
+        localIp = NetworkConfiguration.getLocalNetworkIP();
     }
 
     @Tag("flaky")

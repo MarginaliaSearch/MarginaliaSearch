@@ -9,6 +9,7 @@ import io.jooby.SessionStore;
 import io.jooby.StatusCode;
 import io.jooby.exception.StatusCodeException;
 import io.jooby.netty.NettyServer;
+import nu.marginalia.NetworkConfiguration;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.gson.GsonFactory;
 import org.openqa.selenium.By;
@@ -47,6 +48,7 @@ public class HeadlessBrowserMain extends Jooby {
 
     static void main(String[] args) {
         var options = new ServerOptions();
+        options.setHost(NetworkConfiguration.getBindAddress());
         options.setCompressionLevel(1);
         options.setWorkerThreads(Math.min(4, options.getWorkerThreads()));
         options.setIoThreads(Math.min(4, options.getIoThreads()));
