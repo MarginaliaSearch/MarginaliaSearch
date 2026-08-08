@@ -1,9 +1,9 @@
 package nu.marginalia.converting.processor.plugin;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.DocumentHeaders;
+import nu.marginalia.converting.model.DocumentTags;
 import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.model.ProcessedDocumentDetails;
 import nu.marginalia.converting.processor.DocumentClass;
@@ -14,7 +14,6 @@ import nu.marginalia.converting.processor.logic.links.FileLinks;
 import nu.marginalia.converting.processor.logic.links.LinkProcessor;
 import nu.marginalia.converting.processor.plugin.specialization.HtmlProcessorSpecializations;
 import nu.marginalia.converting.processor.pubdate.PubDateSniffer;
-import nu.marginalia.dom.MeasureLengthVisitor;
 import nu.marginalia.domclassifier.DomSampleClassification;
 import nu.marginalia.gregex.GuardedRegex;
 import nu.marginalia.gregex.GuardedRegexFactory;
@@ -110,14 +109,16 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
             throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.ACCEPTABLE_ADS);
         }
 
-        if (!metaRobotsTag.allowIndexingByMetaTag(doc)) {
+        final DocumentTags documentTags = new DocumentTags(doc);
+
+        if (!metaRobotsTag.allowIndexingByMetaTag(documentTags)) {
             throw new DisqualifiedException(DisqualificationReason.FORBIDDEN);
         }
 
         final EdgeUrl url = new EdgeUrl(crawledDocument.url);
         final DocumentHeaders documentHeaders = new DocumentHeaders(crawledDocument.headers);
 
-        final var generatorParts = documentGeneratorExtractor.detectGenerator(url, doc, documentHeaders);
+        final var generatorParts = documentGeneratorExtractor.detectGenerator(url, doc, documentHeaders, documentTags);
 
         final var specialization = htmlProcessorSpecializations.select(generatorParts, url);
 
@@ -127,12 +128,12 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         var prunedDoc = specialization.prune(doc);
 
-        final int length = getLength(doc);
+        final int length = documentTags.textLength();
         final DocumentFormat format = getDocumentFormat(doc);
         final double quality;
 
         if (domSampleClassifications.contains(DomSampleClassification.UNCLASSIFIED)) {
-            quality = documentValuator.getQuality(crawledDocument, format, doc, length);
+            quality = documentValuator.getQuality(crawledDocument, format, doc, documentTags, length);
         }
         else {
             quality = documentValuator.getQuality(domSampleClassifications);
@@ -152,7 +153,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         ret.title = specialization.getTitle(doc, dld, crawledDocument.url);
         ret.languageIsoCode = languageIsoCode;
 
-        final Set<HtmlFeature> features = featureExtractor.getFeatures(url, doc, documentHeaders, dld);
+        final Set<HtmlFeature> features = featureExtractor.getFeatures(url, doc, documentHeaders, documentTags, dld);
 
         if (!documentLengthLogic.validateLength(dld, specialization.lengthModifier() * documentClass.lengthLimitModifier())) {
             features.add(HtmlFeature.SHORT_DOCUMENT);
@@ -163,7 +164,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         ret.quality = documentValuator.adjustQuality(quality, features);
         ret.hashCode = dld.localitySensitiveHashCode();
 
-        PubDate pubDate = pubDateSniffer.getPubDate(documentHeaders, url, doc, format, true);
+        PubDate pubDate = pubDateSniffer.getPubDate(documentHeaders, url, doc, documentTags, format, true);
 
         EnumSet<DocumentFlags> documentFlags = documentFlags(features, generatorParts.type());
 
@@ -192,7 +193,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         words.addAllSyntheticTerms(tagWords);
         specialization.amendWords(doc, words);
 
-        getLinks(url, ret, doc, words);
+        getLinks(url, ret, documentTags, words);
 
         if (pubDate.hasYear()) {
             ret.pubYear = pubDate.year();
@@ -262,17 +263,17 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     }
 
 
-    private void getLinks(EdgeUrl baseUrl, ProcessedDocumentDetails ret, Document doc, DocumentKeywordsBuilder words) {
+    private void getLinks(EdgeUrl baseUrl, ProcessedDocumentDetails ret, DocumentTags tags, DocumentKeywordsBuilder words) {
 
         final LinkProcessor lp = new LinkProcessor(ret, baseUrl);
 
-        baseUrl = linkParser.getBaseLink(doc, baseUrl);
+        baseUrl = linkParser.getBaseLink(tags.baseTags(), baseUrl);
 
         EdgeDomain domain = baseUrl.domain;
 
         List<EdgeUrl> allParsedUrls = new ArrayList<>();
 
-        for (Element atag : doc.getElementsByTag("a")) {
+        for (Element atag : tags.aTags()) {
             var linkOpt = linkParser.parseLinkPermissive(baseUrl, atag);
             if (linkOpt.isEmpty())
                 continue;
@@ -288,14 +289,13 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
             allParsedUrls.add(link);
         }
 
-        for (Element frame : doc.getElementsByTag("frame")) {
+        for (Element frame : tags.frameTags()) {
             linkParser.parseFrame(baseUrl, frame).ifPresent(lp::accept);
         }
-        for (Element frame : doc.getElementsByTag("iframe")) {
-            linkParser.parseFrame(baseUrl, frame).ifPresent(lp::accept);
-        }
-        for (Element meta : doc.select("meta[http-equiv=refresh]")) {
-            linkParser.parseMetaRedirect(baseUrl, meta).ifPresent(lp::accept);
+        for (Element meta : tags.metaTags()) {
+            if (DocumentTags.attrIs(meta, "http-equiv", "refresh")) {
+                linkParser.parseMetaRedirect(baseUrl, meta).ifPresent(lp::accept);
+            }
         }
 
         words.addAllSyntheticTerms(FileLinks.createFileLinkKeywords(lp, domain));
@@ -328,12 +328,6 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
             return HtmlStandardExtractor.sniffHtmlStandard(doc);
         }
         return format;
-    }
-
-    private int getLength(Document doc) {
-        var mlv = new MeasureLengthVisitor();
-        doc.traverse(mlv);
-        return mlv.length;
     }
 
 }

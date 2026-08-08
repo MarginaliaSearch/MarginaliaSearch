@@ -101,6 +101,8 @@ public class DomPruningFilter implements NodeFilter {
             return true;
         if ("noscript".equalsIgnoreCase(tagName))
             return true;
+        if ("svg".equalsIgnoreCase(tagName))
+            return true;
         if ("footer".equalsIgnoreCase(tagName))
             return true;
         if ("header".equalsIgnoreCase(tagName))

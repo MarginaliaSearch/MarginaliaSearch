@@ -13,7 +13,12 @@ public class AcceptableAds {
      */
 
     public static boolean hasAcceptableAdsTag(Document parsedDocument) {
-        return parsedDocument.getElementsByTag("html").hasAttr("data-adblockkey");
+        for (var el : parsedDocument.children()) {
+            if ("html".equals(el.normalName()) && el.hasAttr("data-adblockkey")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static boolean hasAcceptableAdsHeader(CrawledDocument document) {

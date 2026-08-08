@@ -1,6 +1,7 @@
 package nu.marginalia.converting.processor.logic;
 
 import nu.marginalia.converting.model.DisqualifiedException;
+import nu.marginalia.converting.model.DocumentTags;
 import nu.marginalia.domclassifier.DomSampleClassification;
 import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.crawl.HtmlFeature;
@@ -12,7 +13,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.select.NodeVisitor;
 
-import java.util.List;
 import java.util.Set;
 
 import static nu.marginalia.domclassifier.DomSampleClassification.*;
@@ -22,10 +22,11 @@ public class DocumentValuator {
     public double getQuality(CrawledDocument crawledDocument,
                              DocumentFormat htmlStandard,
                              Document parsedDocument,
+                             DocumentTags tags,
                              int textLength) throws DisqualifiedException {
 
-        double scriptPenalty = getScriptPenalty(parsedDocument);
-        double chatGptPenalty = getChatGptContentFarmPenalty(parsedDocument);
+        double scriptPenalty = getScriptPenalty(parsedDocument, tags);
+        double chatGptPenalty = getChatGptContentFarmPenalty(tags);
 
         int rawLength = crawledDocument.documentBodyBytes.length;
 
@@ -39,23 +40,20 @@ public class DocumentValuator {
                 - chatGptPenalty;
     }
 
-    private double getChatGptContentFarmPenalty(Document parsedDocument) {
+    private double getChatGptContentFarmPenalty(DocumentTags tags) {
         // easily 90% of modern AI-authored content farm spam has these nonsense headers
 
         boolean benefitsOf = false, keyBenefits = false, keyTakeaways = false;
 
-        outer:
-        for (String tagName : List.of("h1", "h2", "h3")) {
-            for (var elem : parsedDocument.getElementsByTag(tagName)) {
-                if (benefitsOf && keyBenefits && keyTakeaways)
-                    break outer;
+        for (var elem : tags.allHeadingTags()) {
+            if (benefitsOf && keyBenefits && keyTakeaways)
+                break;
 
-                String text = elem.text().toLowerCase();
+            String text = elem.text().toLowerCase();
 
-                benefitsOf = benefitsOf || text.startsWith("benefits of");
-                keyBenefits = keyBenefits || text.startsWith("key benefits");
-                keyTakeaways = keyTakeaways || text.startsWith("key takeaways");
-            }
+            benefitsOf = benefitsOf || text.startsWith("benefits of");
+            keyBenefits = keyBenefits || text.startsWith("key benefits");
+            keyTakeaways = keyTakeaways || text.startsWith("key takeaways");
         }
 
         double penalty = 0;
@@ -68,10 +66,10 @@ public class DocumentValuator {
     }
 
 
-    private int getScriptPenalty(Document parsed) {
+    private int getScriptPenalty(Document parsed, DocumentTags tags) {
         var scriptVisitor = new ScriptVisitor();
 
-        parsed.getElementsByTag("script").traverse(scriptVisitor);
+        tags.scriptTags().traverse(scriptVisitor);
         int value = scriptVisitor.score();
 
         for (var links : parsed.head().getElementsByTag("link")) {

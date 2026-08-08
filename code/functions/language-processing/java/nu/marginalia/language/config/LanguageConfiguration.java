@@ -13,6 +13,7 @@ import nu.marginalia.language.pos.PosPatternCategory;
 import nu.marginalia.language.pos.PosTagger;
 import nu.marginalia.language.stemming.Stemmer;
 import org.jsoup.nodes.TextNode;
+import org.jsoup.select.NodeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -49,14 +50,16 @@ public class LanguageConfiguration {
     private final JFastText fastTextLanguageModel = new JFastText();
 
     public Optional<LanguageDefinition> identifyLanguage(org.jsoup.nodes.Document jsoupDoc) {
-        StringBuilder sampleBuilder = new StringBuilder();
-        jsoupDoc.body().traverse((node, _) -> {
-            if (sampleBuilder.length() > 4096)
-                return;
-            if (!(node instanceof TextNode tn))
-                return;
+        final int sampleSize = 4096;
 
-            sampleBuilder.append(' ').append(tn.text());
+        StringBuilder sampleBuilder = new StringBuilder();
+        jsoupDoc.body().filter((node, _) -> {
+            if (sampleBuilder.length() > sampleSize)
+                return NodeFilter.FilterResult.STOP;
+            if (node instanceof TextNode tn)
+                sampleBuilder.append(' ').append(tn.text());
+
+            return NodeFilter.FilterResult.CONTINUE;
         });
         return identifyLanguage(sampleBuilder.toString());
     }

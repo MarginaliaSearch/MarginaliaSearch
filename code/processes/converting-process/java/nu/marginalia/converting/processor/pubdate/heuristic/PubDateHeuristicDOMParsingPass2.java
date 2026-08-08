@@ -1,6 +1,7 @@
 package nu.marginalia.converting.processor.pubdate.heuristic;
 
 import nu.marginalia.converting.model.DocumentHeaders;
+import nu.marginalia.converting.model.DocumentTags;
 import nu.marginalia.converting.processor.pubdate.PubDateEffortLevel;
 import nu.marginalia.converting.processor.pubdate.PubDateFromHtmlStandard;
 import nu.marginalia.converting.processor.pubdate.PubDateHeuristic;
@@ -19,7 +20,7 @@ import java.util.Optional;
 public class PubDateHeuristicDOMParsingPass2 implements PubDateHeuristic {
 
     @Override
-    public Optional<PubDate> apply(PubDateEffortLevel effortLevel, DocumentHeaders headers, EdgeUrl url, Document document, DocumentFormat htmlStandard) {
+    public Optional<PubDate> apply(PubDateEffortLevel effortLevel, DocumentHeaders headers, EdgeUrl url, Document document, DocumentTags tags, DocumentFormat htmlStandard) {
         if (effortLevel == PubDateEffortLevel.LOW)
             return Optional.empty();
 

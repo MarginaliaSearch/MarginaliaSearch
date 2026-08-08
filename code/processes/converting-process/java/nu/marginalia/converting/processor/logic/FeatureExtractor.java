@@ -3,6 +3,7 @@ package nu.marginalia.converting.processor.logic;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.converting.model.DocumentHeaders;
+import nu.marginalia.converting.model.DocumentTags;
 import nu.marginalia.converting.processor.classifier.adblock.GoogleAnwersSpamDetector;
 import nu.marginalia.converting.processor.classifier.topic.RecipeDetector;
 import nu.marginalia.converting.processor.classifier.topic.TextileCraftDetector;
@@ -88,12 +89,12 @@ public class FeatureExtractor {
         this.nsfwFilter = nsfwFilter;
     }
 
-    public Set<HtmlFeature> getFeatures(EdgeUrl url, Document doc, DocumentHeaders headers, DocumentLanguageData dld) {
+    public Set<HtmlFeature> getFeatures(EdgeUrl url, Document doc, DocumentHeaders headers, DocumentTags tags, DocumentLanguageData dld) {
         final Set<HtmlFeature> features = new HashSet<>();
 
-        final Elements scriptTags = doc.getElementsByTag("script");
+        final Elements scriptTags = tags.scriptTags();
 
-        if (googleAnwersSpamDetector.testP(doc) > 0.5) {
+        if (googleAnwersSpamDetector.testP(tags) > 0.5) {
             features.add(HtmlFeature.GA_SPAM);
         }
 
@@ -118,17 +119,17 @@ public class FeatureExtractor {
         if (!doc.head().getElementsByTag("viewport").isEmpty()) {
             features.add(HtmlFeature.VIEWPORT);
         }
-        for (var atag : doc.body().getElementsByTag("a")) {
+        for (var atag : tags.aTags()) {
             var rel = atag.attr("rel");
             if (rel.equals("dofollow")) {
                 features.add(HtmlFeature.DOFOLLOW_LINK);
             }
         }
 
-        if (!doc.getElementsByTag("date").isEmpty()) {
+        if (tags.hasDateTag()) {
             features.add(HtmlFeature.DATE_TAG);
         }
-        if (!doc.getElementsByTag("noscript").isEmpty()) {
+        if (!tags.noscriptTags().isEmpty()) {
             features.add(HtmlFeature.NOSCRIPT_TAG);
         }
 
@@ -221,9 +222,7 @@ public class FeatureExtractor {
             }
         }
 
-        if (!doc.getElementsByTag("object").isEmpty()
-                || !doc.getElementsByTag("audio").isEmpty()
-                || !doc.getElementsByTag("video").isEmpty()) {
+        if (tags.hasMediaTag()) {
             features.add(HtmlFeature.MEDIA);
         }
 
@@ -281,7 +280,7 @@ public class FeatureExtractor {
             }
         }
 
-        for (var noscript : doc.getElementsByTag("noscript")) {
+        for (var noscript : tags.noscriptTags()) {
             for (var iframe : noscript.getElementsByTag("iframe")) {
                 if (hasInvasiveTrackingScript(iframe)) {
                     features.add(HtmlFeature.TRACKING);
@@ -306,7 +305,7 @@ public class FeatureExtractor {
             features.add(HtmlFeature.TRACKING);
         }
 
-        for (var aTag : doc.getElementsByTag("a")) {
+        for (var aTag : tags.aTags()) {
             if (isAmazonAffiliateLink(aTag)) {
                 features.add(HtmlFeature.AFFILIATE_LINK);
                 break;

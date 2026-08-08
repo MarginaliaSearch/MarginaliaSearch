@@ -30,7 +30,6 @@ public class DefaultSpecialization implements HtmlProcessorSpecializations.HtmlP
     public Document prune(Document doc) {
         final var prunedDoc = doc.clone();
 
-        prunedDoc.getElementsByTag("svg").remove();
         prunedDoc.body().filter(new DomPruningFilter(0.5));
 
         return prunedDoc;

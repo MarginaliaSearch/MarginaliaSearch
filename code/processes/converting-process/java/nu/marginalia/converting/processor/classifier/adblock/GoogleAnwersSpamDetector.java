@@ -1,6 +1,7 @@
 package nu.marginalia.converting.processor.classifier.adblock;
 
-import org.jsoup.nodes.Document;
+import nu.marginalia.converting.model.DocumentTags;
+import org.jsoup.nodes.Element;
 
 import java.util.List;
 
@@ -8,19 +9,22 @@ public class GoogleAnwersSpamDetector {
 
     private final List<String> prefixes = List.of("What", "Why", "How", "When", "Is");
 
-    public double testP(Document doc) {
-        if (trialTag(doc, "h1")) return 1;
-        if (trialTag(doc, "h2")) return 1;
-        if (trialTag(doc, "h3")) return 1;
+    public double testP(DocumentTags tags) {
+        if (trialTag(tags, "h1")) return 1;
+        if (trialTag(tags, "h2")) return 1;
+        if (trialTag(tags, "h3")) return 1;
 
         return 0;
     }
 
-    private boolean trialTag(Document doc, String tagName) {
+    private boolean trialTag(DocumentTags tags, String tagName) {
         int positive = 0;
         int total = 0;
 
-        for (var elem : doc.getElementsByTag(tagName)) {
+        for (Element elem : tags.allHeadingTags()) {
+            if (!tagName.equals(elem.normalName()))
+                continue;
+
             String text = elem.text();
             for (var prefix : prefixes) {
                 if (text.startsWith(prefix)) {

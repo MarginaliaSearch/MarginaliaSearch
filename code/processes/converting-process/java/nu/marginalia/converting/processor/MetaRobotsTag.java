@@ -1,6 +1,6 @@
 package nu.marginalia.converting.processor;
 
-import org.jsoup.nodes.Document;
+import nu.marginalia.converting.model.DocumentTags;
 
 import com.google.inject.Singleton;
 
@@ -8,15 +8,24 @@ import com.google.inject.Singleton;
 public class MetaRobotsTag {
     private final String searchEngineName = "marginalia-search";
 
-    public boolean allowIndexingByMetaTag(Document doc) {
-        var robotsContent = doc.getElementsByTag("meta").select("meta[name=robots]").attr("content");
+    public boolean allowIndexingByMetaTag(DocumentTags tags) {
+        var robotsContent = metaContent(tags, "robots");
 
         if (isForbidden(robotsContent)) {
-            var marginaliaTag = doc.select( "meta[name=" + searchEngineName + "]").attr("content");
+            var marginaliaTag = metaContent(tags, searchEngineName);
             return isExplicitlyAllowed(marginaliaTag);
         }
 
         return true;
+    }
+
+    private String metaContent(DocumentTags tags, String name) {
+        for (var meta : tags.metaTags()) {
+            if (DocumentTags.attrIs(meta, "name", name) && meta.hasAttr("content")) {
+                return meta.attr("content");
+            }
+        }
+        return "";
     }
 
     private boolean isForbidden(String robotsContent) {

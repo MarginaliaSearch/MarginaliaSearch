@@ -1,5 +1,6 @@
 package nu.marginalia.converting.processor.logic;
 
+import nu.marginalia.converting.model.DocumentTags;
 import nu.marginalia.converting.processor.MetaRobotsTag;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,7 @@ class MetaRobotsTagTest {
                 </html>
                 """;
 
-        assertTrue(metaRobotsTag.allowIndexingByMetaTag(Jsoup.parse(html)));
+        assertTrue(metaRobotsTag.allowIndexingByMetaTag(new DocumentTags(Jsoup.parse(html))));
     }
 
     @Test
@@ -32,7 +33,7 @@ class MetaRobotsTagTest {
                 </html>
                 """;
 
-        assertFalse(metaRobotsTag.allowIndexingByMetaTag(Jsoup.parse(html)));
+        assertFalse(metaRobotsTag.allowIndexingByMetaTag(new DocumentTags(Jsoup.parse(html))));
     }
 
     @Test
@@ -47,7 +48,7 @@ class MetaRobotsTagTest {
                 </html>
                 """;
 
-        assertFalse(metaRobotsTag.allowIndexingByMetaTag(Jsoup.parse(html)));
+        assertFalse(metaRobotsTag.allowIndexingByMetaTag(new DocumentTags(Jsoup.parse(html))));
     }
 
     @Test
@@ -63,6 +64,6 @@ class MetaRobotsTagTest {
                 </html>
                 """;
 
-        assertTrue(metaRobotsTag.allowIndexingByMetaTag(Jsoup.parse(html)));
+        assertTrue(metaRobotsTag.allowIndexingByMetaTag(new DocumentTags(Jsoup.parse(html))));
     }
 }

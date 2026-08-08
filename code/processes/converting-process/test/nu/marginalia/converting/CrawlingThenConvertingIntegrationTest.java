@@ -64,7 +64,7 @@ public class CrawlingThenConvertingIntegrationTest {
         domainProcessor = injector.getInstance(DomainProcessor.class);
         httpFetcher = new HttpFetcherImpl(WmsaHome.getUserAgent().uaString());
         this.fileName = Files.createTempFile("crawling-then-converting", ".warc.gz");
-        this.fileName2 = Files.createTempFile("crawling-then-converting", ".warc.gz");
+        this.fileName2 = Files.createTempFile("crawling-then-converting", ".slop.zip");
         this.dbTempFile = Files.createTempFile("domains", "db");
     }
 

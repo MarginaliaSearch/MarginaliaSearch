@@ -2,10 +2,13 @@ package nu.marginalia.converting.processor.pubdate;
 
 import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.model.DocumentHeaders;
+import nu.marginalia.converting.model.DocumentTags;
 import nu.marginalia.converting.processor.pubdate.heuristic.PubDateHeuristicDOMParsingPass2;
+import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.EdgeUrl;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -17,6 +20,10 @@ import static org.junit.jupiter.api.Assertions.*;
 class PubDateSnifferTest {
 
     PubDateSniffer dateSniffer = new PubDateSniffer();
+
+    private PubDate getPubDate(DocumentHeaders headers, EdgeUrl url, Document document, DocumentFormat htmlStandard, boolean runExpensive) {
+        return dateSniffer.getPubDate(headers, url, document, new DocumentTags(document), htmlStandard, runExpensive);
+    }
 
     @Test
     public void testGetYearFromText() {
@@ -65,7 +72,7 @@ class PubDateSnifferTest {
 
     @Test
     public void testHtml5A() throws URISyntaxException {
-        var ret = dateSniffer.getPubDate(new DocumentHeaders(""),
+        var ret = getPubDate(new DocumentHeaders(""),
                 new EdgeUrl("https://www.example.com/"),
                 Jsoup.parse("""
                         <!doctype html>
@@ -83,7 +90,7 @@ class PubDateSnifferTest {
     @Test
     public void testHtml5B() throws URISyntaxException {
         // Bare <time> tag is a low-quality heuristic, so result is year-only
-        var ret = dateSniffer.getPubDate(new DocumentHeaders(""),
+        var ret = getPubDate(new DocumentHeaders(""),
                 new EdgeUrl("https://www.example.com/"),
                 Jsoup.parse("""
                         <!doctype html>
@@ -100,7 +107,7 @@ class PubDateSnifferTest {
 
     @Test
     public void testHtml5C() throws URISyntaxException {
-        var ret = dateSniffer.getPubDate(new DocumentHeaders(""),
+        var ret = getPubDate(new DocumentHeaders(""),
                 new EdgeUrl("https://www.example.com/"),
                 Jsoup.parse("""
                         <!doctype html>
@@ -116,14 +123,14 @@ class PubDateSnifferTest {
 
     @Test
     public void testProblemCases() throws IOException, URISyntaxException {
-        var ret = dateSniffer.getPubDate(new DocumentHeaders(""),
+        var ret = getPubDate(new DocumentHeaders(""),
                 new EdgeUrl("https://www.example.com/"),
                 Jsoup.parse(Files.readString(WmsaHome.getHomePath().resolve("test-data/The Switch to Linux Begins .html"))), DocumentFormat.HTML5, true);
 
         assertFalse(ret.isEmpty());
         assertEquals(2006, ret.year());
 
-        ret = dateSniffer.getPubDate(new DocumentHeaders(""),
+        ret = getPubDate(new DocumentHeaders(""),
                 new EdgeUrl("https://www.example.com/"),
                 Jsoup.parse(Files.readString(WmsaHome.getHomePath().resolve("test-data/Black Hat USA 2010 Understanding and Deploying DNSSEC by Paul Wouters and Patrick Nauber.html"))), DocumentFormat.XHTML, true);
 
@@ -142,7 +149,7 @@ class PubDateSnifferTest {
 
     @Test
     public void testMicrodata() throws URISyntaxException {
-        var ret = dateSniffer.getPubDate(new DocumentHeaders(""),
+        var ret = getPubDate(new DocumentHeaders(""),
                 new EdgeUrl("https://www.example.com/"),
                 Jsoup.parse("""
                         <!doctype html>
@@ -156,7 +163,7 @@ class PubDateSnifferTest {
 
     @Test
     public void testRDFa() throws URISyntaxException {
-        var ret = dateSniffer.getPubDate(new DocumentHeaders(""),
+        var ret = getPubDate(new DocumentHeaders(""),
                 new EdgeUrl("https://www.example.com/"),
                 Jsoup.parse("""
                         <!doctype html>
@@ -170,7 +177,7 @@ class PubDateSnifferTest {
 
     @Test
     public void testLD() throws URISyntaxException {
-        var ret = dateSniffer.getPubDate(new DocumentHeaders(""),
+        var ret = getPubDate(new DocumentHeaders(""),
                 new EdgeUrl("https://www.example.com/"),
                 Jsoup.parse("""
                         <!doctype html>
@@ -184,7 +191,7 @@ class PubDateSnifferTest {
 
     @Test
     public void testLDWithGraph() throws URISyntaxException {
-        var ret = dateSniffer.getPubDate(new DocumentHeaders(""),
+        var ret = getPubDate(new DocumentHeaders(""),
                 new EdgeUrl("https://www.example.com/"),
                 Jsoup.parse("""
                         <!doctype html>
@@ -198,7 +205,7 @@ class PubDateSnifferTest {
 
     @Test
     public void testPath() throws URISyntaxException {
-        var ret = dateSniffer.getPubDate(new DocumentHeaders(""),
+        var ret = getPubDate(new DocumentHeaders(""),
                 new EdgeUrl("https://www.example.com/articles/2022/04/how-to-detect-dates"),
                 Jsoup.parse("""
                         <!doctype html>
@@ -213,7 +220,7 @@ class PubDateSnifferTest {
 
     @Test
     public void testHeader() throws URISyntaxException {
-        var ret = dateSniffer.getPubDate(new DocumentHeaders("content-type: application/pdf\netag: \"4fc0ba8a7f5090b6fa6be385dca206ec\"\nlast-modified: Thu, 03 Feb 2022 19:22:58 GMT\ncontent-length: 298819\ndate: Wed, 24 Aug 2022 19:48:52 GMT\ncache-control: public, no-transform, immutable, max-age\u003d31536000\naccess-control-expose-headers: Content-Length,Content-Disposition,Content-Range,Etag,Server-Timing,Vary,X-Cld-Error,X-Content-Type-Options\naccess-control-allow-origin: *\naccept-ranges: bytes\ntiming-allow-origin: *\nserver: Cloudinary\nstrict-transport-security: max-age\u003d604800\nx-content-type-options: nosniff\nserver-timing: akam;dur\u003d25;start\u003d2022-08-24T19:48:52.519Z;desc\u003dmiss,rtt;dur\u003d19,cloudinary;dur\u003d129;start\u003d2022-08-23T06:35:17.331Z\n"),
+        var ret = getPubDate(new DocumentHeaders("content-type: application/pdf\netag: \"4fc0ba8a7f5090b6fa6be385dca206ec\"\nlast-modified: Thu, 03 Feb 2022 19:22:58 GMT\ncontent-length: 298819\ndate: Wed, 24 Aug 2022 19:48:52 GMT\ncache-control: public, no-transform, immutable, max-age\u003d31536000\naccess-control-expose-headers: Content-Length,Content-Disposition,Content-Range,Etag,Server-Timing,Vary,X-Cld-Error,X-Content-Type-Options\naccess-control-allow-origin: *\naccept-ranges: bytes\ntiming-allow-origin: *\nserver: Cloudinary\nstrict-transport-security: max-age\u003d604800\nx-content-type-options: nosniff\nserver-timing: akam;dur\u003d25;start\u003d2022-08-24T19:48:52.519Z;desc\u003dmiss,rtt;dur\u003d19,cloudinary;dur\u003d129;start\u003d2022-08-23T06:35:17.331Z\n"),
                 new EdgeUrl("https://www.example.com/"),
                 Jsoup.parse("""
                         <!doctype html>
@@ -230,7 +237,7 @@ class PubDateSnifferTest {
 
     @Test
     public void testDOM() throws URISyntaxException {
-        var ret = dateSniffer.getPubDate(new DocumentHeaders(""),
+        var ret = getPubDate(new DocumentHeaders(""),
                 new EdgeUrl("https://www.example.com/"),
                 Jsoup.parse("""
                         <!doctype html>
@@ -256,7 +263,7 @@ class PubDateSnifferTest {
 
     @Test
     public void testOldInvision() throws URISyntaxException {
-        var ret = dateSniffer.getPubDate(new DocumentHeaders(""),
+        var ret = getPubDate(new DocumentHeaders(""),
                 new EdgeUrl("https://www.example.com/"),
                 Jsoup.parse("""
                         <!doctype html>

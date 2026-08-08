@@ -1,6 +1,7 @@
 package nu.marginalia.converting.processor.plugin.specialization;
 
 import nu.marginalia.converting.model.DocumentHeaders;
+import nu.marginalia.converting.model.DocumentTags;
 import nu.marginalia.converting.processor.logic.DocumentGeneratorExtractor;
 import nu.marginalia.converting.processor.logic.TitleExtractor;
 import nu.marginalia.converting.processor.summary.SummaryExtractor;
@@ -40,7 +41,8 @@ class XenForoSpecializationTest {
 
     @Test
     void generatorExtraction() throws URISyntaxException {
-        var gen = generatorExtractor.detectGenerator(new EdgeUrl("https://www.example.com/"), Jsoup.parse(thread), new DocumentHeaders(""));
+        var doc = Jsoup.parse(thread);
+        var gen = generatorExtractor.detectGenerator(new EdgeUrl("https://www.example.com/"), doc, new DocumentHeaders(""), new DocumentTags(doc));
 
         System.out.println(gen);
     }

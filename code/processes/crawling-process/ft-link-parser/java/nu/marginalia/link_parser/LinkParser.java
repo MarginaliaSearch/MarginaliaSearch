@@ -236,8 +236,10 @@ public class LinkParser {
     }
 
     public EdgeUrl getBaseLink(Document parsed, EdgeUrl documentUrl) {
-        var baseTags = parsed.getElementsByTag("base");
+        return getBaseLink(parsed.getElementsByTag("base"), documentUrl);
+    }
 
+    public EdgeUrl getBaseLink(List<Element> baseTags, EdgeUrl documentUrl) {
         try {
             for (var tag : baseTags) {
                 String href = tag.attr("href");

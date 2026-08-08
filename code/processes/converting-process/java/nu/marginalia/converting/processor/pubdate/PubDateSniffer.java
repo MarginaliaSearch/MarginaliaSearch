@@ -1,6 +1,7 @@
 package nu.marginalia.converting.processor.pubdate;
 
 import nu.marginalia.converting.model.DocumentHeaders;
+import nu.marginalia.converting.model.DocumentTags;
 import nu.marginalia.converting.processor.pubdate.heuristic.*;
 import nu.marginalia.model.DocumentFormat;
 import nu.marginalia.model.EdgeUrl;
@@ -37,11 +38,11 @@ public class PubDateSniffer {
         lowQualityHeuristics.add(new PubDateHeuristicGuessFromHtmlStandard());
     }
 
-    public PubDate getPubDate(DocumentHeaders headers, EdgeUrl url, Document document, DocumentFormat htmlStandard, boolean runExpensive) {
+    public PubDate getPubDate(DocumentHeaders headers, EdgeUrl url, Document document, DocumentTags tags, DocumentFormat htmlStandard, boolean runExpensive) {
         final PubDateEffortLevel effortLevel = runExpensive ? PubDateEffortLevel.HIGH : PubDateEffortLevel.LOW;
 
         for (var heuristic : highQualityHeuristics) {
-            var maybe = heuristic.apply(effortLevel, headers, url, document, htmlStandard);
+            var maybe = heuristic.apply(effortLevel, headers, url, document, tags, htmlStandard);
             if (maybe.isEmpty())
                 continue;
 
@@ -49,7 +50,7 @@ public class PubDateSniffer {
         }
 
         for (var heuristic : lowQualityHeuristics) {
-            var maybe = heuristic.apply(effortLevel, headers, url, document, htmlStandard);
+            var maybe = heuristic.apply(effortLevel, headers, url, document, tags, htmlStandard);
             if (maybe.isEmpty()) {
                 continue;
             }

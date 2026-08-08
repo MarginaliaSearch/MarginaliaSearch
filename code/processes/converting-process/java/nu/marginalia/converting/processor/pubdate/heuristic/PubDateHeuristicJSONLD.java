@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
 import nu.marginalia.converting.model.DocumentHeaders;
+import nu.marginalia.converting.model.DocumentTags;
 import nu.marginalia.converting.processor.pubdate.PubDateEffortLevel;
 import nu.marginalia.converting.processor.pubdate.PubDateHeuristic;
 import nu.marginalia.converting.processor.pubdate.PubDateParser;
@@ -21,8 +22,11 @@ import java.util.Optional;
 public class PubDateHeuristicJSONLD implements PubDateHeuristic {
 
     @Override
-    public Optional<PubDate> apply(PubDateEffortLevel effortLevel, DocumentHeaders headers, EdgeUrl url, Document document, DocumentFormat htmlStandard) {
-        for (var tag : document.select("script[type=\"application/ld+json\"]")) {
+    public Optional<PubDate> apply(PubDateEffortLevel effortLevel, DocumentHeaders headers, EdgeUrl url, Document document, DocumentTags tags, DocumentFormat htmlStandard) {
+        for (var tag : tags.scriptTags()) {
+            if (!DocumentTags.attrIs(tag, "type", "application/ld+json"))
+                continue;
+
             var maybeDate = parseLdJson(tag.data())
                     .flatMap(PubDateParser::attemptParseDate);
 
