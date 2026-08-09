@@ -40,7 +40,11 @@ public class VarintCodedSequence implements CodedSequence {
         for (int i = 0; i < values.size(); i++) {
             int value = values.getInt(i);
             int toEncode = value - prev;
-            assert toEncode > 0 : "Values must be strictly increasing";
+
+            // A non-positive delta encodes as a bogus continuation marker
+            // that desyncs the rest of the stream
+            if (toEncode <= 0)
+                throw new IllegalArgumentException("Values must be strictly increasing");
 
             encodeValue(buffer, toEncode);
 
@@ -62,7 +66,9 @@ public class VarintCodedSequence implements CodedSequence {
 
         for (int value : values) {
             int toEncode = value - prev;
-            assert toEncode > 0 : "Values must be strictly increasing";
+
+            if (toEncode <= 0)
+                throw new IllegalArgumentException("Values must be strictly increasing");
 
             encodeValue(buffer, toEncode);
 
