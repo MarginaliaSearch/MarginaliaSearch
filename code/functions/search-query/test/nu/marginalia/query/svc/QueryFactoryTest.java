@@ -280,6 +280,22 @@ public class QueryFactoryTest {
     }
 
     @Test
+    public void testRomanNumeralExpansion() {
+        var subquery = parseAndGetQuery("world war 2").getTerms();
+        System.out.println(subquery);
+        Assertions.assertTrue(subquery.getCompiledQuery().contains(" ii "));
+    }
+
+    @Test
+    public void testRomanNumeralExpansionBackwards() {
+        var subquery = parseAndGetQuery("world war ii").getTerms();
+        System.out.println(subquery);
+        Assertions.assertTrue(subquery.getCompiledQuery().contains(" 2 "));
+    }
+
+
+
+    @Test
     public void testExpansion2() {
         var subquery = parseAndGetQuery("need for speed").getTerms();
         System.out.println(subquery);
