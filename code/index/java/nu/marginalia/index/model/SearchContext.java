@@ -12,6 +12,7 @@ import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryParser;
 import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
+import nu.marginalia.api.searchquery.model.compiled.CqExpression;
 import nu.marginalia.api.searchquery.model.query.QueryStrategy;
 import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
 import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
@@ -177,6 +178,8 @@ public class SearchContext {
             }
         }
 
+        harmonizeVariantFrequencies(compiledQuery.root(), full);
+
         this.fullCounts = new CqDataInt(full);
         this.priorityCounts = new CqDataInt(prio);
 
@@ -257,6 +260,35 @@ public class SearchContext {
         }
 
         this.phraseConstraints = new PhraseConstraintGroupList(constraintsFull, constraintsMandatory, constraintsOptional);
+    }
+
+    /** Let word alternatives in an Or group share the largest document frequency
+     * in the group, so that rare spelling variants from query expansion don't get
+     * an outsized IDF relative to the canonical form. */
+    public static void harmonizeVariantFrequencies(CqExpression expression, int[] frequencies) {
+        if (expression instanceof CqExpression.Or or) {
+            int maxFrequency = 0;
+
+            for (var part : or.parts()) {
+                if (part instanceof CqExpression.Word word) {
+                    maxFrequency = Math.max(maxFrequency, frequencies[word.idx()]);
+                }
+            }
+
+            for (var part : or.parts()) {
+                if (part instanceof CqExpression.Word word) {
+                    frequencies[word.idx()] = maxFrequency;
+                }
+                else {
+                    harmonizeVariantFrequencies(part, frequencies);
+                }
+            }
+        }
+        else if (expression instanceof CqExpression.And and) {
+            for (var part : and.parts()) {
+                harmonizeVariantFrequencies(part, frequencies);
+            }
+        }
     }
 
     public int termFreqDocCount() {
