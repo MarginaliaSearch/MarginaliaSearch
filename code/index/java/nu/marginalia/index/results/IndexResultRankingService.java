@@ -401,7 +401,6 @@ public class IndexResultRankingService {
         private static final float[] weights_partial;
         private static final float[] attenuation;
 
-        private static final float multi_exactTitle = 4.0f;
         private static final float single_exactTitle = 4.0f;
         private static final float single_titleBoundary = 2.5f;
         private static final float single_titleContained = 1.0f;
@@ -528,10 +527,6 @@ public class IndexResultRankingService {
                 score += 1.5f * titleBoundaryMatches;
             }
 
-            // Bonus when the full query constitutes the entire title
-            if (spans.getSpan(HtmlTag.TITLE).countRangeMatchesExact(fullGroupIntersections, fullGroup.size) > 0) {
-                score += multi_exactTitle;
-            }
 
             return score;
         }
