@@ -20,6 +20,7 @@ public class ExecutionInit {
         actorControlService.start(ExecutorActor.PROC_CONVERTER_SPAWNER);
         actorControlService.start(ExecutorActor.PROC_CRAWLER_SPAWNER);
         actorControlService.start(ExecutorActor.PROC_INDEX_CONSTRUCTOR_SPAWNER);
+        actorControlService.start(ExecutorActor.PROC_RANKING_CONSTRUCTOR_SPAWNER);
         actorControlService.start(ExecutorActor.PROC_LOADER_SPAWNER);
         actorControlService.start(ExecutorActor.PROC_EXPORT_TASKS_SPAWNER);
         actorControlService.stop(ExecutorActor.PROC_NDP_SPAWNER);
