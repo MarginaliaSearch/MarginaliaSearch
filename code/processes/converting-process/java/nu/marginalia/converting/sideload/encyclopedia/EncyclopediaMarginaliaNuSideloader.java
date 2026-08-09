@@ -3,6 +3,7 @@ package nu.marginalia.converting.sideload.encyclopedia;
 import com.github.luben.zstd.ZstdInputStream;
 import com.google.common.base.Charsets;
 import com.google.gson.Gson;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import nu.marginalia.atags.AnchorTextKeywords;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
@@ -13,6 +14,7 @@ import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.converting.sideload.SideloaderProcessing;
+import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
@@ -25,6 +27,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -47,6 +50,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
     private final AnchorTextKeywords anchorTextKeywords;
     private final SideloaderProcessing sideloaderProcessing;
     private final AnchorTagsSourceFactory anchorTagsSourceFactory;
+    private static final MurmurHash3_128 hash = new MurmurHash3_128();
     private static final Logger logger = LoggerFactory.getLogger(EncyclopediaMarginaliaNuSideloader.class);
 
     public EncyclopediaMarginaliaNuSideloader(Path pathToDbFile,
@@ -82,6 +86,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
         // This leaks a thread pool, but it doesn't matter since this is a one-off process
         return ProcessingIterator.factory(24, 16).create((taskConsumer) -> {
             DomainLinks domainLinks = getDomainLinks();
+            Long2IntOpenHashMap incomingLinkCounts = countIntraWikiLinks();
 
             var stmt = connection.prepareStatement("""
                     SELECT url,title,html FROM articles
@@ -95,7 +100,9 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
                 String title = rs.getString("title");
                 String url = rs.getString("url");
 
-                taskConsumer.accept(() -> convertDocument(articleParts.parts, title, url, domainLinks));
+                int topology = incomingLinkCounts.get(hash.hashUtf8(url));
+
+                taskConsumer.accept(() -> convertDocument(articleParts.parts, title, url, topology, domainLinks));
             }
         });
     }
@@ -110,7 +117,45 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
         }
     }
 
-    private ProcessedDocument convertDocument(List<String> parts, String title, String url, DomainLinks domainLinks) throws URISyntaxException, DisqualifiedException {
+    /** Count each article's incoming links from within the wiki, mirroring the
+     * topology signal crawled domains get from their internal link graph. */
+    private Long2IntOpenHashMap countIntraWikiLinks() throws SQLException, IOException {
+        Long2IntOpenHashMap counts = new Long2IntOpenHashMap(8_000_000);
+
+        var stmt = connection.prepareStatement("""
+                SELECT urls FROM articles
+                """);
+        stmt.setFetchSize(100);
+
+        var rs = stmt.executeQuery();
+        while (rs.next()) {
+            var urls = fromCompressedJson(rs.getBytes("urls"), ArticleUrls.class);
+            if (urls.links() == null)
+                continue;
+
+            for (var link : urls.links()) {
+                if (link.url() == null)
+                    continue;
+
+                // Link targets are percent encoded while the url column holds the raw name
+                String target;
+                try {
+                    target = URLDecoder.decode(link.url(), Charsets.UTF_8);
+                }
+                catch (IllegalArgumentException e) {
+                    target = link.url();
+                }
+
+                counts.addTo(hash.hashUtf8(target), 1);
+            }
+        }
+
+        logger.info("Counted intra-wiki links for {} articles", counts.size());
+
+        return counts;
+    }
+
+    private ProcessedDocument convertDocument(List<String> parts, String title, String url, int topology, DomainLinks domainLinks) throws URISyntaxException, DisqualifiedException {
         String fullUrl = baseUrl.toString() + URLEncoder.encode(normalizeUtf8(url), Charsets.UTF_8);
 
         StringBuilder fullHtml = new StringBuilder();
@@ -128,7 +173,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
         }
         fullHtml.append("</div></body></html>");
 
-        return sideloaderProcessing
+        var doc = sideloaderProcessing
                 .processDocument(fullUrl,
                         fullHtml.toString(),
                         List.of("encyclopedia", "wiki"),
@@ -139,6 +184,14 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
                         LocalDate.now().getYear(),
                         PubDate.INVALID_DATE_SENTINEL,
                         10_000_000);
+
+        // Overrides the topology set by SideloaderProcessing, which only sees the anchor tag data
+        if (doc.details != null && doc.details.metadata != null) {
+            int atagsCount = domainLinks.countForUrl(new EdgeUrl(fullUrl));
+            doc.details.metadata = doc.details.metadata.withSizeAndTopology(10_000_000, topology + atagsCount);
+        }
+
+        return doc;
     }
 
     private String normalizeUtf8(String url) {
@@ -155,6 +208,10 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
     }
 
     private record ArticleParts(List<String> parts) {}
+
+    private record ArticleUrls(List<ArticleLink> links) {}
+
+    private record ArticleLink(String url, String text) {}
 
     @Override
     public void close() throws Exception {
