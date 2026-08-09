@@ -64,6 +64,17 @@ class DocumentKeywordsBuilderTest {
 
 
     @Test
+    void addMeta__mergesFlags() {
+        builder.addMeta("word", WordFlags.Title.asBit());
+        builder.addMeta("word", WordFlags.NamesWords.asBit());
+
+        byte meta = (byte) builder.wordToMeta.getLong("word");
+
+        Assertions.assertTrue(WordFlags.Title.isPresent(meta));
+        Assertions.assertTrue(WordFlags.NamesWords.isPresent(meta));
+    }
+
+    @Test
     void testFlagsBleed() {
         builder.addMeta("word", WordFlags.UrlDomain.asBit());
         builder.setFlagOnMetadataForWords(WordFlags.UrlDomain, List.of("other"));

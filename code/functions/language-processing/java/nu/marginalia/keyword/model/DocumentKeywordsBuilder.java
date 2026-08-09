@@ -162,7 +162,7 @@ public class DocumentKeywordsBuilder {
         if (word.length() > MAX_WORD_LENGTH)
             return;
 
-        wordToMeta.put(word, Byte.toUnsignedLong(meta));
+        wordToMeta.mergeLong(word, Byte.toUnsignedLong(meta), (a, b) -> a | b);
     }
 
     public void addPos(String word, int pos) {
