@@ -1,18 +1,24 @@
 package nu.marginalia.query;
 
 import com.google.common.base.Strings;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
 import io.jooby.Context;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
 import nu.marginalia.api.searchquery.RpcResultRankingParameters;
 import nu.marginalia.api.searchquery.RpcTemporalBias;
 import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
+import nu.marginalia.api.searchquery.model.results.debug.ResultRankingDetails;
 import nu.marginalia.functions.searchquery.QueryGRPCService;
 import nu.marginalia.index.api.IndexClient;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static java.lang.Integer.min;
@@ -21,6 +27,7 @@ import static java.util.Objects.requireNonNullElse;
 
 public class QueryDebugInterface {
     private final MustacheRenderer<Object> qdebugRenderer;
+    private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     private final QueryGRPCService queryGRPCService;
 
@@ -77,6 +84,73 @@ public class QueryDebugInterface {
         );
     }
 
+    /** JSON variant of the qdebug endpoint for scripted ranking experiments */
+    public Object handleAdvancedJson(Context ctx) {
+        String queryString = ctx.query("q").valueOrNull();
+
+        if (queryString == null) {
+            ctx.setResponseCode(400);
+            return "{\"error\": \"missing query parameter q\"}";
+        }
+
+        int count = ctx.query("count").intValue(10);
+        int page = ctx.query("page").intValue(1);
+        int domainCount = ctx.query("domainCount").intValue(5);
+        int timeoutMs = ctx.query("timeoutMs").intValue(250);
+        String langIsoCode = ctx.query("lang").value("en");
+        String set = ctx.query("set").value("");
+
+        var pagination = new IndexClient.Pagination(page, count);
+        var rankingParams = debugRankingParamsFromRequest(ctx);
+
+        var detailedDirectResult = queryGRPCService.executeDirect(
+                queryString,
+                RpcQueryLimits.newBuilder()
+                        .setResultsByDomain(domainCount)
+                        .setResultsTotal(min(100, count * 10))
+                        .setTimeoutMs(timeoutMs)
+                        .build(),
+                set,
+                langIsoCode,
+                pagination,
+                rankingParams
+        );
+
+        var results = new ArrayList<JsonResult>();
+        for (var result : detailedDirectResult.result()) {
+            results.add(new JsonResult(
+                    result.url.toString(),
+                    result.title,
+                    result.rankingScore,
+                    result.urlQuality,
+                    result.wordsTotal,
+                    result.rankingDetails
+            ));
+        }
+
+        var response = new JsonResponse(
+                queryString,
+                detailedDirectResult.processedQuery().searchTermsHuman,
+                detailedDirectResult.totalResults(),
+                results
+        );
+
+        ctx.setResponseType("application/json");
+        return gson.toJson(response);
+    }
+
+    private record JsonResponse(String query,
+                                List<String> searchTermsHuman,
+                                int totalResults,
+                                List<JsonResult> results) {}
+
+    private record JsonResult(String url,
+                              String title,
+                              double rankingScore,
+                              double urlQuality,
+                              int wordsTotal,
+                              @Nullable ResultRankingDetails rankingDetails) {}
+
     private RpcResultRankingParameters debugRankingParamsFromRequest(Context ctx) {
         var sensibleDefaults = PrototypeRankingParameters.sensibleDefaults();
 
@@ -97,7 +171,7 @@ public class QueryDebugInterface {
                 .setShortSentenceThreshold(ctx.query("shortSentenceThreshold").intValue(sensibleDefaults.getShortSentenceThreshold()))
                 .setShortSentencePenalty(ctx.query("shortSentencePenalty").doubleValue(sensibleDefaults.getShortSentencePenalty()))
                 .setBm25Weight(ctx.query("bm25Weight").doubleValue(sensibleDefaults.getBm25Weight()))
-                .setDisablePenalties(ctx.query("disablePenalties").booleanValue())
+                .setDisablePenalties(ctx.query("disablePenalties").booleanValue(false))
                 .setExportDebugData(true)
                 .build();
     }

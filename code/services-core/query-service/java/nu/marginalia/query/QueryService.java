@@ -55,6 +55,7 @@ public class QueryService extends JoobyService {
 
         if (!Boolean.getBoolean("noQdebug")) {
             jooby.get("/qdebug", queryDebugInterface::handleAdvanced);
+            jooby.get("/qdebug/json", queryDebugInterface::handleAdvancedJson);
         }
 
         jooby.error(Exception.class, (ctx, e, code) -> {
