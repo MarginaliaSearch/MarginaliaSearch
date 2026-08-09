@@ -103,7 +103,15 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
                 continue;
             }
 
-            DocumentKeywords wb = document.words.build();
+            DocumentKeywords wb;
+            try {
+                wb = document.words.build();
+            }
+            catch (Exception e) {
+                // Better to drop the document than to abort the whole batch
+                logger.warn("Failed to encode keyword data for {}", document.url, e);
+                continue;
+            }
 
             documentWriter.write(new SlopDocumentRecord(
                     domainName,
