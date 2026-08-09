@@ -74,6 +74,11 @@ public class PrimaryRankingsCalculator {
      * leaves the previous list in place. */
     private void reloadDomainsLists() {
         for (var type : List.of(DomainTypes.Type.BLOG, DomainTypes.Type.SMALL)) {
+            if (domainTypes.getUrlForSelection(type).isBlank()) {
+                logger.warn("No source is configured for domain list {}, skipping", type);
+                continue;
+            }
+
             try {
                 domainTypes.reloadDomainsList(type);
             }
