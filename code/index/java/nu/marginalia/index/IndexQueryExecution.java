@@ -679,17 +679,44 @@ public class IndexQueryExecution {
     /** Rank the results again, gathering detailed ranking information */
     private void performDebugRanking(SearchContext searchContext, List<RankableDocument> results) {
 
-        // Iterate over documents by their index in the combinedDocIds, as we need the index for the
-        // term data arrays as well
+        // The term data the documents held during ranking lives in recycled
+        // scratch buffers by now and must be fetched anew
 
         ScratchIntListPool pool = new ScratchIntListPool(128);
-        for (var doc : results) {
-            pool.reset();
-            SearchResultItem score = rankingService.calculateScore(new DebugRankingFactors(), pool, currentIndex, searchContext, doc);
+        ScratchSegmentAllocator segmentAllocator = RankingStage.allocatorFactory.createAllocator();
 
-            if (score != null) {
-                doc.item = score;
+        try {
+            for (var doc : results) {
+                pool.reset();
+                segmentAllocator.reset();
+
+                DecodableDocumentSpans codedSpans = currentIndex.getDocumentSpans(segmentAllocator, doc.combinedDocumentId);
+                if (codedSpans == null)
+                    continue;
+
+                doc.documentSpans = codedSpans.decode(pool::get);
+
+                CodedSequence[] codedPositions = currentIndex.getTermPositions(segmentAllocator, doc.positionOffsets);
+                IntList[] positions = new IntList[codedPositions.length];
+                for (int i = 0; i < positions.length; i++) {
+                    if (codedPositions[i] != null) {
+                        positions[i] = codedPositions[i].values(pool::get);
+                    }
+                    else {
+                        positions[i] = IntList.of();
+                    }
+                }
+                doc.positions = positions;
+
+                SearchResultItem score = rankingService.calculateScore(new DebugRankingFactors(), pool, currentIndex, searchContext, doc);
+
+                if (score != null) {
+                    doc.item = score;
+                }
             }
+        }
+        finally {
+            segmentAllocator.close();
         }
     }
 
