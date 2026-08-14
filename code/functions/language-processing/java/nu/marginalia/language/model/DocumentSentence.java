@@ -14,6 +14,7 @@ import java.util.*;
 public class DocumentSentence implements Iterable<DocumentSentence.SentencePos> {
 
     /** A span of words in a sentence */
+    public final String[] wordsOriginal;
     public final String[] wordsLowerCase;
     public final String[] stemmedWords;
     public final long[] posTags;
@@ -36,6 +37,7 @@ public class DocumentSentence implements Iterable<DocumentSentence.SentencePos> 
     private final BitSet separators;
 
     public DocumentSentence(BitSet separators,
+                            String[] wordsOriginal,
                             String[] wordsLowerCase,
                             long[] posTags,
                             String[] stemmedWords,
@@ -46,6 +48,7 @@ public class DocumentSentence implements Iterable<DocumentSentence.SentencePos> 
                             )
     {
         this.separators = separators;
+        this.wordsOriginal = wordsOriginal;
         this.wordsLowerCase = wordsLowerCase;
         this.posTags = posTags;
         this.stemmedWords = stemmedWords;
@@ -72,6 +75,7 @@ public class DocumentSentence implements Iterable<DocumentSentence.SentencePos> 
 
         return new DocumentSentence(
                 emptyBitSet,
+                lowerCase.toArray(String[]::new),
                 lowerCase.toArray(String[]::new),
                 new long[lowerCase.size()],
                 stemmed.toArray(String[]::new),

@@ -17,6 +17,7 @@ import nu.marginalia.index.model.CombinedDocIdList;
 import nu.marginalia.index.model.RankableDocument;
 import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.results.IndexResultRankingService;
+import nu.marginalia.index.results.SnippetGenerator;
 import nu.marginalia.index.reverse.query.IndexQuery;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
@@ -201,24 +202,26 @@ public class IndexQueryExecution {
         List<RpcDecoratedResultItem> ret = new ArrayList<>(resultsList.size());
 
         // Decorate the results with the document details
-        ResultConverter converter = new ResultConverter();
-        for (RankableDocument doc : resultsList) {
+        try (SnippetGenerator snippetGenerator = new SnippetGenerator(currentIndex, rankingContext)) {
+            ResultConverter converter = new ResultConverter();
+            for (RankableDocument doc : resultsList) {
 
-            final long id = doc.item.getDocumentId();
-            final DocdbUrlDetail docData = detailsById.get(id);
+                final long id = doc.item.getDocumentId();
+                final DocdbUrlDetail docData = detailsById.get(id);
 
-            if (docData == null)
-                continue;
+                if (docData == null)
+                    continue;
 
-            int pubDate = currentIndex.getDocPubDate(doc.item.combinedId);
+                String snippet = snippetGenerator.generate(doc);
+                int pubDate = currentIndex.getDocPubDate(doc.item.combinedId);
 
-            converter.convert(rankingContext, doc, docData, pubDate)
-                    .ifPresent(ret::add);
+                converter.convert(rankingContext, doc, docData, snippet, pubDate)
+                        .ifPresent(ret::add);
+            }
         }
 
         return ret;
     }
-
 
 
     private class LookupStage implements BufferPipe.IntermediateFunction<IndexQuery, CombinedDocIdList> {
@@ -728,6 +731,7 @@ public class IndexQueryExecution {
         public Optional<RpcDecoratedResultItem> convert(SearchContext rankingContext,
                                                  RankableDocument doc,
                                                  DocdbUrlDetail docData,
+                                                 @Nullable String snippet,
                                                  int pubDate) {
             SearchResultItem resultItem = doc.item;
 
@@ -754,7 +758,7 @@ public class IndexQueryExecution {
 
             var decoratedBuilder = RpcDecoratedResultItem.newBuilder()
                     .setDataHash(docData.dataHash())
-                    .setDescription(docData.description())
+                    .setDescription(Objects.requireNonNullElse(snippet, ""))
                     .setFeatures(docData.features())
                     .setFormat(docData.format())
                     .setRankingScore(resultItem.getScore())

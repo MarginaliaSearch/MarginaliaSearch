@@ -87,7 +87,8 @@ public class PerfTestMain {
                 new ForwardIndexReader(
                         indexDir.resolve("ir/fwd-doc-id.dat"),
                         indexDir.resolve("ir/fwd-doc-data.dat"),
-                        indexDir.resolve("ir/fwd-spans.dat")
+                        indexDir.resolve("ir/fwd-spans.dat"),
+                        indexDir.resolve("ir/fwd-doc-texts.dat")
                 ),
                 new FullReverseIndexReader(
                         "full",
@@ -237,7 +238,9 @@ public class PerfTestMain {
         List<Double> times = new ArrayList<>();
         int iter;
         for (iter = 0;; iter++) {
-            var execution = new IndexQueryExecution(indexReader, new DocumentDbReader(indexDir.resolve("ldbr/documents.db")), rankingService,
+            var execution = new IndexQueryExecution(indexReader,
+                    new DocumentDbReader(indexDir.resolve("ldbr/documents.db")),
+                    rankingService,
                     SearchContext.create(indexReader, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny(), ConnectivityView.empty()), 1);
             long start = System.nanoTime();
             execution.run();

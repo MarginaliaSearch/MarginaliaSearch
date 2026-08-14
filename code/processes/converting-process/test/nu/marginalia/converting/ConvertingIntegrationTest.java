@@ -127,7 +127,6 @@ public class ConvertingIntegrationTest {
             var details = doc.details;
 
             assertTrue(details.title.length() > 4);
-            assertTrue(details.description.length() > 4);
             assertEquals(DocumentFormat.HTML5, details.format);
 
         }
@@ -161,7 +160,6 @@ public class ConvertingIntegrationTest {
 
             assertTrue(details.metadata.size() > 0);
             assertTrue(details.title.length() > 4);
-            assertTrue(details.description.length() > 4);
             assertEquals(DocumentFormat.HTML5, details.format);
         }
     }

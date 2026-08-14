@@ -116,7 +116,7 @@ public class DocumentDbReader {
             // being constructed from an input of longs.
 
             var rs = stmt.executeQuery("""
-                SELECT ID, URL, TITLE, DESCRIPTION, LANGUAGE, WORDS_TOTAL, FORMAT, FEATURES, DATA_HASH, QUALITY, PUB_YEAR
+                SELECT ID, URL, TITLE, LANGUAGE, WORDS_TOTAL, FORMAT, FEATURES, DATA_HASH, QUALITY, PUB_YEAR
                 FROM DOCUMENT WHERE ID IN 
                 """ + docIds);
 
@@ -133,7 +133,6 @@ public class DocumentDbReader {
                         id,
                         urlMaybe.get(),
                         rs.getString("TITLE"),
-                        rs.getString("DESCRIPTION"),
                         rs.getString("LANGUAGE"),
                         rs.getDouble("QUALITY"),
                         rs.getString("FORMAT"),

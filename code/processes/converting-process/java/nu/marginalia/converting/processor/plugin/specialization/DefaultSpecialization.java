@@ -3,7 +3,6 @@ package nu.marginalia.converting.processor.plugin.specialization;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.converting.processor.logic.TitleExtractor;
-import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import nu.marginalia.dom.DomPruningFilter;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.language.model.DocumentLanguageData;
@@ -17,12 +16,10 @@ import java.util.Set;
 @Singleton
 public class DefaultSpecialization implements HtmlProcessorSpecializations.HtmlProcessorSpecializationIf {
 
-    private final SummaryExtractor summaryExtractor;
     private final TitleExtractor titleExtractor;
 
     @Inject
-    public DefaultSpecialization(SummaryExtractor summaryExtractor, TitleExtractor titleExtractor) {
-        this.summaryExtractor = summaryExtractor;
+    public DefaultSpecialization(TitleExtractor titleExtractor) {
         this.titleExtractor = titleExtractor;
     }
 
@@ -33,23 +30,6 @@ public class DefaultSpecialization implements HtmlProcessorSpecializations.HtmlP
         prunedDoc.body().filter(new DomPruningFilter(0.5));
 
         return prunedDoc;
-    }
-
-    @Override
-    public String getSummary(Document doc,
-                             Set<String> importantWords) {
-        List<String> cleanedWords = new ArrayList<>(importantWords.size());
-
-        for (var word : importantWords) {
-            // summary extraction is not interested in n-grams
-            if (word.contains("_")) {
-                continue;
-            }
-
-            cleanedWords.add(word);
-        }
-
-        return summaryExtractor.extractSummary(doc, cleanedWords);
     }
 
     @Override

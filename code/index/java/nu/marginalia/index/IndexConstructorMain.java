@@ -191,11 +191,13 @@ public class IndexConstructorMain extends ProcessMainClass {
         Path outputFileDocsId = findNextFile(new IndexFileName.ForwardDocIds());
         Path outputFileDocsData = findNextFile(new IndexFileName.ForwardDocData());
         Path outputFileSpansData = findNextFile(new IndexFileName.ForwardSpansData());
+        Path outputFileDocTextsData = findNextFile(new IndexFileName.ForwardDocTextsData());
 
         ForwardIndexConverter converter = new ForwardIndexConverter(heartbeat,
                 outputFileDocsId,
                 outputFileDocsData,
                 outputFileSpansData,
+                outputFileDocTextsData,
                 IndexJournal.findJournals(workDir, languageConfiguration.languages()).values(),
                 domainRankings
         );

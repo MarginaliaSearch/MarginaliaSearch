@@ -30,7 +30,7 @@ public record IndexJournalPage(Path baseDir, int page) {
 
     public static ByteArrayColumn spanCodes = new ByteArrayColumn("spanCodes", StorageType.ZSTD);
     public static VarintCodedSequenceArrayColumn spans = new VarintCodedSequenceArrayColumn("spans", StorageType.ZSTD);
-
+    public static ByteArrayColumn documentTextZstd = new ByteArrayColumn("documentTextZstd", StorageType.PLAIN);
 
     public IndexJournalPage {
         if (!baseDir.toFile().isDirectory()) {
@@ -76,6 +76,10 @@ public record IndexJournalPage(Path baseDir, int page) {
 
     public ByteArrayColumn.Reader openSpanCodes(SlopTable table) throws IOException {
         return spanCodes.open(table);
+    }
+
+    public ByteArrayColumn.Reader openDocumentTextZstd(SlopTable table) throws IOException {
+        return documentTextZstd.open(table);
     }
 
     public ShortColumn.Reader openPubDate(SlopTable table) throws IOException {

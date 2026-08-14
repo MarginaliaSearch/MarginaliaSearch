@@ -163,7 +163,7 @@ public class StackexchangeSideloader implements SideloadSource {
 
             ret.details.generator = GeneratorType.DOCS;
             ret.details.title = StringUtils.truncate(post.title(), 128);
-            ret.details.description = StringUtils.truncate(doc.body().text(), 255);
+            ret.details.setDocumentText(dld.reconstructText());
             ret.details.length = 128;
             ret.details.languageIsoCode = "en"; // FIXME we should run this throguh language detection
 

@@ -176,7 +176,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, linkTexts, url);
 
-        ret.description = specialization.getSummary(prunedDoc, words.importantWords);
+        ret.setDocumentText(dld.reconstructText());
         ret.generator = generatorParts.type();
 
         var tagWords = new MetaTagsBuilder()

@@ -442,6 +442,11 @@ public class CombinedIndexReader {
         return forwardIndexReader.getDocumentSpans(allocator, documentId);
     }
 
+    @Nullable
+    public String getDocumentText(long documentId) {
+        return forwardIndexReader.getDocumentText(documentId);
+    }
+
     public CodedSequence[] getTermPositions(SegmentAllocator allocator, long[] codedOffsets) {
         return reverseIndexFullReader.getTermPositions(allocator, codedOffsets);
     }

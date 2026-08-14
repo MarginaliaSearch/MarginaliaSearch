@@ -36,6 +36,7 @@ class ForwardIndexConverterTest {
     private Path docsFileId;
     private Path docsFileData;
     private Path docsSpanData;
+    private Path docsTextData;
 
     int workSetSize = 512;
 
@@ -61,6 +62,7 @@ class ForwardIndexConverterTest {
         docsFileId = dataDir.resolve("docs-i.dat");
         docsFileData = dataDir.resolve("docs-d.dat");
         docsSpanData = dataDir.resolve("docs-s.dat");
+        docsTextData = dataDir.resolve("docs-t.dat");
     }
 
     @AfterEach
@@ -88,7 +90,8 @@ class ForwardIndexConverterTest {
                         new long[0],
                         List.of(),
                         new byte[0],
-                        List.of()
+                        List.of(),
+                        new byte[0]
                 ),
                 new KeywordHasher.AsciiIsh());
 
@@ -102,10 +105,11 @@ class ForwardIndexConverterTest {
                 docsFileId,
                 docsFileData,
                 docsSpanData,
+                docsTextData,
                 IndexJournal.findJournal(workDir, "en").stream().toList(),
                 new DomainRankings()).convert();
 
-        var forwardReader = new ForwardIndexReader(docsFileId, docsFileData, docsSpanData);
+        var forwardReader = new ForwardIndexReader(docsFileId, docsFileData, docsSpanData, docsTextData);
 
         for (int i = 36; i < workSetSize; i++) {
             long docId = createId(i, i/20);

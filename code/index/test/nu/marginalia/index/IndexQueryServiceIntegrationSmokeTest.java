@@ -389,11 +389,13 @@ IndexQueryServiceIntegrationSmokeTest {
         Path outputFileDocsId = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.ForwardDocIds(), IndexFileName.Version.NEXT);
         Path outputFileDocsData = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.ForwardDocData(), IndexFileName.Version.NEXT);
         Path outputFileSpansData = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.ForwardSpansData(), IndexFileName.Version.NEXT);
+        Path outputFileDocTextsData = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.ForwardDocTextsData(), IndexFileName.Version.NEXT);
 
         ForwardIndexConverter converter = new ForwardIndexConverter(new FakeProcessHeartbeat(),
                 outputFileDocsId,
                 outputFileDocsData,
                 outputFileSpansData,
+                outputFileDocTextsData,
                 IndexJournal.findJournal(workDir, "en").stream().toList(),
                 domainRankings
         );
@@ -415,7 +417,7 @@ IndexQueryServiceIntegrationSmokeTest {
 
         ldbw.add(new DocdbUrlDetail(
                 fullId, new EdgeUrl("https://www.example.com/"+id),
-                "test", "test", "en", 0., "HTML5", 0, null, fullId, 10
+                "test", "en", 0., "HTML5", 0, null, fullId, 10
         ));
 
         List<String> keywords = IntStream.of(factors).mapToObj(Integer::toString).toList();
@@ -444,7 +446,8 @@ IndexQueryServiceIntegrationSmokeTest {
                         metadata,
                         positions,
                         new byte[0],
-                        List.of()
+                        List.of(),
+                        new byte[0]
                 ), new KeywordHasher.AsciiIsh());
 
     }
@@ -455,7 +458,7 @@ IndexQueryServiceIntegrationSmokeTest {
 
         ldbw.add(new DocdbUrlDetail(
                 fullId, new EdgeUrl("https://www.example.com/"+id),
-                "test", "test", "en", 0., "HTML5", 0, null, id, 10
+                "test", "en", 0., "HTML5", 0, null, id, 10
         ));
 
 
@@ -485,7 +488,8 @@ IndexQueryServiceIntegrationSmokeTest {
                         metadata,
                         positions,
                         new byte[0],
-                        List.of()
+                        List.of(),
+                        new byte[0]
                 ), new KeywordHasher.AsciiIsh());
 
     }

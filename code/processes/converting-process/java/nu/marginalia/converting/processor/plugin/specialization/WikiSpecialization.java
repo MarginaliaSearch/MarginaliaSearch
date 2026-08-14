@@ -3,7 +3,6 @@ package nu.marginalia.converting.processor.plugin.specialization;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.converting.processor.logic.TitleExtractor;
-import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import nu.marginalia.model.EdgeUrl;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -15,8 +14,8 @@ import java.util.Set;
 public class WikiSpecialization extends DefaultSpecialization {
 
     @Inject
-    public WikiSpecialization(SummaryExtractor summaryExtractor, TitleExtractor titleExtractor) {
-        super(summaryExtractor, titleExtractor);
+    public WikiSpecialization(TitleExtractor titleExtractor) {
+        super(titleExtractor);
     }
 
     @Override
@@ -46,17 +45,6 @@ public class WikiSpecialization extends DefaultSpecialization {
 
         // Use the default pruning as a fallback
         return super.prune(doc);
-    }
-
-    @Override
-    public String getSummary(Document original, Set<String> importantWords) {
-        // Trust wikis to generate a useful summary
-        var ogDescription = original.select("meta[property=og:description]").attr("content");
-        if (!ogDescription.isBlank()) {
-            return ogDescription;
-        }
-
-        return super.getSummary(original, importantWords);
     }
 
     @Override

@@ -4,7 +4,6 @@ import nu.marginalia.converting.model.DocumentHeaders;
 import nu.marginalia.converting.model.DocumentTags;
 import nu.marginalia.converting.processor.logic.DocumentGeneratorExtractor;
 import nu.marginalia.converting.processor.logic.TitleExtractor;
-import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.test.CommonTestData;
 import org.jsoup.Jsoup;
@@ -23,13 +22,7 @@ class JavadocSpecializationTest {
     @BeforeAll
     public static void setUpAll() {
         specialization = new JavadocSpecialization(
-                new SummaryExtractor(255,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null),
-                new TitleExtractor(128));
+                                new TitleExtractor(128));
     }
 
     @Test
@@ -43,12 +36,5 @@ class JavadocSpecializationTest {
         var gen = generatorExtractor.detectGenerator(new EdgeUrl("https://www.example.com/"), doc, new DocumentHeaders(""), new DocumentTags(doc));
 
         System.out.println(gen);
-    }
-
-    @Test
-    void getSummary() {
-        String summary = specialization.getSummary(Jsoup.parse(thread), Set.of(""));
-
-        System.out.println(summary);
     }
 }

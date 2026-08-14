@@ -183,6 +183,7 @@ public class SentenceExtractor {
 
         return new DocumentSentence(
                 seps,
+                words,
                 lc,
                 posTags,
                 stemmed,
@@ -281,7 +282,7 @@ public class SentenceExtractor {
                         stemmed[i] = "NN"; // ???
                     }
                 }
-                ret.add(new DocumentSentence(separators, tokensLc, posTags, stemmed, htmlTags, isCapitalized, isAllCaps, includeInStemming));
+                ret.add(new DocumentSentence(separators, tokens, tokensLc, posTags, stemmed, htmlTags, isCapitalized, isAllCaps, includeInStemming));
             }
         }
         else {
@@ -319,7 +320,7 @@ public class SentenceExtractor {
                     stemmed[i] = tokensLc[i]; // we don't stem non-language words
                 }
 
-                ret.add(new DocumentSentence(separators, tokensLc, posTags, stemmed, htmlTags, isCapitalized, isAllCaps, includeInStemming));
+                ret.add(new DocumentSentence(separators, tokens, tokensLc, posTags, stemmed, htmlTags, isCapitalized, isAllCaps, includeInStemming));
             }
 
         }

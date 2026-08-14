@@ -23,7 +23,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
 import static java.lang.foreign.ValueLayout.JAVA_LONG;
 import static java.lang.foreign.ValueLayout.JAVA_LONG_UNALIGNED;
-import static nu.marginalia.index.config.ForwardIndexParameters.ENTRY_SIZE;
 import static nu.marginalia.index.config.ForwardIndexParameters.FEATURES_OFFSET;
 import static nu.marginalia.index.config.ForwardIndexParameters.METADATA_OFFSET;
 import static nu.marginalia.index.config.ForwardIndexParameters.SPANS_OFFSET;
@@ -32,16 +31,6 @@ import static nu.marginalia.index.config.ForwardIndexParameters.SPANS_OFFSET;
  *  span data and term positions, in batched io_uring submissions.  Batching lets
  *  page cache misses overlap in the device queue instead of stalling the ranking
  *  thread once per read.
- *  <p>
- *  In mmap mode, span and position data whose pages are already resident is
- *  instead read straight out of mappings of the index files, skipping both the
- *  syscall and the page cache copy.  Residency is probed with one mincore call
- *  per batch, and batches that miss take the io_uring path, which also warms
- *  the pages for subsequent queries.
- *  <p>
- *  A fetcher owns rings on the index reader's file descriptors and may only be
- *  used by one thread at a time.  Pooled instances must be discarded when the
- *  index is swapped, which owner() helps detect.
  */
 public class RankingBatchFetcher implements AutoCloseable {
 
@@ -103,6 +92,9 @@ public class RankingBatchFetcher implements AutoCloseable {
     /** Submission chunk cap and ring queue size.  Kept modest since each ring
      *  locks its queue memory against RLIMIT_MEMLOCK. */
     private static final int RING_SIZE = 256;
+
+    // N.B. this is smaller than the entry size in the forward index, we don't need the doc offset
+    private static final int ENTRY_SIZE = 3;
 
     /** Capacity of the marshalling arrays.  The positions phase may need more
      *  slots than this and is handled in waves. */

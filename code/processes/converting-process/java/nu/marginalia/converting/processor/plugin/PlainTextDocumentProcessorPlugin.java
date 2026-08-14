@@ -96,7 +96,7 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
         ret.quality = -1;
 
         ret.features = new HashSet<>();
-        ret.description = StringUtils.truncate(plainTextLogic.getDescription(firstFewLines), 255);
+        ret.setDocumentText(dld.reconstructText());
         ret.hashCode = dld.localitySensitiveHashCode();
 
         final PubDate pubDate = PubDate.ofYear(1993);

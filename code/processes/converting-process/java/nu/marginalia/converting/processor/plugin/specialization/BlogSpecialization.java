@@ -4,7 +4,6 @@ import ca.rmen.porterstemmer.PorterStemmer;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.converting.processor.logic.TitleExtractor;
-import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.idx.WordFlags;
@@ -30,8 +29,8 @@ import java.util.stream.Collectors;
 public class BlogSpecialization extends DefaultSpecialization {
 
     @Inject
-    public BlogSpecialization(SummaryExtractor summaryExtractor, TitleExtractor titleExtractor) {
-        super(summaryExtractor, titleExtractor);
+    public BlogSpecialization(TitleExtractor titleExtractor) {
+        super(titleExtractor);
     }
 
     @Override
@@ -55,11 +54,6 @@ public class BlogSpecialization extends DefaultSpecialization {
 
         // Use the default pruning as a fallback
         return super.prune(doc);
-    }
-
-    @Override
-    public String getSummary(Document original, Set<String> importantWords) {
-        return super.getSummary(original, importantWords);
     }
 
     private final static List<String> badPathElements =

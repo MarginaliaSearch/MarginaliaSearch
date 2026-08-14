@@ -1,7 +1,6 @@
 package nu.marginalia.converting.processor.plugin.specialization;
 
 import nu.marginalia.converting.processor.logic.TitleExtractor;
-import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import nu.marginalia.test.CommonTestData;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.BeforeAll;
@@ -19,13 +18,7 @@ class WikiSpecializationTest {
     @BeforeAll
     public static void setUpAll() {
         specialization = new WikiSpecialization(
-                new SummaryExtractor(255,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null),
-                new TitleExtractor(128)
+                                new TitleExtractor(128)
                 );
     }
 
@@ -37,11 +30,5 @@ class WikiSpecializationTest {
 
     @Test
     void generatorExtraction() {
-    }
-
-    @Test
-    void getSummary() {
-        System.out.println(specialization.getSummary(Jsoup.parse(doomArmor), Set.of("")));
-        System.out.println(specialization.getSummary(Jsoup.parse(doomFan), Set.of("")));
     }
 }

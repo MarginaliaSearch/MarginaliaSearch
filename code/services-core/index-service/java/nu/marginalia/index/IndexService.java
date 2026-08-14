@@ -33,8 +33,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import static nu.marginalia.linkdb.LinkdbFileNames.DOCDB_FILE_NAME;
-import static nu.marginalia.linkdb.LinkdbFileNames.DOMAIN_LINKS_FILE_NAME;
+import static nu.marginalia.linkdb.LinkdbFileNames.*;
 
 public class IndexService extends JoobyService {
     private final Logger logger = LoggerFactory.getLogger(getClass());

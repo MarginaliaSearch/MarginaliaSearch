@@ -5,7 +5,6 @@ import nu.marginalia.model.EdgeUrl;
 public record DocdbUrlDetail(long urlId,
                              EdgeUrl url,
                              String title,
-                             String description,
                              String language,
                              double urlQuality,
                              String format,

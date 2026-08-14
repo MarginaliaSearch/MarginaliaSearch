@@ -5,8 +5,6 @@ import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.processor.logic.DocumentLengthLogic;
 import nu.marginalia.converting.processor.logic.TitleExtractor;
 import nu.marginalia.converting.processor.plugin.specialization.DefaultSpecialization;
-import nu.marginalia.converting.processor.summary.SummaryExtractor;
-import nu.marginalia.converting.processor.summary.heuristic.*;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
 import nu.marginalia.keyword.LinkTexts;
 import nu.marginalia.language.config.LanguageConfigLocation;
@@ -40,16 +38,7 @@ class PdfDocumentProcessorPluginTest {
                 new ThreadLocalSentenceExtractorProvider(new LanguageConfiguration(lm, new LanguageConfigLocation.Experimental()), lm),
                 new DocumentKeywordExtractor(new TermFrequencyDict(lm)),
                 new DocumentLengthLogic(100),
-                new DefaultSpecialization(new SummaryExtractor(
-                        255,
-                        new DomFilterHeuristic(255),
-                        new TagDensityHeuristic(255),
-                        new OpenGraphDescriptionHeuristic(),
-                        new MetaDescriptionHeuristic(),
-                        new FallbackHeuristic()
-                ),
-                        new TitleExtractor(255)
-                        ));
+                new DefaultSpecialization(new TitleExtractor(255)));
     }
     public AbstractDocumentProcessorPlugin.DetailsWithWords testPdfFile(byte[] pdfBytes) throws Exception {
         var doc = new CrawledDocument("test", "https://www.example.com/sample.pdf", "application/pdf", Instant.now().toString(), 200, "OK", "OK", "", pdfBytes, false, -1, null, null);

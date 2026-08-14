@@ -44,6 +44,50 @@ public record DocumentLanguageData(LanguageDefinition language,
         return ret;
     }
 
+
+    public String reconstructText() {
+        StringBuilder sb = new StringBuilder(totalNumWords() * 8);
+
+        for (DocumentSentence sentence : sentences) {
+            for (int i = 0; i < sentence.wordsOriginal.length; i++) {
+                String word = sentence.wordsOriginal[i];
+
+                // Guard against tokens that would vanish or split when
+                // the reconstruction is split by the snippet extractor
+                if (!isSafeToken(word)) {
+                    word = "_";
+                }
+
+                sb.append(word);
+
+                if (i + 1 < sentence.wordsOriginal.length) {
+                    if (sentence.isSeparatorComma(i)) {
+                        sb.append(", ");
+                    }
+                    else {
+                        sb.append(' ');
+                    }
+                }
+            }
+            sb.append('\n');
+        }
+
+        return sb.toString();
+    }
+
+    private static boolean isSafeToken(String word) {
+        if (word.isEmpty())
+            return false;
+
+        for (int i = 0; i < word.length(); i++) {
+            char c = word.charAt(i);
+            if (c == ',' || Character.isWhitespace(c))
+                return false;
+        }
+
+        return true;
+    }
+
     public long localitySensitiveHashCode() {
         var hash = new EasyLSH();
 

@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 class CppreferenceSpecializationTest {
-    CppreferenceSpecialization specialization = new CppreferenceSpecialization(null, null);
+    CppreferenceSpecialization specialization = new CppreferenceSpecialization(null);
 
     @Test
     public void testTitleMagic() {

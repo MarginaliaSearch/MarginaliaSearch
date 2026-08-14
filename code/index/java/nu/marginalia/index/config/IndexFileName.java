@@ -23,6 +23,7 @@ public sealed interface IndexFileName {
     record ForwardDocIds() implements IndexFileName { }
     record ForwardDocData() implements IndexFileName { }
     record ForwardSpansData() implements IndexFileName { }
+    record ForwardDocTextsData() implements IndexFileName { }
 
     static List<IndexFileName> revFullIndexFiles(LanguageConfiguration languageConfiguration) {
         List<IndexFileName> ret = new ArrayList<>();
@@ -54,7 +55,8 @@ public sealed interface IndexFileName {
         return List.of(
                 new ForwardDocData(),
                 new ForwardDocIds(),
-                new ForwardSpansData()
+                new ForwardSpansData(),
+                new ForwardDocTextsData()
         );
     }
 
@@ -95,6 +97,10 @@ public sealed interface IndexFileName {
             case ForwardSpansData() -> switch (version) {
                 case CURRENT -> basePath.resolve("fwd-spans.dat");
                 case NEXT -> basePath.resolve("fwd-spans.dat.next");
+            };
+            case ForwardDocTextsData() -> switch (version) {
+                case CURRENT -> basePath.resolve("fwd-doc-texts.dat");
+                case NEXT -> basePath.resolve("fwd-doc-texts.dat.next");
             };
         };
     }
