@@ -104,8 +104,9 @@ public class IndexFactory {
         Path docIdsFile = getCurrentPath(new IndexFileName.ForwardDocIds());
         Path docDataFile = getCurrentPath(new IndexFileName.ForwardDocData());
         Path spansFile = getCurrentPath(new IndexFileName.ForwardSpansData());
+        Path docTextsFile = getCurrentPath(new IndexFileName.ForwardDocTextsData());
 
-        return new ForwardIndexReader(docIdsFile, docDataFile, spansFile);
+        return new ForwardIndexReader(docIdsFile, docDataFile, spansFile, docTextsFile);
     }
 
     private Path getCurrentPath(IndexFileName fileName) {

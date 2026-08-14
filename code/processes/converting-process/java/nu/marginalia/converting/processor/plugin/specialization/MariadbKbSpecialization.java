@@ -3,7 +3,6 @@ package nu.marginalia.converting.processor.plugin.specialization;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.converting.processor.logic.TitleExtractor;
-import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.model.idx.WordFlags;
 import org.jsoup.nodes.Document;
@@ -19,8 +18,8 @@ public class MariadbKbSpecialization extends DefaultSpecialization {
     private static final Logger logger = LoggerFactory.getLogger(MariadbKbSpecialization.class);
 
     @Inject
-    public MariadbKbSpecialization(SummaryExtractor summaryExtractor, TitleExtractor titleExtractor) {
-        super(summaryExtractor, titleExtractor);
+    public MariadbKbSpecialization(TitleExtractor titleExtractor) {
+        super(titleExtractor);
     }
 
     @Override

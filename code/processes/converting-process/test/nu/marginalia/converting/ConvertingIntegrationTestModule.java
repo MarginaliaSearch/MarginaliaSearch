@@ -16,7 +16,6 @@ public class ConvertingIntegrationTestModule  extends AbstractModule {
         bind(Double.class).annotatedWith(Names.named("min-document-quality")).toInstance(-15.);
         bind(Integer.class).annotatedWith(Names.named("min-document-length")).toInstance(250);
         bind(Integer.class).annotatedWith(Names.named("max-title-length")).toInstance(128);
-        bind(Integer.class).annotatedWith(Names.named("max-summary-length")).toInstance(255);
         bind(ServiceConfiguration.class).toInstance(new ServiceConfiguration(
                 null, 1, "localhost", "localhost", 0, null
         ));

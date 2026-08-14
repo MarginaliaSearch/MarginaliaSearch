@@ -55,7 +55,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 
-import static nu.marginalia.linkdb.LinkdbFileNames.DOCDB_FILE_NAME;
+import static nu.marginalia.linkdb.LinkdbFileNames.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -443,11 +443,13 @@ public class IntegrationTest {
         Path outputFileDocsId = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.ForwardDocIds(), IndexFileName.Version.NEXT);
         Path outputFileDocsData = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.ForwardDocData(), IndexFileName.Version.NEXT);
         Path outputFileSpansData = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.ForwardSpansData(), IndexFileName.Version.NEXT);
+        Path outputFileDocTextsData = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.ForwardDocTextsData(), IndexFileName.Version.NEXT);
 
         ForwardIndexConverter converter = new ForwardIndexConverter(new FakeProcessHeartbeat(),
                 outputFileDocsId,
                 outputFileDocsData,
                 outputFileSpansData,
+                outputFileDocTextsData,
                 IndexJournal.findJournals(workDir, languageConfiguration.languages()).values(),
                 domainRankings
         );

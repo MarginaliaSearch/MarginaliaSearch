@@ -141,6 +141,8 @@ public class VarintCodedSequenceArrayColumn extends AbstractObjectColumn<List<Va
         }
 
         public List<ByteBuffer> getData(ByteBuffer workArea) throws IOException {
+            workArea.clear();
+
             int count = groupsReader.get();
             var ret = new ArrayList<ByteBuffer>(count);
 

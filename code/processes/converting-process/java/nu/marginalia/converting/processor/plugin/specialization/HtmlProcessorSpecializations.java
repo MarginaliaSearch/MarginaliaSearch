@@ -96,8 +96,6 @@ public class HtmlProcessorSpecializations {
      */
     public interface HtmlProcessorSpecializationIf {
         Document prune(Document original);
-        String getSummary(Document original,
-                          Set<String> importantWords);
         String getTitle(Document original, DocumentLanguageData dld, String url);
 
         boolean shouldIndex(EdgeUrl url);

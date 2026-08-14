@@ -233,6 +233,7 @@ class PosPatternTest {
         return new DocumentSentence(
                 allSet,
                 tags,
+                tags,
                 encodedTags,
                 tags,
                 EnumSet.noneOf(HtmlTag.class),
@@ -257,6 +258,7 @@ class PosPatternTest {
 
         return new DocumentSentence(
                 commaSet,
+                tags,
                 tags,
                 encodedTags,
                 tags,

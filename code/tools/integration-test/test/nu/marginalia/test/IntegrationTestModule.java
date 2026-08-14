@@ -42,8 +42,7 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import static nu.marginalia.linkdb.LinkdbFileNames.DOCDB_FILE_NAME;
-import static nu.marginalia.linkdb.LinkdbFileNames.DOMAIN_LINKS_FILE_NAME;
+import static nu.marginalia.linkdb.LinkdbFileNames.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -133,7 +132,6 @@ public class IntegrationTestModule extends AbstractModule {
             bind(Double.class).annotatedWith(Names.named("min-document-quality")).toInstance(-15.);
             bind(Integer.class).annotatedWith(Names.named("min-document-length")).toInstance(32);
             bind(Integer.class).annotatedWith(Names.named("max-title-length")).toInstance(128);
-            bind(Integer.class).annotatedWith(Names.named("max-summary-length")).toInstance(255);
 
             bind(Path.class).annotatedWith(Names.named("local-index-path")).toInstance(indexDir);
 

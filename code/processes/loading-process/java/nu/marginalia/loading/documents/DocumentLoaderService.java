@@ -84,7 +84,6 @@ public class DocumentLoaderService {
                         urlId,
                         parsedUrl.get(),
                         projection.title(),
-                        projection.description(),
                         projection.language(),
                         projection.quality(),
                         projection.htmlStandard(),

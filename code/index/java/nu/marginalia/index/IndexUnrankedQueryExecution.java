@@ -10,6 +10,7 @@ import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.model.RankableDocument;
 import nu.marginalia.index.model.UnrankedSearchContext;
 import nu.marginalia.index.results.IndexResultRankingService;
+import nu.marginalia.index.results.SnippetGenerator;
 import nu.marginalia.index.reverse.query.IndexQuery;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
@@ -119,17 +120,20 @@ public class IndexUnrankedQueryExecution {
         Map<Long, DocdbUrlDetail> detailsById = documentDbReader.getUrlDetails(new LongArrayList(seenDocIds));
         ResultConverter converter = new ResultConverter();
 
-        for (RankableDocument doc : results) {
+        try (SnippetGenerator snippetGenerator = new SnippetGenerator(currentIndex, null)) {
+            for (RankableDocument doc : results) {
 
-            final long id = doc.item.getDocumentId();
-            final DocdbUrlDetail docData = detailsById.get(id);
+                final long id = doc.item.getDocumentId();
+                final DocdbUrlDetail docData = detailsById.get(id);
 
-            if (docData == null)
-                continue;
+                if (docData == null)
+                    continue;
 
-            int pubDate = currentIndex.getDocPubDate(doc.item.combinedId);
+                String lead = snippetGenerator.generate(doc);
+                int pubDate = currentIndex.getDocPubDate(doc.item.combinedId);
 
-            converter.convert(doc, docData, pubDate).ifPresent(ret::add);
+                converter.convert(doc, docData, lead, pubDate).ifPresent(ret::add);
+            }
         }
 
         return ret;
@@ -142,6 +146,7 @@ public class IndexUnrankedQueryExecution {
         @Nullable
         public Optional<RpcDecoratedResultItem> convert(RankableDocument doc,
                                                  DocdbUrlDetail docData,
+                                                 @Nullable String leadDescription,
                                                  int pubDate) {
             SearchResultItem resultItem = doc.item;
 
@@ -168,7 +173,7 @@ public class IndexUnrankedQueryExecution {
 
             var decoratedBuilder = RpcDecoratedResultItem.newBuilder()
                     .setDataHash(docData.dataHash())
-                    .setDescription(docData.description())
+                    .setDescription(Objects.requireNonNullElse(leadDescription, ""))
                     .setFeatures(docData.features())
                     .setFormat(docData.format())
                     .setRankingScore(resultItem.getScore())

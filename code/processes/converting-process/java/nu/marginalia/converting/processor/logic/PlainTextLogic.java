@@ -9,11 +9,6 @@ import java.util.stream.Collectors;
 
 public class PlainTextLogic {
 
-    public String getDescription(List<String> firstFewLines) {
-        return StringUtils.truncate(firstFewLines.stream().filter(this::looksLikeText)
-                .collect(Collectors.joining(" ")).replaceAll("\\s+", " ")
-                , 255);
-    }
 
     private boolean looksLikeText(String s) {
         s = s.trim();

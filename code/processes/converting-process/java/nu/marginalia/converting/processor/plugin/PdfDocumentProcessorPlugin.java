@@ -117,7 +117,7 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
         ret.features = new HashSet<>(); // must be mutable!
         ret.features.add(HtmlFeature.PDF);
 
-        ret.description = getDescription(doc);
+        ret.setDocumentText(dld.reconstructText());
         ret.hashCode = dld.localitySensitiveHashCode();
 
         final PubDate pubDate = PubDate.ofYear(1993);
@@ -153,35 +153,6 @@ public class PdfDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin 
         return new DetailsWithWords(ret, words);
     }
 
-    private String getDescription(Document doc) {
-        int cnt = 0;
-        boolean useNext = false;
-        for (var ptag : doc.getElementsByTag("p")) {
-            String text = ptag.text();
-
-            // Many academic documents have an abstract at the start of the document,
-            // which makes a nice summary.  Though they tend to bleed into the text,
-            // so we check for the word "Abstract" at the start of the paragraph.
-
-            if (text.startsWith("Abstract ")) {
-                return StringUtils.abbreviate(text.substring("Abstract ".length()), "...", 255);
-            }
-            else if (text.equals("Abstract")) {
-                useNext = true;
-            }
-            else if (useNext) {
-                return StringUtils.abbreviate(text, "...", 255);
-            }
-
-            if (++cnt > 15) { // Don't scan the entire document
-                break;
-            }
-        }
-
-        // Fall back to the default specialization
-        return defaultSpecialization.getSummary(doc, Set.of());
-
-    }
 
     /** Convert the provided PDF bytes into a HTML rendering that can be fed
      * to the HTML processor.

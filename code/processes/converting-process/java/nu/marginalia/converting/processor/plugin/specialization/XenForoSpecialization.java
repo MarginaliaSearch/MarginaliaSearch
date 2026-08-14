@@ -3,7 +3,6 @@ package nu.marginalia.converting.processor.plugin.specialization;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.converting.processor.logic.TitleExtractor;
-import nu.marginalia.converting.processor.summary.SummaryExtractor;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,12 +12,10 @@ import java.util.Set;
 @Singleton
 public class XenForoSpecialization extends DefaultSpecialization {
     private static final Logger logger = LoggerFactory.getLogger(XenForoSpecialization.class);
-    private final SummaryExtractor summaryExtractor;
 
     @Inject
-    public XenForoSpecialization(SummaryExtractor summaryExtractor, TitleExtractor titleExtractor) {
-        super(summaryExtractor, titleExtractor);
-        this.summaryExtractor = summaryExtractor;
+    public XenForoSpecialization(TitleExtractor titleExtractor) {
+        super(titleExtractor);
     }
 
     public Document prune(Document document) {
@@ -50,25 +47,6 @@ public class XenForoSpecialization extends DefaultSpecialization {
         return newDoc;
     }
 
-    public String getSummary(Document document, Set<String> importantWords) {
-        StringBuilder summary = new StringBuilder();
-
-        for (var pTag : document.getElementsByClass("bbWrapper")) {
-            if (summary.length() > 512) {
-                break;
-            }
-            String text = pTag.text();
-
-            if (text.isBlank())
-                continue;
-
-            summary
-                    .append(text)
-                    .append(' ');
-        }
-
-        return summaryExtractor.abbreivateSummary(summary.toString());
-    }
 
     @Override
     public double lengthModifier() {

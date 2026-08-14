@@ -20,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -30,6 +31,8 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
     private final SlopDocumentRecord.Writer documentWriter;
 
     private int ordinalOffset = 0;
+
+    private static final byte[] EMPTY_DOCUMENT_TEXT = new byte[0];
 
     private static final Logger logger = LoggerFactory.getLogger(ConverterBatchWriter.class);
 
@@ -113,6 +116,8 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
                 continue;
             }
 
+            byte[] documentTextZstd = Objects.requireNonNullElse(document.details.documentTextZstd, EMPTY_DOCUMENT_TEXT);
+
             documentWriter.write(new SlopDocumentRecord(
                     domainName,
                     document.url.toString(),
@@ -120,7 +125,7 @@ public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriter
                     document.state.toString(),
                     document.stateReason,
                     document.details.title,
-                    document.details.description,
+                    documentTextZstd,
                     HtmlFeature.encode(document.details.features),
                     document.details.format.name(),
                     document.details.length,

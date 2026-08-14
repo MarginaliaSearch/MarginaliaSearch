@@ -243,11 +243,13 @@ public class CombinedIndexReaderTest {
         Path outputFileDocsId = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.ForwardDocIds(), IndexFileName.Version.NEXT);
         Path outputFileDocsData = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.ForwardDocData(), IndexFileName.Version.NEXT);
         Path outputFileSpansData = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.ForwardSpansData(), IndexFileName.Version.NEXT);
+        Path outputFileDocTextsData = IndexFileName.resolve(IndexLocations.getCurrentIndex(fileStorageService), new IndexFileName.ForwardDocTextsData(), IndexFileName.Version.NEXT);
 
         ForwardIndexConverter converter = new ForwardIndexConverter(new FakeProcessHeartbeat(),
                 outputFileDocsId,
                 outputFileDocsData,
                 outputFileSpansData,
+                outputFileDocTextsData,
                 IndexJournal.findJournal(workDir, "en").stream().toList(),
                 domainRankings
         );
@@ -304,7 +306,8 @@ public class CombinedIndexReaderTest {
                                 metadata,
                                 positions,
                                 new byte[0],
-                                List.of()
+                                List.of(),
+                                new byte[0]
                         ), new KeywordHasher.AsciiIsh());
             }
 
@@ -315,7 +318,6 @@ public class CombinedIndexReaderTest {
                 linkdbWriter.add(new DocdbUrlDetail(
                         key,
                         new EdgeUrl("https://www.example.com"),
-                        "test",
                         "test",
                         "en",
                         0.,

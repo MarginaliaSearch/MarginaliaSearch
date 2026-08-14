@@ -30,6 +30,7 @@ public class IndexJournalSlopWriter extends SlopTable {
 
     private final VarintCodedSequenceArrayColumn.Writer spansWriter;
     private final ByteArrayColumn.Writer spanCodesWriter;
+    private final ByteArrayColumn.Writer documentTextZstdWriter;
     private final EnumColumn.Writer languagesWriter;
 
     public IndexJournalSlopWriter(Path dir, int page) throws IOException {
@@ -53,6 +54,7 @@ public class IndexJournalSlopWriter extends SlopTable {
 
         spanCodesWriter = IndexJournalPage.spanCodes.create(this);
         spansWriter = IndexJournalPage.spans.create(this);
+        documentTextZstdWriter = IndexJournalPage.documentTextZstd.create(this);
 
         languagesWriter = IndexJournalPage.languageIsoCode.create(this);
     }
@@ -84,6 +86,8 @@ public class IndexJournalSlopWriter extends SlopTable {
 
         spanCodesWriter.put(keywordsProjection.spanCodes());
         spansWriter.put(keywordsProjection.spans());
+
+        documentTextZstdWriter.put(keywordsProjection.documentTextZstd());
     }
 
     public void close() throws IOException {
@@ -98,5 +102,6 @@ public class IndexJournalSlopWriter extends SlopTable {
         languagesWriter.close();
         spansWriter.close();
         spanCodesWriter.close();
+        documentTextZstdWriter.close();
     }
 }

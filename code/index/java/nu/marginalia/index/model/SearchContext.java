@@ -178,7 +178,7 @@ public class SearchContext {
             }
         }
 
-        harmonizeVariantFrequencies(compiledQuery.root(), full);
+        harmonizeVariantTermFrequencies(compiledQuery.root(), full);
 
         this.fullCounts = new CqDataInt(full);
         this.priorityCounts = new CqDataInt(prio);
@@ -262,10 +262,45 @@ public class SearchContext {
         this.phraseConstraints = new PhraseConstraintGroupList(constraintsFull, constraintsMandatory, constraintsOptional);
     }
 
+    /** Returns a mapping from compiled query index to a representative index for
+     * its variant group, where word alternatives in an Or group share a
+     * representative.  Terms without variants map to themselves. */
+    public static int[] variantClasses(CqExpression expression, int size) {
+        int[] classes = new int[size];
+        for (int i = 0; i < size; i++) {
+            classes[i] = i;
+        }
+        assignVariantClasses(expression, classes);
+        return classes;
+    }
+
+    private static void assignVariantClasses(CqExpression expression, int[] classes) {
+        if (expression instanceof CqExpression.Or or) {
+            int representative = -1;
+
+            for (var part : or.parts()) {
+                if (part instanceof CqExpression.Word word) {
+                    if (representative < 0) {
+                        representative = word.idx();
+                    }
+                    classes[word.idx()] = representative;
+                }
+                else {
+                    assignVariantClasses(part, classes);
+                }
+            }
+        }
+        else if (expression instanceof CqExpression.And and) {
+            for (var part : and.parts()) {
+                assignVariantClasses(part, classes);
+            }
+        }
+    }
+
     /** Let word alternatives in an Or group share the largest document frequency
      * in the group, so that rare spelling variants from query expansion don't get
      * an outsized IDF relative to the canonical form. */
-    public static void harmonizeVariantFrequencies(CqExpression expression, int[] frequencies) {
+    public static void harmonizeVariantTermFrequencies(CqExpression expression, int[] frequencies) {
         if (expression instanceof CqExpression.Or or) {
             int maxFrequency = 0;
 
@@ -280,13 +315,13 @@ public class SearchContext {
                     frequencies[word.idx()] = maxFrequency;
                 }
                 else {
-                    harmonizeVariantFrequencies(part, frequencies);
+                    harmonizeVariantTermFrequencies(part, frequencies);
                 }
             }
         }
         else if (expression instanceof CqExpression.And and) {
             for (var part : and.parts()) {
-                harmonizeVariantFrequencies(part, frequencies);
+                harmonizeVariantTermFrequencies(part, frequencies);
             }
         }
     }

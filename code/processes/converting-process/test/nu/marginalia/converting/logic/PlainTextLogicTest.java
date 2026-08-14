@@ -274,15 +274,6 @@ class PlainTextLogicTest {
             developmental releases of the K Desktop Environment, XFree86 4.0,
             OpenMotif 2.1.30, and TrollTech's Qt 2.1.1 library available as system
             """;
-    @Test
-    void getDescription() {
-        System.out.println(ptl.getDescription(LineUtils.firstNLines(PXE, 25)));
-        System.out.println(ptl.getDescription(LineUtils.firstNLines(uml, 25)));
-        System.out.println(ptl.getDescription(LineUtils.firstNLines(cmucl, 25)));
-        System.out.println(ptl.getDescription(LineUtils.firstNLines(xprint, 25)));
-        System.out.println(ptl.getDescription(LineUtils.firstNLines(vm, 25)));
-        System.out.println(ptl.getDescription(LineUtils.firstNLines(garfinkel, 25)));
-    }
 
     @Test
     void getTitle() throws URISyntaxException {

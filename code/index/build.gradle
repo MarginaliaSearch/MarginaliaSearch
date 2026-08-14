@@ -61,6 +61,7 @@ dependencies {
     }
     implementation libs.trove
     implementation libs.fastutil
+    implementation libs.zstd
     implementation libs.bundles.gson
     implementation libs.bundles.mariadb
 

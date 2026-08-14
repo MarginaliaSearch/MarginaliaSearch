@@ -85,7 +85,8 @@ public class TestJournalFactory {
                             meta,
                             Arrays.asList(positions),
                             new byte[0],
-                            List.of()
+                            List.of(),
+                            new byte[0]
                     ),
                     new KeywordHasher.AsciiIsh());
         }
@@ -123,7 +124,8 @@ public class TestJournalFactory {
                             meta,
                             Arrays.asList(positions),
                             new byte[0],
-                            List.of()
+                            List.of(),
+                            new byte[0]
                     ),
                     new KeywordHasher.AsciiIsh());
 
