@@ -7,6 +7,7 @@ import nu.marginalia.api.searchquery.model.query.SpecificationLimitType;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.index.config.ForwardIndexParameters;
 import nu.marginalia.index.forward.ForwardIndexReader;
+import nu.marginalia.index.forward.doctext.DocTextDecoder;
 import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
 import nu.marginalia.index.model.*;
 import nu.marginalia.index.reverse.FullReverseIndexReader;
@@ -443,8 +444,8 @@ public class CombinedIndexReader {
     }
 
     @Nullable
-    public String getDocumentText(long documentId) {
-        return forwardIndexReader.getDocumentText(documentId);
+    public String getDocumentText(DocTextDecoder decoder, long documentId) {
+        return forwardIndexReader.getDocumentText(decoder, documentId);
     }
 
     public CodedSequence[] getTermPositions(SegmentAllocator allocator, long[] codedOffsets) {

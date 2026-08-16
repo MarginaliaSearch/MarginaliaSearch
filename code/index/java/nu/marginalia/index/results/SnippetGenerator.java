@@ -5,6 +5,7 @@ import nu.marginalia.index.CombinedIndexReader;
 import nu.marginalia.index.ScratchIntListPool;
 import nu.marginalia.index.ScratchSegmentAllocator;
 import nu.marginalia.index.ScratchSegmentAllocatorFactory;
+import nu.marginalia.index.forward.doctext.DocTextDecoder;
 import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
 import nu.marginalia.index.model.RankableDocument;
 import nu.marginalia.index.model.SearchContext;
@@ -27,6 +28,7 @@ public class SnippetGenerator implements AutoCloseable {
 
     private final ScratchIntListPool pool = new ScratchIntListPool(128);
     private final ScratchSegmentAllocator segmentAllocator = allocatorFactory.createAllocator();
+    private final DocTextDecoder textDecoder = new DocTextDecoder();
 
     private final float[] termWeights;
     private final int[] termClasses;
@@ -49,7 +51,7 @@ public class SnippetGenerator implements AutoCloseable {
 
     @Nullable
     public String generate(RankableDocument doc) {
-        String text = index.getDocumentText(doc.combinedDocumentId);
+        String text = index.getDocumentText(textDecoder, doc.combinedDocumentId);
         if (text == null) {
             return null;
         }
@@ -65,9 +67,11 @@ public class SnippetGenerator implements AutoCloseable {
             titleRanges = codedSpans.decode(pool::get).getSpan(HtmlTag.TITLE).startsEnds();
         }
 
+        SentenceSnippetExtractor extractor = new SentenceSnippetExtractor(text, titleRanges);
+
         if (searchContext == null) {
             // Grab the start of the document text as a fallback
-            return SentenceSnippetExtractor.extractLead(text, titleRanges);
+            return extractor.extractLead();
         }
 
         // The term position data the document held during ranking lives in recycled
@@ -83,7 +87,7 @@ public class SnippetGenerator implements AutoCloseable {
             }
         }
 
-        return SentenceSnippetExtractor.extract(text, positions, termWeights, termClasses, titleRanges);
+        return extractor.extract(positions, termWeights, termClasses);
     }
 
     private static float[] termWeights(SearchContext searchContext) {
@@ -104,5 +108,6 @@ public class SnippetGenerator implements AutoCloseable {
     @Override
     public void close() {
         segmentAllocator.close();
+        textDecoder.close();
     }
 }

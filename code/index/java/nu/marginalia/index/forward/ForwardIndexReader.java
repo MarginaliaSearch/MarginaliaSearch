@@ -1,12 +1,12 @@
 package nu.marginalia.index.forward;
 
-import com.github.luben.zstd.Zstd;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.ffi.LinuxSystemCalls;
 import nu.marginalia.index.config.ForwardIndexParameters;
-import nu.marginalia.index.forward.doctext.DocTextsCodec;
+import nu.marginalia.index.forward.doctext.DocTextDecoder;
+import nu.marginalia.index.forward.doctext.DocTextsReader;
 import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
 import nu.marginalia.index.forward.spans.SpansCodec;
 import nu.marginalia.index.model.FeaturesCodec;
@@ -20,9 +20,7 @@ import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
-import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -49,8 +47,7 @@ public class ForwardIndexReader {
     private final int dataFd;
     private final int spansFd;
 
-    private final FileChannel docTextsChannel;
-    private static final long MAX_TEXT_LENGTH = 1L << 27;
+    private final DocTextsReader docTextsReader;
 
     private final int entrySize;
 
@@ -76,7 +73,7 @@ public class ForwardIndexReader {
             spansFd = -1;
             spansArena = null;
             spansSegment = null;
-            docTextsChannel = null;
+            docTextsReader = null;
             entrySize = 0;
             version = null;
             return;
@@ -90,7 +87,7 @@ public class ForwardIndexReader {
             spansFd = -1;
             spansArena = null;
             spansSegment = null;
-            docTextsChannel = null;
+            docTextsReader = null;
             entrySize = 0;
             version = null;
             return;
@@ -104,7 +101,7 @@ public class ForwardIndexReader {
             spansFd = -1;
             spansArena = null;
             spansSegment = null;
-            docTextsChannel = null;
+            docTextsReader = null;
             entrySize = 0;
             version = null;
             return;
@@ -119,11 +116,11 @@ public class ForwardIndexReader {
         logger.info("Switching forward index, version {}", version);
 
         if (version.compareTo(ForwardIndexVersion.V2026_08__1) >= 0 && Files.exists(docTextsFile)) {
-            docTextsChannel = FileChannel.open(docTextsFile, StandardOpenOption.READ);
+            docTextsReader = new DocTextsReader(docTextsFile);
         }
         else {
             logger.warn("Document texts are not available, snippets will not be generated");
-            docTextsChannel = null;
+            docTextsReader = null;
         }
 
         domainRankings = new DomainRankings();
@@ -273,8 +270,8 @@ public class ForwardIndexReader {
     /** Returns the document text stored for the given document, or null
      * if no text is stored for it or the stored blob cannot be read */
     @Nullable
-    public String getDocumentText(long documentId) {
-        if (docTextsChannel == null) {
+    public String getDocumentText(DocTextDecoder decoder, long documentId) {
+        if (docTextsReader == null) {
             return null;
         }
 
@@ -283,40 +280,7 @@ public class ForwardIndexReader {
             return null;
         }
 
-        long encodedOffset = data.get(entrySize * fwdIdxOffset + DOC_TEXT_OFFSET);
-        if (DocTextsCodec.isAbsent(encodedOffset)) {
-            return null;
-        }
-
-        long readOffset = DocTextsCodec.decodeStartOffset(encodedOffset);
-        int readSize = DocTextsCodec.decodeSize(encodedOffset);
-
-        byte[] blob = new byte[readSize];
-        try {
-            ByteBuffer buffer = ByteBuffer.wrap(blob);
-            while (buffer.hasRemaining()) {
-                if (docTextsChannel.read(buffer, readOffset + buffer.position()) < 0)
-                    return null;
-            }
-        }
-        catch (IOException ex) {
-            logger.error("Failed to read document text", ex);
-            return null;
-        }
-
-        try {
-            long size = Zstd.getFrameContentSize(blob);
-            if (size <= 0 || size > MAX_TEXT_LENGTH) {
-                logger.warn("Implausible document text size {} for document {}", size, documentId);
-                return null;
-            }
-
-            return new String(Zstd.decompress(blob, (int) size), StandardCharsets.UTF_8);
-        }
-        catch (RuntimeException ex) {
-            logger.warn("Failed to decompress document text for document {}", documentId, ex);
-            return null;
-        }
+        return docTextsReader.read(decoder, data.get(entrySize * fwdIdxOffset + DOC_TEXT_OFFSET));
     }
 
     public int totalDocCount() {
@@ -385,11 +349,11 @@ public class ForwardIndexReader {
         }
 
         try {
-            if (docTextsChannel != null)
-                docTextsChannel.close();
+            if (docTextsReader != null)
+                docTextsReader.close();
         }
         catch (IOException | RuntimeException ex) {
-            logger.error("Error closing 'docTextsChannel'", ex);
+            logger.error("Error closing 'docTextsReader'", ex);
         }
 
         try {

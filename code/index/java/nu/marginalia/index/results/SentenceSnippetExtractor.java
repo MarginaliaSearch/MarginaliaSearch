@@ -1,11 +1,12 @@
 package nu.marginalia.index.results;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /** <p>Selects an excerpt from the stored document text.</p>
  *
@@ -29,19 +30,26 @@ public class SentenceSnippetExtractor {
 
     private static final float RUN_BONUS = 0.2f;
 
-    @Nullable
-    public static String extract(String text,
-                                 IntList[] termPositions,
-                                 @Nullable float[] termIdfWeights,
-                                 @Nullable int[] termClasses,
-                                 @Nullable IntList excludedRanges)
-    {
-        if (text.isEmpty()) {
-            return null;
-        }
+    private final String text;
+    private final List<Sentence> sentences;
+    private final int tokenCount;
 
-        Tokens tokens = Tokens.of(text);
-        if (tokens.count == 0) {
+    @Nullable
+    private final IntList excludedRangeStartEndPairs;
+
+    public SentenceSnippetExtractor(String text, @Nullable IntList excludedRangeStartEndPairs) {
+        this.text = text;
+        this.sentences = splitSentences(text);
+        this.tokenCount = sentences.isEmpty() ? 0 : sentences.getLast().lastTokenIdx() + 1;
+        this.excludedRangeStartEndPairs = excludedRangeStartEndPairs;
+    }
+
+    @Nullable
+    public String extract(IntList[] termPositions,
+                          @Nullable float[] termIdfWeights,
+                          @Nullable int[] termClasses)
+    {
+        if (tokenCount == 0) {
             return null;
         }
 
@@ -68,9 +76,9 @@ public class SentenceSnippetExtractor {
 
                 if (position < 1)
                     continue;
-                if (position > tokens.count)
+                if (position > tokenCount)
                     continue;
-                if (inExcludedRange(excludedRanges, position))
+                if (isPositionExcluded(position))
                     continue;
 
                 matches.add(encodeMatch(matchTermIdx, position));
@@ -79,12 +87,12 @@ public class SentenceSnippetExtractor {
 
         // Terms do not obviously appear in the document, so no snippet is possible
         if (matches.isEmpty()) {
-            return extractLead(text, tokens, excludedRanges);
+            return extractLead();
         }
 
         Arrays.sort(matches.elements(), 0, matches.size());
 
-        SentenceSelection selection = scoreSentences(matches, tokens, termPositions.length, termIdfWeights);
+        SentenceSelection selection = scoreSentences(matches, termPositions.length, termIdfWeights);
         SentenceScore best = selection.best();
 
         // Assemble the snippet.  The primary fragment is the best sentence, when
@@ -107,81 +115,76 @@ public class SentenceSnippetExtractor {
 
         // Order the fragments in document order
 
-        SentenceFragment first;
-        SentenceFragment second = null;
+        TextFragment first;
+        TextFragment second = null;
 
         if (secondary == null) {
-            first = new SentenceFragment(best);
-        }
-        else if (best.sentence() < secondary.sentence()) {
-            first = new SentenceFragment(best);
-            second = new SentenceFragment(secondary);
+            first = fragmentAround(best.firstMatchToken(), targetLength);
         }
         else {
-            first = new SentenceFragment(secondary);
-            second = new SentenceFragment(best);
+            SentenceScore earlier = best.sentence().sentenceIdx() < secondary.sentence().sentenceIdx() ? best : secondary;
+            SentenceScore later = earlier == best ? secondary : best;
+
+            first = fragmentAround(earlier.firstMatchToken(), targetLength / 2);
+            second = fragmentAround(later.firstMatchToken(), targetLength / 2);
         }
 
-        // Align with sentences
+        extendFragments(first, second);
 
-        alignFragment(first, second == null ? targetLength : targetLength / 2, tokens);
-        if (second != null) {
-            alignFragment(second, targetLength / 2, tokens);
-        }
-
-        extendFragments(first, second, tokens, excludedRanges);
-
-        return render(text, tokens, first, second, excludedRanges);
+        return render(first, second);
     }
 
     /** Returns a query-independent lead excerpt of the text, the first sentences
      * of the document outside any excluded region, for use in place of the static
      * document summary when no query-biased snippet applies. */
     @Nullable
-    public static String extractLead(String text, @Nullable IntList excludedRanges) {
-        if (text.isEmpty()) {
+    public String extractLead() {
+        int firstTokenIdx = firstDisplayableTokenIdx();
+        if (firstTokenIdx < 0) {
             return null;
         }
 
-        Tokens tokens = Tokens.of(text);
-        if (tokens.count == 0) {
-            return null;
-        }
+        TextFragment fragment = fragmentAround(firstTokenIdx, targetLength);
+        extendFragments(fragment, null);
 
-        return extractLead(text, tokens, excludedRanges);
+        return render(fragment, null);
     }
 
-    @Nullable
-    private static String extractLead(String text, Tokens tokens, @Nullable IntList excludedRanges) {
-        int firstToken = 0;
-        while (firstToken < tokens.count && inExcludedRange(excludedRanges, firstToken + 1)) {
-            firstToken++;
-        }
-        if (firstToken == tokens.count) {
-            return null;
+    private int firstDisplayableTokenIdx() {
+        for (int tokenIdx = 0; tokenIdx < tokenCount; tokenIdx++) {
+            if (!isPositionExcluded(tokenIdx + 1))
+                return tokenIdx;
         }
 
-        SentenceFragment fragment = new SentenceFragment(firstToken);
-        alignFragment(fragment, targetLength, tokens);
-        extendFragments(fragment, null, tokens, excludedRanges);
-
-        return render(text, tokens, fragment, null, excludedRanges);
+        return -1;
     }
 
-    private static SentenceSelection scoreSentences(LongArrayList matches,
-                                                    Tokens tokens,
-                                                    int numTerms,
-                                                    @Nullable float[] termIdfWeights) {
+    private boolean isPositionExcluded(int position) {
+        if (excludedRangeStartEndPairs == null)
+            return false;
+
+        for (int i = 0; i + 1 < excludedRangeStartEndPairs.size(); i += 2) {
+            if (position >= excludedRangeStartEndPairs.getInt(i) && position < excludedRangeStartEndPairs.getInt(i + 1))
+                return true;
+        }
+
+        return false;
+    }
+
+    private SentenceSelection scoreSentences(LongArrayList matches,
+                                             int numTerms,
+                                             @Nullable float[] termIdfWeights) {
         SentenceScore best = null;
         SentenceScore[] bestPerTerm = new SentenceScore[numTerms];
 
         int[] tf = new int[numTerms];
 
         for (int begin = 0; begin < matches.size(); ) {
-            int sentence = tokens.sentenceOfToken[decodeMatchPosition(matches.getLong(begin)) - 1];
+            int firstMatchToken = decodeMatchPosition(matches.getLong(begin)) - 1;
+            Sentence sentence = sentenceContaining(firstMatchToken);
 
             int end = begin;
-            while (end < matches.size() && tokens.sentenceOfToken[decodeMatchPosition(matches.getLong(end)) - 1] == sentence) {
+            while (end < matches.size() && decodeMatchPosition(matches.getLong(end)) - 1 <= sentence.lastTokenIdx()) {
                 end++;
             }
 
@@ -211,24 +214,21 @@ public class SentenceSnippetExtractor {
                 prevPosition = position;
             }
 
-            int sentFirst = tokens.firstTokenOfSentence[sentence];
-            int sentLength = tokens.ends[tokens.lastTokenOfSentence(sentence)] - tokens.starts[sentFirst];
-
             float score = 0;
             for (int termIdx = 0; termIdx < numTerms; termIdx++) {
                 if (tf[termIdx] == 0)
                     continue;
 
                 float weight = termIdfWeights != null ? termIdfWeights[termIdx] : 1.0f;
-                float tfNorm = tf[termIdx] * (K1 + 1) / (tf[termIdx] + K1 * (1 - B + B * sentLength / AVG_LENGTH));
+                float tfNorm = tf[termIdx] * (K1 + 1) / (tf[termIdx] + K1 * (1 - B + B * sentence.length() / AVG_LENGTH));
 
                 score += weight * tfNorm;
             }
 
             score *= 1 + RUN_BONUS * (longestRun - 1);
-            score *= 1 + 1 / (float) Math.log(AVG_LENGTH + tokens.starts[sentFirst]);
+            score *= 1 + 1 / (float) Math.log(AVG_LENGTH + sentence.charStart());
 
-            SentenceScore candidate = new SentenceScore(sentence, score, decodeMatchPosition(matches.getLong(begin)) - 1, termsMask);
+            SentenceScore candidate = new SentenceScore(sentence, score, firstMatchToken, termsMask);
 
             if (best == null || candidate.score() > best.score()) {
                 best = candidate;
@@ -258,64 +258,64 @@ public class SentenceSnippetExtractor {
         return (int) (match >>> 16);
     }
 
-    private record SentenceScore(int sentence, float score, int firstMatchToken, long termsMask) {}
+    private record SentenceScore(Sentence sentence, float score, int firstMatchToken, long termsMask) {}
 
     private record SentenceSelection(SentenceScore best, SentenceScore[] bestPerTerm) {}
 
-    private static class SentenceFragment {
-        int firstToken;
-        int lastToken;  // inclusive
-        final int firstMatchToken;
+    private static class TextFragment {
+        Sentence first;
+        Sentence last;
+        int charStart;
+        int charEnd;
 
-        SentenceFragment(SentenceScore sentence) {
-            this.firstMatchToken = sentence.firstMatchToken();
+        TextFragment(Sentence sentence, int charStart, int charEnd) {
+            this.first = sentence;
+            this.last = sentence;
+            this.charStart = charStart;
+            this.charEnd = charEnd;
         }
 
-        SentenceFragment(int firstMatchToken) {
-            this.firstMatchToken = firstMatchToken;
+        int length() {
+            return charEnd - charStart;
         }
     }
 
-    private static void alignFragment(SentenceFragment fragment, int budget, Tokens tokens) {
-        int sentence = tokens.sentenceOfToken[fragment.firstMatchToken];
+    private TextFragment fragmentAround(int anchorToken, int budget) {
+        Sentence sentence = sentenceContaining(anchorToken);
 
-        int sentFirst = tokens.firstTokenOfSentence[sentence];
-        int sentLast = tokens.lastTokenOfSentence(sentence);
-
-        if (tokens.ends[sentLast] - tokens.starts[sentFirst] <= budget) {
-            fragment.firstToken = sentFirst;
-            fragment.lastToken = sentLast;
-            return;
+        if (sentence.length() <= budget) {
+            return new TextFragment(sentence, sentence.charStart(), sentence.charEnd());
         }
 
-        int start = sentFirst;
-        if (tokens.ends[fragment.firstMatchToken] - tokens.starts[start] > budget) {
-            start = fragment.firstMatchToken;
+        LongArrayList encodedTokenBounds = tokenize(sentence);
+        int anchorIdx = anchorToken - sentence.firstTokenIdx();
+        long encodedAnchor = encodedTokenBounds.get(anchorIdx);
+
+        int charStart = decodeTokenEnd(encodedAnchor)
+                - sentence.charStart() <= budget
+                    ? sentence.charStart()
+                    : decodeTokenStart(encodedAnchor);
+
+        int charEnd = decodeTokenEnd(encodedAnchor);
+
+        for (int i = anchorIdx + 1; i < encodedTokenBounds.size() && decodeTokenEnd(encodedTokenBounds.get(i)) - charStart <= budget; i++) {
+            charEnd = decodeTokenEnd(encodedTokenBounds.get(i));
         }
 
-        int end = start;
-        while (end + 1 <= sentLast && tokens.ends[end + 1] - tokens.starts[start] <= budget) {
-            end++;
-        }
-
-        fragment.firstToken = start;
-        fragment.lastToken = end;
+        return new TextFragment(sentence, charStart, charEnd);
     }
 
     /** Spends any remaining character budget appending whole following sentences
      * to the fragments, preferring the primary (first) fragment */
-    private static void extendFragments(SentenceFragment first,
-                                        @Nullable SentenceFragment second,
-                                        Tokens tokens,
-                                        @Nullable IntList excludedRanges) {
+    private void extendFragments(TextFragment first, @Nullable TextFragment second) {
         for (int i = 0; i < 100; i++) {
-            int spent = fragmentLength(first, tokens) + (second == null ? 0 : fragmentLength(second, tokens));
+            int spent = first.length() + (second == null ? 0 : second.length());
             int remaining = targetLength - spent;
             if (remaining <= 0)
                 return;
 
-            if (!extendFragment(first, second, tokens, excludedRanges, remaining)
-                    && (second == null || !extendFragment(second, null, tokens, excludedRanges, remaining))) {
+            if (!extendFragment(first, second, remaining)
+                    && (second == null || !extendFragment(second, null, remaining))) {
                 return;
             }
         }
@@ -325,97 +325,69 @@ public class SentenceSnippetExtractor {
         throw new IllegalStateException("Could not extend fragments");
     }
 
-    private static boolean extendFragment(SentenceFragment fragment,
-                                          @Nullable SentenceFragment next,
-                                          Tokens tokens,
-                                          @Nullable IntList excludedRanges,
-                                          int budget) {
-        int lastSentence = tokens.sentenceOfToken[fragment.lastToken];
-
-        if (fragment.lastToken != tokens.lastTokenOfSentence(lastSentence))
+    private boolean extendFragment(TextFragment fragment, @Nullable TextFragment next, int budget) {
+        if (fragment.charEnd != fragment.last.charEnd())
             return false;  // fragment was cut mid-sentence, don't extend
-        if (lastSentence + 1 >= tokens.firstTokenOfSentence.length)
+        if (fragment.last.sentenceIdx() + 1 >= sentences.size())
             return false;
 
-        int nextFirst = tokens.firstTokenOfSentence[lastSentence + 1];
-        int nextLast = tokens.lastTokenOfSentence(lastSentence + 1);
+        Sentence nextSentence = sentences.get(fragment.last.sentenceIdx() + 1);
 
         // Don't grow into the next fragment or into excluded regions
-        if (next != null && nextFirst >= next.firstToken)
+        if (next != null && nextSentence.sentenceIdx() >= next.first.sentenceIdx())
             return false;
-        if (inExcludedRange(excludedRanges, nextFirst + 1))
+        if (isPositionExcluded(nextSentence.firstTokenIdx() + 1))
             return false;
-        if (tokens.ends[nextLast] - tokens.starts[nextFirst] > budget)
+        if (nextSentence.length() > budget)
             return false;
 
-        fragment.lastToken = nextLast;
+        fragment.last = nextSentence;
+        fragment.charEnd = nextSentence.charEnd();
         return true;
     }
 
-    private static int fragmentLength(SentenceFragment fragment, Tokens tokens) {
-        return tokens.ends[fragment.lastToken] - tokens.starts[fragment.firstToken];
-    }
-
-    private static String render(String text,
-                                 Tokens tokens,
-                                 SentenceFragment first,
-                                 @Nullable SentenceFragment second,
-                                 @Nullable IntList excludedRanges) {
+    private String render(TextFragment first, @Nullable TextFragment second) {
         StringBuilder snippet = new StringBuilder(targetLength + 16);
 
         // No leading truncation marker when everything skipped ahead of the
         // fragment is excluded content, e.g. a title leading the document text
-        int firstDisplayable = 0;
-        while (firstDisplayable < first.firstToken && inExcludedRange(excludedRanges, firstDisplayable + 1)) {
-            firstDisplayable++;
-        }
-
-        if (first.firstToken > firstDisplayable) {
+        if (first.charStart > startOfToken(firstDisplayableTokenIdx())) {
             snippet.append(truncationMarker);
         }
-        renderRange(text, tokens, first, snippet);
+        renderRange(first, snippet);
 
         if (second != null) {
-            if (isContinuous(first, second, tokens)) {
+            if (isContinuous(first, second)) {
                 snippet.append(". ");
             }
             else {
                 snippet.append(fragmentSeparator);
             }
-            renderRange(text, tokens, second, snippet);
+            renderRange(second, snippet);
         }
 
-        SentenceFragment last = second != null ? second : first;
-        if (last.lastToken + 1 < tokens.count) {
+        TextFragment last = second != null ? second : first;
+        if (last.charEnd < sentences.getLast().charEnd()) {
             snippet.append(truncationMarker);
         }
 
         return snippet.toString();
     }
 
-    private static boolean isContinuous(SentenceFragment first, SentenceFragment second, Tokens tokens) {
-        if (second.firstToken == first.lastToken + 1)
-            return true;
-
-        int secondSentence = tokens.sentenceOfToken[second.firstToken];
-
-        return secondSentence == tokens.sentenceOfToken[first.lastToken] + 1
-                && second.firstToken == tokens.firstTokenOfSentence[secondSentence];
+    private static boolean isContinuous(TextFragment first, TextFragment second) {
+        return second.first.sentenceIdx() == first.last.sentenceIdx() + 1
+                && second.charStart == second.first.charStart();
     }
 
-    private static void renderRange(String text, Tokens tokens, SentenceFragment fragment, StringBuilder snippet) {
-        int from = tokens.starts[fragment.firstToken];
-        int to = tokens.ends[fragment.lastToken];
+    private void renderRange(TextFragment fragment, StringBuilder snippet) {
+        // Sentence boundaries are represented as newlines in the stored reconstruction,
+        // but here we render the boundaries with a period to keep adjacent sentences apart
 
-        // Sentence boundaries are newlines in the stored reconstruction, and the
-        // tokenizer strips terminal punctuation, so render the boundaries with a
-        // period to keep adjacent sentences apart
-
-        for (int i = from; i < to; i++) {
+        for (int i = fragment.charStart; i < fragment.charEnd; i++) {
             char c = text.charAt(i);
             if (c == '\n') {
                 snippet.append(". ");
-                while (i + 1 < to && text.charAt(i + 1) == '\n') i++;
+                while (i + 1 < fragment.charEnd && text.charAt(i + 1) == '\n') i++;
             }
             else {
                 snippet.append(c);
@@ -423,82 +395,116 @@ public class SentenceSnippetExtractor {
         }
     }
 
-    private static boolean inExcludedRange(@Nullable IntList ranges, int position) {
-        if (ranges == null)
-            return false;
-
-        for (int i = 0; i + 1 < ranges.size(); i += 2) {
-            if (position >= ranges.getInt(i) && position < ranges.getInt(i + 1))
-                return true;
+    private record Sentence(int sentenceIdx,
+                            int firstTokenIdx,
+                            int lastTokenIdx,
+                            int charStart,
+                            int charEnd)
+    {
+        int length() {
+            return charEnd - charStart;
         }
-
-        return false;
     }
 
-    private static class Tokens {
-        int count;
-        int[] starts;
-        int[] ends;
-        int[] sentenceOfToken;
-        int[] firstTokenOfSentence;
 
-        public static Tokens of(String text) {
-            final int length = text.length();
-            int count = 0;
+    private static List<Sentence> splitSentences(String text) {
+        List<Sentence> sentences = new ArrayList<>();
 
-            for (int pos = 0; pos < length; ) {
-                while (pos < length && isTokenBoundary(text.charAt(pos))) pos++;
-                if (pos == length)
-                    break;
-                while (pos < length && !isTokenBoundary(text.charAt(pos))) pos++;
+        int tokenCount = 0;
+        final int length = text.length();
+
+        for (int lineStart = 0; lineStart < length; ) {
+            int lineEnd = text.indexOf('\n', lineStart);
+            if (lineEnd < 0) {
+                lineEnd = length;
+            }
+
+            int charStart = lineStart;
+            int charEnd = lineEnd;
+
+            while (charStart < charEnd && isTokenBoundary(text.charAt(charStart))) charStart++;
+            while (charEnd > charStart && isTokenBoundary(text.charAt(charEnd - 1))) charEnd--;
+
+            int lineTokens = countTokens(text, charStart, charEnd);
+            if (lineTokens > 0) {
+                sentences.add(new Sentence(sentences.size(),
+                        tokenCount, tokenCount + lineTokens - 1,
+                        charStart, charEnd));
+                tokenCount += lineTokens;
+            }
+
+            lineStart = lineEnd + 1;
+        }
+
+        return sentences;
+    }
+
+    private static int countTokens(String text, int charStart, int charEnd) {
+        int count = 0;
+        boolean previousBoundary = true;
+
+        for (int i = charStart; i < charEnd; i++) {
+            var isBoundary = isTokenBoundary(text.charAt(i));
+            if (previousBoundary && isBoundary) {
                 count++;
             }
+            previousBoundary = isBoundary;
+        }
 
-            Tokens ret = new Tokens();
-            ret.count = count;
-            ret.starts = new int[count];
-            ret.ends = new int[count];
-            ret.sentenceOfToken = new int[count];
+        return count;
+    }
 
-            IntArrayList sentenceFirsts = new IntArrayList();
+    private static boolean isTokenBoundary(char c) {
+        return c == ' ' || c == ',';
+    }
 
-            int sentence = -1;
-            boolean sentenceBoundaryPending = true;
+    private Sentence sentenceContaining(int tokenIdx) {
+        int low = 0;
+        int high = sentences.size() - 1;
 
-            for (int pos = 0, token = 0; pos < length; ) {
-                while (pos < length && isTokenBoundary(text.charAt(pos))) {
-                    if (text.charAt(pos) == '\n')
-                        sentenceBoundaryPending = true;
-                    pos++;
-                }
-                if (pos == length)
-                    break;
-
-                if (sentenceBoundaryPending) {
-                    sentence++;
-                    sentenceFirsts.add(token);
-                    sentenceBoundaryPending = false;
-                }
-
-                ret.starts[token] = pos;
-                ret.sentenceOfToken[token] = sentence;
-                while (pos < length && !isTokenBoundary(text.charAt(pos))) pos++;
-                ret.ends[token++] = pos;
+        while (low < high) {
+            int mid = (low + high + 1) >>> 1;
+            if (sentences.get(mid).firstTokenIdx() <= tokenIdx) {
+                low = mid;
             }
-
-            ret.firstTokenOfSentence = sentenceFirsts.toIntArray();
-
-            return ret;
+            else {
+                high = mid - 1;
+            }
         }
 
-        private int lastTokenOfSentence(int sentence) {
-            if (sentence + 1 < firstTokenOfSentence.length)
-                return firstTokenOfSentence[sentence + 1] - 1;
-            return count - 1;
+        return sentences.get(low);
+    }
+
+
+    private long encodeToken(int start, int end) {
+        return (long) start << 32 | end;
+    }
+    private int decodeTokenStart(long token) {
+        return (int) (token >>> 32);
+    }
+    private int decodeTokenEnd(long token) {
+        return (int) token;
+    }
+
+    /** Return encoded token start,end pairs */
+    private LongArrayList tokenize(Sentence sentence) {
+        LongArrayList tokens = new LongArrayList();
+
+        for (int pos = sentence.charStart(); pos < sentence.charEnd(); ) {
+            while (pos < sentence.charEnd() && !isTokenBoundary(text.charAt(pos))) pos++;
+            if (pos == sentence.charEnd())
+                break;
+
+            int start = pos;
+            while (pos < sentence.charEnd() && !isTokenBoundary(text.charAt(pos))) pos++;
+            tokens.add(encodeToken(start, pos));
         }
 
-        private static boolean isTokenBoundary(char c) {
-            return c == ',' || Character.isWhitespace(c);
-        }
+        return tokens;
+    }
+
+    private int startOfToken(int tokenIdx) {
+        Sentence sentence = sentenceContaining(tokenIdx);
+        return decodeTokenStart(tokenize(sentence).get(tokenIdx - sentence.firstTokenIdx()));
     }
 }
