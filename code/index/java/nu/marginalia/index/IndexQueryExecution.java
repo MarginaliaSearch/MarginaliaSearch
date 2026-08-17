@@ -326,13 +326,18 @@ public class IndexQueryExecution {
         final long[] metadata = new long[termIds.length];
 
         public PreparationStage() {
-
             if (!indexLock.tryLock()) {
                 throw new IllegalStateException("Index lock could not be acquired");
             }
 
-            segmentAllocator = allocatorFactory.createAllocator();
-            batchContext = useBatchValueReads ? claimBatchContext() : null;
+            try {
+                segmentAllocator = allocatorFactory.createAllocator();
+                batchContext = useBatchValueReads ? claimBatchContext() : null;
+            }
+            catch (RuntimeException e) {
+                indexLock.unlock();
+                throw new IllegalStateException("Failed to create value batch context", e);
+            }
         }
 
         /** Contexts are tied to the value file's descriptor, so a pooled one built
@@ -520,8 +525,14 @@ public class IndexQueryExecution {
                 throw new IllegalStateException("Index lock could not be acquired");
             }
 
-            segmentAllocator = allocatorFactory.createAllocator();
-            fetcher = useUringFetch ? claimFetcher() : null;
+            try {
+                segmentAllocator = allocatorFactory.createAllocator();
+                fetcher = useUringFetch ? claimFetcher() : null;
+            }
+            catch (RuntimeException e) {
+                indexLock.unlock();
+                throw new IllegalStateException("Failed to create batch fetcher", e);
+            }
         }
 
         /** Fetchers hold rings on the index files, so pooled instances built
