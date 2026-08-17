@@ -2,13 +2,12 @@ package nu.marginalia.index.results.snippet;
 
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static nu.marginalia.index.results.snippet.SnippetTokenizer.splitSentences;
+import java.util.Objects;
 
 /** <p>Selects an excerpt from the stored document text.</p>
  *
@@ -48,51 +47,24 @@ public class SentenceSnippetExtractor {
 
     @Nullable
     public String extract(IntList[] termPositions,
-                          @Nullable float[] termIdfWeights,
-                          @Nullable int[] termClasses)
+                          float[] termIdfWeights,
+                          int[] termClasses)
     {
+        Objects.requireNonNull(termIdfWeights, "termIdfWeights must not be null");
+        Objects.requireNonNull(termClasses, "termClasses must not be null");
+
         if (tokenCount == 0) {
             return null;
         }
 
         assert termPositions.length < (1 << 16);
 
-        LongArrayList matches = new LongArrayList();
+        LongArrayList matches = findMatches(termPositions, termIdfWeights, termClasses);
 
-        for (int termIdx = 0; termIdx < termPositions.length; termIdx++) {
-            IntList positions = termPositions[termIdx];
-            if (positions == null)
-                continue;
-
-            // Variants fold onto a shared representative termIdx and are scored
-            // as the same term
-            int matchTermIdx = termClasses != null ? termClasses[termIdx] : termIdx;
-
-            // Zero-weighted terms (e.g. masked-out ngrams) neither score nor
-            // count towards coverage
-            if (termIdfWeights != null && termIdfWeights[matchTermIdx] <= 0)
-                continue;
-
-            for (int i = 0; i < positions.size(); i++) {
-                int position = positions.getInt(i);
-
-                if (position < 1)
-                    continue;
-                if (position > tokenCount)
-                    continue;
-                if (isPositionExcluded(position))
-                    continue;
-
-                matches.add(encodeMatch(matchTermIdx, position));
-            }
-        }
-
-        // Terms do not obviously appear in the document, so no snippet is possible
+        // Search do not appear in the document, so no snippet is possible
         if (matches.isEmpty()) {
-            return extractLead();
+            return extractDocumentBeginning();
         }
-
-        Arrays.sort(matches.elements(), 0, matches.size());
 
         SentenceSelection selection = scoreSentences(matches, termPositions.length, termIdfWeights);
         SentenceScore best = selection.best();
@@ -136,11 +108,48 @@ public class SentenceSnippetExtractor {
         return render(first, second);
     }
 
-    /** Returns a query-independent lead excerpt of the text, the first sentences
-     * of the document outside any excluded region, for use in place of the static
-     * document summary when no query-biased snippet applies. */
+    private LongArrayList findMatches(IntList[] termPositions,
+                                               float[] termIdfWeights,
+                                               int[] termClasses) {
+
+        LongArrayList matches = new LongArrayList();
+
+        for (int termIdx = 0; termIdx < termPositions.length; termIdx++) {
+            IntList positions = termPositions[termIdx];
+            if (positions == null)
+                continue;
+
+            // Variants fold onto a shared representative termIdx and are scored
+            // as the same term to normalize the IDF
+            int matchTermIdx = termClasses[termIdx];
+
+            // Zero-weighted terms (e.g. masked ngrams) neither score nor
+            // count towards coverage
+            if (termIdfWeights[matchTermIdx] <= 0)
+                continue;
+
+            for (int i = 0; i < positions.size(); i++) {
+                int position = positions.getInt(i);
+
+                if (position < 1)
+                    continue;
+                if (position > tokenCount)
+                    continue;
+                if (isPositionExcluded(position))
+                    continue;
+
+                matches.add(encodeMatch(matchTermIdx, position));
+            }
+        }
+
+        // encoding is such that this sorts matches by position
+        Arrays.sort(matches.elements(), 0, matches.size());
+
+        return matches;
+    }
+
     @Nullable
-    public String extractLead() {
+    public String extractDocumentBeginning() {
         int firstTokenIdx = firstDisplayableTokenIdx();
         if (firstTokenIdx < 0) {
             return null;
@@ -176,7 +185,10 @@ public class SentenceSnippetExtractor {
 
     private SentenceSelection scoreSentences(LongArrayList matches,
                                              int numTerms,
-                                             @Nullable float[] termIdfWeights) {
+                                             float[] termIdfWeights) {
+
+        Objects.requireNonNull(termIdfWeights, "termIdfWeights must not be null");
+
         SentenceScore best = null;
         SentenceScore[] bestPerTerm = new SentenceScore[numTerms];
 
@@ -222,7 +234,7 @@ public class SentenceSnippetExtractor {
                 if (tf[termIdx] == 0)
                     continue;
 
-                float weight = termIdfWeights != null ? termIdfWeights[termIdx] : 1.0f;
+                float weight = termIdfWeights[termIdx];
                 float tfNorm = tf[termIdx] * (K1 + 1) / (tf[termIdx] + K1 * (1 - B + B * sentence.length() / AVG_LENGTH));
 
                 score += weight * tfNorm;
@@ -397,8 +409,6 @@ public class SentenceSnippetExtractor {
         }
     }
 
-
-
     private SnippetTokenizer.Sentence sentenceContaining(int tokenIdx) {
         int low = 0;
         int high = sentences.size() - 1;
@@ -415,7 +425,6 @@ public class SentenceSnippetExtractor {
 
         return sentences.get(low);
     }
-
 
     // The amount of we work we do here is very cursed, but it's only got one call site per snippet
     // so maybe it's not worth the hassle to clean up

@@ -9,6 +9,7 @@ import nu.marginalia.index.forward.doctext.DocTextDecoder;
 import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
 import nu.marginalia.index.model.RankableDocument;
 import nu.marginalia.index.model.SearchContext;
+import nu.marginalia.index.model.UnrankedSearchContext;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.sequence.CodedSequence;
 
@@ -33,7 +34,7 @@ public class SnippetGenerator implements AutoCloseable {
     private final float[] termWeights;
     private final int[] termClasses;
 
-    public SnippetGenerator(CombinedIndexReader index, @Nullable SearchContext searchContext) {
+    public SnippetGenerator(CombinedIndexReader index, SearchContext searchContext) {
         this.index = index;
         this.searchContext = searchContext;
 
@@ -46,6 +47,21 @@ public class SnippetGenerator implements AutoCloseable {
         else {
             termWeights = null;
             termClasses = null;
+        }
+    }
+
+    public SnippetGenerator(CombinedIndexReader index, UnrankedSearchContext searchContext) {
+        this.index = index;
+        this.searchContext = null;
+
+        int nTerms = searchContext.termIdsRequireUnique.size();
+
+        termWeights = new float[nTerms];
+        termClasses = new int[nTerms];
+
+        for (int i = 0; i < nTerms; i++) {
+            termWeights[i] = 1.0f;
+            termClasses[i] = i;
         }
     }
 
@@ -71,7 +87,7 @@ public class SnippetGenerator implements AutoCloseable {
 
         if (searchContext == null) {
             // Grab the start of the document text as a fallback
-            return extractor.extractLead();
+            return extractor.extractDocumentBeginning();
         }
 
         // The term position data the document held during ranking lives in recycled
