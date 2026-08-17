@@ -29,6 +29,7 @@ public class IndexUnrankedQueryExecution {
     private static final Logger logger = LoggerFactory.getLogger(IndexUnrankedQueryExecution.class);
 
     private final DocumentDbReader documentDbReader;
+    private final UnrankedSearchContext searchContext;
     private final String nodeName;
 
     private final CombinedIndexReader currentIndex;
@@ -58,6 +59,7 @@ public class IndexUnrankedQueryExecution {
     {
         this.currentIndex = currentIndex;
         this.documentDbReader = documentDbReader;
+        this.searchContext = searchContext;
         this.nodeName = Integer.toString(serviceNode);
         this.rankingService = rankingService;
 
@@ -120,7 +122,7 @@ public class IndexUnrankedQueryExecution {
         Map<Long, DocdbUrlDetail> detailsById = documentDbReader.getUrlDetails(new LongArrayList(seenDocIds));
         ResultConverter converter = new ResultConverter();
 
-        try (SnippetGenerator snippetGenerator = new SnippetGenerator(currentIndex, null)) {
+        try (SnippetGenerator snippetGenerator = new SnippetGenerator(currentIndex, searchContext)) {
             for (RankableDocument doc : results) {
 
                 final long id = doc.item.getDocumentId();
