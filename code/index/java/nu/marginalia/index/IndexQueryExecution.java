@@ -17,7 +17,7 @@ import nu.marginalia.index.model.CombinedDocIdList;
 import nu.marginalia.index.model.RankableDocument;
 import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.results.IndexResultRankingService;
-import nu.marginalia.index.results.SnippetGenerator;
+import nu.marginalia.index.results.snippet.SnippetGenerator;
 import nu.marginalia.index.reverse.query.IndexQuery;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
 import nu.marginalia.linkdb.docs.DocumentDbReader;

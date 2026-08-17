@@ -1,4 +1,4 @@
-package nu.marginalia.index.results;
+package nu.marginalia.index.results.snippet;
 
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
@@ -7,6 +7,8 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static nu.marginalia.index.results.snippet.SnippetTokenizer.splitSentences;
 
 /** <p>Selects an excerpt from the stored document text.</p>
  *
@@ -31,7 +33,7 @@ public class SentenceSnippetExtractor {
     private static final float RUN_BONUS = 0.2f;
 
     private final String text;
-    private final List<Sentence> sentences;
+    private final List<SnippetTokenizer.Sentence> sentences;
     private final int tokenCount;
 
     @Nullable
@@ -39,8 +41,8 @@ public class SentenceSnippetExtractor {
 
     public SentenceSnippetExtractor(String text, @Nullable IntList excludedRangeStartEndPairs) {
         this.text = text;
-        this.sentences = splitSentences(text);
-        this.tokenCount = sentences.isEmpty() ? 0 : sentences.getLast().lastTokenIdx() + 1;
+        this.sentences = SnippetTokenizer.splitSentences(text);
+        this.tokenCount = sentences.isEmpty() ? 0 : sentences.getLast().lastTokenIdx();
         this.excludedRangeStartEndPairs = excludedRangeStartEndPairs;
     }
 
@@ -164,7 +166,8 @@ public class SentenceSnippetExtractor {
             return false;
 
         for (int i = 0; i + 1 < excludedRangeStartEndPairs.size(); i += 2) {
-            if (position >= excludedRangeStartEndPairs.getInt(i) && position < excludedRangeStartEndPairs.getInt(i + 1))
+            if (position >= excludedRangeStartEndPairs.getInt(i)
+                && position < excludedRangeStartEndPairs.getInt(i + 1))
                 return true;
         }
 
@@ -181,10 +184,10 @@ public class SentenceSnippetExtractor {
 
         for (int begin = 0; begin < matches.size(); ) {
             int firstMatchToken = decodeMatchPosition(matches.getLong(begin)) - 1;
-            Sentence sentence = sentenceContaining(firstMatchToken);
+            SnippetTokenizer.Sentence sentence = sentenceContaining(firstMatchToken);
 
             int end = begin;
-            while (end < matches.size() && decodeMatchPosition(matches.getLong(end)) - 1 <= sentence.lastTokenIdx()) {
+            while (end < matches.size() && decodeMatchPosition(matches.getLong(end)) - 1 < sentence.lastTokenIdx()) {
                 end++;
             }
 
@@ -258,17 +261,17 @@ public class SentenceSnippetExtractor {
         return (int) (match >>> 16);
     }
 
-    private record SentenceScore(Sentence sentence, float score, int firstMatchToken, long termsMask) {}
+    private record SentenceScore(SnippetTokenizer.Sentence sentence, float score, int firstMatchToken, long termsMask) {}
 
     private record SentenceSelection(SentenceScore best, SentenceScore[] bestPerTerm) {}
 
     private static class TextFragment {
-        Sentence first;
-        Sentence last;
+        SnippetTokenizer.Sentence first;
+        SnippetTokenizer.Sentence last;
         int charStart;
         int charEnd;
 
-        TextFragment(Sentence sentence, int charStart, int charEnd) {
+        TextFragment(SnippetTokenizer.Sentence sentence, int charStart, int charEnd) {
             this.first = sentence;
             this.last = sentence;
             this.charStart = charStart;
@@ -281,25 +284,24 @@ public class SentenceSnippetExtractor {
     }
 
     private TextFragment fragmentAround(int anchorToken, int budget) {
-        Sentence sentence = sentenceContaining(anchorToken);
+        SnippetTokenizer.Sentence sentence = sentenceContaining(anchorToken);
 
         if (sentence.length() <= budget) {
             return new TextFragment(sentence, sentence.charStart(), sentence.charEnd());
         }
 
-        LongArrayList encodedTokenBounds = tokenize(sentence);
+        SnippetTokenizer.TokenBounds tokenBounds = sentence.tokenize(text);
         int anchorIdx = anchorToken - sentence.firstTokenIdx();
-        long encodedAnchor = encodedTokenBounds.get(anchorIdx);
 
-        int charStart = decodeTokenEnd(encodedAnchor)
+        int charStart = tokenBounds.end(anchorIdx)
                 - sentence.charStart() <= budget
                     ? sentence.charStart()
-                    : decodeTokenStart(encodedAnchor);
+                    : tokenBounds.start(anchorIdx);
 
-        int charEnd = decodeTokenEnd(encodedAnchor);
+        int charEnd = tokenBounds.end(anchorIdx);
 
-        for (int i = anchorIdx + 1; i < encodedTokenBounds.size() && decodeTokenEnd(encodedTokenBounds.get(i)) - charStart <= budget; i++) {
-            charEnd = decodeTokenEnd(encodedTokenBounds.get(i));
+        for (int i = anchorIdx + 1; i < tokenBounds.length() && tokenBounds.end(i) - charStart <= budget; i++) {
+            charEnd = tokenBounds.end(i);
         }
 
         return new TextFragment(sentence, charStart, charEnd);
@@ -331,7 +333,7 @@ public class SentenceSnippetExtractor {
         if (fragment.last.sentenceIdx() + 1 >= sentences.size())
             return false;
 
-        Sentence nextSentence = sentences.get(fragment.last.sentenceIdx() + 1);
+        SnippetTokenizer.Sentence nextSentence = sentences.get(fragment.last.sentenceIdx() + 1);
 
         // Don't grow into the next fragment or into excluded regions
         if (next != null && nextSentence.sentenceIdx() >= next.first.sentenceIdx())
@@ -395,70 +397,9 @@ public class SentenceSnippetExtractor {
         }
     }
 
-    private record Sentence(int sentenceIdx,
-                            int firstTokenIdx,
-                            int lastTokenIdx,
-                            int charStart,
-                            int charEnd)
-    {
-        int length() {
-            return charEnd - charStart;
-        }
-    }
 
 
-    private static List<Sentence> splitSentences(String text) {
-        List<Sentence> sentences = new ArrayList<>();
-
-        int tokenCount = 0;
-        final int length = text.length();
-
-        for (int lineStart = 0; lineStart < length; ) {
-            int lineEnd = text.indexOf('\n', lineStart);
-            if (lineEnd < 0) {
-                lineEnd = length;
-            }
-
-            int charStart = lineStart;
-            int charEnd = lineEnd;
-
-            while (charStart < charEnd && isTokenBoundary(text.charAt(charStart))) charStart++;
-            while (charEnd > charStart && isTokenBoundary(text.charAt(charEnd - 1))) charEnd--;
-
-            int lineTokens = countTokens(text, charStart, charEnd);
-            if (lineTokens > 0) {
-                sentences.add(new Sentence(sentences.size(),
-                        tokenCount, tokenCount + lineTokens - 1,
-                        charStart, charEnd));
-                tokenCount += lineTokens;
-            }
-
-            lineStart = lineEnd + 1;
-        }
-
-        return sentences;
-    }
-
-    private static int countTokens(String text, int charStart, int charEnd) {
-        int count = 0;
-        boolean previousBoundary = true;
-
-        for (int i = charStart; i < charEnd; i++) {
-            var isBoundary = isTokenBoundary(text.charAt(i));
-            if (previousBoundary && isBoundary) {
-                count++;
-            }
-            previousBoundary = isBoundary;
-        }
-
-        return count;
-    }
-
-    private static boolean isTokenBoundary(char c) {
-        return c == ' ' || c == ',';
-    }
-
-    private Sentence sentenceContaining(int tokenIdx) {
+    private SnippetTokenizer.Sentence sentenceContaining(int tokenIdx) {
         int low = 0;
         int high = sentences.size() - 1;
 
@@ -476,35 +417,12 @@ public class SentenceSnippetExtractor {
     }
 
 
-    private long encodeToken(int start, int end) {
-        return (long) start << 32 | end;
-    }
-    private int decodeTokenStart(long token) {
-        return (int) (token >>> 32);
-    }
-    private int decodeTokenEnd(long token) {
-        return (int) token;
-    }
-
-    /** Return encoded token start,end pairs */
-    private LongArrayList tokenize(Sentence sentence) {
-        LongArrayList tokens = new LongArrayList();
-
-        for (int pos = sentence.charStart(); pos < sentence.charEnd(); ) {
-            while (pos < sentence.charEnd() && !isTokenBoundary(text.charAt(pos))) pos++;
-            if (pos == sentence.charEnd())
-                break;
-
-            int start = pos;
-            while (pos < sentence.charEnd() && !isTokenBoundary(text.charAt(pos))) pos++;
-            tokens.add(encodeToken(start, pos));
-        }
-
-        return tokens;
-    }
-
+    // The amount of we work we do here is very cursed, but it's only got one call site per snippet
+    // so maybe it's not worth the hassle to clean up
     private int startOfToken(int tokenIdx) {
-        Sentence sentence = sentenceContaining(tokenIdx);
-        return decodeTokenStart(tokenize(sentence).get(tokenIdx - sentence.firstTokenIdx()));
+        SnippetTokenizer.Sentence sentence = sentenceContaining(tokenIdx);
+        var tokenBounds = sentence.tokenize(text);
+
+        return tokenBounds.start(tokenIdx - sentence.firstTokenIdx());
     }
 }
