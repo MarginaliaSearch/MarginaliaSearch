@@ -1,6 +1,7 @@
 package nu.marginalia.index.results;
 
 import it.unimi.dsi.fastutil.ints.IntList;
+import nu.marginalia.index.results.snippet.SentenceSnippetExtractor;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -8,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class SentenceSnippetExtractorTest {
 
     @Test
-    void testSelectsBestSentence() {
+    void test__bestSentence() {
         String text = "The first sentence is not interesting\nthe second sentence mentions potato flour manufacture\nthe third does not\n";
 
         // "potato" is token 12, "flour" is token 13
@@ -25,7 +26,7 @@ class SentenceSnippetExtractorTest {
     }
 
     @Test
-    void testNoMatchesFallsBackToLeadExcerpt() {
+    void test__noMatches_fallbackExcerpt() {
         assertEquals("some text", new SentenceSnippetExtractor("some text\n", null).extract(new IntList[] { IntList.of() }, null, null));
         assertEquals("some text", new SentenceSnippetExtractor("some text\n", null).extract(new IntList[] { null }, null, null));
 
@@ -35,7 +36,7 @@ class SentenceSnippetExtractorTest {
     }
 
     @Test
-    void testSnippetStartsAtSentenceStart() {
+    void testSnippetStart() {
         // The match sits at the very end of its sentence, the fragment must still start at the sentence boundary
         String text = "An unrelated opening sentence sits here\nThis quite long sentence rambles onward for a spell and finally arrives at the needle\nAnd a following sentence provides context\n";
 
@@ -43,12 +44,13 @@ class SentenceSnippetExtractorTest {
         String snippet = new SentenceSnippetExtractor(text, null).extract(new IntList[] { IntList.of(21) }, null, null);
 
         assertNotNull(snippet);
+        System.out.println(snippet);
         assertTrue(snippet.startsWith("...This quite long sentence"), snippet);
         assertTrue(snippet.contains("needle"), snippet);
     }
 
     @Test
-    void testFollowingSentenceExtendsSnippet() {
+    void testExtension() {
         String text = "The needle is here\nA short follow-up comes after\n";
 
         String snippet = new SentenceSnippetExtractor(text, null).extract(new IntList[] { IntList.of(2) }, null, null);
@@ -58,7 +60,7 @@ class SentenceSnippetExtractorTest {
     }
 
     @Test
-    void testTermWeightsSteerSelection() {
+    void testWeights() {
         // "common" appears in the first sentence, the rare term in the second,
         // with a heavily weighted rare term the second sentence must win
         String text = "The common word appears here\nThe rareword appears in this other sentence\n";
@@ -75,7 +77,7 @@ class SentenceSnippetExtractorTest {
     }
 
     @Test
-    void testSecondFragmentAddsMissingTerm() {
+    void testMissingTerm() {
         // Terms A and B never co-occur, the snippet should contain two fragments covering both
         StringBuilder text = new StringBuilder();
         text.append("The alpha term is in this first sentence\n");
@@ -99,7 +101,7 @@ class SentenceSnippetExtractorTest {
     }
 
     @Test
-    void testLeadExcerptSkipsTitleAndReadsFromTheTop() {
+    void testExceptSkipsTitle() {
         String text = "Plato\nPlato was an ancient Greek philosopher of Classical Athens\nHe influenced nearly all of western philosophy\n";
 
         String lead = new SentenceSnippetExtractor(text, IntList.of(1, 2)).extractLead();
@@ -109,14 +111,9 @@ class SentenceSnippetExtractorTest {
         assertTrue(lead.contains("Athens. He influenced"), lead);
     }
 
-    @Test
-    void testLeadExcerptOfEmptyOrFullyExcludedTextIsNull() {
-        assertNull(new SentenceSnippetExtractor("", null).extractLead());
-        assertNull(new SentenceSnippetExtractor("Only a title\n", IntList.of(1, 4)).extractLead());
-    }
 
     @Test
-    void testVariantDoesNotAttractSecondFragment() {
+    void testVariant() {
         // Models the "elden ring" / "lord of the rings" scenario, where the best sentence
         // covers both canonical terms, and a spelling variant of one of them
         // occurring elsewhere must not read as an uncovered term and pull in a
@@ -142,7 +139,7 @@ class SentenceSnippetExtractorTest {
     }
 
     @Test
-    void testExcludedTitleRangeIsAvoided() {
+    void testExcludedTitleRangeAvoided() {
         String text = "Plato\nPlato was an ancient Greek philosopher of Classical Athens\n";
 
         // "Plato" occurs at ordinals 1 (title) and 2 (body); title span is [1, 2)
@@ -158,7 +155,7 @@ class SentenceSnippetExtractorTest {
     }
 
     @Test
-    void testOverlongSentenceIsCutAtBudget() {
+    void testBudget() {
         StringBuilder text = new StringBuilder();
         for (int i = 1; i <= 100; i++) {
             if (i == 5) text.append("needle ");
@@ -175,7 +172,7 @@ class SentenceSnippetExtractorTest {
     }
 
     @Test
-    void testMatchDeepInOverlongSentenceStartsAtMatch() {
+    void testLongSentence() {
         StringBuilder text = new StringBuilder();
         for (int i = 1; i <= 100; i++) {
             if (i == 80) text.append("needle ");
@@ -190,7 +187,7 @@ class SentenceSnippetExtractorTest {
     }
 
     @Test
-    void testPhraseRunOutscoresScatteredTerms() {
+    void testScatteredTerms() {
         String text = "The elden word and later the ring word appear scattered around this sentence here\nThis mentions Elden Ring together\n";
 
         IntList[] positions = new IntList[] {

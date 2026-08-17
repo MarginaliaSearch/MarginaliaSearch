@@ -1,4 +1,4 @@
-package nu.marginalia.index.results;
+package nu.marginalia.index.results.snippet;
 
 import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.index.CombinedIndexReader;
