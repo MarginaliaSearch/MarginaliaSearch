@@ -22,13 +22,13 @@ public record PrioPreindexReference(
     public PrioPreindex open() throws IOException {
         return new PrioPreindex(
             new PrioPreindexWordSegments(
-                    LongArrayFactory.mmapForModifyingShared(wordsFile),
-                    LongArrayFactory.mmapForModifyingShared(countsFile),
+                    LongArrayFactory.mmapForReadingShared(wordsFile),
+                    LongArrayFactory.mmapForReadingShared(countsFile),
                     wordsFile,
                     countsFile
             ),
             new PrioPreindexDocuments(
-                    LongArrayFactory.mmapForModifyingShared(documentsFile),
+                    LongArrayFactory.mmapForReadingShared(documentsFile),
                     documentsFile
             )
         );

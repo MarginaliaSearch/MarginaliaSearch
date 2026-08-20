@@ -101,7 +101,7 @@ public class FullIndexConstructor {
             var right = rightR.open();
 
             try {
-                return FullPreindex.merge(tmpDir, left, right).closeToReference();
+                return FullPreindex.merge(tmpDir, left, right);
             } finally {
                 left.delete();
                 right.delete();

@@ -78,8 +78,8 @@ public class PrioPreindexWordSegments {
             }
         }
 
-        LongArray words = LongArrayFactory.mmapForWritingConfined(wordIdsFile, countsMap.size());
-        LongArray counts = LongArrayFactory.mmapForWritingConfined(countsFile, countsMap.size());
+        LongArray words = LongArrayFactory.onHeapConfined(countsMap.size());
+        LongArray counts = LongArrayFactory.onHeapConfined(countsMap.size());
 
         // Create the words file by iterating over the map and inserting them into
         // the words file in whatever bizarro hash table order they appear in
@@ -97,14 +97,14 @@ public class PrioPreindexWordSegments {
             counts.set(i, countsMap.get(words.get(i)));
         }
 
+        words.write(wordIdsFile);
+        counts.write(countsFile);
+
         return new PrioPreindexWordSegments(words, counts, wordIdsFile, countsFile);
     }
 
     public SegmentIterator iterator(int recordSize) {
         return new SegmentIterator(recordSize);
-    }
-    public SegmentConstructionIterator constructionIterator(int recordSize) {
-        return new SegmentConstructionIterator(recordSize);
     }
 
     public long totalSize() {
@@ -117,11 +117,6 @@ public class PrioPreindexWordSegments {
 
         counts.close();
         wordIds.close();
-    }
-
-    public void force() {
-        counts.force();
-        wordIds.force();
     }
 
     public void close() {
@@ -142,9 +137,7 @@ public class PrioPreindexWordSegments {
         }
 
         private long i = -1;
-        public long idx() {
-            return i;
-        }
+
         public boolean next() {
             if (++i >= fileSize) {
                 wordId = Long.MIN_VALUE;
@@ -158,66 +151,8 @@ public class PrioPreindexWordSegments {
             return true;
         }
 
-        public boolean hasMorePositions() {
-            return i + 1 < wordIds.size();
-        }
-
-        public boolean isPositionBeforeEnd() {
-            return i < wordIds.size();
-        }
-
         public long size() {
             return endOffset - startOffset;
-        }
-    }
-
-    class SegmentConstructionIterator {
-        private final int recordSize;
-        private final long fileSize;
-        long wordId;
-        long startOffset = 0;
-        long endOffset = 0;
-
-        private SegmentConstructionIterator(int recordSize) {
-            this.recordSize = recordSize;
-            this.fileSize = wordIds.size();
-            if (fileSize == 0) {
-                throw new IllegalArgumentException("Cannot construct zero-length word segment file");
-            }
-            this.wordId = wordIds.get(0);
-        }
-
-        private long i = 0;
-        public long idx() {
-            return i;
-        }
-
-        public boolean putNext(long size) {
-
-            if (i >= fileSize)
-                return false;
-
-            endOffset = startOffset + recordSize * size;
-            counts.set(i, size);
-            startOffset = endOffset;
-            endOffset = -1;
-
-            i++;
-
-            if (i == fileSize) {
-                // We've reached the end of the iteration and there is no
-                // "next" termId to fetch
-                wordId = Long.MIN_VALUE;
-                return false;
-            }
-            else {
-                wordId = wordIds.get(i);
-                return true;
-            }
-        }
-
-        public boolean canPutMore() {
-            return i < wordIds.size();
         }
     }
 }
