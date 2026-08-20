@@ -42,6 +42,9 @@ public class SnippetTokenizer {
     }
 
     private static int countTokens(String text, int charStart, int charEnd) {
+        if (charStart == charEnd)
+            return 0;
+
         int count = 0;
         boolean previousBoundary = true;
 
