@@ -36,6 +36,22 @@ class SentenceSnippetExtractorTest {
     }
 
     @Test
+    void testEmptySentence() {
+        String leading = new SentenceSnippetExtractor("\nhello world\n", null)
+                .extract(new IntList[] { IntList.of(1) }, weights(1), classes(1));
+        assertEquals("hello world", leading);
+
+        // "beta" is token 2 right after "alpha", despite the empty sentence between them
+        String middle = new SentenceSnippetExtractor("alpha\n\nbeta\n", null)
+                .extract(new IntList[] { IntList.of(2) }, weights(1), classes(1));
+        assertNotNull(middle);
+        assertTrue(middle.contains("beta"), middle);
+
+        assertNull(new SentenceSnippetExtractor("\n\n", null)
+                .extract(new IntList[] { IntList.of() }, weights(1), classes(1)));
+    }
+
+    @Test
     void testSnippetStart() {
         // The match sits at the very end of its sentence, the fragment must still start at the sentence boundary
         String text = "An unrelated opening sentence sits here\nThis quite long sentence rambles onward for a spell and finally arrives at the needle\nAnd a following sentence provides context\n";
