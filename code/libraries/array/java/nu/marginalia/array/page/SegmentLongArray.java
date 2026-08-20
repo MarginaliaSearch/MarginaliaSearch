@@ -1,6 +1,7 @@
 package nu.marginalia.array.page;
 
 import nu.marginalia.array.LongArray;
+import nu.marginalia.array.LongArrayFileWriter;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -130,11 +131,9 @@ public class SegmentLongArray implements LongArray {
 
     @Override
     public void write(Path filename) throws IOException {
-        try (var arena = Arena.ofConfined()) {
-            var destSegment = SegmentLongArray.fromMmapReadWrite(arena, filename, 0, segment.byteSize() / JAVA_LONG.byteSize());
-
-            destSegment.segment.copyFrom(segment);
-            destSegment.force();
+        try (var writer = LongArrayFileWriter.create(filename)) {
+            writer.put(this, 0, size());
+            writer.force();
         }
     }
 

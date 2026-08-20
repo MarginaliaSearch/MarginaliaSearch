@@ -1,6 +1,7 @@
 package nu.marginalia.array.page;
 
 import nu.marginalia.array.LongArray;
+import nu.marginalia.array.LongArrayFileWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.misc.Unsafe;
@@ -129,7 +130,6 @@ public class UnsafeLongArray implements LongArray {
 
     @Override
     public void set(long start, long end, LongBuffer buffer, int bufferStart) {
-        System.out.println("setA@"+ start + "#" + hashCode() + "-" + Thread.currentThread().threadId());
         for (int i = 0; i < end - start; i++) {
             unsafe.putLong(segment.address() + (start + i) * JAVA_LONG.byteSize(), buffer.get(bufferStart + i));
         }
@@ -159,11 +159,9 @@ public class UnsafeLongArray implements LongArray {
 
     @Override
     public void write(Path filename) throws IOException {
-        try (var arena = Arena.ofConfined()) {
-            var destSegment = UnsafeLongArray.fromMmapReadWrite(arena, filename, 0, segment.byteSize() / JAVA_LONG.byteSize());
-
-            destSegment.segment.copyFrom(segment);
-            destSegment.force();
+        try (var writer = LongArrayFileWriter.create(filename)) {
+            writer.put(this, 0, size());
+            writer.force();
         }
     }
 
@@ -267,9 +265,6 @@ public class UnsafeLongArray implements LongArray {
             var bufferSlice = segment.asSlice(segmentIndexB, lengthB).asByteBuffer();
 
             while (bufferSlice.position() < bufferSlice.capacity()) {
-                if (source.position() + bufferSlice.capacity() > sourceEndB)
-                    throw new IndexOutOfBoundsException("Source channel too small");
-
                 if (source.read(bufferSlice, channelIndexB + bufferSlice.position()) < 0)
                     throw new IOException("Failed to read from source");
             }

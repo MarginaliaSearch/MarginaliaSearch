@@ -94,7 +94,7 @@ public class PrioIndexConstructor {
             var right = rightR.open();
 
             try {
-                return PrioPreindex.merge(tmpDir, left, right).closeToReference();
+                return PrioPreindex.merge(tmpDir, left, right);
             } finally {
                 left.delete();
                 right.delete();

@@ -22,13 +22,13 @@ public record FullPreindexReference(
     public FullPreindex open() throws IOException {
         return new FullPreindex(
             new FullPreindexWordSegments(
-                    LongArrayFactory.mmapForModifyingShared(wordsFile),
-                    LongArrayFactory.mmapForModifyingShared(countsFile),
+                    LongArrayFactory.mmapForReadingShared(wordsFile),
+                    LongArrayFactory.mmapForReadingShared(countsFile),
                     wordsFile,
                     countsFile
             ),
             new FullPreindexDocuments(
-                    LongArrayFactory.mmapForModifyingShared(documentsFile),
+                    LongArrayFactory.mmapForReadingShared(documentsFile),
                     documentsFile
             )
         );

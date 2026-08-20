@@ -5,15 +5,18 @@ import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongList;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
+import nu.marginalia.array.LongArrayFileWriter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,6 +41,50 @@ class TwoArrayOperationsTest {
     }
 
     @Test
+    void mergeArraysToFile() throws IOException {
+        Path file = Files.createTempFile("merge", ".dat");
+        Random r = new Random(0);
+
+        try {
+            for (int n = 1; n <= 3; n++) {
+                for (int iter = 0; iter < 200; iter++) {
+                    long[] aKeys = LongStream.generate(() -> r.nextLong(0, 100)).limit(r.nextInt(0, 500)).sorted().toArray();
+                    long[] bKeys = LongStream.generate(() -> r.nextLong(0, 100)).limit(r.nextInt(0, 500)).sorted().toArray();
+
+                    try (var a = LongArrayFactory.onHeapConfined((long) n * aKeys.length);
+                         var b = LongArrayFactory.onHeapConfined((long) n * bKeys.length);
+                         var expected = LongArrayFactory.onHeapConfined((long) n * (aKeys.length + bKeys.length));
+                         var writer = LongArrayFileWriter.create(file))
+                    {
+                        for (int i = 0; i < aKeys.length; i++) {
+                            for (int j = 0; j < n; j++) a.set((long) n * i + j, aKeys[i] * 7 + j);
+                        }
+                        for (int i = 0; i < bKeys.length; i++) {
+                            for (int j = 0; j < n; j++) b.set((long) n * i + j, bKeys[i] * 7 + j);
+                        }
+
+                        long expectedSize = TwoArrayOperations.mergeArraysN(n, expected, a, b, 0, 0, a.size(), 0, b.size());
+                        long actualSize = TwoArrayOperations.mergeArraysN(n, writer, a, b, 0, a.size(), 0, b.size());
+                        writer.close();
+
+                        assertEquals(expectedSize, actualSize);
+
+                        try (var actual = LongArrayFactory.mmapForReadingConfined(file)) {
+                            assertEquals(expectedSize, actual.size());
+                            for (long i = 0; i < expectedSize; i++) {
+                                assertEquals(expected.get(i), actual.get(i), "n=" + n + " iteration " + iter + " at " + i);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        finally {
+            Files.deleteIfExists(file);
+        }
+    }
+
+    @Test
     @Tag("slow")
     public void mergeArraysFuzz() {
 
@@ -45,13 +92,14 @@ class TwoArrayOperationsTest {
         for (int i = 0; i < 100_000; i++, seed++) {
             Random r = new Random(seed);
             int aLen = r.nextInt(1, 25);
-            int aSkip = r.nextInt(0, aLen);
             int bLen = r.nextInt(1, 25);
-            int bSkip = r.nextInt(0, bLen);
             int outSkip = r.nextInt(0, 25);
 
             LongList aVals = new LongArrayList(LongStream.generate(() -> r.nextLong(0, 25000)).limit(aLen).sorted().distinct().toArray());
             LongList bVals = new LongArrayList(LongStream.generate(() -> r.nextLong(0, 25000)).limit(bLen).sorted().distinct().toArray());
+
+            int aSkip = r.nextInt(0, aVals.size());
+            int bSkip = r.nextInt(0, bVals.size());
             LongList expectedOutVals = new LongArrayList(LongStream.concat(aVals.longStream().skip(aSkip), bVals.longStream().skip(bSkip)).sorted().distinct().toArray());
 
             try (var a = LongArrayFactory.onHeapShared(aVals);
@@ -97,12 +145,13 @@ class TwoArrayOperationsTest {
         for (int i = 0; i < 100_000; i++, seed++) {
             Random r = new Random(seed);
             int aLen = r.nextInt(1, 25);
-            int aSkip = r.nextInt(0, aLen);
             int bLen = r.nextInt(1, 25);
-            int bSkip = r.nextInt(0, bLen);
 
             LongList aVals = new LongArrayList(LongStream.generate(() -> r.nextLong(0, 25000)).limit(aLen).sorted().distinct().toArray());
             LongList bVals = new LongArrayList(LongStream.generate(() -> r.nextLong(0, 25000)).limit(bLen).sorted().distinct().toArray());
+
+            int aSkip = r.nextInt(0, aVals.size());
+            int bSkip = r.nextInt(0, bVals.size());
             long expectedOutCnt = LongStream.concat(aVals.longStream().skip(aSkip), bVals.longStream().skip(bSkip)).distinct().count();
 
             try (var a = LongArrayFactory.onHeapShared(aVals);

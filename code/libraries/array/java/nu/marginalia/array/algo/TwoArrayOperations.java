@@ -1,13 +1,98 @@
 package nu.marginalia.array.algo;
 
 import nu.marginalia.array.LongArray;
+import nu.marginalia.array.LongArrayFileWriter;
 import nu.marginalia.ffi.NativeAlgos;
+
+import java.io.IOException;
 
 
 /** Functions for operating on pairs of arrays.
  */
 public class TwoArrayOperations {
 
+
+    // Merge directly onto disk
+    public static long mergeArraysN(int n,
+                                    LongArrayFileWriter out,
+                                    LongArray a, LongArray b,
+                                    long aStart, long aEnd,
+                                    long bStart, long bEnd) throws IOException
+    {
+        if (TwoArrayOperations.class.desiredAssertionStatus()) {
+            assert (a.isSortedN(n, aStart, aEnd));
+            assert (b.isSortedN(n, bStart, bEnd));
+        }
+
+        long aPos = aStart;
+        long bPos = bStart;
+        long written = 0;
+        long lastKey = 0;
+
+        while (aPos < aEnd && bPos < bEnd) {
+            final long aKey = a.get(aPos);
+            final long bKey = b.get(bPos);
+
+            final LongArray src;
+            final long srcPos;
+            final long key;
+
+            if (aKey < bKey) {
+                src = a;
+                srcPos = aPos;
+                key = aKey;
+
+                aPos += n;
+            }
+            else if (bKey < aKey) {
+                src = b;
+                srcPos = bPos;
+                key = bKey;
+
+                bPos += n;
+            }
+            else {
+                src = a;
+                srcPos = aPos;
+                key = aKey;
+
+                aPos += n;
+                bPos += n;
+            }
+
+            if (key != lastKey || written == 0) {
+                out.put(src, srcPos, srcPos + n);
+                written += n;
+                lastKey = key;
+            }
+        }
+
+        while (aPos < aEnd) {
+            long key = a.get(aPos);
+
+            if (key != lastKey || written == 0) {
+                out.put(a, aPos, aPos + n);
+                written += n;
+                lastKey = key;
+            }
+
+            aPos += n;
+        }
+
+        while (bPos < bEnd) {
+            long key = b.get(bPos);
+
+            if (key != lastKey || written == 0) {
+                out.put(b, bPos, bPos + n);
+                written += n;
+                lastKey = key;
+            }
+
+            bPos += n;
+        }
+
+        return written;
+    }
 
     public static long mergeArraysN(int n,
                                     LongArray out, LongArray a, LongArray b,
@@ -33,7 +118,6 @@ public class TwoArrayOperations {
         }
         throw new UnsupportedOperationException("Implement a merge(n)");
     }
-
 
     /**
      * Merge two sorted arrays into a third array, removing duplicates.
