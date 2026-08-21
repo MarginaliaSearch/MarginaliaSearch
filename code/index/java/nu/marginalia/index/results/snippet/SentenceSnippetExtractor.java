@@ -22,6 +22,7 @@ import java.util.Objects;
 public class SentenceSnippetExtractor {
 
     private static final int targetLength = 240;
+    private static final int minPartialExtension = 24;
     private static final String truncationMarker = "...";
     private static final String fragmentSeparator = " // ";
 
@@ -319,8 +320,8 @@ public class SentenceSnippetExtractor {
         return new TextFragment(sentence, charStart, charEnd);
     }
 
-    /** Spends any remaining character budget appending whole following sentences
-     * to the fragments, preferring the primary (first) fragment */
+    /** Spends any remaining character budget appending subsequent sentence(s)
+     * to the fragments, preferring the primary (first) fragment. */
     private void extendFragments(TextFragment first, @Nullable TextFragment second) {
         for (int i = 0; i < 100; i++) {
             int spent = first.length() + (second == null ? 0 : second.length());
@@ -328,8 +329,9 @@ public class SentenceSnippetExtractor {
             if (remaining <= 0)
                 return;
 
-            if (!extendFragment(first, second, remaining)
-                    && (second == null || !extendFragment(second, null, remaining))) {
+            if (!extendEitherFragment(first, second, remaining, false)) {
+                // No whole sentence fits the remaining budget
+                extendEitherFragment(first, second, remaining, true);
                 return;
             }
         }
@@ -339,7 +341,26 @@ public class SentenceSnippetExtractor {
         throw new IllegalStateException("Could not extend fragments");
     }
 
-    private boolean extendFragment(TextFragment fragment, @Nullable TextFragment next, int budget) {
+    private boolean extendEitherFragment(TextFragment first,
+                                         @Nullable TextFragment second,
+                                         int budget,
+                                         boolean allowPartial)
+    {
+        if (extendFragment(first, second, budget, allowPartial))
+            return true;
+
+        if (second == null)
+            return false;
+
+        // Try extending only the secondary fragment
+        return extendFragment(second, null, budget, allowPartial);
+    }
+
+    private boolean extendFragment(TextFragment fragment,
+                                   @Nullable TextFragment next,
+                                   int budget,
+                                   boolean allowPartial)
+    {
         if (fragment.charEnd != fragment.last.charEnd())
             return false;  // fragment was cut mid-sentence, don't extend
         if (fragment.last.sentenceIdx() + 1 >= sentences.size())
@@ -352,20 +373,35 @@ public class SentenceSnippetExtractor {
             return false;
         if (isPositionExcluded(nextSentence.firstTokenIdx() + 1))
             return false;
-        if (nextSentence.length() > budget)
+
+        if (nextSentence.length() <= budget) {
+            fragment.last = nextSentence;
+            fragment.charEnd = nextSentence.charEnd();
+            return true;
+        }
+
+        if (!allowPartial)
+            return false;
+
+        SnippetTokenizer.TokenBounds tokenBounds = nextSentence.tokenize(text);
+
+        int charEnd = nextSentence.charStart();
+        for (int i = 0; i < tokenBounds.length() && tokenBounds.end(i) - nextSentence.charStart() <= budget; i++) {
+            charEnd = tokenBounds.end(i);
+        }
+
+        if (charEnd - nextSentence.charStart() < minPartialExtension)
             return false;
 
         fragment.last = nextSentence;
-        fragment.charEnd = nextSentence.charEnd();
+        fragment.charEnd = charEnd;
         return true;
     }
 
     private String render(TextFragment first, @Nullable TextFragment second) {
         StringBuilder snippet = new StringBuilder(targetLength + 16);
 
-        // No leading truncation marker when everything skipped ahead of the
-        // fragment is excluded content, e.g. a title leading the document text
-        if (first.charStart > startOfToken(firstDisplayableTokenIdx())) {
+        if (first.charStart > first.first.charStart()) {
             snippet.append(truncationMarker);
         }
         renderRange(first, snippet);
@@ -381,7 +417,7 @@ public class SentenceSnippetExtractor {
         }
 
         TextFragment last = second != null ? second : first;
-        if (last.charEnd < sentences.getLast().charEnd()) {
+        if (last.charEnd < last.last.charEnd()) {
             snippet.append(truncationMarker);
         }
 
@@ -390,6 +426,7 @@ public class SentenceSnippetExtractor {
 
     private static boolean isContinuous(TextFragment first, TextFragment second) {
         return second.first.sentenceIdx() == first.last.sentenceIdx() + 1
+                && first.charEnd == first.last.charEnd()
                 && second.charStart == second.first.charStart();
     }
 
@@ -426,12 +463,4 @@ public class SentenceSnippetExtractor {
         return sentences.get(low);
     }
 
-    // The amount of we work we do here is very cursed, but it's only got one call site per snippet
-    // so maybe it's not worth the hassle to clean up
-    private int startOfToken(int tokenIdx) {
-        SnippetTokenizer.Sentence sentence = sentenceContaining(tokenIdx);
-        var tokenBounds = sentence.tokenize(text);
-
-        return tokenBounds.start(tokenIdx - sentence.firstTokenIdx());
-    }
 }
