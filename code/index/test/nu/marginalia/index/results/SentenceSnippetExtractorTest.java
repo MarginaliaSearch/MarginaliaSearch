@@ -61,7 +61,7 @@ class SentenceSnippetExtractorTest {
 
         assertNotNull(snippet);
         System.out.println(snippet);
-        assertTrue(snippet.startsWith("...This quite long sentence"), snippet);
+        assertTrue(snippet.startsWith("This quite long sentence"), snippet);
         assertTrue(snippet.contains("needle"), snippet);
     }
 
@@ -73,6 +73,21 @@ class SentenceSnippetExtractorTest {
 
         assertNotNull(snippet);
         assertTrue(snippet.contains("The needle is here. A short follow-up comes after"), snippet);
+    }
+
+    @Test
+    void testPartialExtension() {
+        String paragraph = "lorem ipsum dolor sit amet ".repeat(20).trim();
+        String text = "Interesting heading\n" + paragraph + "\n";
+
+        String snippet = new SentenceSnippetExtractor(text, null)
+                .extract(new IntList[] { IntList.of(2) }, weights(1), classes(1));
+
+        assertNotNull(snippet);
+        System.out.println(snippet);
+        assertTrue(snippet.startsWith("Interesting heading. lorem ipsum"), snippet);
+        assertTrue(snippet.length() > 200, snippet);
+        assertTrue(snippet.endsWith("..."), snippet);
     }
 
     @Test
@@ -214,7 +229,7 @@ class SentenceSnippetExtractorTest {
         String snippet = new SentenceSnippetExtractor(text, null).extract(positions, weights(2), classes(2));
 
         assertNotNull(snippet);
-        assertTrue(snippet.startsWith("...This mentions Elden Ring"), snippet);
+        assertTrue(snippet.startsWith("This mentions Elden Ring"), snippet);
     }
 
     float[] weights(int n) {
