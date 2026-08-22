@@ -16,6 +16,9 @@ public class ForwardIndexParameters {
         V2026_08__1(4)  // add document texts pointer
         ;
 
+        // CAVEAT: If entry size grows beyond 4, we may need to update the assumptions in RankingBatchFetcher as it
+        // skips retrieval of the document text pointer.
+
         public int entrySize;
 
         ForwardIndexVersion(int entrySize) {
