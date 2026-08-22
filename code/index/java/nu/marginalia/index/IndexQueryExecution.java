@@ -674,7 +674,6 @@ public class IndexQueryExecution {
             finally {
                 try {
                     if (fetcher != null) {
-                        fetcher.flushMetrics();
                         fetcherPool.add(fetcher);
                     }
                     segmentAllocator.close();
