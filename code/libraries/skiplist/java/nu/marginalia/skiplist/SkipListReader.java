@@ -39,31 +39,33 @@ public class SkipListReader {
     private boolean atEnd;
 
     /** Per thread scratch buffer for decompressed doc id blocks, shared between
-     * all readers on the thread.  It is tagged with its current contents, so that
-     * repeat access to the same block skips the decompression. */
+     * all readers on the thread. */
     private static final class DecompressedBlock {
-        final long[] data = new long[BLOCK_SIZE];
-        SkipListReader owner;
-        long block;
+        public final long[] data = new long[BLOCK_SIZE];
+
+        private SkipListReader owner;
+        private long block;
+
+        public boolean canBeReused(SkipListReader currentReader, long currentBlock) {
+            return this.owner == currentReader && this.block == currentBlock;
+        }
+
+        public void claim(SkipListReader currentReader, long currentBlock) {
+            this.owner = currentReader;
+            this.block = currentBlock;
+        }
     }
 
     private static final ThreadLocal<DecompressedBlock> decompressedBlock = ThreadLocal.withInitial(DecompressedBlock::new);
 
-    /** Merge keys against compressed blocks with a fused native decode and match,
-     *  without materializing the decoded block. */
-    private static final boolean useFusedMatch = NativeAlgos.isAvailable
-            && Boolean.parseBoolean(System.getProperty("index.fusedMatch", "true"));
-
-    /** Decompress the current block into the thread's scratch buffer, unless the buffer
-     * already holds it, and return the buffer.  The claim is only valid until another
-     * reader runs on the same thread. */
-    private long[] claimDecompressedBlock(MemoryPage page, int dataOffset, int n) {
+    private long[] decompressBlock(MemoryPage page, int dataOffset, int n) {
         DecompressedBlock scratch = decompressedBlock.get();
-        if (scratch.owner != this || scratch.block != currentBlock) {
+
+        if (!scratch.canBeReused(this, currentBlock)) {
             DocIdCompressor.decompress(new SegmentCompressorBuffer(page.getMemorySegment(), dataOffset), n, scratch.data);
-            scratch.owner = this;
-            scratch.block = currentBlock;
+            scratch.claim(this, currentBlock);
         }
+
         return scratch.data;
     }
 
@@ -127,7 +129,7 @@ public class SkipListReader {
             long maxVal;
 
             if (FLAG_COMPRESSED_BLOCK == (flags & FLAG_COMPRESSED_BLOCK)) {
-                long[] decompressedData = claimDecompressedBlock(page, dataOffset, n);
+                long[] decompressedData = decompressBlock(page, dataOffset, n);
                 maxVal = decompressedData[n-1];
             }
             else {
@@ -270,7 +272,7 @@ public class SkipListReader {
 
             long maxVal;
             if (FLAG_COMPRESSED_BLOCK == (flags & FLAG_COMPRESSED_BLOCK)) {
-                long[] decompressedData = claimDecompressedBlock(page, dataOffset, n);
+                long[] decompressedData = decompressBlock(page, dataOffset, n);
                 maxVal = decompressedData[n-1];
             }
             else {
@@ -313,7 +315,7 @@ public class SkipListReader {
 
     boolean rejectInPage(MemoryPage page, int flags, int dataOffset, int n, LongQueryBuffer data) {
         if (FLAG_COMPRESSED_BLOCK == (flags & FLAG_COMPRESSED_BLOCK)) {
-            claimDecompressedBlock(page, dataOffset, n);
+            decompressBlock(page, dataOffset, n);
             return rejectInPage_Compressed(n, data);
         }
         else {
@@ -423,7 +425,7 @@ public class SkipListReader {
                 int dataOffset = pageDataOffset(currentBlockOffset, fc);
 
                 if (FLAG_COMPRESSED_BLOCK == (flags & FLAG_COMPRESSED_BLOCK)) {
-                    long[] decompressedData = claimDecompressedBlock(page, dataOffset, n);
+                    long[] decompressedData = decompressBlock(page, dataOffset, n);
                     int nCopied = dest.addData(decompressedData, currentBlockIdx, n - currentBlockIdx);
                     currentBlockIdx += nCopied;
                     totalCopied += nCopied;
@@ -480,7 +482,7 @@ public class SkipListReader {
                 int dataOffset = pageDataOffset(currentBlockOffset, fc);
 
                 if (FLAG_COMPRESSED_BLOCK == (flags & FLAG_COMPRESSED_BLOCK)) {
-                    long[] decompressedData = claimDecompressedBlock(page, dataOffset, n);
+                    long[] decompressedData = decompressBlock(page, dataOffset, n);
 
                     do {
                         long blockMinValue = decompressedData[currentBlockIdx];
@@ -785,7 +787,7 @@ public class SkipListReader {
                         return;
 
                     if (FLAG_COMPRESSED_BLOCK == (flags & FLAG_COMPRESSED_BLOCK)) {
-                        if (useFusedMatch && currentBlockIdx == 0) {
+                        if (currentBlockIdx == 0) {
                             long packed = NativeAlgos.decompressMatch(page.getMemorySegment(), dataOffset, n,
                                     inputKeys, offsetPos, valuesOffset, 8L * (RECORD_SIZE - 1), valueOffsets, vLen);
 
@@ -795,7 +797,7 @@ public class SkipListReader {
                             offsetPos = newOffsetPos;
                         }
                         else {
-                            claimDecompressedBlock(page, dataOffset, n);
+                            decompressBlock(page, dataOffset, n);
                             readOffsetsForBlock_Compressed(n, valuesOffset);
                         }
                     }
@@ -956,7 +958,7 @@ public class SkipListReader {
                 int searchStart = currentBlockIdx;
 
                 if (FLAG_COMPRESSED_BLOCK == (flags & FLAG_COMPRESSED_BLOCK)) {
-                    long[] decompressedData = claimDecompressedBlock(page, dataOffset, n);
+                    long[] decompressedData = decompressBlock(page, dataOffset, n);
                     outer:
                     while (pos < keys.length) {
                         long kv = keys[pos];
