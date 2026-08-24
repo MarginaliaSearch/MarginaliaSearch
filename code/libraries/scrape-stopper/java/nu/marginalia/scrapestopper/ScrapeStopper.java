@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.LongAdder;
 
 @Singleton
 public class ScrapeStopper {
@@ -133,7 +134,7 @@ public class ScrapeStopper {
     }
 
     private ValidationRate getValidationRate(String zone) {
-        return validationRatePerZone.computeIfAbsent(zone, z -> new ValidationRate(100));
+        return validationRatePerZone.computeIfAbsent(zone, z -> new ValidationRate(2.0));
     }
 
 }
@@ -230,49 +231,38 @@ class Token {
 }
 
 class ValidationRate {
-    private final int maxSize;
+    private final double targetRps;
 
-    private double target;
+    /** Seconds of additional delay per RPS of error, per update. */
+    private static final double GAIN = 0.5;
 
-    private volatile double delay;
-    private double delayMin;
-    private double delayMax;
+    private static final double DELAY_MIN = 1.0;
+    private static final double DELAY_MAX = 5.0;
 
-    private final LinkedList<Instant> validations = new LinkedList<>();
+    private final LongAdder validationCount = new LongAdder();
+    private Instant lastUpdate = Instant.now();
 
-    public ValidationRate(int maxSize) {
-        this.maxSize = maxSize;
+    private volatile double delay = DELAY_MIN;
 
-        this.target = 4.0;
-        this.delay = 1.;
-        this.delayMin = 1.0;
-        this.delayMax = 5.;
+    public ValidationRate(double targetRps) {
+        this.targetRps = targetRps;
     }
 
-    public synchronized void register() {
-        validations.addLast(Instant.now());
-
-        if (validations.size() > maxSize) {
-            validations.removeFirst();
-        }
+    public void register() {
+        validationCount.increment();
     }
 
     public synchronized void updateTarget() {
-        if (validations.size() < maxSize/2) {
+        Instant now = Instant.now();
+        double elapsedSecs = Duration.between(lastUpdate, now).toMillis() / 1000.;
+        lastUpdate = now;
+
+        if (elapsedSecs <= 0)
             return;
-        }
 
-        long millisBetween = Duration.between(validations.getFirst(), validations.getLast()).toMillis();
+        double measuredRps = validationCount.sumThenReset() / elapsedSecs;
 
-        double secs = millisBetween / 1000.;
-        double interval = secs / (validations.size()-1);
-
-        // Delay and target rate accidentally is of the same order of magnitude [1...5]
-        // which makes this a bit easier
-
-        double delta = target - interval;
-
-        delay = Math.clamp(delay + delta, delayMin, delayMax);
+        delay = Math.clamp(delay + GAIN * (measuredRps - targetRps), DELAY_MIN, DELAY_MAX);
     }
 
     public Duration getDelay() {
@@ -280,7 +270,7 @@ class ValidationRate {
     }
 
     public double getStrain() {
-        return (delay - delayMin) / (delayMax - delayMin);
+        return (delay - DELAY_MIN) / (DELAY_MAX - DELAY_MIN);
     }
 
 }
