@@ -121,12 +121,12 @@ task compileTailwind {
             // pointing you here, you need to run  `npm install -D tailwindcss`
             workingDir projectDir
             if (System.getProperty('os.name').toLowerCase().contains('windows')) {
-                commandLine 'cmd', '/c', 'npx', 'tailwindcss',
+                commandLine 'cmd', '/c', 'npx', '--yes', 'tailwindcss@3',
                         '-i', inputFile.toString(),
                         '-o', outputFile.toString(),
                         '-c', configFile.toString()
             } else {
-                commandLine 'npx', 'tailwindcss',
+                commandLine 'npx', '--yes', 'tailwindcss@3',
                         '-i', inputFile.toString(),
                         '-o', outputFile.toString(),
                         '-c', configFile.toString()
