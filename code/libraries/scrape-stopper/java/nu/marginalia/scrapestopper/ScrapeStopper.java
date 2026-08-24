@@ -243,7 +243,7 @@ class ValidationRate {
     public ValidationRate(int maxSize) {
         this.maxSize = maxSize;
 
-        this.target = 2.0;
+        this.target = 4.0;
         this.delay = 1.;
         this.delayMin = 1.0;
         this.delayMax = 5.;
