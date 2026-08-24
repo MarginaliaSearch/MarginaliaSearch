@@ -1,5 +1,6 @@
 package nu.marginalia.search.model;
 
+import com.sun.istack.Nullable;
 import nu.marginalia.WebsiteUrl;
 
 import java.util.List;
@@ -88,6 +89,36 @@ public class DecoratedSearchResults {
 
     public List<ResultsPage> getResultPages() {
         return resultPages;
+    }
+
+    @Nullable
+    public ResultsPage getPrevPage() {
+        for (int i = 1; i < resultPages.size(); i++) {
+            if (resultPages.get(i).current()) {
+                return resultPages.get(i - 1);
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    public ResultsPage getCurrentPage() {
+        for (int i = 0; i < resultPages.size(); i++) {
+            if (resultPages.get(i).current()) {
+                return resultPages.get(i);
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    public ResultsPage getNextPage() {
+        for (int i = 0; i+1 < resultPages.size(); i++) {
+            if (resultPages.get(i).current()) {
+                return resultPages.get(i + 1);
+            }
+        }
+        return null;
     }
 
     private final String focusDomain;

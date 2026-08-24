@@ -101,14 +101,22 @@
 
         <!-- Pagination -->
         @if (results.getResultPages().size() > 1)
-            <div class="mt-8 flex justify-center space-x-2 font-mono text-sm">
-                @for(ResultsPage page : results.getResultPages())
-                    @if (page.current())
-                        <a href="${results.getParams().withPage(page.number()).renderUrl()}" class="px-2 py-1 border dark:border-gray-600 border-gray-400 bg-gray-200 dark:bg-gray-900">${page.number()}</a>
-                    @else
-                        <a href="${results.getParams().withPage(page.number()).renderUrl()}" class="px-2 py-1 bg-white border dark:border-gray-600 border-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-900">${page.number()}</a>
-                    @endif
-                @endfor
+            <div class="mt-8 flex justify-center space-x-2 font-mono text-md">
+                !{
+                    ResultsPage prevPage = results.getPrevPage();
+                    ResultsPage currentPage = results.getCurrentPage();
+                    ResultsPage nextPage = results.getNextPage();
+                }
+
+                @if (prevPage != null)
+                    <a href="${results.getParams().withPage(prevPage.number()).renderUrl()}" class="px-2 py-1 bg-white border dark:border-gray-600 border-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-900">Previous</a>
+                @endif
+                @if (currentPage != null)
+                    <a href="${results.getParams().withPage(currentPage.number()).renderUrl()}" class="px-2 py-1 border dark:border-gray-600 border-gray-400 bg-gray-200 dark:bg-gray-900">Page ${currentPage.number()} of ${results.getResultPages().size()}</a>
+                @endif
+                @if (nextPage != null)
+                    <a href="${results.getParams().withPage(nextPage.number()).renderUrl()}" class="px-2 py-1 bg-white border dark:border-gray-600 border-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-900">Next</a>
+                @endif
             </div>
         @endif
     </main>
