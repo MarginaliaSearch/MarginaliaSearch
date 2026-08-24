@@ -61,7 +61,7 @@ public class DomPruningFilter implements NodeFilter {
         if (dataForNode.depth <= 1)
             return FilterResult.CONTINUE;
 
-        if (dataForNode.signalNodeSize == 0)
+        if (dataForNode.signalNodeSize + dataForNode.noiseNodeSize == 0)
             return FilterResult.REMOVE;
         if (dataForNode.noiseNodeSize > 0
                 && dataForNode.signalRate() < pruneThreshold
