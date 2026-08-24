@@ -28,8 +28,7 @@
                     search engine doesn't yet have any information about <span class="inline font-mono text-pink-800 dark:text-pink-200">${report.domain()}</span>.
                     <p class="mt-4"></p>
                     Be patient.  Several million websites need to be visited and assessed,
-                    each visit taking up to 30 seconds.  At the current rate, it is expected
-                    the full database will be complete around the end of 2025, or early 2026.
+                    each visit taking up to 30 seconds.
                 </div>
             </div>
         @else
@@ -44,6 +43,8 @@
                     To help make sense of the recorded network traffic, the report is supplemented with information from
                     <a href="https://github.com/duckduckgo/tracker-radar/" class="text-blue-800 dark:text-blue-200 underline" rel="external">DuckDuckGo's Tracker Radar</a>,
                     subject to the CC BY-NC-SA 4.0 license.
+                    <p class="mt-2"></p>
+                    This information refreshes on a fairly long update cycle, and may be stale.
                     <details class="mt-2">
                     <summary class="text-gray-600 hover:text-gray-700 dark:text-gray-400 hover:dark:text-gray-300 cursor-pointer select-none">
                         Learn More
