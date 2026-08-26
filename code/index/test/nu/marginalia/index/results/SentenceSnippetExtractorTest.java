@@ -18,7 +18,7 @@ class SentenceSnippetExtractorTest {
                 IntList.of(13),
         };
 
-        String snippet = new SentenceSnippetExtractor(text, null).extract(positions, weights(2), classes(2));
+        String snippet = new SentenceSnippetExtractor(text, Integer.MAX_VALUE, null).extract(positions, weights(2), classes(2));
 
         assertNotNull(snippet);
         assertTrue(snippet.contains("potato flour"), snippet);
@@ -27,27 +27,27 @@ class SentenceSnippetExtractorTest {
 
     @Test
     void test__noMatches_fallbackExcerpt() {
-        assertEquals("some text", new SentenceSnippetExtractor("some text\n", null).extract(new IntList[] { IntList.of() }, weights(1), classes(1)));
-        assertEquals("some text", new SentenceSnippetExtractor("some text\n", null).extract(new IntList[] { null }, weights(1), classes(1)));
+        assertEquals("some text", new SentenceSnippetExtractor("some text\n", Integer.MAX_VALUE, null).extract(new IntList[] { IntList.of() }, weights(1), classes(1)));
+        assertEquals("some text", new SentenceSnippetExtractor("some text\n", Integer.MAX_VALUE, null).extract(new IntList[] { null }, weights(1), classes(1)));
 
-        assertEquals("one two three", new SentenceSnippetExtractor("one two three\n", null).extract(new IntList[] { IntList.of(4, 100) }, weights(1), classes(1)));
+        assertEquals("one two three", new SentenceSnippetExtractor("one two three\n", Integer.MAX_VALUE, null).extract(new IntList[] { IntList.of(4, 100) }, weights(1), classes(1)));
 
-        assertNull(new SentenceSnippetExtractor("", null).extract(new IntList[] { IntList.of() }, weights(1), classes(1)));
+        assertNull(new SentenceSnippetExtractor("", Integer.MAX_VALUE, null).extract(new IntList[] { IntList.of() }, weights(1), classes(1)));
     }
 
     @Test
     void testEmptySentence() {
-        String leading = new SentenceSnippetExtractor("\nhello world\n", null)
+        String leading = new SentenceSnippetExtractor("\nhello world\n", Integer.MAX_VALUE, null)
                 .extract(new IntList[] { IntList.of(1) }, weights(1), classes(1));
         assertEquals("hello world", leading);
 
         // "beta" is token 2 right after "alpha", despite the empty sentence between them
-        String middle = new SentenceSnippetExtractor("alpha\n\nbeta\n", null)
+        String middle = new SentenceSnippetExtractor("alpha\n\nbeta\n", Integer.MAX_VALUE, null)
                 .extract(new IntList[] { IntList.of(2) }, weights(1), classes(1));
         assertNotNull(middle);
         assertTrue(middle.contains("beta"), middle);
 
-        assertNull(new SentenceSnippetExtractor("\n\n", null)
+        assertNull(new SentenceSnippetExtractor("\n\n", Integer.MAX_VALUE, null)
                 .extract(new IntList[] { IntList.of() }, weights(1), classes(1)));
     }
 
@@ -57,7 +57,7 @@ class SentenceSnippetExtractorTest {
         String text = "An unrelated opening sentence sits here\nThis quite long sentence rambles onward for a spell and finally arrives at the needle\nAnd a following sentence provides context\n";
 
         // "needle" is the last token of the second sentence, token 21
-        String snippet = new SentenceSnippetExtractor(text, null).extract(new IntList[] { IntList.of(21) }, weights(1), classes(1));
+        String snippet = new SentenceSnippetExtractor(text, Integer.MAX_VALUE, null).extract(new IntList[] { IntList.of(21) }, weights(1), classes(1));
 
         assertNotNull(snippet);
         System.out.println(snippet);
@@ -69,7 +69,7 @@ class SentenceSnippetExtractorTest {
     void testExtension() {
         String text = "The needle is here\nA short follow-up comes after\n";
 
-        String snippet = new SentenceSnippetExtractor(text, null).extract(new IntList[] { IntList.of(2) }, weights(1), classes(1));
+        String snippet = new SentenceSnippetExtractor(text, Integer.MAX_VALUE, null).extract(new IntList[] { IntList.of(2) }, weights(1), classes(1));
 
         assertNotNull(snippet);
         assertTrue(snippet.contains("The needle is here. A short follow-up comes after"), snippet);
@@ -80,7 +80,7 @@ class SentenceSnippetExtractorTest {
         String paragraph = "lorem ipsum dolor sit amet ".repeat(20).trim();
         String text = "Interesting heading\n" + paragraph + "\n";
 
-        String snippet = new SentenceSnippetExtractor(text, null)
+        String snippet = new SentenceSnippetExtractor(text, Integer.MAX_VALUE, null)
                 .extract(new IntList[] { IntList.of(2) }, weights(1), classes(1));
 
         assertNotNull(snippet);
@@ -101,7 +101,7 @@ class SentenceSnippetExtractorTest {
                 IntList.of(7),   // rareword
         };
 
-        String weighted = new SentenceSnippetExtractor(text, null).extract(positions, new float[] { 0.1f, 10f }, classes(2));
+        String weighted = new SentenceSnippetExtractor(text, Integer.MAX_VALUE, null).extract(positions, new float[] { 0.1f, 10f }, classes(2));
 
         assertNotNull(weighted);
         assertTrue(weighted.contains("rareword"), weighted);
@@ -120,7 +120,7 @@ class SentenceSnippetExtractorTest {
         int alphaOrdinal = 2;
         int betaOrdinal = 2 + 8 + 40 * 6;
 
-        String snippet = new SentenceSnippetExtractor(text.toString(), null)
+        String snippet = new SentenceSnippetExtractor(text.toString(), Integer.MAX_VALUE, null)
                 .extract(new IntList[] { IntList.of(alphaOrdinal), IntList.of(betaOrdinal) }, weights(2), classes(2));
 
         System.out.println(snippet);
@@ -135,7 +135,7 @@ class SentenceSnippetExtractorTest {
     void testExceptSkipsTitle() {
         String text = "Plato\nPlato was an ancient Greek philosopher of Classical Athens\nHe influenced nearly all of western philosophy\n";
 
-        String lead = new SentenceSnippetExtractor(text, IntList.of(1, 2)).extractDocumentBeginning();
+        String lead = new SentenceSnippetExtractor(text, Integer.MAX_VALUE, IntList.of(1, 2)).extractDocumentBeginning();
 
         assertNotNull(lead);
         assertTrue(lead.startsWith("Plato was an ancient Greek philosopher"), lead);
@@ -158,13 +158,13 @@ class SentenceSnippetExtractorTest {
         };
         int[] classes = new int[] { 0, 1, 1 };
 
-        String snippet = new SentenceSnippetExtractor(text, null).extract(positions, weights(3), classes);
+        String snippet = new SentenceSnippetExtractor(text, Integer.MAX_VALUE, null).extract(positions, weights(3), classes);
 
         assertNotNull(snippet);
         assertFalse(snippet.contains("Lord of the Rings"), snippet);
         assertTrue(snippet.contains("Elden Ring was revealed"), snippet);
 
-        String unclassed = new SentenceSnippetExtractor(text, null).extract(positions, weights(3), classes(3));
+        String unclassed = new SentenceSnippetExtractor(text, Integer.MAX_VALUE, null).extract(positions, weights(3), classes(3));
         assertNotNull(unclassed);
         assertTrue(unclassed.contains("Lord of the Rings"), unclassed);
     }
@@ -176,13 +176,13 @@ class SentenceSnippetExtractorTest {
         // "Plato" occurs at ordinals 1 (title) and 2 (body); title span is [1, 2)
         IntList[] positions = new IntList[] { IntList.of(1, 2) };
 
-        String snippet = new SentenceSnippetExtractor(text, IntList.of(1, 2)).extract(positions, weights(1), classes(1));
+        String snippet = new SentenceSnippetExtractor(text, Integer.MAX_VALUE, IntList.of(1, 2)).extract(positions, weights(1), classes(1));
 
         assertNotNull(snippet);
         assertTrue(snippet.startsWith("Plato was an ancient"), snippet);
 
         assertEquals("Plato was an ancient Greek philosopher of Classical Athens",
-                new SentenceSnippetExtractor(text, IntList.of(1, 2)).extract(new IntList[] { IntList.of(1) }, weights(1), classes(1)));
+                new SentenceSnippetExtractor(text, Integer.MAX_VALUE, IntList.of(1, 2)).extract(new IntList[] { IntList.of(1) }, weights(1), classes(1)));
     }
 
     @Test
@@ -194,7 +194,7 @@ class SentenceSnippetExtractorTest {
         }
         text.append('\n');
 
-        String snippet = new SentenceSnippetExtractor(text.toString(), null).extract(new IntList[] { IntList.of(5) }, weights(1), classes(1));
+        String snippet = new SentenceSnippetExtractor(text.toString(), Integer.MAX_VALUE, null).extract(new IntList[] { IntList.of(5) }, weights(1), classes(1));
 
         assertNotNull(snippet);
         assertTrue(snippet.contains("needle"), snippet);
@@ -211,7 +211,7 @@ class SentenceSnippetExtractorTest {
         }
         text.append('\n');
 
-        String snippet = new SentenceSnippetExtractor(text.toString(), null).extract(new IntList[] { IntList.of(80) }, weights(1), classes(1));
+        String snippet = new SentenceSnippetExtractor(text.toString(), Integer.MAX_VALUE, null).extract(new IntList[] { IntList.of(80) }, weights(1), classes(1));
 
         assertNotNull(snippet);
         assertTrue(snippet.startsWith("...needle"), snippet);
@@ -226,7 +226,7 @@ class SentenceSnippetExtractorTest {
                 IntList.of(7, 17),  // ring
         };
 
-        String snippet = new SentenceSnippetExtractor(text, null).extract(positions, weights(2), classes(2));
+        String snippet = new SentenceSnippetExtractor(text, Integer.MAX_VALUE, null).extract(positions, weights(2), classes(2));
 
         assertNotNull(snippet);
         assertTrue(snippet.startsWith("This mentions Elden Ring"), snippet);

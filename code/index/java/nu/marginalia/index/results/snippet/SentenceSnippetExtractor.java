@@ -39,9 +39,9 @@ public class SentenceSnippetExtractor {
     @Nullable
     private final IntList excludedRangeStartEndPairs;
 
-    public SentenceSnippetExtractor(String text, @Nullable IntList excludedRangeStartEndPairs) {
+    public SentenceSnippetExtractor(String text, int maxPosHint, @Nullable IntList excludedRangeStartEndPairs) {
         this.text = text;
-        this.sentences = SnippetTokenizer.splitSentences(text);
+        this.sentences = SnippetTokenizer.splitSentences(text, maxPosHint);
         this.tokenCount = sentences.isEmpty() ? 0 : sentences.getLast().lastTokenIdx();
         this.excludedRangeStartEndPairs = excludedRangeStartEndPairs;
     }

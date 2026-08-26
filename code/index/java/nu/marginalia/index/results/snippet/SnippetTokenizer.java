@@ -8,12 +8,13 @@ import java.util.List;
 
 public class SnippetTokenizer {
 
-    public static List<Sentence> splitSentences(String text) {
-        List<Sentence> sentences = new ArrayList<>();
+    public static List<Sentence> splitSentences(String text, int maxPosHint) {
+        List<Sentence> sentences = new ArrayList<>(Math.max(8, maxPosHint / 8));
 
         int tokensTotal = 0;
         final int length = text.length();
 
+        int trailingSentences = 0;
         for (int lineStart = 0; lineStart < length; ) {
             int lineEnd = text.indexOf('\n', lineStart);
             if (lineEnd < 0) {
@@ -33,6 +34,11 @@ public class SnippetTokenizer {
                         charStart,
                         charEnd));
                 tokensTotal += lineTokens;
+            }
+
+            // Capture at most two sentences past maxPosHint
+            if (tokensTotal > maxPosHint && ++trailingSentences > 2) {
+                break;
             }
 
             lineStart = lineEnd + 1;

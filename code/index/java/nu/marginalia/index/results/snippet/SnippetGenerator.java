@@ -83,9 +83,9 @@ public class SnippetGenerator implements AutoCloseable {
             titleRanges = codedSpans.decode(pool::get).getSpan(HtmlTag.TITLE).startsEnds();
         }
 
-        SentenceSnippetExtractor extractor = new SentenceSnippetExtractor(text, titleRanges);
-
         if (searchContext == null) {
+            SentenceSnippetExtractor extractor = new SentenceSnippetExtractor(text, 64, titleRanges);
+
             // Grab the start of the document text as a fallback
             return extractor.extractDocumentBeginning();
         }
@@ -94,14 +94,25 @@ public class SnippetGenerator implements AutoCloseable {
         // scratch buffers at this stage, and must be re-fetched for snippet generation
         CodedSequence[] codedPositions = index.getTermPositions(segmentAllocator, doc.positionOffsets);
         IntList[] positions = new IntList[codedPositions.length];
+        int maxPos = -1;
         for (int i = 0; i < positions.length; i++) {
             if (codedPositions[i] != null) {
                 positions[i] = codedPositions[i].values(pool::get);
+
+                if (positions[i].isEmpty())
+                    continue;
+                maxPos = Math.max(maxPos, positions[i].getInt(positions[i].size() - 1));
             }
             else {
                 positions[i] = IntList.of();
             }
         }
+
+        if (maxPos == -1) {
+            maxPos = 64;
+        }
+
+        SentenceSnippetExtractor extractor = new SentenceSnippetExtractor(text, maxPos, titleRanges);
 
         return extractor.extract(positions, termWeights, termClasses);
     }
