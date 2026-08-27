@@ -154,16 +154,16 @@ public class UrlDetails implements Comparable<UrlDetails> {
             else if (!Character.isAlphabetic(c) && !Character.isWhitespace(c)) {
                 distSinceBreak = 0;
                 sb.appendCodePoint(c);
-                sb.append("&shy;");
+                sb.append("<wbr>");
             }
             else if (Character.isUpperCase(c) && Character.isLowerCase(prevC)) {
                 distSinceBreak = 0;
-                sb.append("&shy;");
+                sb.append("<wbr>");
                 sb.appendCodePoint(c);
             }
             else if (distSinceBreak > 16) {
                 distSinceBreak = 0;
-                sb.append("&shy;");
+                sb.append("<wbr>");
                 sb.appendCodePoint(c);
             }
             else {
@@ -200,12 +200,12 @@ public class UrlDetails implements Comparable<UrlDetails> {
             }
             else if (!Character.isAlphabetic(c) && distSinceSpace > 24) {
                 sb.appendCodePoint(c);
-                sb.append("&shy;");
+                sb.append("<wbr>");
                 distSinceSpace = 0;
             }
             else if (distSinceSpace > 48) {
                 sb.appendCodePoint(c);
-                sb.append("&shy;");
+                sb.append("<wbr>");
                 distSinceSpace = 0;
             }
             else {
@@ -235,7 +235,7 @@ public class UrlDetails implements Comparable<UrlDetails> {
             }
             else if (!Character.isAlphabetic(c) && !Character.isWhitespace(c)) {
                 sb.appendCodePoint(c);
-                sb.append("&shy;");
+                sb.append("<wbr>");
             }
             else {
                 sb.appendCodePoint(c);
