@@ -46,6 +46,8 @@ import javax.annotation.Nullable;
 import javax.swing.text.NumberFormatter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.NumberFormat;
 import java.time.Duration;
@@ -128,10 +130,13 @@ public class SearchSiteInfoService {
         if (domain != null) {
             // Handle what looks like URLs by parsing them and extracting the domain name
             if (domain.contains(":") || domain.contains("/")) {
+                if (domain.contains("%")) {
+                    domain = URLDecoder.decode(domain, StandardCharsets.UTF_8);
+                }
                 domain = EdgeUrl.parse(domain)
-                        .map(EdgeUrl::getDomain)
-                        .map(EdgeDomain::toString)
-                        .orElse(domain);
+                            .map(EdgeUrl::getDomain)
+                            .map(EdgeDomain::toString)
+                            .orElse(domain);
             }
             // redirect to /site/domainName
             return new MapModelAndView("redirect.jte", Map.of("url", "/site/"+domain.toLowerCase()));
