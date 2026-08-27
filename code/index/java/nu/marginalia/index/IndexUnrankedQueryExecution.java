@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -70,7 +71,7 @@ public class IndexUnrankedQueryExecution {
         queries = currentIndex.createUnrankedQueries(searchContext);
     }
 
-    public List<RpcDecoratedResultItem> run() throws InterruptedException, SQLException {
+    public List<RpcDecoratedResultItem> run() throws InterruptedException, IOException, SQLException {
         LongOpenHashSet seenDocIds = new LongOpenHashSet(limitTotal*2);
         List<RankableDocument> results = new ArrayList<>(limitTotal);
         List<RpcDecoratedResultItem> ret = new ArrayList<>(limitTotal);
@@ -123,7 +124,10 @@ public class IndexUnrankedQueryExecution {
         ResultConverter converter = new ResultConverter();
 
         try (SnippetGenerator snippetGenerator = new SnippetGenerator(currentIndex, searchContext)) {
-            for (RankableDocument doc : results) {
+            String[] leads = snippetGenerator.generate(results);
+
+            for (int i = 0; i < results.size(); i++) {
+                RankableDocument doc = results.get(i);
 
                 final long id = doc.item.getDocumentId();
                 final DocdbUrlDetail docData = detailsById.get(id);
@@ -131,10 +135,9 @@ public class IndexUnrankedQueryExecution {
                 if (docData == null)
                     continue;
 
-                String lead = snippetGenerator.generate(doc);
                 int pubDate = currentIndex.getDocPubDate(doc.item.combinedId);
 
-                converter.convert(doc, docData, lead, pubDate).ifPresent(ret::add);
+                converter.convert(doc, docData, leads[i], pubDate).ifPresent(ret::add);
             }
         }
 

@@ -467,6 +467,9 @@ public class CombinedIndexReader {
             logger.info("Interrupted while waiting for close lock", e);
         }
 
+        // Holding the lock should guarantee this closes all fetchers
+        RankingBatchFetcher.closeForIndex(this);
+
         try {
             forwardIndexReader.close();
         } catch (Throwable t) {

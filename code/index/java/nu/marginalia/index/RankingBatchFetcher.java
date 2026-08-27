@@ -10,6 +10,7 @@ import nu.marginalia.index.reverse.positions.PositionCodec;
 import nu.marginalia.index.reverse.positions.PositionsBatchDecoder;
 import nu.marginalia.uring.UringQueue;
 
+import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
@@ -17,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.lang.foreign.ValueLayout.JAVA_INT;
@@ -32,7 +34,9 @@ import static nu.marginalia.index.config.ForwardIndexParameters.SPANS_OFFSET;
 public class RankingBatchFetcher implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(RankingBatchFetcher.class);
-    private static final AtomicBoolean warnedRegisterFailure = new AtomicBoolean();
+
+    private static final ConcurrentLinkedQueue<RankingBatchFetcher> pool = new ConcurrentLinkedQueue<>();
+    private static final AtomicBoolean warnedCreateFailure = new AtomicBoolean();
 
     private static final int RING_SIZE = 256;
     private static final int ARRAY_SIZE = 4096;
@@ -87,8 +91,47 @@ public class RankingBatchFetcher implements AutoCloseable {
         offsets = arena.allocate(8L * ARRAY_SIZE, 8);
     }
 
-    public CombinedIndexReader owner() {
-        return owner;
+    public static RankingBatchFetcher claim(CombinedIndexReader index) throws IOException {
+
+        RankingBatchFetcher pooled;
+        while ((pooled = pool.poll()) != null) {
+            if (pooled.owner == index) {
+                return pooled;
+            }
+            pooled.close();
+        }
+
+        if (pool.size() >= 256) {
+            logger.error("RankingBatchFetcher leak: {} items in pool", pool.size());
+            throw new IOException("RankingBatchFetcher leak");
+        }
+
+        try {
+            return new RankingBatchFetcher(index);
+        }
+        catch (RuntimeException e) {
+            if (!warnedCreateFailure.getAndSet(true)) {
+                logger.warn("Failed to create batch fetcher, using serial reads", e);
+            }
+            throw new IOException("Failed to create batch fetcher", e);
+        }
+    }
+
+    /** Close and remove all fetchers associated with the index
+     * */
+    public static void closeForIndex(CombinedIndexReader combinedIndexReader) {
+        pool.removeIf(r -> {
+            if (r.owner == combinedIndexReader) {
+                r.close();
+                return true;
+            }
+            return false;
+        });
+    }
+
+    /** Return the fetcher to the pool for reuse */
+    public void release() {
+        pool.add(this);
     }
 
     public PositionsBatchDecoder positionsDecoder() {
