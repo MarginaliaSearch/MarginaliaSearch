@@ -27,7 +27,7 @@
                                 @endif
 
 
-                                <a href="$unsafe{option.getUrl()}" class="flex place-items-baseline text-sm md:text-xs lg:text-sm" href="#">
+                                <a href="$unsafe{option.getUrl()}" class="flex place-items-baseline text-sm md:text-xs lg:text-sm pr-1" href="#">
                                     @if (option.isSet())
                                         <i class="fas fa-check-circle mr-3"></i>
                                     @else
