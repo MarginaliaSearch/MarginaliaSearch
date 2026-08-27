@@ -44,13 +44,7 @@ public class SkipListWriter implements AutoCloseable {
     @Override
     public void close() throws IOException {
 
-        // Write remaining values
-
-        valuesBuffer.flip();
-
-        while (valuesBuffer.hasRemaining()) {
-            valuesChannel.write(valuesBuffer);
-        }
+        flushValues();
 
         int blockRemaining = (int) (VALUE_BLOCK_SIZE - (valuesChannel.position() & (VALUE_BLOCK_SIZE - 1)));
         valuesBuffer.position(0);
@@ -174,6 +168,9 @@ public class SkipListWriter implements AutoCloseable {
         while (buffer.hasRemaining()) {
             documentsChannel.write(buffer);
         }
+
+        flushValues();
+
         buffer.flip();
         buffer.limit(buffer.limit() & ~15);
         while (buffer.hasRemaining()) {
@@ -181,7 +178,6 @@ public class SkipListWriter implements AutoCloseable {
         }
         valueBlockOffset = valuesChannel.position();
     }
-
 
     private void writeCompactBlockHeader(ByteBuffer buffer, int nItems, byte fc, byte flags) {
         assert nItems >= 0;
@@ -205,13 +201,7 @@ public class SkipListWriter implements AutoCloseable {
 
         for (int i = 0; i < n; i++) {
             if (valuesBuffer.remaining() < 8*(RECORD_SIZE-1)) {
-                valuesBuffer.flip();
-                while (valuesBuffer.hasRemaining()) {
-                    int wb = valuesChannel.write(valuesBuffer);
-                    if (wb > 0)
-                        valueBlockOffset += wb;
-                }
-                valuesBuffer.clear();
+                flushValues();
             }
 
             long valuePairOffset = inputOffset + (long) RECORD_SIZE * i;
@@ -452,5 +442,16 @@ public class SkipListWriter implements AutoCloseable {
 
         return blocks;
     }
+
+    private void flushValues() throws IOException {
+        valuesBuffer.flip();
+        while (valuesBuffer.hasRemaining()) {
+            int wb = valuesChannel.write(valuesBuffer);
+            if (wb > 0)
+                valueBlockOffset += wb;
+        }
+        valuesBuffer.clear();
+    }
+
 
 }
