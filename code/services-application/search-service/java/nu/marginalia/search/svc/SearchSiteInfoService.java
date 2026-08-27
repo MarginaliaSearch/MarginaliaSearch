@@ -126,8 +126,15 @@ public class SearchSiteInfoService {
     @Path("/site")
     public ModelAndView<?> handleOverview(@QueryParam String domain) {
         if (domain != null) {
+            // Handle what looks like URLs by parsing them and extracting the domain name
+            if (domain.contains(":") || domain.contains("/")) {
+                domain = EdgeUrl.parse(domain)
+                        .map(EdgeUrl::getDomain)
+                        .map(EdgeDomain::toString)
+                        .orElse(domain);
+            }
             // redirect to /site/domainName
-            return new MapModelAndView("redirect.jte", Map.of("url", "/site/"+domain));
+            return new MapModelAndView("redirect.jte", Map.of("url", "/site/"+domain.toLowerCase()));
         }
 
         return new MapModelAndView("siteinfo/start.jte",
