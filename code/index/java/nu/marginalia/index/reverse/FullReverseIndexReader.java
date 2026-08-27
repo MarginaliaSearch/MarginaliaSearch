@@ -45,6 +45,7 @@ public class FullReverseIndexReader {
     private final MemorySegment positionsSegment;
     private final BufferPool dataPool;
     private final SkipListValueReader valueReader;
+    private final SkipListFormat skipListFormat;
     private final String name;
 
     public FullReverseIndexReader(String name,
@@ -56,7 +57,9 @@ public class FullReverseIndexReader {
     {
         this.name = name;
 
-        if (!Files.exists(documents) || !Files.exists(documentValues) || !validateDocumentsFooter(documents)) {
+        this.skipListFormat = documentsFormat(documents, documentValues);
+
+        if (skipListFormat == null) {
             this.documents = null;
             this.dataPool = null;
             this.valueReader = null;
@@ -99,14 +102,19 @@ public class FullReverseIndexReader {
         return this.valueReader != null;
     }
 
-    private boolean validateDocumentsFooter(Path documents) {
+    @Nullable
+    private SkipListFormat documentsFormat(Path documents, Path documentValues) {
+        if (!Files.exists(documents))
+            return null;
+        if (!Files.exists(documentValues))
+            return null;
+
         try {
-            SkipListWriter.validateFooter(documents, "skplist-docs-file");
-            return true;
+            return SkipListWriter.validateFooter(documents, "skplist-docs-file");
         }
-        catch (IllegalArgumentException|IOException ex) {
+        catch (IllegalArgumentException | IOException ex) {
             logger.error("Failed to validate documents file footer", ex);
-            return false;
+            return null;
         }
     }
 
@@ -216,7 +224,7 @@ public class FullReverseIndexReader {
 
     /** Create a BTreeReader for the document offset associated with a termId */
     private SkipListReader getReader(long offset) {
-        return new SkipListReader(dataPool, valueReader, offset);
+        return new SkipListReader(dataPool, valueReader, offset, skipListFormat);
     }
 
     @Nullable

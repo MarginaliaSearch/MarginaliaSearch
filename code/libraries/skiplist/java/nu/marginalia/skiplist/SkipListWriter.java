@@ -30,9 +30,20 @@ public class SkipListWriter implements AutoCloseable {
 
     private final LongArrayList maxValuesList = new LongArrayList();
 
+    private final SkipListFormat format;
+
     private long valueBlockOffset;
 
     public SkipListWriter(Path dataFileName, Path valuesFileName) throws IOException {
+        this(dataFileName, valuesFileName, SkipListFormat.CURRENT);
+    }
+
+    public SkipListWriter(Path dataFileName,
+                          Path valuesFileName,
+                          SkipListFormat format) throws IOException
+    {
+        this.format = format;
+
         documentsChannel = (FileChannel) Files.newByteChannel(dataFileName, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
         documentsChannel.position(documentsChannel.size());
 
@@ -73,6 +84,10 @@ public class SkipListWriter implements AutoCloseable {
     }
 
     public static void writeFooter(Path documentsFileName, String magicWord) throws IOException {
+        writeFooter(documentsFileName, magicWord, SkipListFormat.CURRENT);
+    }
+
+    public static void writeFooter(Path documentsFileName, String magicWord, SkipListFormat format) throws IOException {
 
         ByteBuffer buffer = ByteBuffer.allocateDirect(BLOCK_SIZE).order(ByteOrder.nativeOrder());
 
@@ -97,7 +112,7 @@ public class SkipListWriter implements AutoCloseable {
 
         buffer.put(magicWordBytes);
 
-        buffer.put((byte) 0);    // reserved for future use
+        buffer.put((byte) format.version());
         buffer.put((byte) 0);    // reserved for future use
         buffer.put((byte) 0);    // reserved for future use
 
@@ -116,7 +131,7 @@ public class SkipListWriter implements AutoCloseable {
         }
     }
 
-    public static void validateFooter(Path documentsFileName, String expectedMagicWord) throws IOException {
+    public static SkipListFormat validateFooter(Path documentsFileName, String expectedMagicWord) throws IOException, IllegalArgumentException {
 
         ByteBuffer buffer = ByteBuffer.allocateDirect(BLOCK_SIZE).order(ByteOrder.nativeOrder());
 
@@ -144,8 +159,9 @@ public class SkipListWriter implements AutoCloseable {
 
         buffer.get(actualMagicWordBytes);
 
+        int formatVersion = buffer.get();
+
         // reserved space
-        buffer.get();
         buffer.get();
         buffer.get();
 
@@ -155,6 +171,8 @@ public class SkipListWriter implements AutoCloseable {
 
         if (!Arrays.equals(expectedMagicWordBytes, actualMagicWordBytes) || magicStringLength != expectedMagicWord.length()) throw new IllegalArgumentException("Invalid skip list footer, mismatching magic word bytes: + " + Arrays.toString(actualMagicWordBytes));
         if (blockSize != BLOCK_SIZE) throw new IllegalArgumentException("Incompatible skip list, block size mismatch: " + blockSize + ", expected " + BLOCK_SIZE);
+
+        return SkipListFormat.fromVersion(formatVersion);
     }
 
 
@@ -285,13 +303,13 @@ public class SkipListWriter implements AutoCloseable {
 
         int writtenRecords = 0;
         long valueOffset = 0L;
-        int numBlocks = calculateActualNumBlocks(blockRemaining, compressorInput);
+        int numBlocks = calculateActualNumBlocks(blockRemaining, compressorInput, format);
 
         {
             docsBuffer.clear();
 
-            int rootBlockCapacity = rootBlockCapacity(blockRemaining, compressorInput);
-            int rootBlockPointerCount = numPointersForRootBlock(blockRemaining, compressorInput);
+            int rootBlockCapacity = rootBlockCapacity(blockRemaining, compressorInput, format);
+            int rootBlockPointerCount = numPointersForRootBlock(blockRemaining, compressorInput, format);
 
             /** WRITE THE ROOT BLOCK **/
 
@@ -307,7 +325,7 @@ public class SkipListWriter implements AutoCloseable {
 
             // Write skip pointers
             for (int pi = 0; pi < rootBlockPointerCount; pi++) {
-                int skipBlocks = skipOffsetForPointer(pi);
+                int skipBlocks = format.skipOffsetForPointer(pi);
 
                 assert skipBlocks < 1 + numBlocks; // should be ~ 1/2 numBlocks at most for the root block
 
@@ -346,7 +364,7 @@ public class SkipListWriter implements AutoCloseable {
 
             int forwardPointers;
             for (forwardPointers = 0; forwardPointers < POINTER_TARGET_COUNT; forwardPointers++) {
-                if (blockIdx + skipOffsetForPointer(forwardPointers) + 1 >= maxValuesList.size())
+                if (blockIdx + format.skipOffsetForPointer(forwardPointers) + 1 >= maxValuesList.size())
                     break;
             }
 
@@ -361,7 +379,7 @@ public class SkipListWriter implements AutoCloseable {
             writeCompactBlockHeader(docsBuffer, blockSize, (byte) forwardPointers, flags);
 
             for (int pi = 0; pi < forwardPointers; pi++) {
-                docsBuffer.putLong(maxValuesList.getLong(blockIdx + skipOffsetForPointer(pi)));
+                docsBuffer.putLong(maxValuesList.getLong(blockIdx + format.skipOffsetForPointer(pi)));
             }
 
             // Write the keys
@@ -424,13 +442,13 @@ public class SkipListWriter implements AutoCloseable {
     }
 
 
-    static int calculateActualNumBlocks(int rootBlockSize, StaggeredCompressorInput originalInput) {
+    static int calculateActualNumBlocks(int rootBlockSize, StaggeredCompressorInput originalInput, SkipListFormat format) {
         assert originalInput.size() >= 1;
 
         int blocks = 1; // We always generate a root block
         StaggeredCompressorInput input = StaggeredCompressorInput.copyOf(originalInput);
 
-        input.moveBounds(rootBlockCapacity(rootBlockSize, input));
+        input.moveBounds(rootBlockCapacity(rootBlockSize, input, format));
 
         while (input.size() > 0) {
             int size = input.size();

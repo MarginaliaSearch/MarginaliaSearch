@@ -23,22 +23,16 @@ public class SkipListConstants {
     static final byte FLAG_FOOTER_BLOCK = 1<<3;
     static final byte FLAG_COMPRESSED_BLOCK = 1<<4;
 
-    static int skipOffsetForPointer(int pointerIdx) {
-        final int linearPart = 16;
-        if (pointerIdx <= linearPart) {
-            return pointerIdx + 1;
-        }
-        return linearPart + ((pointerIdx - linearPart - 1) * (pointerIdx - linearPart - 1));
-    }
-
-
-    static int numPointersForRootBlock(int rootBlockSize, StaggeredCompressorInput compressorInput) {
+    static int numPointersForRootBlock(int rootBlockSize,
+                                       StaggeredCompressorInput compressorInput,
+                                       SkipListFormat format)
+    {
         int numBlocks = estimateNumBlocks(compressorInput);
         int fp;
 
         for (fp = 0; fp <= POINTER_TARGET_COUNT;fp++) {
             if (rootBlockCapacity(rootBlockSize, fp, compressorInput) <= 0
-             || skipOffsetForPointer(fp) >= numBlocks)
+             || format.skipOffsetForPointer(fp) >= numBlocks)
                 break;
         }
 
@@ -51,10 +45,13 @@ public class SkipListConstants {
                 (rootBlockSize - DATA_BLOCK_HEADER_SIZE - 8 * pointerCount));
     }
 
-    static int rootBlockCapacity(int rootBlockSize, StaggeredCompressorInput input) {
+    static int rootBlockCapacity(int rootBlockSize,
+                                 StaggeredCompressorInput input,
+                                 SkipListFormat format)
+    {
 
         return rootBlockCapacity(rootBlockSize,
-                numPointersForRootBlock(rootBlockSize, input),
+                numPointersForRootBlock(rootBlockSize, input, format),
                 input);
     }
 

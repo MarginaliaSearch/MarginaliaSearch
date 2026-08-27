@@ -29,6 +29,7 @@ public class SkipListReader {
 
     private final BufferPool indexPool;
     private final SkipListValueReader valuesReader;
+    private final SkipListFormat format;
 
     private final long blockStart;
 
@@ -72,8 +73,16 @@ public class SkipListReader {
     public SkipListReader(BufferPool indexPool,
                           SkipListValueReader valuesReader,
                           long blockStart) {
+        this(indexPool, valuesReader, blockStart, SkipListFormat.CURRENT);
+    }
+
+    public SkipListReader(BufferPool indexPool,
+                          SkipListValueReader valuesReader,
+                          long blockStart,
+                          SkipListFormat format) {
         this.indexPool = indexPool;
         this.valuesReader = valuesReader;
+        this.format = format;
         this.blockStart = blockStart;
 
         currentBlock = blockStart & -BLOCK_SIZE;
@@ -100,7 +109,7 @@ public class SkipListReader {
         try (var page = indexPool.get(currentBlock)) {
             int fc = headerForwardCount(page, currentBlockOffset);
             if (fc > 0) {
-                return MAX_RECORDS_PER_BLOCK * skipOffsetForPointer(fc);
+                return MAX_RECORDS_PER_BLOCK * format.skipOffsetForPointer(fc);
             }
             else {
                 return headerNumRecords(page, currentBlockOffset);
@@ -816,15 +825,7 @@ public class SkipListReader {
                             currentBlockOffset = 0;
                             currentBlockIdx = 0;
                         } else {
-                            long nextBlock = currentBlock + (long) BLOCK_STRIDE;
-                            long currentValue = inputKeys[offsetPos];
-                            for (int i = 0; i < fc; i++) {
-                                long blockMaxValue = page.getLong(currentBlockOffset + DATA_BLOCK_HEADER_SIZE + 8 * i);
-                                nextBlock = currentBlock + (long) BLOCK_STRIDE * skipOffsetForPointer(Math.max(0, i - 1));
-                                if (blockMaxValue >= currentValue) {
-                                    break;
-                                }
-                            }
+                            long nextBlock = findNextBlock(page, fc, inputKeys[offsetPos]);
 
                             currentBlockOffset = 0;
                             currentBlockIdx = 0;
@@ -1009,15 +1010,8 @@ public class SkipListReader {
                         currentBlockIdx = 0;
                     }
                     else {
-                        long nextBlock = currentBlock + (long) BLOCK_STRIDE;
-                        long currentValue = keys[pos];
-                        for (int i = 0; i < fc; i++) {
-                            long blockMaxValue = page.getLong(currentBlockOffset + DATA_BLOCK_HEADER_SIZE + 8 * i);
-                            nextBlock = currentBlock + (long) BLOCK_STRIDE * skipOffsetForPointer(Math.max(0, i-1));
-                            if (blockMaxValue >= currentValue) {
-                                break;
-                            }
-                        }
+                        long nextBlock = findNextBlock(page, fc, keys[pos]);
+
                         currentBlockOffset = 0;
                         currentBlockIdx = 0;
                         currentBlock = nextBlock;
@@ -1036,15 +1030,19 @@ public class SkipListReader {
 
     /** Return the next block we need to look in if we are looking for targetValue */
     private long findNextBlock(MemoryPage page, int fc, long targetValue) {
-        long nextBlock = currentBlock + (long) BLOCK_STRIDE;
+        // The pointer distances are not strictly increasing in the V0 format due to a construction bug.
+        // TODO: After 2027-01-01 we can drop support for this historical quirk and simplify the function
+        int furthestBelow = 0;
+
         for (int i = 0; i < fc; i++) {
             long blockMaxValue = page.getLong(currentBlockOffset + DATA_BLOCK_HEADER_SIZE + 8 * i);
-            nextBlock = currentBlock + (long) BLOCK_STRIDE * skipOffsetForPointer(Math.max(0, i-1));
             if (blockMaxValue >= targetValue) {
-                break;
+                return currentBlock + (long) BLOCK_STRIDE * (furthestBelow + 1);
             }
+            furthestBelow = Math.max(furthestBelow, format.skipOffsetForPointer(i));
         }
-        return nextBlock;
+
+        return currentBlock + (long) BLOCK_STRIDE * Math.max(1, furthestBelow);
     }
 
 

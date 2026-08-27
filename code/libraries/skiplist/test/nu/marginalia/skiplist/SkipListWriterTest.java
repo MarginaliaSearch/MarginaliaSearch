@@ -15,7 +15,9 @@ import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.Path;
 import java.util.Random;
 import java.util.stream.LongStream;
@@ -121,7 +123,7 @@ class SkipListWriterTest {
         }
 
         SkipListWriter.writeFooter(docsFile, "test123");
-        SkipListWriter.validateFooter(docsFile, "test123");
+        assertEquals(SkipListFormat.CURRENT, SkipListWriter.validateFooter(docsFile, "test123"));
 
         System.out.println(pos1);
         System.out.println(pos2);
@@ -258,7 +260,7 @@ class SkipListWriterTest {
             for (int i = 0; i < blocks.size(); i++) {
                 SkipListReader.RecordView block = blocks.get(i);
                 for (int fci = 0; fci < block.fc(); fci++) {
-                    int skipOffset = skipOffsetForPointer(fci);
+                    int skipOffset = SkipListFormat.CURRENT.skipOffsetForPointer(fci);
                     assertTrue(i + skipOffset < blocks.size());
                     Assertions.assertEquals(block.fowardPointers().getLong(fci), blocks.get(i+skipOffset).highestDocId());
                 }
@@ -371,10 +373,16 @@ class SkipListWriterTest {
 
     @Test
     public void testSkipOffsetForPointer() {
-        for (int i = 0; i < 64; i++) {
-            System.out.println(i + ":" + skipOffsetForPointer(i));
+        for (int i = 1; i <= POINTER_TARGET_COUNT; i++) {
+            assertTrue(SkipListFormat.CURRENT.skipOffsetForPointer(i) > SkipListFormat.CURRENT.skipOffsetForPointer(i - 1),
+                    "Pointer distances should be strictly increasing, pointer " + i);
+        }
+
+        int[] legacyDistances = new int[] { 15, 16, 17, 16, 17, 20, 25, 32 };
+        for (int i = 0; i < legacyDistances.length; i++) {
+            assertEquals(legacyDistances[i],
+                    SkipListFormat.V0.skipOffsetForPointer(14 + i),
+                    "Legacy pointer " + (14 + i));
         }
     }
-
-
 }
