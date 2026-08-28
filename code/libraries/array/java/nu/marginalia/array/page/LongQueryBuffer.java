@@ -14,7 +14,6 @@ import java.util.Arrays;
  * <p></p>
  * Filtering is done via the methods {@link #rejectAndAdvance()}, {@link #retainAndAdvance()},
  * and {@link #finalizeFiltering()}.
- *
  */
 public class LongQueryBuffer {
     /** Direct access to the data in the buffer,
@@ -24,16 +23,21 @@ public class LongQueryBuffer {
     /** Number of items in the data buffer */
     public int end;
 
+    private final long[] retained;
+
     private int read = 0;
     private int write = 0;
+    private int rejected = 0;
 
     public LongQueryBuffer(int size) {
         this.data = new long[size];
+        this.retained = new long[size];
         this.end = 0;
     }
 
     public LongQueryBuffer(long[] data, int size) {
         this.data = data;
+        this.retained = new long[data.length];
         this.end = size;
     }
 
@@ -42,7 +46,7 @@ public class LongQueryBuffer {
     }
 
     public long[] copyFilterData() {
-        return Arrays.copyOf(data, write);
+        return Arrays.copyOf(retained, write);
     }
 
     public boolean fitsMore() {
@@ -79,14 +83,18 @@ public class LongQueryBuffer {
 
     public void reset() {
         end = data.length;
-        read = 0;
-        write = 0;
+        resetFiltering();
     }
 
     public void zero() {
         end = 0;
+        resetFiltering();
+    }
+
+    private void resetFiltering() {
         read = 0;
         write = 0;
+        rejected = 0;
     }
 
     /* ==  Filtering methods == */
@@ -97,10 +105,15 @@ public class LongQueryBuffer {
         return data[read];
     }
 
-    /** Advances the read pointer and returns true if there are more values to read. */
+    /** Rejects the current value and advances the read pointer, returning true if there are more
+     *  values to read.  Rejected values are compacted in order at the front of the data,
+     *  so that they can be evaluated against another filter.
+     */
     public boolean rejectAndAdvance() {
         assert read < end;
-        assert write < end;
+        assert rejected <= read;
+
+        data[rejected++] = data[read];
 
         return ++read < end;
     }
@@ -112,22 +125,15 @@ public class LongQueryBuffer {
         }
         return true;
     }
+
     /** Retains the current value at the read pointer and advances the read and write pointers.
      *  Returns true if there are more values to read.
-     *  <p></p> To enable "or" style criterias, the method swaps the current value with the value
-     *  at the write pointer, so that it's retained at the end of the buffer.
      */
     public boolean retainAndAdvance() {
         assert read < end;
-        assert write < end;
+        assert write < retained.length;
 
-        if (read != write) {
-            long tmp = data[write];
-            data[write] = data[read];
-            data[read] = tmp;
-        }
-
-        write++;
+        retained[write++] = data[read];
 
         return ++read < end;
     }
@@ -137,7 +143,8 @@ public class LongQueryBuffer {
      * as though all values were retained.
      */
     public void retainAll() {
-        write = end;
+        System.arraycopy(data, read, retained, write, end - read);
+        write += end - read;
         read = end;
     }
 
@@ -155,33 +162,32 @@ public class LongQueryBuffer {
      * At this point the buffer can either be read, or additional filtering can be applied.
      */
     public void finalizeFiltering() {
+        System.arraycopy(retained, 0, data, 0, write);
+
         end = write;
-        read = 0;
-        write = 0;
+        resetFiltering();
     }
 
-    /** Finalizes the filtering by setting the end pointer to the write pointer,
-     * and resetting the read and write pointers to zero.  This version of the function
-     * also sorts the data as it needs to be ascending for subsequent filtering passes.
+    /** Finalizes a multipass filter.  Each pass retains its values in order, but later
+     * passes retain values that sort before earlier ones, so the retained values are
+     * sorted to keep the buffer ascending for subsequent filtering.
      * <p></p>
      * At this point the buffer can either be read, or additional filtering can be applied.
      */
     public void finalizeMultipass() {
-        Arrays.sort(data, 0, write);
+        Arrays.sort(retained, 0, write);
+        System.arraycopy(retained, 0, data, 0, write);
 
         end = write;
-        read = 0;
-        write = 0;
+        resetFiltering();
     }
 
-
-    /** Resets the buffer so that the rejected values can be re-evaluated with another filter. */
+    /** Resets the buffer so that the rejected values can be re-evaluated with another filter */
     public void tryOther() {
-        // Ensure assumption of sortedness
-        Arrays.sort(data, write, end);
-        read = write;
+        end = rejected;
+        read = 0;
+        rejected = 0;
     }
-
 
     /**  Retain only unique values in the buffer, and update the end pointer to the new length.
      * <p></p>
@@ -216,6 +222,4 @@ public class LongQueryBuffer {
             ",end = " + end +
             ",data = [" + Arrays.toString(copyData()) + "]]";
     }
-
-
 }

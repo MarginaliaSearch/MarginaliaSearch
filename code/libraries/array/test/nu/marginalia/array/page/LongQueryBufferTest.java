@@ -55,6 +55,39 @@ class LongQueryBufferTest {
         assertArrayEquals(new long[] { 1, 2, 3, 4 }, buffer.copyData());
     }
 
+    @Test
+    void testMultipass() {
+        long[] values = new long[64];
+        for (int i = 0; i < values.length; i++) values[i] = i;
+        var buffer = new LongQueryBuffer(values, values.length);
+
+        // Seven passes each retaining every seventh value, then a pass retaining nothing,
+        // so that the runs interleave completely and one run is empty
+        for (int pass = 0; pass < 7; pass++) {
+            final int residue = pass;
+            filter(buffer, v -> v % 7 == residue);
+            buffer.tryOther();
+        }
+        filter(buffer, v -> false);
+        buffer.finalizeMultipass();
+
+        long[] expected = new long[values.length];
+        for (int i = 0; i < expected.length; i++) expected[i] = i;
+        assertArrayEquals(expected, buffer.copyData());
+    }
+
+    @Test
+    void testRetainAll() {
+        var buffer = new LongQueryBuffer(new long[] { 1, 2, 3, 4, 5 }, 5);
+
+        buffer.rejectAndAdvance();
+        buffer.retainAndAdvance();
+        buffer.retainAll();
+        buffer.finalizeFiltering();
+
+        assertArrayEquals(new long[] { 2, 3, 4, 5 }, buffer.copyData());
+    }
+
     private static void filter(LongQueryBuffer buffer, LongPredicate predicate) {
         while (buffer.hasMore()) {
             if (predicate.test(buffer.currentValue())) {
