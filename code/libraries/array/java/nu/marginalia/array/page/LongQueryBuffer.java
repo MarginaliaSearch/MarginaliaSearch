@@ -1,11 +1,7 @@
 package nu.marginalia.array.page;
 
-import nu.marginalia.array.LongArray;
-import nu.marginalia.array.LongArrayFactory;
-
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /** A buffer for long values that can be used to filter and manipulate the data.
@@ -23,7 +19,7 @@ import java.util.Arrays;
 public class LongQueryBuffer {
     /** Direct access to the data in the buffer,
      * guaranteed to be populated until `end` */
-    public final LongArray data;
+    public final long[] data;
 
     /** Number of items in the data buffer */
     public int end;
@@ -31,42 +27,32 @@ public class LongQueryBuffer {
     private int read = 0;
     private int write = 0;
 
-    private LongQueryBuffer(LongArray array, int size) {
-        this.data = array;
-        this.end = size;
-    }
-
     public LongQueryBuffer(int size) {
-        this.data = LongArrayFactory.onHeapConfined(size);
+        this.data = new long[size];
         this.end = 0;
     }
 
     public LongQueryBuffer(long[] data, int size) {
-        this.data = LongArrayFactory.onHeapConfined(size);
-        this.data.set(0, data);
+        this.data = data;
         this.end = size;
     }
 
     public long[] copyData() {
-        long[] copy = new long[end];
-        data.forEach(0, end, (pos, val) -> copy[(int)pos]=val );
-        return copy;
+        return Arrays.copyOf(data, end);
     }
 
     public long[] copyFilterData() {
-        long[] copy = new long[write];
-        data.forEach(0, write, (pos, val) -> copy[(int)pos]=val );
-        return copy;
+        return Arrays.copyOf(data, write);
     }
 
     public boolean fitsMore() {
-        return end < data.size();
+        return end < data.length;
     }
 
     public int addData(MemorySegment source, long sourceOffset, int nMax) {
-        int n = Math.min(nMax, (int) data.size() - end);
+        int n = Math.min(nMax, data.length - end);
 
-        MemorySegment.copy(source, ValueLayout.JAVA_LONG, sourceOffset, data.getMemorySegment(), ValueLayout.JAVA_LONG, 8L * end, n);
+        MemorySegment.copy(source, ValueLayout.JAVA_LONG, sourceOffset, data, end, n);
 
         end += n;
 
@@ -74,17 +60,13 @@ public class LongQueryBuffer {
     }
 
     public int addData(long[] newData, int start, int nMax) {
-        int n = Math.min(nMax, (int) data.size() - end);
+        int n = Math.min(nMax, data.length - end);
 
-        MemorySegment.copy(newData, start, data.getMemorySegment(), ValueLayout.JAVA_LONG, 8L*end, n);
+        System.arraycopy(newData, start, data, end, n);
 
         end += n;
 
         return n;
-    }
-    /** Dispose of the buffer and release resources */
-    public void dispose() {
-        data.close();
     }
 
     public boolean isEmpty() {
@@ -96,7 +78,7 @@ public class LongQueryBuffer {
     }
 
     public void reset() {
-        end = (int) data.size();
+        end = data.length;
         read = 0;
         write = 0;
     }
@@ -107,16 +89,12 @@ public class LongQueryBuffer {
         write = 0;
     }
 
-    public LongQueryBuffer slice(int start, int end) {
-        return new LongQueryBuffer(data.range(start, end), end - start);
-    }
-
     /* ==  Filtering methods == */
 
     /** Returns the current value at the read pointer.
      */
     public long currentValue() {
-        return data.get(read);
+        return data[read];
     }
 
     /** Advances the read pointer and returns true if there are more values to read. */
@@ -129,7 +107,7 @@ public class LongQueryBuffer {
 
     public boolean isAscending() {
         for (int i = read + 1; i < end; i++) {
-            if (data.get(i-1) > data.get(i))
+            if (data[i-1] > data[i])
                 return false;
         }
         return true;
@@ -144,9 +122,9 @@ public class LongQueryBuffer {
         assert write < end;
 
         if (read != write) {
-            long tmp = data.get(write);
-            data.set(write, data.get(read));
-            data.set(read, tmp);
+            long tmp = data[write];
+            data[write] = data[read];
+            data[read] = tmp;
         }
 
         write++;
@@ -189,7 +167,7 @@ public class LongQueryBuffer {
      * At this point the buffer can either be read, or additional filtering can be applied.
      */
     public void finalizeMultipass() {
-        data.sort(0, write);
+        Arrays.sort(data, 0, write);
 
         end = write;
         read = 0;
@@ -197,8 +175,10 @@ public class LongQueryBuffer {
     }
 
 
-    /** Resets the buffer so that the rejected values can be re-evaluated with another filter */
+    /** Resets the buffer so that the rejected values can be re-evaluated with another filter. */
     public void tryOther() {
+        // Ensure assumption of sortedness
+        Arrays.sort(data, write, end);
         read = write;
     }
 
@@ -227,11 +207,6 @@ public class LongQueryBuffer {
         }
 
         finalizeFiltering();
-    }
-
-    @SuppressWarnings("preview")
-    public ByteBuffer asByteBuffer() {
-        return data.getMemorySegment().asByteBuffer();
     }
 
     public String toString() {

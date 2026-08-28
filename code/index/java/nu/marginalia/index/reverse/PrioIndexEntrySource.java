@@ -7,7 +7,6 @@ import nu.marginalia.sequence.io.BitReader;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 
 public class PrioIndexEntrySource implements EntrySource {
@@ -56,13 +55,11 @@ public class PrioIndexEntrySource implements EntrySource {
     }
 
     @Override
-    @SuppressWarnings("preview")
     public void read(LongQueryBuffer buffer) {
-        var outputBuffer = buffer.asByteBuffer().order(ByteOrder.LITTLE_ENDIAN);
-        outputBuffer.clear();
+        int outputPos = 0;
 
         // FYI: The encoding end of this compression algorithm is at PrioDocIdsTransformer
-        while (outputBuffer.hasRemaining() && readItems++ < numItems) {
+        while (outputPos < buffer.data.length && readItems++ < numItems) {
             int rank;
             int domainId;
             int docOrd;
@@ -97,16 +94,14 @@ public class PrioIndexEntrySource implements EntrySource {
 
             long encodedId = UrlIdCodec.encodeId(rank, domainId, docOrd);
 
-            outputBuffer.putLong(
-                    encodedId
-            );
+            buffer.data[outputPos++] = encodedId;
 
             prevRank = rank;
             prevDomainId = domainId;
             prevDocOrd = docOrd;
         }
 
-        buffer.end = outputBuffer.position() / 8;
+        buffer.end = outputPos;
 
         buffer.uniq();
     }

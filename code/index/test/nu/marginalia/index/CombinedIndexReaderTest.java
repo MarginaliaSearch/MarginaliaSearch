@@ -181,7 +181,7 @@ public class CombinedIndexReaderTest {
     List<MockDataDocument> decode(LongQueryBuffer buffer) {
         List<MockDataDocument> result = new ArrayList<>();
         for (int i = 0; i < buffer.size(); i++) {
-            result.add(new MockDataDocument(buffer.data.get(i)));
+            result.add(new MockDataDocument(buffer.data[i]));
         }
         return result;
     }

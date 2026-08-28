@@ -80,22 +80,21 @@ public class IndexUnrankedQueryExecution {
 
         var buffer = new LongQueryBuffer(limitTotal);
 
-        try {
-            for (IndexQuery query : queries) {
-                if (!budget.hasTimeLeft()) break;
-                if (limitTotal <= seenDocIds.size()) break;
+        for (IndexQuery query : queries) {
+            if (!budget.hasTimeLeft()) break;
+            if (limitTotal <= seenDocIds.size()) break;
 
-                while (query.hasMore() && budget.hasTimeLeft() && seenDocIds.size() < limitTotal) {
-                    buffer.reset();
-                    query.getMoreResults(buffer);
+            while (query.hasMore() && budget.hasTimeLeft() && seenDocIds.size() < limitTotal) {
+                buffer.reset();
+                query.getMoreResults(buffer);
 
-                    if (buffer.isEmpty()) continue;
+                if (buffer.isEmpty()) continue;
 
-                    while (buffer.hasMore() && seenDocIds.size() < limitTotal) {
-                        long nextId = buffer.currentValue();
+                while (buffer.hasMore() && seenDocIds.size() < limitTotal) {
+                    long nextId = buffer.currentValue();
 
-                        if (seenDocIds.add(UrlIdCodec.removeRank(nextId))) {
-                            var result = new RankableDocument(nextId);
+                    if (seenDocIds.add(UrlIdCodec.removeRank(nextId))) {
+                        var result = new RankableDocument(nextId);
 
                             result.item = new SearchResultItem(nextId,
                                     nodeId,
@@ -103,18 +102,14 @@ public class IndexUnrankedQueryExecution {
                                     currentIndex.getHtmlFeatures(nextId),
                                     0, 0L);
 
-                            results.add(result);
-                        }
-
-                        buffer.rejectAndAdvance(); // cheaper than retain fwiw
+                        results.add(result);
                     }
-                }
 
-                finished = !buffer.hasMore() && !query.hasMore();
+                    buffer.rejectAndAdvance(); // cheaper than retain fwiw
+                }
             }
-        }
-        finally {
-            buffer.dispose();
+
+            finished = !buffer.hasMore() && !query.hasMore();
         }
 
         results.sort(Comparator.naturalOrder());
@@ -140,7 +135,7 @@ public class IndexUnrankedQueryExecution {
 
                 int pubDate = currentIndex.getDocPubDate(doc.item.combinedId);
 
-                converter.convert(doc, docData, leads[i], nodeId, pubDate).ifPresent(ret::add);
+                converter.convert(doc, docData, leads[i], pubDate).ifPresent(ret::add);
             }
         }
 
@@ -155,7 +150,6 @@ public class IndexUnrankedQueryExecution {
         public Optional<RpcDecoratedResultItem> convert(RankableDocument doc,
                                                  DocdbUrlDetail docData,
                                                  @Nullable String leadDescription,
-                                                 int nodeId,
                                                  int pubDate) {
             SearchResultItem resultItem = doc.item;
 

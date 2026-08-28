@@ -79,7 +79,7 @@ public class SkipListReaderTest {
             while (!reader.atEnd()) {
                 reader.getKeys(lqb);
                 for (int i = 0; i < lqb.end; i++) {
-                    actual.add(lqb.data.get(i));
+                    actual.add(lqb.data[i]);
                 }
                 lqb.zero();
             }
@@ -116,14 +116,14 @@ public class SkipListReaderTest {
                 if (!readerA.atEnd()) {
                     readerA.getKeys(lqb);
                     for (int i = 0; i < lqb.end; i++) {
-                        actualA.add(lqb.data.get(i));
+                        actualA.add(lqb.data[i]);
                     }
                     lqb.zero();
                 }
                 if (!readerB.atEnd()) {
                     readerB.getKeys(lqb);
                     for (int i = 0; i < lqb.end; i++) {
-                        actualB.add(lqb.data.get(i));
+                        actualB.add(lqb.data[i]);
                     }
                     lqb.zero();
                 }
