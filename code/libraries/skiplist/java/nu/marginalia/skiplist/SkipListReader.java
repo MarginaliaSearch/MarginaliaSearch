@@ -40,7 +40,10 @@ public class SkipListReader {
 
     private boolean atEnd;
 
-    private static final int DECOMPRESSED_BLOCK_POOL_SIZE = 24;
+    private int sequentialReadsObserved;
+
+    private static final int DECOMPRESSED_BLOCK_POOL_SIZE = 128;
+
     private static final AtomicLong readerSequence = new AtomicLong();
 
     private static final class DecompressedBlock {
@@ -126,6 +129,7 @@ public class SkipListReader {
         currentBlock = blockStart & -BLOCK_SIZE;
         currentBlockOffset = (int) (blockStart & (BLOCK_SIZE - 1));
         currentBlockIdx = 0;
+        sequentialReadsObserved = 0;
 
         atEnd = false;
     }
@@ -156,7 +160,7 @@ public class SkipListReader {
         if (atEnd) return false;
         if (!data.hasMore()) return false;
 
-        try (var page = indexPool.get(currentBlock)) {
+        try (var page = indexPool.get(currentBlock, readAhead())) {
 
             int n = headerNumRecords(page, currentBlockOffset);
             int fc = headerForwardCount(page, currentBlockOffset);
@@ -191,6 +195,8 @@ public class SkipListReader {
                 else {
                     nextBlock = currentBlock + BLOCK_STRIDE;
                 }
+
+                sequentialReadsObserved = nextBlock == currentBlock + BLOCK_STRIDE ? sequentialReadsObserved + 1 : 0;
 
                 currentBlockOffset = 0;
                 currentBlockIdx = 0;
@@ -300,7 +306,7 @@ public class SkipListReader {
     public boolean tryRejectData(@NotNull LongQueryBuffer data) {
         assert data.isAscending();
 
-        try (var page = indexPool.get(currentBlock)) {
+        try (var page = indexPool.get(currentBlock, readAhead())) {
 
             int n = headerNumRecords(page, currentBlockOffset);
             int fc = headerForwardCount(page, currentBlockOffset);
@@ -334,6 +340,8 @@ public class SkipListReader {
                 else {
                     nextBlock = currentBlock + BLOCK_STRIDE;
                 }
+
+                sequentialReadsObserved = nextBlock == currentBlock + BLOCK_STRIDE ? sequentialReadsObserved + 1 : 0;
 
                 currentBlockOffset = 0;
                 currentBlockIdx = 0;
@@ -446,7 +454,7 @@ public class SkipListReader {
 
         int totalCopied = 0;
         while (dest.fitsMore() && !atEnd) {
-            try (var page = indexPool.get(currentBlock)) {
+            try (var page = indexPool.get(currentBlock, BLOCK_READ_AHEAD)) {
                 MemorySegment ms = page.getMemorySegment();
 
                 assert ms.get(ValueLayout.JAVA_INT, currentBlockOffset) != 0 : "Likely reading zero space";
@@ -1057,7 +1065,13 @@ public class SkipListReader {
         return page.getLong(pageDataOffset(currentBlockOffset, fc) + 8*(n-1));
     }
 
-    /** Return the next block we need to look in if we are looking for targetValue */
+    private int readAhead() {
+        // Readahead if we've seen sequentail read behavior
+        if (sequentialReadsObserved >= 2)
+            return BLOCK_READ_AHEAD;
+        return Math.min(1, BLOCK_READ_AHEAD);
+    }
+
     private long findNextBlock(MemoryPage page, int fc, long targetValue) {
         // The pointer distances are not strictly increasing in the V0 format due to a construction bug.
         // TODO: After 2027-01-01 we can drop support for this historical quirk and simplify the function

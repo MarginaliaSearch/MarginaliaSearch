@@ -997,6 +997,11 @@ public class SkipListReaderTest {
             return super.get(address);
         }
 
+        @Override
+        public MemoryPage get(long address, int readAheadPages) {
+            return get(address);
+        }
+
         public List<Integer> visitedBlocks() {
             List<Integer> blocks = new ArrayList<>();
             for (long address : addresses) {
