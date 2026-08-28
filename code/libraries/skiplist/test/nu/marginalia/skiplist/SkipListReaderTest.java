@@ -134,6 +134,45 @@ public class SkipListReaderTest {
         }
     }
 
+    /** More readers than the decompressed block pool holds, so that slots are recycled
+     *  from under readers that are still in use */
+    @Test
+    public void testPoolContention() throws IOException {
+        long[] keys = LongStream.range(1, 20_000).toArray();
+        long[] vals = new long[keys.length];
+
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
+            writer.writeList(createArray(keys, vals), keys.length);
+        }
+
+        try (var indexPool = new BufferPool(docsFile, SkipListConstants.BLOCK_SIZE, 8);
+             var valueReader = new SkipListValueReader(valuesFile)) {
+            int readerCount = 64;
+
+            List<SkipListReader> readers = new ArrayList<>(readerCount);
+            List<LongList> actual = new ArrayList<>(readerCount);
+            for (int i = 0; i < readerCount; i++) {
+                readers.add(new SkipListReader(indexPool, valueReader, 0));
+                actual.add(new LongArrayList(keys.length));
+            }
+
+            LongQueryBuffer lqb = new LongQueryBuffer(512);
+            while (!readers.getFirst().atEnd()) {
+                for (int i = 0; i < readerCount; i++) {
+                    readers.get(i).getKeys(lqb);
+                    for (int j = 0; j < lqb.end; j++) {
+                        actual.get(i).add(lqb.data[j]);
+                    }
+                    lqb.zero();
+                }
+            }
+
+            for (int i = 0; i < readerCount; i++) {
+                Assertions.assertArrayEquals(keys, actual.get(i).toLongArray(), "reader " + i);
+            }
+        }
+    }
+
     @Test
     public void testGetKeysWithRange__sunny_day() throws IOException {
         long[] keys = LongStream.range(0, 1000).toArray();
