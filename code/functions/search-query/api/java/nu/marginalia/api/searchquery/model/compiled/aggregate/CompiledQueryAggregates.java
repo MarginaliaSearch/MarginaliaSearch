@@ -1,12 +1,8 @@
 package nu.marginalia.api.searchquery.model.compiled.aggregate;
 
 import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.longs.LongArraySet;
-import it.unimi.dsi.fastutil.longs.LongSet;
 import nu.marginalia.api.searchquery.model.compiled.*;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.*;
 
 /** Contains methods for aggregating across a CompiledQuery or CompiledQueryLong */
@@ -204,28 +200,6 @@ public class CompiledQueryAggregates {
         }
 
         return bestPath;
-    }
-
-    /** Enumerate all possible paths through the compiled query */
-    public static List<LongSet> queriesAggregate(CompiledQueryLong query) {
-        final CqDataLong data = query.data;
-
-        List<LongSet> ret = new ArrayList<>();
-
-        for (IntList path : query.paths) {
-            LongSet set = new LongArraySet(path.size());
-
-            for (int i = 0; i < path.size(); i++) {
-                final int dataIdx = path.getInt(i);
-                final long dataVal = data.get(dataIdx);
-
-                set.add(dataVal);
-            }
-
-            ret.add(set);
-        }
-
-        return ret;
     }
 
 }

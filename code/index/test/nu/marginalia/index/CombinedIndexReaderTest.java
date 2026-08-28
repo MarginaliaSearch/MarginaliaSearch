@@ -4,6 +4,11 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.IndexLocations;
+import nu.marginalia.api.searchquery.IndexProtobufCodec;
+import nu.marginalia.api.searchquery.RpcIndexQuery;
+import nu.marginalia.api.searchquery.RpcQueryLimits;
+import nu.marginalia.api.searchquery.RpcQueryTerms;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.index.config.IndexFileName;
@@ -13,7 +18,11 @@ import nu.marginalia.index.journal.IndexJournalSlopWriter;
 import nu.marginalia.index.reverse.construction.DocIdRewriter;
 import nu.marginalia.index.reverse.construction.full.FullIndexConstructor;
 import nu.marginalia.index.reverse.construction.prio.PrioIndexConstructor;
+import nu.marginalia.index.model.SearchContext;
+import nu.marginalia.index.reverse.query.IndexQuery;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
+import nu.marginalia.ranking.connectivity.ConnectivityView;
+import nu.marginalia.ranking.set.SearchSetAny;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
@@ -176,6 +185,51 @@ public class CombinedIndexReaderTest {
                 List.of(d(2, 4)),
                 decode(buffer)
         );
+    }
+
+    @Test
+    public void testGroupRetrieval() throws Exception {
+        new MockData()
+                .add(d(1, 1), anyMetadata, w("elden", WordFlags.Title), w("ring", WordFlags.Title))
+                .add(d(1, 2), anyMetadata, w("elden", WordFlags.Title), w("rings", WordFlags.Title))
+                .add(d(1, 3), anyMetadata, w("elden_ring", WordFlags.Title))
+                .add(d(2, 4), anyMetadata, w("ring", WordFlags.Title))
+                .add(d(2, 5), anyMetadata, w("rings", WordFlags.Title))
+                .load();
+
+        var reader = indexFactory.getCombinedIndexReader();
+
+        // elden ( ring | rings ) | elden_ring
+        var compiledQuery = new CompiledQuery<>(
+                List.of(IntList.of(0, 1), IntList.of(0, 2), IntList.of(3)),
+                new int[] { 0, 1, 1, 3 },
+                new String[] { "elden", "ring", "rings", "elden_ring" });
+
+        var request = RpcIndexQuery.newBuilder()
+                .setLangIsoCode("en")
+                .setQueryLimits(RpcQueryLimits.newBuilder().setTimeoutMs(10_000).setResultsTotal(100).setResultsByDomain(100))
+                .setTerms(RpcQueryTerms.newBuilder()
+                        .setCompiledQuery(IndexProtobufCodec.convertCompiledQuery(compiledQuery))
+                        .addAllTermsQuery(compiledQuery.stream().toList()))
+                .build();
+
+        var context = SearchContext.create(reader, new KeywordHasher.AsciiIsh(), request, new SearchSetAny(), ConnectivityView.empty());
+        var queries = reader.createQueries(context);
+
+        // The two ring/rings paths share a head, so the full index is consulted twice rather than three times
+        assertEquals(2, queries.stream().filter(query -> !query.isPrioritized()).count());
+
+        Set<MockDataDocument> retrieved = new HashSet<>();
+        var buffer = new LongQueryBuffer(32);
+        for (IndexQuery query : queries) {
+            while (query.hasMore()) {
+                buffer.zero();
+                query.getMoreResults(buffer);
+                retrieved.addAll(decode(buffer));
+            }
+        }
+
+        assertEquals(Set.of(d(1, 1), d(1, 2), d(1, 3)), retrieved);
     }
 
     List<MockDataDocument> decode(LongQueryBuffer buffer) {
