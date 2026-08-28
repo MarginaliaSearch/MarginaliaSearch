@@ -13,9 +13,6 @@ public class CqDataLong {
     public long get(int i) {
         return data[i];
     }
-    public long get(CqExpression.Word w) {
-        return data[w.idx()];
-    }
 
     public LongStream stream() {
         return Arrays.stream(data);

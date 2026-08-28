@@ -10,9 +10,7 @@ import it.unimi.dsi.fastutil.longs.LongList;
 import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQueryLong;
-import nu.marginalia.api.searchquery.model.compiled.CompiledQueryParser;
 import nu.marginalia.api.searchquery.model.compiled.CqDataInt;
-import nu.marginalia.api.searchquery.model.compiled.CqExpression;
 import nu.marginalia.api.searchquery.model.query.QueryStrategy;
 import nu.marginalia.api.searchquery.model.query.SpecificationLimit;
 import nu.marginalia.api.searchquery.model.results.PrototypeRankingParameters;
@@ -112,7 +110,6 @@ public class SearchContext {
                 connectivityView,
                 request.getLangIsoCode(),
                 currentIndex,
-                queryTerms.getCompiledQuery(),
                 queryParams,
                 queryTerms,
                 rankingParams,
@@ -128,7 +125,6 @@ public class SearchContext {
             ConnectivityView connectivityView,
             String langIsoCode,
             CombinedIndexReader currentIndex,
-            String queryExpression,
             QueryParams queryParams,
             RpcQueryTerms query,
             RpcResultRankingParameters rankingParams,
@@ -162,7 +158,7 @@ public class SearchContext {
         this.limitByDomain = limits.getResultsByDomain();
         this.limitTotal = limits.getResultsTotal();
 
-        this.compiledQuery = CompiledQueryParser.parse(queryExpression);
+        this.compiledQuery = IndexProtobufCodec.convertCompiledQuery(query.getCompiledQuery());
         this.compiledQueryIds = compiledQuery.mapToLong(keywordHasher::hashKeyword);
         int[] full = new int[compiledQueryIds.size()];
         int[] prio = new int[compiledQueryIds.size()];
@@ -183,7 +179,7 @@ public class SearchContext {
             }
         }
 
-        harmonizeVariantTermFrequencies(compiledQuery.root(), full);
+        harmonizeVariantTermFrequencies(compiledQuery.variantClasses, full);
 
         this.fullCounts = new CqDataInt(full);
         this.priorityCounts = new CqDataInt(prio);
@@ -267,67 +263,21 @@ public class SearchContext {
         this.phraseConstraints = new PhraseConstraintGroupList(constraintsFull, constraintsMandatory, constraintsOptional);
     }
 
-    /** Returns a mapping from compiled query index to a representative index for
-     * its variant group, where word alternatives in an Or group share a
-     * representative.  Terms without variants map to themselves. */
-    public static int[] variantClasses(CqExpression expression, int size) {
-        int[] classes = new int[size];
-        for (int i = 0; i < size; i++) {
-            classes[i] = i;
+    /** The query factory creates multiple subqueries, with alternative words for some parts of the query,
+     * e.g. by pluralizing a word or adding a hyphen between adjacent words.  Since these alternatives
+     * are often more or less common than the original term, they can skew the BM25 calculation.  We thus
+     * count them as instances of the original word.
+     * */
+    public static void harmonizeVariantTermFrequencies(int[] classes, int[] frequencies) {
+        int[] max = new int[frequencies.length];
+
+        for (int i = 0; i < frequencies.length; i++) {
+            int variantClass = classes[i];
+            max[variantClass] = Math.max(max[variantClass], frequencies[i]);
         }
-        assignVariantClasses(expression, classes);
-        return classes;
-    }
 
-    private static void assignVariantClasses(CqExpression expression, int[] classes) {
-        if (expression instanceof CqExpression.Or or) {
-            int representative = -1;
-
-            for (var part : or.parts()) {
-                if (part instanceof CqExpression.Word word) {
-                    if (representative < 0) {
-                        representative = word.idx();
-                    }
-                    classes[word.idx()] = representative;
-                }
-                else {
-                    assignVariantClasses(part, classes);
-                }
-            }
-        }
-        else if (expression instanceof CqExpression.And and) {
-            for (var part : and.parts()) {
-                assignVariantClasses(part, classes);
-            }
-        }
-    }
-
-    /** Let word alternatives in an Or group share the largest document frequency
-     * in the group, so that rare spelling variants from query expansion don't get
-     * an outsized IDF relative to the canonical form. */
-    public static void harmonizeVariantTermFrequencies(CqExpression expression, int[] frequencies) {
-        if (expression instanceof CqExpression.Or or) {
-            int maxFrequency = 0;
-
-            for (var part : or.parts()) {
-                if (part instanceof CqExpression.Word word) {
-                    maxFrequency = Math.max(maxFrequency, frequencies[word.idx()]);
-                }
-            }
-
-            for (var part : or.parts()) {
-                if (part instanceof CqExpression.Word word) {
-                    frequencies[word.idx()] = maxFrequency;
-                }
-                else {
-                    harmonizeVariantTermFrequencies(part, frequencies);
-                }
-            }
-        }
-        else if (expression instanceof CqExpression.And and) {
-            for (var part : and.parts()) {
-                harmonizeVariantTermFrequencies(part, frequencies);
-            }
+        for (int i = 0; i < frequencies.length; i++) {
+            frequencies[i] = max[classes[i]];
         }
     }
 

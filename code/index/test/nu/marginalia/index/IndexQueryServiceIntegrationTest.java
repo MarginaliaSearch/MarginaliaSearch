@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.api.searchquery.*;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.index.config.IndexFileName;
 import nu.marginalia.index.forward.construction.ForwardIndexConverter;
@@ -31,7 +32,6 @@ import nu.marginalia.sequence.VarintCodedSequence;
 import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.service.server.Initialization;
 import nu.marginalia.storage.FileStorageService;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -138,7 +138,7 @@ public class IndexQueryServiceIntegrationTest {
         var queryMissingPriority = basicQuery(builder ->
                 builder.setTerms(
                         RpcQueryTerms.newBuilder()
-                                .setCompiledQuery("hello")
+                                .setCompiledQuery(compiledQuery("hello"))
                                 .addTermsQuery("hello")
                                 .addTermsPriority("missing")
                                 .addTermsPriorityWeight(1.f)
@@ -382,15 +382,23 @@ public class IndexQueryServiceIntegrationTest {
         return mutator.apply(builder).build();
     }
 
+    RpcCompiledQuery compiledQuery(String... terms) {
+        return IndexProtobufCodec.convertCompiledQuery(CompiledQuery.just(terms));
+    }
+
+    RpcCompiledQuery compiledQuery(List<String> terms) {
+        return compiledQuery(terms.toArray(String[]::new));
+    }
+
     RpcQueryTerms justInclude(String... includes) {
         return RpcQueryTerms.newBuilder()
-                .setCompiledQuery(StringUtils.join(includes, " "))
+                .setCompiledQuery(compiledQuery(includes))
                 .addAllTermsQuery(List.of(includes)).build();
     }
 
     RpcQueryTerms includeAndExclude(List<String> includes, List<String> excludes) {
         return RpcQueryTerms.newBuilder()
-                .setCompiledQuery(StringUtils.join(includes, " "))
+                .setCompiledQuery(compiledQuery(includes))
                 .addAllTermsQuery(includes)
                 .addAllTermsExclude(excludes)
                 .build();
@@ -398,7 +406,7 @@ public class IndexQueryServiceIntegrationTest {
 
     RpcQueryTerms includeAndExclude(String include, String exclude) {
         return RpcQueryTerms.newBuilder()
-                .setCompiledQuery(include)
+                .setCompiledQuery(compiledQuery(include))
                 .addTermsQuery(include)
                 .addTermsExclude(exclude)
                 .build();
@@ -406,7 +414,7 @@ public class IndexQueryServiceIntegrationTest {
 
     RpcQueryTerms includeAndCohere(String... includes) {
         return RpcQueryTerms.newBuilder()
-                .setCompiledQuery(StringUtils.join(includes, " "))
+                .setCompiledQuery(compiledQuery(includes))
                 .addAllTermsQuery(Arrays.asList(includes))
                 .addPhrases(
                         RpcPhrases.newBuilder()
@@ -419,7 +427,7 @@ public class IndexQueryServiceIntegrationTest {
 
     RpcQueryTerms includeWithCohere(List<String> includes, List<String> coherences) {
         return RpcQueryTerms.newBuilder()
-                .setCompiledQuery(StringUtils.join(includes, " "))
+                .setCompiledQuery(compiledQuery(includes))
                 .addAllTermsExclude(includes)
                 .addPhrases(
                         RpcPhrases.newBuilder()

@@ -1,6 +1,7 @@
 package nu.marginalia.index.perftest;
 
 import nu.marginalia.WmsaHome;
+import nu.marginalia.api.searchquery.IndexProtobufCodec;
 import nu.marginalia.api.searchquery.RpcIndexQuery;
 import nu.marginalia.api.searchquery.RpcQsQuery;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
@@ -226,7 +227,7 @@ public class PerfTestMain {
                 CompiledSearchFilterSpec.builder("test", "test").build(),
                 PrototypeRankingParameters.sensibleDefaults()).indexQuery;
 
-        System.out.println("Query compiled to: " + parsedQuery.getTerms().getCompiledQuery());
+        System.out.println("Query compiled to: " + IndexProtobufCodec.convertCompiledQuery(parsedQuery.getTerms().getCompiledQuery()));
 
         System.out.println("Running warmup loop!");
         int sum = 0;
@@ -289,7 +290,7 @@ public class PerfTestMain {
                 CompiledSearchFilterSpec.builder("test", "test").build(),
                 PrototypeRankingParameters.sensibleDefaults()).indexQuery;
 
-        System.out.println("Query compiled to: " + parsedQuery.getTerms().getCompiledQuery());
+        System.out.println("Query compiled to: " + IndexProtobufCodec.convertCompiledQuery(parsedQuery.getTerms().getCompiledQuery()));
 
         SearchContext searchContext = SearchContext.create(indexReader, 1, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny(), ConnectivityView.empty());
 

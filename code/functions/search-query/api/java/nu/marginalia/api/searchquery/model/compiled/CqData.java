@@ -46,9 +46,6 @@ public class CqData<T> {
         return data[i];
     }
 
-    public T get(CqExpression.Word w) {
-        return data[w.idx()];
-    }
 
     public Stream<T> stream() {
         return Arrays.stream(data);

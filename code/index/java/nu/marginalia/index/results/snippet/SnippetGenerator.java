@@ -44,9 +44,7 @@ public class SnippetGenerator implements AutoCloseable {
 
         if (searchContext != null) {
             termWeights = termWeights(searchContext);
-            termClasses = SearchContext.variantClasses(
-                    searchContext.compiledQuery.root(),
-                    searchContext.compiledQuery.size());
+            termClasses = searchContext.compiledQuery.variantClasses;
         }
         else {
             termWeights = null;

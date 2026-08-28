@@ -2,8 +2,10 @@ package nu.marginalia.api.searchquery.model.query;
 
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
+import nu.marginalia.api.searchquery.IndexProtobufCodec;
 import nu.marginalia.api.searchquery.RpcPhrases;
 import nu.marginalia.api.searchquery.RpcQueryTerms;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,9 +14,9 @@ import java.util.stream.Collectors;
 
 public class SearchQuery {
     /**
-     * An infix style expression that encodes the required terms in the query
+     * Alternative combinations of terms to be ranked
      */
-    public final String compiledQuery;
+    public final CompiledQuery<String> compiledQuery;
 
     /**
      * All terms that appear in {@see compiledQuery}
@@ -46,7 +48,7 @@ public class SearchQuery {
      */
     public final List<SearchPhraseConstraint> phraseConstraints;
 
-    public SearchQuery(String compiledQuery,
+    public SearchQuery(CompiledQuery<String> compiledQuery,
                        List<String> searchTermsInclude,
                        List<String> searchTermsExclude,
                        List<String> searchTermsAdvice,
@@ -67,7 +69,7 @@ public class SearchQuery {
     }
 
     public SearchQuery() {
-        this.compiledQuery = "";
+        this.compiledQuery = CompiledQuery.just();
         this.searchTermsInclude = new ArrayList<>();
         this.searchTermsExclude = new ArrayList<>();
         this.searchTermsAdvice = new ArrayList<>();
@@ -92,7 +94,7 @@ public class SearchQuery {
         return sb.toString();
     }
 
-    public String getCompiledQuery() {
+    public CompiledQuery<String> getCompiledQuery() {
         return this.compiledQuery;
     }
 
@@ -141,7 +143,7 @@ public class SearchQuery {
     }
 
     public static class SearchQueryBuilder {
-        private String compiledQuery;
+        private CompiledQuery<String> compiledQuery;
         public final List<String> searchTermsQuery = new ArrayList<>();
         public final List<String> searchTermsExclude = new ArrayList<>();
         public final List<String> searchTermsRequire = new ArrayList<>();
@@ -152,7 +154,7 @@ public class SearchQuery {
         private SearchQueryBuilder() {
         }
 
-        public SearchQueryBuilder compiledQuery(String query) {
+        public SearchQueryBuilder compiledQuery(CompiledQuery<String> query) {
             this.compiledQuery = query;
             return this;
         }
@@ -187,7 +189,7 @@ public class SearchQuery {
 
             var termsBuilder =
                     RpcQueryTerms.newBuilder()
-                            .setCompiledQuery(compiledQuery)
+                            .setCompiledQuery(IndexProtobufCodec.convertCompiledQuery(compiledQuery))
                             .addAllTermsQuery(searchTermsQuery)
                             .addAllTermsRequire(searchTermsRequire)
                             .addAllTermsExclude(searchTermsExclude)

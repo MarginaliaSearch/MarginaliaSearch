@@ -1,5 +1,6 @@
 package nu.marginalia.functions.searchquery.query_parser.model;
 
+import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -231,9 +232,10 @@ public class QWordGraph implements Iterable<QWord> {
         }
     }
 
-    public String compileToQuery() {
-        return QWordPathsRenderer.render(this);
+    public CompiledQuery<String> compileToQuery() {
+        return QWordGraphCompiler.compile(this);
     }
+
     public String compileToDot() {
         StringBuilder sb = new StringBuilder();
         sb.append("digraph {\n");

@@ -2,10 +2,10 @@ package nu.marginalia.functions.searchquery.query_parser;
 
 import ca.rmen.porterstemmer.PorterStemmer;
 import com.google.inject.Inject;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.functions.searchquery.query_parser.model.QWord;
 import nu.marginalia.functions.searchquery.query_parser.model.QWordGraph;
 import nu.marginalia.functions.searchquery.query_parser.model.QWordGraphPathLister;
-import nu.marginalia.functions.searchquery.query_parser.model.QWordPathsRenderer;
 import nu.marginalia.language.NounVariants;
 import nu.marginalia.segmentation.NgramLexicon;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
@@ -42,7 +42,7 @@ public class QueryExpansion {
             strategy.expand(graph);
         }
 
-        return new Expansion(QWordPathsRenderer.render(graph),
+        return new Expansion(graph.compileToQuery(),
                 createSegments(graph),
                 listFullConstraints(graph));
     }
@@ -315,7 +315,7 @@ public class QueryExpansion {
         void expand(QWordGraph graph);
     }
 
-    public record Expansion(String compiledQuery,
+    public record Expansion(CompiledQuery<String> compiledQuery,
                             List<List<String>> optionalPharseConstraints,
                             List<List<String>> fullPhraseConstraints) {}
 }
