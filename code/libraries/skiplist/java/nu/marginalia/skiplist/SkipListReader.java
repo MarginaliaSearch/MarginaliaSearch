@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static nu.marginalia.skiplist.SkipListConstants.*;
 
@@ -39,32 +40,60 @@ public class SkipListReader {
 
     private boolean atEnd;
 
-    /** Per thread scratch buffer for decompressed doc id blocks, shared between
-     * all readers on the thread. */
+    private static final int DECOMPRESSED_BLOCK_POOL_SIZE = 24;
+    private static final AtomicLong readerSequence = new AtomicLong();
+
     private static final class DecompressedBlock {
         public final long[] data = new long[BLOCK_SIZE];
+        private final DecompressedBlockPool pool;
 
-        private SkipListReader owner;
-        private long block;
+        private long ownerId = -1;
+        private long block = -1;
 
-        public boolean canBeReused(SkipListReader currentReader, long currentBlock) {
-            return this.owner == currentReader && this.block == currentBlock;
-        }
-
-        public void claim(SkipListReader currentReader, long currentBlock) {
-            this.owner = currentReader;
-            this.block = currentBlock;
+        DecompressedBlock(DecompressedBlockPool pool) {
+            this.pool = pool;
         }
     }
 
-    private static final ThreadLocal<DecompressedBlock> decompressedBlock = ThreadLocal.withInitial(DecompressedBlock::new);
+    private static final class DecompressedBlockPool {
+        private final DecompressedBlock[] blocks = new DecompressedBlock[DECOMPRESSED_BLOCK_POOL_SIZE];
+        private int next = 0;
+
+        DecompressedBlock claim(long readerId) {
+            DecompressedBlock scratch = blocks[next];
+            if (scratch == null) {
+                scratch = new DecompressedBlock(this);
+                blocks[next] = scratch;
+            }
+            next = (next + 1) % blocks.length;
+
+            scratch.ownerId = readerId;
+            scratch.block = -1;
+
+            return scratch;
+        }
+    }
+
+    private static final ThreadLocal<DecompressedBlockPool> decompressedBlockPool = ThreadLocal.withInitial(DecompressedBlockPool::new);
+
+    private final long readerId = readerSequence.incrementAndGet();
+    private DecompressedBlock decompressedBlock;
 
     private long[] decompressBlock(MemoryPage page, int dataOffset, int n) {
-        DecompressedBlock scratch = decompressedBlock.get();
+        DecompressedBlockPool pool = decompressedBlockPool.get();
+        DecompressedBlock scratch = decompressedBlock;
 
-        if (!scratch.canBeReused(this, currentBlock)) {
-            DocIdCompressor.decompress(new SegmentCompressorBuffer(page.getMemorySegment(), dataOffset), n, scratch.data);
-            scratch.claim(this, currentBlock);
+        if (scratch == null || scratch.ownerId != readerId || scratch.pool != pool) {
+            scratch = pool.claim(readerId);
+            decompressedBlock = scratch;
+        }
+
+        if (scratch.block != currentBlock) {
+            DocIdCompressor.decompress(
+                    new SegmentCompressorBuffer(page.getMemorySegment(), dataOffset),
+                    n,
+                    scratch.data);
+            scratch.block = currentBlock;
         }
 
         return scratch.data;
@@ -227,7 +256,7 @@ public class SkipListReader {
     }
 
     boolean retainInPage_Compressed(int n, LongQueryBuffer data) {
-        long[] decompressedData = decompressedBlock.get().data;
+        long[] decompressedData = decompressedBlock.data;
 
         while (data.hasMore()
                 && n > (currentBlockIdx = binarySearchUB(decompressedData, data.currentValue(), currentBlockIdx, n)))
@@ -333,7 +362,7 @@ public class SkipListReader {
     }
 
     boolean rejectInPage_Compressed(int n, LongQueryBuffer data) {
-        long[] decompressedData = decompressedBlock.get().data;
+        long[] decompressedData = decompressedBlock.data;
 
         while (data.hasMore()
                 && n > (currentBlockIdx = binarySearchUB(decompressedData, data.currentValue(), currentBlockIdx, n)))
@@ -838,7 +867,7 @@ public class SkipListReader {
         }
 
         private void readOffsetsForBlock_Compressed(int n, long valuesOffset) {
-            long[] decompressedData = decompressedBlock.get().data;
+            long[] decompressedData = decompressedBlock.data;
 
             int searchStart = currentBlockIdx;
 
