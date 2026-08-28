@@ -126,12 +126,7 @@ public class IndexQuery {
         }
 
         for (var step : inclusionFilter) {
-            if (step instanceof ReverseIndexRetainFilter(SkipListReader _, String name, String term, _)) {
-                System.out.println("Retain " + name + " " + term);
-            }
-            else if (step instanceof ReverseIndexRejectFilter(SkipListReader _, String term, _)) {
-                System.out.println("Reject " + term);
-            }
+            System.out.println(step.describe());
         }
     }
 

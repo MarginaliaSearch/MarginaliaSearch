@@ -5,7 +5,6 @@ import it.unimi.dsi.fastutil.floats.FloatList;
 import it.unimi.dsi.fastutil.ints.*;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
-import it.unimi.dsi.fastutil.longs.LongComparator;
 import it.unimi.dsi.fastutil.longs.LongList;
 import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
@@ -283,12 +282,6 @@ public class SearchContext {
 
     public int termFreqDocCount() {
         return docCount;
-    }
-
-    public long[] sortedDistinctIncludes(LongComparator comparator) {
-        LongList list = new LongArrayList(compiledQueryIds.copyData());
-        list.sort(comparator);
-        return list.toLongArray();
     }
 
 }
