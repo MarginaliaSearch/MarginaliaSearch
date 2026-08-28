@@ -4,6 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.api.searchquery.*;
+import nu.marginalia.api.searchquery.model.compiled.CompiledQuery;
 import nu.marginalia.index.config.IndexFileName;
 import nu.marginalia.index.forward.construction.ForwardIndexConverter;
 import nu.marginalia.index.journal.IndexJournal;
@@ -123,7 +124,7 @@ IndexQueryServiceIntegrationSmokeTest {
                         .setSearchSetIdentifier("NONE")
                         .setHumanQuery("2 3 5 -4")
                         .setTerms(RpcQueryTerms.newBuilder()
-                                .setCompiledQuery("2 3 5")
+                                .setCompiledQuery(compiledQuery("2", "3", "5"))
                                 .addAllTermsQuery(List.of("5", "3", "2"))
                                 .addTermsExclude("4")
                                 .addPhrases(RpcPhrases
@@ -185,7 +186,7 @@ IndexQueryServiceIntegrationSmokeTest {
                         .setSearchSetIdentifier("NONE")
                         .setHumanQuery("2")
                         .setTerms(RpcQueryTerms.newBuilder()
-                                .setCompiledQuery("2")
+                                .setCompiledQuery(compiledQuery("2"))
                                 .addAllTermsQuery(List.of("2"))
                                 .addPhrases(RpcPhrases
                                         .newBuilder()
@@ -243,7 +244,7 @@ IndexQueryServiceIntegrationSmokeTest {
                         .setHumanQuery("2")
                         .addRequiredDomainIds(2)
                         .setTerms(RpcQueryTerms.newBuilder()
-                                .setCompiledQuery("2 3 5")
+                                .setCompiledQuery(compiledQuery("2", "3", "5"))
                                 .addAllTermsQuery(List.of("5", "3", "2"))
                                 .addTermsExclude("4")
                                 .addPhrases(RpcPhrases
@@ -313,7 +314,7 @@ IndexQueryServiceIntegrationSmokeTest {
                                 .build()
                         )
                         .setTerms(RpcQueryTerms.newBuilder()
-                                .setCompiledQuery("4")
+                                .setCompiledQuery(compiledQuery("4"))
                                 .addAllTermsQuery(List.of("4"))
                                 .addPhrases(RpcPhrases
                                         .newBuilder()
@@ -494,4 +495,8 @@ IndexQueryServiceIntegrationSmokeTest {
 
     }
 
+
+    private static RpcCompiledQuery compiledQuery(String... terms) {
+        return IndexProtobufCodec.convertCompiledQuery(CompiledQuery.just(terms));
+    }
 }

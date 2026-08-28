@@ -13,9 +13,6 @@ public class CqDataInt {
     public int get(int i) {
         return data[i];
     }
-    public int get(CqExpression.Word w) {
-        return data[w.idx()];
-    }
 
     public IntStream stream() {
         return Arrays.stream(data);

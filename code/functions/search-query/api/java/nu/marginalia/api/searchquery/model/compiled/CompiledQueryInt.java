@@ -1,8 +1,5 @@
 package nu.marginalia.api.searchquery.model.compiled;
 
-import it.unimi.dsi.fastutil.ints.IntList;
-
-import java.util.List;
 import java.util.stream.IntStream;
 
 
@@ -10,14 +7,9 @@ import java.util.stream.IntStream;
 public class CompiledQueryInt extends CompiledQueryTopology {
     public final CqDataInt data;
 
-    public CompiledQueryInt(CqExpression root, List<IntList> paths, CqDataInt data) {
-        super(root, paths);
+    public CompiledQueryInt(CompiledQueryTopology topology, CqDataInt data) {
+        super(topology);
         this.data = data;
-    }
-
-
-    public CqExpression root() {
-        return root;
     }
 
     public IntStream stream() {

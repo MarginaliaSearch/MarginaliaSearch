@@ -225,7 +225,7 @@ public class QueryFactoryTest {
     public void testPriorityTerm() {
         var subquery = parseAndGetQuery("physics ?tld:edu").getTerms();
         assertEquals(List.of("tld:edu"), subquery.getTermsPriorityList());
-        assertEquals("physics", subquery.getCompiledQuery());
+        assertEquals(List.of("physics"), subquery.getCompiledQuery().getTermsList());
     }
 
     private List<String> mandatoryPhrase(RpcQueryTerms terms) {
@@ -283,14 +283,14 @@ public class QueryFactoryTest {
     public void testRomanNumeralExpansion() {
         var subquery = parseAndGetQuery("world war 2").getTerms();
         System.out.println(subquery);
-        Assertions.assertTrue(subquery.getCompiledQuery().contains(" ii "));
+        Assertions.assertTrue(subquery.getCompiledQuery().getTermsList().contains("ii"));
     }
 
     @Test
     public void testRomanNumeralExpansionBackwards() {
         var subquery = parseAndGetQuery("world war ii").getTerms();
         System.out.println(subquery);
-        Assertions.assertTrue(subquery.getCompiledQuery().contains(" 2 "));
+        Assertions.assertTrue(subquery.getCompiledQuery().getTermsList().contains("2"));
     }
 
 
@@ -360,10 +360,10 @@ public class QueryFactoryTest {
     public void testContractionWordNum() {
         var subquery = parseAndGetQuery("glove 80");
 
-        Assertions.assertTrue(subquery.getTerms().getCompiledQuery().contains(" glove "));
-        Assertions.assertTrue(subquery.getTerms().getCompiledQuery().contains(" 80 "));
-        Assertions.assertTrue(subquery.getTerms().getCompiledQuery().contains(" glove-80 "));
-        Assertions.assertTrue(subquery.getTerms().getCompiledQuery().contains(" glove80 "));
+        Assertions.assertTrue(subquery.getTerms().getCompiledQuery().getTermsList().contains("glove"));
+        Assertions.assertTrue(subquery.getTerms().getCompiledQuery().getTermsList().contains("80"));
+        Assertions.assertTrue(subquery.getTerms().getCompiledQuery().getTermsList().contains("glove-80"));
+        Assertions.assertTrue(subquery.getTerms().getCompiledQuery().getTermsList().contains("glove80"));
     }
 
 
@@ -379,61 +379,62 @@ public class QueryFactoryTest {
 
         System.out.println(subquery);
 
-        Assertions.assertTrue(subquery.getTerms().getCompiledQuery().contains(" bob "));
-        Assertions.assertFalse(subquery.getTerms().getCompiledQuery().contains(" bob's "));
+        Assertions.assertTrue(subquery.getTerms().getCompiledQuery().getTermsList().contains("bob"));
+        Assertions.assertFalse(subquery.getTerms().getCompiledQuery().getTermsList().contains("bob's"));
     }
 
     @Test
-    public void testStrayOpenParenthesis() {
-        var subquery = parseAndGetQuery("test \\(");
+    public void testStrayParentheses() {
+        // Escaped parentheses survive tokenization as literal terms, but are never
+        // indexed and must not become query terms
+        List<String> queries = List.of(
+                "test \\(",
+                "\\(",
+                "test \\)",
+                "\\)",
+                "\\) sobre el perfil del egresado de la",
+                "\") sobre el perfil del egresado de la\""
+        );
 
-        System.out.println(subquery);
+        for (String query : queries) {
+            var terms = parseAndGetQuery(query).getTerms();
+
+            Assertions.assertDoesNotThrow(() -> IndexProtobufCodec.convertCompiledQuery(terms.getCompiledQuery()), query);
+            Assertions.assertFalse(terms.getTermsQueryList().contains("("), query);
+            Assertions.assertFalse(terms.getTermsQueryList().contains(")"), query);
+        }
     }
 
     @Test
-    public void testStrayJustOpenParenthesis() {
-        var subquery = parseAndGetQuery("\\(");
+    public void testStrayPipe() {
+        var terms = parseAndGetQuery("foo | bar").getTerms();
 
-        System.out.println(subquery);
+        assertEquals(List.of("foo", "bar"), terms.getTermsQueryList());
+        Assertions.assertDoesNotThrow(() -> IndexProtobufCodec.convertCompiledQuery(terms.getCompiledQuery()));
     }
-
-    @Test
-    public void testStrayClosedParenthesis() {
-        var subquery = parseAndGetQuery("test \\)");
-
-        System.out.println(subquery);
-    }
-
-    @Test
-    public void testStrayJustClosedParenthesis() {
-        var subquery = parseAndGetQuery("\\)");
-
-        System.out.println(subquery);
-    }
-
 
     @Test
     public void testExpansion9() {
         var subquery = parseAndGetQuery("pie recipe");
 
-        Assertions.assertTrue(subquery.getTerms().getCompiledQuery().contains(" category:food "));
+        Assertions.assertTrue(subquery.getTerms().getCompiledQuery().getTermsList().contains("category:food"));
 
         subquery = parseAndGetQuery("recipe pie");
 
-        Assertions.assertFalse(subquery.getTerms().getCompiledQuery().contains(" category:food "));
+        Assertions.assertFalse(subquery.getTerms().getCompiledQuery().getTermsList().contains("category:food"));
     }
 
     @Test
     public void testParsing() {
         var subquery = parseAndGetQuery("strlen()");
-        assertEquals("strlen", subquery.getTerms().getCompiledQuery());
+        assertEquals(List.of("strlen"), subquery.getTerms().getCompiledQuery().getTermsList());
         System.out.println(subquery);
     }
 
     @Test
     public void testAdvice() {
         var subquery = parseAndGetQuery("mmap (strlen)");
-        assertEquals("mmap", subquery.getTerms().getCompiledQuery());
+        assertEquals(List.of("mmap"), subquery.getTerms().getCompiledQuery().getTermsList());
         assertEquals(List.of("strlen"), subquery.getTerms().getTermsRequireList());
         System.out.println(subquery);
     }

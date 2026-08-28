@@ -293,9 +293,20 @@ message RpcQueryTerms {
   repeated string termsExclude = 2;   // These terms must be absent
   repeated string termsRequire = 3;   // These terms must be present, but do not affect ranking
   repeated string termsPriority = 4;  // These terms are not mandatory, but affect ranking positively if they are present
-  repeated RpcPhrases phrases = 5; // Groups of terms that must exist in proximity of each other
-  string compiledQuery = 6;  // Compiled query in infix notation
+  repeated RpcPhrases phrases = 5;    // Groups of terms that must exist in proximity of each other
+  reserved 6;                         // Formerly: Compiled query in infix notation
   repeated float termsPriorityWeight = 7;
+  RpcCompiledQuery compiledQuery = 8; // The ranked terms and the alternative ways of satisfying them
+}
+
+message RpcCompiledQuery {
+  repeated string terms = 1;         // String representation of terms
+  repeated RpcTermPath paths = 2;    // list of indices into 'terms'
+  repeated int32 variantClass = 3;   // Index of canonical 'terms' for a variant
+}
+
+message RpcTermPath {
+  repeated int32 term = 1;
 }
 
 /* Defines a group of search terms that must exist in the the specified order within the document */

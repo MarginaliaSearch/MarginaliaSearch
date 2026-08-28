@@ -1,10 +1,8 @@
 package nu.marginalia.api.searchquery.model.compiled;
 
-import it.unimi.dsi.fastutil.ints.IntList;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
@@ -14,14 +12,9 @@ public class CompiledQueryLong extends CompiledQueryTopology implements Iterable
 
     public final CqDataLong data;
 
-    public CompiledQueryLong(CqExpression root, List<IntList> paths, CqDataLong data) {
-        super(root, paths);
+    public CompiledQueryLong(CompiledQueryTopology topology, CqDataLong data) {
+        super(topology);
         this.data = data;
-    }
-
-
-    public CqExpression root() {
-        return root;
     }
 
     public LongStream stream() {

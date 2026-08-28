@@ -129,7 +129,9 @@ public class QueryFactory {
                     analyzeSearchTerm(problems, str, displayStr);
                     searchTermsHuman.addAll(Arrays.asList(displayStr.split("\\s+")));
 
-                    queryBuilder.queryTerms(str);
+                    if (!WordPatterns.isDiscardedByTokenizer(str)) {
+                        queryBuilder.queryTerms(str);
+                    }
                 }
 
                 case QueryToken.ExcludeTerm(String str, _) -> queryBuilder.exclude(str);

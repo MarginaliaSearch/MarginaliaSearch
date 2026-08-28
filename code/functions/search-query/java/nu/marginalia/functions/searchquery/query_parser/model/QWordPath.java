@@ -1,6 +1,7 @@
 package nu.marginalia.functions.searchquery.query_parser.model;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -30,6 +31,10 @@ public class QWordPath {
 
     public Stream<QWord> stream() {
         return nodes.stream();
+    }
+
+    public Collection<QWord> nodes() {
+        return Collections.unmodifiableCollection(nodes);
     }
 
     /** Construct a new path by projecting the path onto a set of nodes, such that
