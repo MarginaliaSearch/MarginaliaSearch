@@ -44,7 +44,7 @@ import java.util.List;
 
 public class PerfTestMain {
     static Duration warmupTime = Duration.ofMinutes(1);
-    static Duration runTime = Duration.ofMinutes(10);
+    static Duration runTime = Duration.ofMinutes(Integer.getInteger("perftest.runMinutes", 10));
 
     public static void main(String[] args) {
         if (args.length != 4) {
@@ -249,7 +249,6 @@ public class PerfTestMain {
             sum2 += execution.itemsProcessed();
             rates.add(execution.itemsProcessed() / ((end - start)/1_000_000_000.));
             times.add((end - start)/1_000_000.);
-            indexReader.reset();
             if ((iter % 100) == 0) {
                 if (Instant.now().isAfter(runEndTime)) {
                     break;
@@ -305,22 +304,24 @@ public class PerfTestMain {
         int sum2 = 0;
         List<Double> times = new ArrayList<>();
         for (iter = 0;; iter++) {
-            indexReader.reset();
             List<IndexQuery> queries = indexReader.createQueries(searchContext);
 
             long start = System.nanoTime();
             for (var query : queries) {
-
                 while (query.hasMore()) {
                     query.getMoreResults(buffer);
                     sum1 += buffer.end;
                     buffer.reset();
                 }
-
-                query.printDebugInformation();
             }
             long end = System.nanoTime();
             times.add((end - start)/1_000_000_000.);
+
+            if (iter == 0) {
+                for (var query : queries) {
+                    query.printDebugInformation();
+                }
+            }
 
             if ((iter % 10) == 0) {
                 if (Instant.now().isAfter(runEndTime)) {
