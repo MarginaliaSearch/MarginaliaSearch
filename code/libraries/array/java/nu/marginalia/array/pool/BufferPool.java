@@ -1,8 +1,6 @@
 package nu.marginalia.array.pool;
 
-import nu.marginalia.ffi.IoUring;
 import nu.marginalia.ffi.LinuxSystemCalls;
-import nu.marginalia.uring.UringQueue;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,8 +12,6 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -40,10 +36,7 @@ public class BufferPool implements AutoCloseable {
 
     public static final int MAX_READ_AHEAD = 8;
 
-    private final List<ReadAheadRing> rings =
-            new CopyOnWriteArrayList<>();
-    private final ThreadLocal<ReadAheadRing> readAheadRing =
-            ThreadLocal.withInitial(this::openReadAheadRing);
+    private final ThreadLocal<MemorySegment> readAheadIovecs;
 
     private volatile boolean running = true;
 
@@ -60,7 +53,6 @@ public class BufferPool implements AutoCloseable {
         poolLru = new PoolLru(pages);
     }
 
-
     public BufferPool(Path filename, int pageSizeBytes, int poolSize) {
         this.fd = LinuxSystemCalls.openDirect(filename);
         this.pageSizeBytes = pageSizeBytes;
@@ -70,6 +62,7 @@ public class BufferPool implements AutoCloseable {
             throw new RuntimeException(e);
         }
         this.arena = Arena.ofShared();
+        this.readAheadIovecs = ThreadLocal.withInitial(this::allocateIovecBuffer);
         this.pages = new MemoryPage[poolSize];
 
         MemorySegment memoryArea = arena.allocate((long) pageSizeBytes*poolSize, 4096);
@@ -84,6 +77,11 @@ public class BufferPool implements AutoCloseable {
 
         this.poolLru = new PoolLru(pages);
         this.monitorThread = Thread.ofPlatform().start(this::statsThread);
+    }
+
+    // Buffer for preadv-calls for readahead
+    private MemorySegment allocateIovecBuffer() {
+        return arena.allocate(16L * (MAX_READ_AHEAD + 1), 8);
     }
 
     private void statsThread() {
@@ -130,10 +128,6 @@ public class BufferPool implements AutoCloseable {
             throw new RuntimeException(e);
         }
         finally {
-            for (ReadAheadRing ring : rings) {
-                ring.close();
-            }
-
             arena.close();
 
             LinuxSystemCalls.closeFd(fd);
@@ -219,7 +213,7 @@ public class BufferPool implements AutoCloseable {
 
         readAheadPages = Math.min(readAheadPages, Math.min(MAX_READ_AHEAD, pages.length / 8));
 
-        if (readAheadPages <= 0 || !IoUring.isAvailable) {
+        if (readAheadPages <= 0) {
             return read(address);
         }
         else if (poolLru.getFreeQueueSize() < pages.length / 8) {
@@ -260,8 +254,7 @@ public class BufferPool implements AutoCloseable {
             throw new  RuntimeException("Address " + address + " not aligned");
         }
 
-        ReadAheadRing ring = readAheadRing.get();
-        MemoryPage[] batch = ring.batch;
+        MemoryPage[] batch = new MemoryPage[readAhead + 1];
         int n = 0;
 
         batch[n] = acquireFreePage(address);
@@ -274,13 +267,13 @@ public class BufferPool implements AutoCloseable {
 
             MemoryPage resident = poolLru.get(next);
             if (resident != null && resident.pageAddress() == next)
-                continue;
+                break;
 
             batch[n] = acquireFreePage(next);
             poolLru.register(batch[n++]);
         }
 
-        ring.read(batch, n);
+        readPages(batch, n, address);
 
         for (int i = 0; i < n; i++) {
             batch[i].dirty(false);
@@ -300,37 +293,17 @@ public class BufferPool implements AutoCloseable {
         return batch[0];
     }
 
-    private ReadAheadRing openReadAheadRing() {
-        ReadAheadRing ring = new ReadAheadRing();
-        rings.add(ring);
-        return ring;
-    }
-
-    private class ReadAheadRing {
-        final MemoryPage[] batch = new MemoryPage[MAX_READ_AHEAD + 1];
-
-        private final UringQueue ring = UringQueue.open(fd, 2 * batch.length);
-        private final Arena ringArena = Arena.ofShared();
-        private final MemorySegment buffers = ringArena.allocate(8L * batch.length, 8);
-        private final MemorySegment sizes = ringArena.allocate(4L * batch.length, 8);
-        private final MemorySegment offsets = ringArena.allocate(8L * batch.length, 8);
-
-        void read(MemoryPage[] pages, int n) {
-            for (int i = 0; i < n; i++) {
-                buffers.setAtIndex(ValueLayout.JAVA_LONG, i, pages[i].getMemorySegment().address());
-                sizes.setAtIndex(ValueLayout.JAVA_INT, i, pageSizeBytes);
-                offsets.setAtIndex(ValueLayout.JAVA_LONG, i, pages[i].pageAddress());
-            }
-
-            int ret = IoUring.readBatchRaw(ring, n, buffers.address(), sizes.address(), offsets.address());
-            if (ret != n) {
-                throw new IllegalStateException("Batch read failed: " + ret + " of " + n);
-            }
+    private void readPages(MemoryPage[] batch, int n, long address) {
+        MemorySegment iovecs = readAheadIovecs.get();
+        for (int i = 0; i < n; i++) {
+            iovecs.setAtIndex(ValueLayout.JAVA_LONG, 2L * i, batch[i].getMemorySegment().address());
+            iovecs.setAtIndex(ValueLayout.JAVA_LONG, 2L * i + 1, pageSizeBytes);
         }
 
-        void close() {
-            ring.close();
-            ringArena.close();
+        long expected = (long) n * pageSizeBytes;
+        long read = LinuxSystemCalls.readVectoredAt(fd, iovecs, n, address);
+        if (read != expected) {
+            throw new IllegalStateException("Scatter read returned " + read + " of " + expected + " bytes at " + address);
         }
     }
 
