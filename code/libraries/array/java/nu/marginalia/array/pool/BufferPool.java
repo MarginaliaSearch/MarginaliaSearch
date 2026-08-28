@@ -1,6 +1,8 @@
 package nu.marginalia.array.pool;
 
+import nu.marginalia.ffi.IoUring;
 import nu.marginalia.ffi.LinuxSystemCalls;
+import nu.marginalia.uring.UringQueue;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +14,8 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -31,6 +35,15 @@ public class BufferPool implements AutoCloseable {
 
     private final AtomicLong diskReadCount = new AtomicLong();
     private final AtomicLong cacheReadCount = new AtomicLong();
+    private final AtomicLong readAheadCount = new AtomicLong();
+    private final AtomicLong readAheadSkippedCount = new AtomicLong();
+
+    public static final int MAX_READ_AHEAD = 8;
+
+    private final List<ReadAheadRing> rings =
+            new CopyOnWriteArrayList<>();
+    private final ThreadLocal<ReadAheadRing> readAheadRing =
+            ThreadLocal.withInitial(this::openReadAheadRing);
 
     private volatile boolean running = true;
 
@@ -99,9 +112,9 @@ public class BufferPool implements AutoCloseable {
             }
 
             if (diskRead != diskReadOld || cacheRead != cacheReadOld) {
-                logger.info("[#{}:{}] Disk/Cached: {}/{}, heldCount={}/{}, fqs={}, rcc={}",
+                logger.info("[#{}:{}] Disk/Cached: {}/{}, readAhead={} (skipped {}), heldCount={}/{}, fqs={}, rcc={}",
                         hashCode(), pageSizeBytes,
-                        diskRead, cacheRead,
+                        diskRead, cacheRead, readAheadCount.get(), readAheadSkippedCount.get(),
                         heldCount, pages.length,
                         poolLru.getFreeQueueSize(), poolLru.getReclaimCycles());
             }
@@ -117,6 +130,10 @@ public class BufferPool implements AutoCloseable {
             throw new RuntimeException(e);
         }
         finally {
+            for (ReadAheadRing ring : rings) {
+                ring.close();
+            }
+
             arena.close();
 
             LinuxSystemCalls.closeFd(fd);
@@ -142,6 +159,14 @@ public class BufferPool implements AutoCloseable {
 
     public long getCacheReadCount() {
         return cacheReadCount.get();
+    }
+
+    public long getReadAheadCount() {
+        return readAheadCount.get();
+    }
+
+    public long getReadAheadSkippedCount() {
+        return readAheadSkippedCount.get();
     }
 
     @Nullable
@@ -182,6 +207,31 @@ public class BufferPool implements AutoCloseable {
         return buffer;
     }
 
+    /** Reads and returns the page at address, and optionally reads and prepares up to 'readAheadPages'
+     * ahead of the address, left unpinned in the buffer pool.
+     * */
+    public MemoryPage get(long address, int readAheadPages) {
+        MemoryPage buffer = getExistingBufferForReading(address);
+
+        if (buffer != null) {
+            return buffer;
+        }
+
+        readAheadPages = Math.min(readAheadPages, Math.min(MAX_READ_AHEAD, pages.length / 8));
+
+        if (readAheadPages <= 0 || !IoUring.isAvailable) {
+            return read(address);
+        }
+        else if (poolLru.getFreeQueueSize() < pages.length / 8) {
+            // Skip readahead due to pressure on the pool
+            readAheadSkippedCount.incrementAndGet();
+            return read(address);
+        }
+        else {
+            return readWithReadAhead(address, readAheadPages);
+        }
+    }
+
     private MemoryPage read(long address) {
         // If the page is not available, read it from the caller's thread
         if (address + pageSizeBytes > fileSize) {
@@ -200,6 +250,88 @@ public class BufferPool implements AutoCloseable {
         diskReadCount.incrementAndGet();
 
         return buffer;
+    }
+
+    private MemoryPage readWithReadAhead(long address, int readAhead) {
+        if (address + pageSizeBytes > fileSize) {
+            throw new RuntimeException("Address " + address + " too large for page size " + pageSizeBytes + " and file size " + fileSize);
+        }
+        if ((address & 511) != 0) {
+            throw new  RuntimeException("Address " + address + " not aligned");
+        }
+
+        ReadAheadRing ring = readAheadRing.get();
+        MemoryPage[] batch = ring.batch;
+        int n = 0;
+
+        batch[n] = acquireFreePage(address);
+        poolLru.register(batch[n++]);
+
+        for (int i = 1; i <= readAhead; i++) {
+            long next = address + (long) i * pageSizeBytes;
+            if (next + pageSizeBytes > fileSize)
+                break;
+
+            MemoryPage resident = poolLru.get(next);
+            if (resident != null && resident.pageAddress() == next)
+                continue;
+
+            batch[n] = acquireFreePage(next);
+            poolLru.register(batch[n++]);
+        }
+
+        ring.read(batch, n);
+
+        for (int i = 0; i < n; i++) {
+            batch[i].dirty(false);
+        }
+
+        for (int i = 1; i < n; i++) { // Leave readahead unpinned, could be claimed or overwritten
+            batch[i].pinCount().addAndGet(-MemoryPage.WRITE_LOCKED);
+        }
+
+        if (batch[0].pinCount().getAndAdd(1 - MemoryPage.WRITE_LOCKED) >= 0) { // Pin requested page
+            throw new IllegalStateException("Panic! Write lock was not held during write!");
+        }
+
+        diskReadCount.addAndGet(n);
+        readAheadCount.addAndGet(n - 1);
+
+        return batch[0];
+    }
+
+    private ReadAheadRing openReadAheadRing() {
+        ReadAheadRing ring = new ReadAheadRing();
+        rings.add(ring);
+        return ring;
+    }
+
+    private class ReadAheadRing {
+        final MemoryPage[] batch = new MemoryPage[MAX_READ_AHEAD + 1];
+
+        private final UringQueue ring = UringQueue.open(fd, 2 * batch.length);
+        private final Arena ringArena = Arena.ofShared();
+        private final MemorySegment buffers = ringArena.allocate(8L * batch.length, 8);
+        private final MemorySegment sizes = ringArena.allocate(4L * batch.length, 8);
+        private final MemorySegment offsets = ringArena.allocate(8L * batch.length, 8);
+
+        void read(MemoryPage[] pages, int n) {
+            for (int i = 0; i < n; i++) {
+                buffers.setAtIndex(ValueLayout.JAVA_LONG, i, pages[i].getMemorySegment().address());
+                sizes.setAtIndex(ValueLayout.JAVA_INT, i, pageSizeBytes);
+                offsets.setAtIndex(ValueLayout.JAVA_LONG, i, pages[i].pageAddress());
+            }
+
+            int ret = IoUring.readBatchRaw(ring, n, buffers.address(), sizes.address(), offsets.address());
+            if (ret != n) {
+                throw new IllegalStateException("Batch read failed: " + ret + " of " + n);
+            }
+        }
+
+        void close() {
+            ring.close();
+            ringArena.close();
+        }
     }
 
     private MemoryPage acquireFreePage(long address) {
