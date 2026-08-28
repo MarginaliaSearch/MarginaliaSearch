@@ -16,12 +16,22 @@ class WordPatternsTest {
         assertTrue(WordPatterns.isDiscardedByTokenizer("*"));
         assertTrue(WordPatterns.isDiscardedByTokenizer("/"));
         assertTrue(WordPatterns.isDiscardedByTokenizer("*/"));
+        assertTrue(WordPatterns.isDiscardedByTokenizer("("));
+        assertTrue(WordPatterns.isDiscardedByTokenizer(")"));
+        assertTrue(WordPatterns.isDiscardedByTokenizer("()"));
+        assertTrue(WordPatterns.isDiscardedByTokenizer("|"));
+        assertTrue(WordPatterns.isDiscardedByTokenizer(","));
+        assertTrue(WordPatterns.isDiscardedByTokenizer(";"));
+        assertTrue(WordPatterns.isDiscardedByTokenizer("..."));
         assertTrue(WordPatterns.isDiscardedByTokenizer("a".repeat(WordPatterns.MAX_WORD_LENGTH)));
 
         assertFalse(WordPatterns.isDiscardedByTokenizer("a"));
         assertFalse(WordPatterns.isDiscardedByTokenizer("foo"));
         assertFalse(WordPatterns.isDiscardedByTokenizer("foo-"));
         assertFalse(WordPatterns.isDiscardedByTokenizer("-foo"));
+        assertFalse(WordPatterns.isDiscardedByTokenizer("foo)"));
+        assertFalse(WordPatterns.isDiscardedByTokenizer("(foo)"));
+        assertFalse(WordPatterns.isDiscardedByTokenizer("a.b"));
         assertFalse(WordPatterns.isDiscardedByTokenizer("123456789012345678"));
         assertFalse(WordPatterns.isDiscardedByTokenizer("a".repeat(WordPatterns.MAX_WORD_LENGTH - 1)));
     }
