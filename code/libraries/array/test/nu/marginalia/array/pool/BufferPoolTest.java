@@ -1,8 +1,6 @@
 package nu.marginalia.array.pool;
 
-import nu.marginalia.ffi.IoUring;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -41,7 +39,6 @@ class BufferPoolTest {
 
     @Test
     void testReadAhead() throws Exception {
-        Assumptions.assumeTrue(IoUring.isAvailable);
 
         try (var pool = new BufferPool(file, PAGE_SIZE, 64)) {
             try (var page = pool.get(3L * PAGE_SIZE, 8)) {
@@ -62,7 +59,6 @@ class BufferPoolTest {
 
     @Test
     void testReadAhead__endOfFile() throws Exception {
-        Assumptions.assumeTrue(IoUring.isAvailable);
 
         try (var pool = new BufferPool(file, PAGE_SIZE, 64)) {
             try (var page = pool.get(30L * PAGE_SIZE, 8)) {
@@ -79,8 +75,6 @@ class BufferPoolTest {
 
     @Test
     void testReadahead__alreadyPopulated() throws Exception {
-        Assumptions.assumeTrue(IoUring.isAvailable);
-
         try (var pool = new BufferPool(file, PAGE_SIZE, 64)) {
             try (var page = pool.get(6L * PAGE_SIZE)) {
                 assertEquals(6, page.getLong(0));
@@ -88,20 +82,23 @@ class BufferPoolTest {
             try (var page = pool.get(4L * PAGE_SIZE, 4)) {
                 assertEquals(4, page.getLong(0));
             }
-            assertEquals(5, pool.getDiskReadCount());
+            assertEquals(3, pool.getDiskReadCount());
+            assertEquals(1, pool.getReadAheadCount());
 
-            for (int i = 4; i <= 8; i++) {
-                try (var page = pool.get((long) i * PAGE_SIZE)) {
-                    assertEquals(i, page.getLong(0));
-                }
+            try (var page = pool.get(5L * PAGE_SIZE)) {
+                assertEquals(5, page.getLong(0));
             }
-            assertEquals(5, pool.getDiskReadCount());
+            assertEquals(3, pool.getDiskReadCount());
+
+            try (var page = pool.get(7L * PAGE_SIZE)) {
+                assertEquals(7, page.getLong(0));
+            }
+            assertEquals(4, pool.getDiskReadCount());
         }
     }
 
     @Test
     void testReadAhead__pressure() throws Exception {
-        Assumptions.assumeTrue(IoUring.isAvailable);
 
         try (var pool = new BufferPool(file, PAGE_SIZE, PAGE_COUNT)) {
             // Hold most of the pool, leaving fewer free pages than read-ahead is allowed to take
@@ -124,7 +121,6 @@ class BufferPoolTest {
 
     @Test
     void testSmallPool() throws Exception {
-        Assumptions.assumeTrue(IoUring.isAvailable);
 
         // A pool of eight pages can spare one for read-ahead
         try (var pool = new BufferPool(file, PAGE_SIZE, 8)) {

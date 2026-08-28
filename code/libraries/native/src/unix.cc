@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <cstring>
 #include <sys/mman.h>
+#include <sys/uio.h>
 
 extern "C" {
 void fadvise_random(int fd) {
@@ -48,6 +49,11 @@ int open_direct_fd(char* filename) {
 int read_at(int fd, void* buf, unsigned int count, long offset) {
   return pread(fd, buf, count, offset);
 }
+
+long read_vectored_at(int fd, const struct iovec* iov, int count, long offset) {
+  return preadv(fd, iov, count, offset);
+}
+
 void close_fd(int fd) {
   close(fd);
 }
