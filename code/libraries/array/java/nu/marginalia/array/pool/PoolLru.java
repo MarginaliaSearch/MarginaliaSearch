@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.StampedLock;
@@ -18,6 +19,9 @@ public class PoolLru {
     private final MemoryPage[] pages;
 
     private final int[] freeQueue;
+
+    // Tracks whether a page is in the free queue so it doesn't enqueued multiple times
+    private final AtomicIntegerArray queueState;
     private final AtomicLong reclaimCycles;
     private final AtomicLong clockWriteIdx;
     private final AtomicLong clockReadIdx;
@@ -37,9 +41,11 @@ public class PoolLru {
         maxSize = backingMap.size();
 
         freeQueue = new int[pages.length];
+        queueState = new AtomicIntegerArray(pages.length);
 
         for (int i = 0; i < freeQueue.length; i++) {
             freeQueue[i] = i;
+            queueState.set(i, 1);
         }
 
         clockReadIdx = new AtomicLong();
@@ -135,7 +141,9 @@ public class PoolLru {
             }
 
             if (clockReadIdx.compareAndSet(readIdx, readIdx + 1)) {
-                return pages[freeQueue[(int) (readIdx % freeQueue.length)]];
+                int pageIdx = freeQueue[(int) (readIdx % freeQueue.length)];
+                queueState.set(pageIdx, 0);
+                return pages[pageIdx];
             }
         }
     }
@@ -164,21 +172,26 @@ public class PoolLru {
 
             reclaimCycles.incrementAndGet();
 
+            int visited = 0;
+
             do {
+                if (++visited > 4 * pages.length) {
+                    break;
+                }
                 if (++pageIdx >= pages.length) {
                     pageIdx = 0;
                 }
                 var currentPage = pages[pageIdx];
 
                 if (currentPage.decreaseClock()) {
-                    if (!currentPage.isHeld()) {
+                    if (currentPage.isHeld()) {
+                        currentPage.touchClock(1);
+                    }
+                    else if (queueState.compareAndSet(pageIdx, 0, 1)) {
                         deregister(pages[pageIdx]);
                         freeQueue[(int) (clockWriteIdx.get() % freeQueue.length)] = pageIdx;
                         clockWriteIdx.incrementAndGet();
                         toClaim--;
-                    }
-                    else {
-                        currentPage.touchClock(1);
                     }
                 }
 
