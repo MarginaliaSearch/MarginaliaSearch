@@ -249,12 +249,7 @@ public class IndexQueryExecution {
 
         @Override
         public void cleanUp() {
-            try {
-                buffer.dispose();
-            }
-            finally {
-                indexLock.unlock();
-            }
+            indexLock.unlock();
         }
     }
 
