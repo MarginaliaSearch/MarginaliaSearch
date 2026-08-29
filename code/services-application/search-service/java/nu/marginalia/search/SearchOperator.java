@@ -93,8 +93,10 @@ public class SearchOperator {
                 cursor
         );
 
+        var asc = SearchResultRedirectService.createContext(ctx);
+
         List<UrlDetails> details = rs.results().stream()
-                .map(item -> createDetails(item, ctx))
+                .map(item -> createDetails(item, asc))
                 .toList();
 
         return new UnrankedSearchResults(details, rs.encodedCursor());
@@ -114,8 +116,10 @@ public class SearchOperator {
                 cursor
         );
 
+        var asc = SearchResultRedirectService.createContext(ctx);
+
         List<UrlDetails> details = rs.results().stream()
-                .map(item -> createDetails(item, ctx))
+                .map(item -> createDetails(item, asc))
                 .toList();
 
         return new UnrankedSearchResults(details, rs.encodedCursor());
@@ -134,8 +138,10 @@ public class SearchOperator {
                 cursor
         );
 
+        var asc = SearchResultRedirectService.createContext(ctx);
+
         List<UrlDetails> details = rs.results().stream()
-                .map(item -> createDetails(item, ctx))
+                .map(item -> createDetails(item, asc))
                 .toList();
 
         return new UnrankedSearchResults(details, rs.encodedCursor());
@@ -209,12 +215,14 @@ public class SearchOperator {
         // Update the query count (this is what you see on the front page)
         searchVisitorCount.registerQuery();
 
+        var asc = SearchResultRedirectService.createContext(ctx);
+
         List<UrlDetails> details = queryResponse.results().stream()
                 .sorted(this::retentionSortOrder) // Sort in an order that makes us more likely to discard the "bad" duplicates
                 .filter(deduplicator::shouldRetain)
                 .sorted() // Return to the presentation sort order before limiting so we don't throw out good results over schema and "ip-ness"
                 .limit(limits.getResultsTotal())
-                .map(item -> createDetails(item, ctx))
+                .map(item -> createDetails(item, asc))
                 .toList();
 
         List<ResultsPage> pages = IntStream.rangeClosed(1, queryResponse.totalPages())
@@ -251,12 +259,12 @@ public class SearchOperator {
         return Double.compare(a.rankingScore, b.rankingScore);
     }
 
-    private UrlDetails createDetails(DecoratedSearchResultItem item, Context ctx) {
+    private UrlDetails createDetails(DecoratedSearchResultItem item, SearchResultRedirectService.AntiscrapeRedirContext asc) {
 
         String redirectUrl;
-        if (SearchResultRedirectService.isEnabled()) {
+        if (SearchResultRedirectService.isEnabled() && asc != null) {
             try {
-                redirectUrl = websiteUrl.withPath(SearchResultRedirectService.encode(ctx, item.rawIndexResult.nodeId, item.rawIndexResult.getDocumentId()));
+                redirectUrl = websiteUrl.withPath(SearchResultRedirectService.encode(asc, item.rawIndexResult.nodeId, item.rawIndexResult.getDocumentId()));
             }
             catch (Exception ex) {
                 logger.error("Error encoding redirect URL", ex);
