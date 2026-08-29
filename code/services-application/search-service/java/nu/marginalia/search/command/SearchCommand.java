@@ -40,7 +40,7 @@ public class SearchCommand implements SearchCommandInterface {
                     )
             ));
         } else {
-            results = searchOperator.doSearch(parameters);
+            results = searchOperator.doSearch(ctx, parameters);
             return Optional.of(new MapModelAndView("serp/main.jte",
                     Map.of("results", results,
                             "navbar", NavbarModel.SEARCH,

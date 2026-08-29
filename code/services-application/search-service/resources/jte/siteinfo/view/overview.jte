@@ -120,7 +120,7 @@
             <dl class="mx-3 text-gray-800 dark:text-white">
                 @for (UrlDetails item : siteInfo.samples())
                     <dt class="ml-2">
-                        <a class="underline text-liteblue dark:text-blue-200 text-sm" rel="noopener nofollow external ugc" href="${item.url.toString()}">${item.title}</a>
+                        <a class="underline text-liteblue dark:text-blue-200 text-sm" rel="noopener nofollow external ugc" href="${item.userFacingUrl().toString()}">${item.title}</a>
                     </dt>
                     <dd class="ml-6 text-sm mb-4">${item.description}</dd>
                 @endfor

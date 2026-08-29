@@ -75,8 +75,8 @@ public class SearchCrosstalkService {
             parts[i] = parts[i].trim();
         }
 
-        UnrankedSearchResults resAtoB = searchOperator.doLinkSearch(parts[0], parts[1], cursorA);
-        UnrankedSearchResults resBtoA = searchOperator.doLinkSearch(parts[1], parts[0], cursorB);
+        UnrankedSearchResults resAtoB = searchOperator.doLinkSearch(context, parts[0], parts[1], cursorA);
+        UnrankedSearchResults resBtoA = searchOperator.doLinkSearch(context, parts[1], parts[0], cursorB);
 
         CrosstalkResult model = new CrosstalkResult(
                 interceptResult.sst(),

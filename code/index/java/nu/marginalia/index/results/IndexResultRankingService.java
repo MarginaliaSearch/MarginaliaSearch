@@ -202,6 +202,7 @@ public class IndexResultRankingService {
         }
 
         SearchResultItem ret = new SearchResultItem(combinedId,
+                rankingContext.nodeId,
                 docMetadata,
                 htmlFeatures,
                 score,

@@ -13,12 +13,12 @@
             <div class="flex flex-col grow" >
                 <div class="flex flex-row space-x-2 place-items-center">
                     <div class="flex-0" title="Match density">
-                        @template.serp.part.matchogram(mask = result.first.positionsMask, domain=result.getFirst().url.domain.toString())
+                        @template.serp.part.matchogram(mask = result.first.positionsMask, domain=result.getFirst().getUrl().domain.toString())
                     </div>
                     <div class="flex grow justify-between items-start">
                         <div class="flex-1">
                             <h2 class="text-md sm:text-xl ${result.colorScheme.textColor} font-serif mr-4 break-words hyphens-auto">
-                                <a href="${result.first.url.toString()}" rel="noopener noreferrer" dir="auto">$unsafe{result.first.displayTitle()}</a>
+                                <a href="${result.first.userFacingUrl()}" rel="noopener noreferrer" dir="auto">$unsafe{result.first.displayTitle()}</a>
                             </h2>
 
                             <div class="text-sm mt-1">
@@ -29,7 +29,7 @@
                                 @if ("PDF".equals(result.first.format))
                                     <i title="PDF" class="fas fa-file-pdf text-red-500"></i>
                                 @endif
-                                <a class="text-liteblue dark:text-blue-200 underline break-all" href="${result.first.url.toString()}"
+                                <a class="text-liteblue dark:text-blue-200 underline break-all" href="${result.first.userFacingUrl()}"
                                    rel="noopener noreferrer" tabindex="-1">$unsafe{result.first.displayUrl()}</a>
                             </div>
                         </div>
@@ -49,7 +49,7 @@
                     <a href="/site/${result.getDomain().toString()}" class="p-1.5 dark:text-gray-200 dark:hover:text-gray-400 text-gray-600 hover:text-gray-900 rounded-xl active:outline outline-1 outline-margeblue" title="About this domain">
                         <i class="fas fa-info text-sm"></i>
                     </a>
-                    <a href="https://web.archive.org/web/*/${result.first.url.toString()}"
+                    <a href="https://web.archive.org/web/*/${result.first.userFacingUrl()}"
                        class="p-1.5 dark:text-gray-200 dark:hover:text-gray-400 text-gray-600 hover:text-gray-900 rounded-xl active:outline outline-1 outline-margeblue"
                        title="Wayback Machine">
                         <i class="fas fa-clock-rotate-left text-sm"></i>
@@ -67,7 +67,7 @@
                             @if ("PDF".equals(item.format))
                                 <i title="PDF" class="fas fa-file-pdf text-red-500"></i>
                             @endif
-                            <a href="${item.url.toString()}" class="underline" rel="noopener noreferrer" dir="auto">$unsafe{item.displayTitle()}</a>
+                            <a href="${item.userFacingUrl()}" class="underline" rel="noopener noreferrer" dir="auto">$unsafe{item.displayTitle()}</a>
                         </li>
                     @endfor
                 </ul>

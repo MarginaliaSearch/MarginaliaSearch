@@ -123,7 +123,7 @@ public class ResultPriorityQueueTest {
     public static RankableDocument doc(int domainId, int ordinal, double score) {
         long combinedId = UrlIdCodec.encodeId(domainId, ordinal);
         RankableDocument d = new RankableDocument(combinedId);
-        d.item = new SearchResultItem(combinedId, 0L, 0, score, 0L);
+        d.item = new SearchResultItem(combinedId, 1, 0L, 0, score, 0L);
         return d;
     }
 

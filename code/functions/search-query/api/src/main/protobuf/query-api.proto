@@ -212,6 +212,8 @@ message RpcRawResultItem {
   bool hasPriorityTerms = 6; // true if this word is important to the document
   MATCH_TYPE matchType = 7; // the type of match this result represents
 
+  int32 node = 8;
+
   enum MATCH_TYPE {
     FLAGS = 0;
     PROXIMITY = 1;

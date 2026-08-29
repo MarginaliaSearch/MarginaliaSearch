@@ -246,7 +246,7 @@ public class IntegrationTest {
             System.out.println(query);
 
             var rs = new IndexQueryExecution(indexReference.get(), documentDbReader, rankingService,
-                    SearchContext.create(indexReference.get(), new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny(), ConnectivityView.empty()), 1).run();
+                    SearchContext.create(indexReference.get(), 1, new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny(), ConnectivityView.empty()), 1).run();
 
             System.out.println(rs);
             Assertions.assertEquals(1, rs.size());
@@ -268,7 +268,7 @@ public class IntegrationTest {
             System.out.println(query);
 
             var rs = new IndexQueryExecution(indexReference.get(), documentDbReader, rankingService,
-                    SearchContext.create(indexReference.get(), new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny(), ConnectivityView.empty()), 1).run();
+                    SearchContext.create(indexReference.get(), 1, new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny(), ConnectivityView.empty()), 1).run();
 
             System.out.println(rs);
             Assertions.assertEquals(1, rs.size());
@@ -379,7 +379,7 @@ public class IntegrationTest {
 
 //            System.out.println(query);
 
-            var rs = new IndexQueryExecution(indexReference.get(), documentDbReader, rankingService, SearchContext.create(indexReference.get(), new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny(), ConnectivityView.empty()), 1).run();
+            var rs = new IndexQueryExecution(indexReference.get(), documentDbReader, rankingService, SearchContext.create(indexReference.get(), 1, new KeywordHasher.AsciiIsh(), query.indexQuery, new SearchSetAny(), ConnectivityView.empty()), 1).run();
 
             System.out.println(rs);
 

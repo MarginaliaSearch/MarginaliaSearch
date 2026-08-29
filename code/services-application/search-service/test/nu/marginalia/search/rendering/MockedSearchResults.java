@@ -46,6 +46,7 @@ public class MockedSearchResults {
                 1,
                 1,
                 new EdgeUrl(url),
+                null,
                 title,
                 desc,
                 "HTML5",
@@ -57,7 +58,7 @@ public class MockedSearchResults {
                 "",
                 mockPositionsMask(),
                 2,
-                new SearchResultItem(0, 0, 0, 0, 0),
+                new SearchResultItem(0, 1, 0, 0, 0, 0),
                 null);
 
     }
