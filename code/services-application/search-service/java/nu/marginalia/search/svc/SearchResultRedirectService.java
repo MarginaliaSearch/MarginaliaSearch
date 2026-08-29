@@ -7,6 +7,7 @@ import io.jooby.MapModelAndView;
 import io.jooby.StatusCode;
 import io.jooby.annotation.*;
 import nu.marginalia.api.searchquery.IndexUrlClient;
+import nu.marginalia.scrapestopper.ScrapeStopper;
 import nu.marginalia.search.model.NavbarModel;
 
 import java.security.MessageDigest;
@@ -15,7 +16,9 @@ import java.util.Base64;
 import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -25,15 +28,26 @@ public class SearchResultRedirectService {
     private static final String salt = Long.toUnsignedString(ThreadLocalRandom.current().nextLong(), 36);
 
     private final IndexUrlClient urlClient;
+    private final ScrapeStopper scrapeStopper;
+
+    private static volatile boolean isEnabled = false;
 
     @Inject
-    public SearchResultRedirectService(IndexUrlClient urlClient) {
+    public SearchResultRedirectService(IndexUrlClient urlClient,
+                                       ScrapeStopper scrapeStopper) {
         this.urlClient = urlClient;
+        this.scrapeStopper = scrapeStopper;
+
+        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
+                () -> isEnabled = scrapeStopper.isStrained(),
+                60,
+                60,
+                TimeUnit.SECONDS
+        );
     }
 
     public static boolean isEnabled() {
-        // FIXME:  Trigger on rate limit
-        return true;
+        return isEnabled;
     }
 
     @GET
@@ -46,6 +60,9 @@ public class SearchResultRedirectService {
             throws TimeoutException
     {
         String ip = context.header(realIpHeader).valueOrNull();
+        if (ip == null) {
+            ip = context.getRemoteAddress();
+        }
 
         var urlLookup = urlClient.getUrl(node, docid);
         if (urlLookup.isEmpty()) {
@@ -105,6 +122,11 @@ public class SearchResultRedirectService {
                 .append(Long.toUnsignedString(docId))
                 .append('/')
                 .append(time);
+
+        long timeDecoded = Long.parseUnsignedLong(time, 36);
+        if (timeDecoded > System.currentTimeMillis() - 3600) {
+            return false;
+        }
 
         try {
             MessageDigest hasher = MessageDigest.getInstance("SHA-256");
