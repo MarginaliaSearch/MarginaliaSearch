@@ -148,4 +148,23 @@ public class DocumentDbReader {
 
         return ret;
     }
+
+    public String getUrl(long docId) throws SQLException {
+
+        if (connection == null || connection.isClosed()) {
+            throw new IllegalStateException("URL query temporarily unavailable due to database switch");
+        }
+
+        try (var stmt = connection.createStatement()) {
+            var rs = stmt.executeQuery("""
+                SELECT URL FROM DOCUMENT WHERE ID = 
+                """ + docId /* safe, long type */);
+            if (rs.next()) {
+                return rs.getString("URL");
+            }
+            else {
+                return null;
+            }
+        }
+    }
 }

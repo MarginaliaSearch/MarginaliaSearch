@@ -17,7 +17,6 @@ import nu.marginalia.linkgraph.PartitionLinkGraphService;
 import nu.marginalia.livecapture.LiveCaptureGrpcService;
 import nu.marginalia.rss.svc.FeedsGrpcService;
 import nu.marginalia.service.control.ServiceEventLog;
-import nu.marginalia.service.discovery.property.ServicePartition;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.service.server.Initialization;
 import nu.marginalia.service.server.JoobyService;
@@ -57,6 +56,7 @@ public class IndexService extends JoobyService {
     public IndexService(BaseServiceParams params,
                         IndexOpsService opsService,
                         IndexGrpcService indexQueryService,
+                        IndexUrlApiGrpcService urlApiService,
                         StatefulIndex statefulIndex,
                         SearchSetsService searchSetsService,
                         ConnectivitySets connectivitySets,
@@ -79,6 +79,7 @@ public class IndexService extends JoobyService {
     {
         super(params,
                 List.of(indexQueryService,
+                        urlApiService,
                         partitionLinkGraphService,
                         liveCaptureGrpcService,
                         domSampleGrpcService,
