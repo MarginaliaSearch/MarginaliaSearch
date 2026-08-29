@@ -137,6 +137,10 @@ public class ScrapeStopper {
         return validationRatePerZone.computeIfAbsent(zone, z -> new ValidationRate(2.0));
     }
 
+    public boolean isStrained() {
+        return validationRatePerZone.values().stream().anyMatch(ValidationRate::isStrained);
+    }
+
 }
 
 
@@ -228,6 +232,7 @@ class Token {
     public boolean isExpired() {
         return Instant.now().isAfter(validUntil) || remainingUses.getAcquire() <= 0;
     }
+
 }
 
 class ValidationRate {
@@ -267,6 +272,10 @@ class ValidationRate {
 
     public Duration getDelay() {
         return Duration.ofMillis((long)(1000*delay));
+    }
+
+    public boolean isStrained() {
+        return delay == DELAY_MAX;
     }
 
     public double getStrain() {
