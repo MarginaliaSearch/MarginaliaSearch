@@ -15,6 +15,17 @@ service IndexApi {
   rpc unrankedQuery(RpcIndexUnrankedQuery) returns (RpcIndexQueryResponse) {}
 }
 
+service IndexUrlApi {
+  rpc getUrl(RpcDocumentIdRequest) returns (RpcIndexUrlResponse) {}
+}
+
+message RpcDocumentIdRequest {
+  int64 docId = 1;
+}
+message RpcIndexUrlResponse {
+  string url = 1;
+}
+
 message Empty {}
 
 message RpcIndexQueryResponse {
