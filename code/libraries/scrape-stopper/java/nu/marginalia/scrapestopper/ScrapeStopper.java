@@ -175,14 +175,15 @@ class Token {
         if (!Objects.equals(remoteIp, this.remoteIp))
             return ScrapeStopper.TokenState.INVALID;
 
-        if (context != null && !Objects.equals(lastContext,context))
-            return ScrapeStopper.TokenState.INVALID;
-
         if (Instant.now().isBefore(validAfter))
             return ScrapeStopper.TokenState.EARLY;
 
         if (Instant.now().isAfter(validUntil))
             return ScrapeStopper.TokenState.INVALID;
+
+        // Short circuit
+        if (context != null && Objects.equals(lastContext,context))
+            return ScrapeStopper.TokenState.VALIDATED;
 
         var lastValidation = this.lastValidation;
 
