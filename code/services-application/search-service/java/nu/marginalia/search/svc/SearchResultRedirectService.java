@@ -19,12 +19,7 @@ import java.time.Duration;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Objects;
-import java.util.StringJoiner;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Singleton
@@ -131,19 +126,25 @@ public class SearchResultRedirectService {
 
     public static String encode(AntiscrapeRedirContext context, int node, long docId) {
 
-        var sj = new StringJoiner("/", "r/", "");
+        StringBuilder sb = new StringBuilder();
 
-        sj.add(Integer.toString(node));
-        sj.add(Long.toUnsignedString(docId));
-        sj.add(Long.toUnsignedString(context.ts,36));
+        sb.append("r/")
+                .append(Integer.toString(node))
+                .append('/')
+                .append(Long.toUnsignedString(docId))
+                .append('/')
+                .append(Long.toUnsignedString(context.ts,36));
 
         try {
             MessageDigest hasher = MessageDigest.getInstance("SHA-256");
             hasher.update(salt.getBytes());
             hasher.update(context.ip.getBytes());
-            hasher.update(sj.toString().getBytes());
+            hasher.update(sb.toString().getBytes());
 
-            return sj.toString() + "?hash="+ Base64.getUrlEncoder().withoutPadding().encodeToString(hasher.digest());
+            return sb
+                    .append("?hash=")
+                    .append(Base64.getUrlEncoder().withoutPadding().encodeToString(hasher.digest()))
+                    .toString();
         }
         catch (Exception e) {
             throw new RuntimeException(e);
