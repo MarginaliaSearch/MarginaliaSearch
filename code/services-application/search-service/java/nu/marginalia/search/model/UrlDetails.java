@@ -7,6 +7,7 @@ import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.idx.DocumentMetadata;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -20,7 +21,10 @@ public class UrlDetails implements Comparable<UrlDetails> {
     public long id;
     public int domainId;
 
-    public EdgeUrl url;
+    private EdgeUrl url;
+    @Nullable
+    public String redirUrl;
+
     public String title;
     public String description;
 
@@ -44,10 +48,27 @@ public class UrlDetails implements Comparable<UrlDetails> {
 
     private static final DateTimeFormatter DISPLAY_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    public UrlDetails(long id, int domainId, EdgeUrl url, String title, String description, String format, int features, DomainIndexingState domainState, double termScore, int resultsFromSameDomain, int pubDate, String positions, long positionsMask, int positionsCount, SearchResultItem resultItem, List<SearchResultKeywordScore> keywordScores) {
+    public UrlDetails(long id,
+                      int domainId,
+                      EdgeUrl url,
+                      String redirUrl,
+                      String title,
+                      String description,
+                      String format,
+                      int features,
+                      DomainIndexingState domainState,
+                      double termScore,
+                      int resultsFromSameDomain,
+                      int pubDate,
+                      String positions,
+                      long positionsMask,
+                      int positionsCount,
+                      SearchResultItem resultItem,
+                      List<SearchResultKeywordScore> keywordScores) {
         this.id = id;
         this.domainId = domainId;
         this.url = url;
+        this.redirUrl = redirUrl;
         this.title = title;
         this.description = description;
         this.format = format;
@@ -220,7 +241,15 @@ public class UrlDetails implements Comparable<UrlDetails> {
      * semantically meaningful codepoints into entity codes */
     public String displayUrl() {
         StringBuilder sb = new StringBuilder();
-        String urlStr = url.toDisplayString();
+        String urlStr;
+
+        if (redirUrl != null) {
+            urlStr = url.withPathAndParam("/", null).toDisplayString();
+        }
+        else {
+            urlStr = url.toDisplayString();
+        }
+
         for (int i = 0; i < urlStr.length(); i++) {
             char c = urlStr.charAt(i);
 
@@ -243,6 +272,13 @@ public class UrlDetails implements Comparable<UrlDetails> {
         }
 
         return sb.toString();
+    }
+
+    public String userFacingUrl() {
+        if (redirUrl != null) {
+            return redirUrl;
+        }
+        return url.toString();
     }
 
     @Override

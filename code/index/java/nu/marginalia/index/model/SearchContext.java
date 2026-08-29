@@ -84,12 +84,14 @@ public class SearchContext {
 
     public final ConnectivityView connectivityView;
 
+    public final int nodeId;
+
     public static SearchContext create(CombinedIndexReader currentIndex,
+                                       int nodeId,
                                        KeywordHasher keywordHasher,
                                        RpcIndexQuery request,
                                        SearchSet searchSet,
-                                       ConnectivityView connectivityView
-                                       ) {
+                                       ConnectivityView connectivityView) {
 
         var limits = request.getQueryLimits();
         var queryTerms = request.getTerms();
@@ -105,6 +107,7 @@ public class SearchContext {
         var rankingParams = request.hasParameters() ? request.getParameters() : PrototypeRankingParameters.sensibleDefaults();
 
         return new SearchContext(
+                nodeId,
                 keywordHasher,
                 connectivityView,
                 request.getLangIsoCode(),
@@ -120,6 +123,7 @@ public class SearchContext {
     }
 
     public SearchContext(
+            int nodeId,
             KeywordHasher keywordHasher,
             ConnectivityView connectivityView,
             String langIsoCode,
@@ -133,6 +137,7 @@ public class SearchContext {
             List<Float> priorityDomainIdsAmountsList,
             RpcQueryLimits limits)
     {
+        this.nodeId = nodeId;
         this.connectivityView = connectivityView;
         this.docCount = currentIndex.totalDocCount();
         this.languageContext = currentIndex.createLanguageContext(langIsoCode);

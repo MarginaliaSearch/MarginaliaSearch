@@ -672,6 +672,7 @@ public class IndexQueryExecution {
             rawItem.setHtmlFeatures(resultItem.htmlFeatures);
             rawItem.setEncodedDocMetadata(resultItem.encodedDocMetadata);
             rawItem.setHasPriorityTerms(resultItem.hasPrioTerm);
+            rawItem.setNode(resultItem.nodeId);
 
             for (var score : resultItem.keywordScores) {
                 rawItem.addKeywordScores(

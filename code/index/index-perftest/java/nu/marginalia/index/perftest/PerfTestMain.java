@@ -241,7 +241,7 @@ public class PerfTestMain {
             var execution = new IndexQueryExecution(indexReader,
                     new DocumentDbReader(indexDir.resolve("ldbr/documents.db")),
                     rankingService,
-                    SearchContext.create(indexReader, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny(), ConnectivityView.empty()), 1);
+                    SearchContext.create(indexReader, 1, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny(), ConnectivityView.empty()), 1);
             long start = System.nanoTime();
             execution.run();
             long end = System.nanoTime();
@@ -291,7 +291,7 @@ public class PerfTestMain {
 
         System.out.println("Query compiled to: " + parsedQuery.getTerms().getCompiledQuery());
 
-        SearchContext searchContext = SearchContext.create(indexReader, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny(), ConnectivityView.empty());
+        SearchContext searchContext = SearchContext.create(indexReader, 1, new KeywordHasher.AsciiIsh(), parsedQuery, new SearchSetAny(), ConnectivityView.empty());
 
 
         Instant runEndTime = Instant.now().plus(runTime);

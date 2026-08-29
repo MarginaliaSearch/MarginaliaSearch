@@ -55,12 +55,14 @@ public class SearchService extends JoobyService {
                          FaviconClient faviconClient,
                          DbDomainQueries domainQueries,
                          SearchFilterService searchFilterService,
+                         SearchResultRedirectService resultRedirectService,
                          SearchQueryService searchQueryService)
     throws Exception {
         super(params,
                 List.of(), // No GRPC services
                 List.of(new SearchFrontPageService_(frontPageService),
                         new SearchQueryService_(searchQueryService),
+                        new SearchResultRedirectService_(resultRedirectService),
                         new SearchSiteInfoService_(siteInfoService),
                         new SearchCrosstalkService_(crosstalkService),
                         new SearchAddToCrawlQueueService_(addToCrawlQueueService),

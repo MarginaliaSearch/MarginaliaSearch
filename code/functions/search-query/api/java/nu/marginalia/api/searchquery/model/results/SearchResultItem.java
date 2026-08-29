@@ -17,6 +17,9 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
      */
     public final long combinedId;
 
+    /** The index node id the document came from */
+    public final int nodeId;
+
     /**
      * Encoded document metadata
      */
@@ -40,11 +43,13 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
     public DebugRankingFactors debugRankingFactors;
 
     public SearchResultItem(long combinedId,
+                            int nodeId,
                             long encodedDocMetadata,
                             int htmlFeatures,
                             double score,
                             long bestPositions) {
         this.combinedId = combinedId;
+        this.nodeId = nodeId;
         this.encodedDocMetadata = encodedDocMetadata;
         this.bestPositions = bestPositions;
         this.keywordScores = new ArrayList<>();
@@ -52,8 +57,17 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
         this.scoreValue = score;
     }
 
-    public SearchResultItem(long combinedId, long encodedDocMetadata, int htmlFeatures, List<SearchResultKeywordScore> keywordScores, boolean hasPrioTerm, long bestPositions, DebugRankingFactors debugRankingFactors, double scoreValue) {
+    public SearchResultItem(long combinedId,
+                            int nodeId,
+                            long encodedDocMetadata,
+                            int htmlFeatures,
+                            List<SearchResultKeywordScore> keywordScores,
+                            boolean hasPrioTerm,
+                            long bestPositions,
+                            DebugRankingFactors debugRankingFactors,
+                            double scoreValue) {
         this.combinedId = combinedId;
+        this.nodeId = nodeId;
         this.encodedDocMetadata = encodedDocMetadata;
         this.htmlFeatures = htmlFeatures;
         this.keywordScores = keywordScores;

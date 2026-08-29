@@ -223,8 +223,8 @@ public class SearchSiteInfoService {
         String sst = interceptResult.sst();
 
         SiteInfoModel model = switch (view) {
-            case "links" -> listLinks(domainName, sst, cursor);
-            case "docs" -> listDocs(domainName, sst, cursor);
+            case "links" -> listLinks(context, domainName, sst, cursor);
+            case "docs" -> listDocs(context, domainName, sst, cursor);
             case "info" -> listInfo(context, domainName, sst);
             case "traffic" -> listSiteRequests(context, domainName, sst);
             case "availability" -> listAvailabilityEvents(context, domainName, sst);
@@ -320,8 +320,8 @@ public class SearchSiteInfoService {
     }
 
 
-    private Backlinks listLinks(String domainName, String sst, String cursor) throws TimeoutException {
-        var results = searchOperator.doBacklinkSearch(domainName, cursor);
+    private Backlinks listLinks(Context ctx, String domainName, String sst, String cursor) throws TimeoutException {
+        var results = searchOperator.doBacklinkSearch(ctx, domainName, cursor);
 
         return new Backlinks(domainName,
                 sst,
@@ -379,11 +379,11 @@ public class SearchSiteInfoService {
             sampleResults = List.of();
         }
         else {
-            sampleResults = searchOperator.doSiteSearch(domainName, 5, "").results;
+            sampleResults = searchOperator.doSiteSearch(context, domainName, 5, "").results;
         }
 
         if (!sampleResults.isEmpty()) {
-            url = sampleResults.getFirst().url.withPathAndParam("/", null).toString();
+            url = sampleResults.getFirst().getUrl().withPathAndParam("/", null).toString();
         }
 
 
@@ -476,9 +476,9 @@ public class SearchSiteInfoService {
                 .build();
     }
 
-    private Docs listDocs(String domainName, String sst, String cursor) throws TimeoutException {
+    private Docs listDocs(Context ctx, String domainName, String sst, String cursor) throws TimeoutException {
         int domainId = domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1);
-        var results = searchOperator.doSiteSearch(domainName, 100, cursor);
+        var results = searchOperator.doSiteSearch(ctx, domainName, 100, cursor);
 
         return new Docs(domainName,
                 sst,

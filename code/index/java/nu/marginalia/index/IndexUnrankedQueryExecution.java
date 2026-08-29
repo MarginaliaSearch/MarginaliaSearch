@@ -29,6 +29,7 @@ public class IndexUnrankedQueryExecution {
 
     private static final Logger logger = LoggerFactory.getLogger(IndexUnrankedQueryExecution.class);
 
+    private final int nodeId;
     private final DocumentDbReader documentDbReader;
     private final UnrankedSearchContext searchContext;
     private final String nodeName;
@@ -62,6 +63,7 @@ public class IndexUnrankedQueryExecution {
         this.documentDbReader = documentDbReader;
         this.searchContext = searchContext;
         this.nodeName = Integer.toString(serviceNode);
+        this.nodeId = serviceNode;
         this.rankingService = rankingService;
 
         this.lastId = searchContext.afterCombinedDocId;
@@ -96,6 +98,7 @@ public class IndexUnrankedQueryExecution {
                             var result = new RankableDocument(nextId);
 
                             result.item = new SearchResultItem(nextId,
+                                    nodeId,
                                     currentIndex.getDocumentMetadata(nextId),
                                     currentIndex.getHtmlFeatures(nextId),
                                     0, 0L);
@@ -137,7 +140,7 @@ public class IndexUnrankedQueryExecution {
 
                 int pubDate = currentIndex.getDocPubDate(doc.item.combinedId);
 
-                converter.convert(doc, docData, leads[i], pubDate).ifPresent(ret::add);
+                converter.convert(doc, docData, leads[i], nodeId, pubDate).ifPresent(ret::add);
             }
         }
 
@@ -152,6 +155,7 @@ public class IndexUnrankedQueryExecution {
         public Optional<RpcDecoratedResultItem> convert(RankableDocument doc,
                                                  DocdbUrlDetail docData,
                                                  @Nullable String leadDescription,
+                                                 int nodeId,
                                                  int pubDate) {
             SearchResultItem resultItem = doc.item;
 
@@ -166,6 +170,7 @@ public class IndexUnrankedQueryExecution {
             rawItem.setHtmlFeatures(resultItem.htmlFeatures);
             rawItem.setEncodedDocMetadata(resultItem.encodedDocMetadata);
             rawItem.setHasPriorityTerms(resultItem.hasPrioTerm);
+            rawItem.setNode(resultItem.nodeId);
 
             for (var score : resultItem.keywordScores) {
                 rawItem.addKeywordScores(

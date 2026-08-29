@@ -190,6 +190,7 @@ public class QueryProtobufCodec {
 
         return new SearchResultItem(
                 rawItem.getCombinedId(),
+                rawItem.getNode(),
                 rawItem.getEncodedDocMetadata(),
                 rawItem.getHtmlFeatures(),
                 keywordScores,

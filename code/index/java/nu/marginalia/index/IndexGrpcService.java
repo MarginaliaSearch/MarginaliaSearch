@@ -121,7 +121,7 @@ public class IndexGrpcService
 
                             CombinedIndexReader index = indexReference.get();
 
-                            SearchContext rankingContext = SearchContext.create(index, hasher, request, set, connectivityView);
+                            SearchContext rankingContext = SearchContext.create(index,nodeId, hasher, request, set, connectivityView);
                             IndexQueryExecution queryExecution = new IndexQueryExecution(index, documentDbReader, rankingService, rankingContext, nodeId);
                             return queryExecution.run();
 
@@ -248,7 +248,7 @@ public class IndexGrpcService
 
             CombinedIndexReader currentIndex = indexReference.get();
 
-            SearchContext context = SearchContext.create(currentIndex,
+            SearchContext context = SearchContext.create(currentIndex, nodeId,
                     keywordHasherByLangIso.get("en"), request, getSearchSet(request),
                     ConnectivityView.empty()
                     );

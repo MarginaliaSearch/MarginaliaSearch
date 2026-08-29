@@ -89,7 +89,7 @@ public class ClusteredUrlDetails implements Comparable<ClusteredUrlDetails> {
 
 
     public EdgeDomain getDomain() {
-        return first.url.getDomain();
+        return first.getUrl().getDomain();
     }
 
     public boolean hasMultiple() {

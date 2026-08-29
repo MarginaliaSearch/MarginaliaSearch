@@ -23,10 +23,10 @@
     <div class="flex grow justify-between items-start p-4">
         <div class="flex-1">
             <h2 class="text-xl text-gray-800 dark:text-white font-serif mr-4">
-                <a href="${details.url.toString()}" rel="noopener noreferrer">$unsafe{details.displayTitle()}</a>
+                <a href="${details.userFacingUrl().toString()}" rel="noopener noreferrer">$unsafe{details.displayTitle()}</a>
             </h2>
             <div class="text-sm mt-1 text-slate-800">
-                <a class="text-liteblue dark:text-blue-200 underline break-all" href="${details.url.toString()}"
+                <a class="text-liteblue dark:text-blue-200 underline break-all" href="${details.userFacingUrl().toString()}"
                    rel="noopener noreferrer" tabindex="-1">$unsafe{details.displayUrl()}</a>
             </div>
         </div>
