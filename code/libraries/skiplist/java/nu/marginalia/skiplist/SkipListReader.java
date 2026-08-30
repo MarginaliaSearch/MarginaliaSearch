@@ -26,6 +26,12 @@ import static nu.marginalia.skiplist.SkipListConstants.*;
 
 public class SkipListReader {
 
+    /** Block readahead when there is weak evidence of a sequential pattern, should be ∈{0,1} probably */
+    public static final int BLOCK_READ_AHEAD_MIN = Integer.getInteger("index.blockReadAheadMin", 1);
+
+    /** Block readahead when we have indications of a sequential read pattern */
+    public static final int BLOCK_READ_AHEAD_MAX = Integer.getInteger("index.blockReadAheadMax", 8);
+
     static final int BLOCK_STRIDE = BLOCK_SIZE;
 
     private final BufferPool indexPool;
@@ -459,7 +465,7 @@ public class SkipListReader {
 
         int totalCopied = 0;
         while (dest.fitsMore() && !atEnd) {
-            try (var page = indexPool.get(currentBlock, BLOCK_READ_AHEAD)) {
+            try (var page = indexPool.get(currentBlock, BLOCK_READ_AHEAD_MAX)) {
                 MemorySegment ms = page.getMemorySegment();
 
                 assert ms.get(ValueLayout.JAVA_INT, currentBlockOffset) != 0 : "Likely reading zero space";
@@ -1073,8 +1079,8 @@ public class SkipListReader {
     private int readAhead() {
         // Readahead if we've seen sequentail read behavior
         if (sequentialReadsObserved >= 2)
-            return BLOCK_READ_AHEAD;
-        return Math.min(1, BLOCK_READ_AHEAD);
+            return BLOCK_READ_AHEAD_MAX;
+        return Math.min(1, BLOCK_READ_AHEAD_MIN);
     }
 
     private long findNextBlock(MemoryPage page, int fc, long targetValue) {
