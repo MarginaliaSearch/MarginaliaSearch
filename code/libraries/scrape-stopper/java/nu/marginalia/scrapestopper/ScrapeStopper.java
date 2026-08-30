@@ -137,8 +137,8 @@ public class ScrapeStopper {
         return validationRatePerZone.computeIfAbsent(zone, z -> new ValidationRate(2.0));
     }
 
-    public boolean isStrained() {
-        return validationRatePerZone.values().stream().anyMatch(ValidationRate::isStrained);
+    public boolean isStrained(String zone, double threshold) {
+        return getValidationRate(zone).isStrained(threshold);
     }
 
 }
@@ -275,8 +275,8 @@ class ValidationRate {
         return Duration.ofMillis((long)(1000*delay));
     }
 
-    public boolean isStrained() {
-        return delay == DELAY_MAX;
+    public boolean isStrained(double threshold) {
+        return getStrain() > threshold;
     }
 
     public double getStrain() {

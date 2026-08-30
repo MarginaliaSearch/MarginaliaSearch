@@ -3,14 +3,11 @@ package nu.marginalia.search;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.jooby.Context;
-import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.api.math.MathClient;
 import nu.marginalia.api.searchquery.QueryClient;
 import nu.marginalia.api.searchquery.RpcQueryLimits;
-import nu.marginalia.api.searchquery.RpcTemporalBias;
 import nu.marginalia.api.searchquery.model.query.QueryResponse;
-import nu.marginalia.api.searchquery.model.query.UnrankedQueryResponse;
 import nu.marginalia.api.searchquery.model.results.DecoratedSearchResultItem;
 import nu.marginalia.bbpc.BrailleBlockPunchCards;
 import nu.marginalia.db.DbDomainQueries;
@@ -264,7 +261,7 @@ public class SearchOperator {
         String redirectUrl;
         if (SearchResultRedirectService.isEnabled() && asc != null) {
             try {
-                redirectUrl = websiteUrl.withPath(SearchResultRedirectService.encode(asc, item.rawIndexResult.nodeId, item.rawIndexResult.getDocumentId()));
+                redirectUrl = websiteUrl.withPath(SearchResultRedirectService.createRedirectUrl(asc, item.rawIndexResult.nodeId, item.rawIndexResult.getDocumentId()));
             }
             catch (Exception ex) {
                 logger.error("Error encoding redirect URL", ex);
