@@ -213,7 +213,7 @@ public class CombinedIndexReaderTest {
                         .addAllTermsQuery(compiledQuery.stream().toList()))
                 .build();
 
-        var context = SearchContext.create(reader, new KeywordHasher.AsciiIsh(), request, new SearchSetAny(), ConnectivityView.empty());
+        var context = SearchContext.create(reader, 1, new KeywordHasher.AsciiIsh(), request, new SearchSetAny(), ConnectivityView.empty());
         var queries = reader.createQueries(context);
 
         // The two ring/rings paths share a head, so the full index is consulted twice rather than three times
