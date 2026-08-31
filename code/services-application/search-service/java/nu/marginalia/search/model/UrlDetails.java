@@ -250,7 +250,7 @@ public class UrlDetails implements Comparable<UrlDetails> {
         String urlStr = url.toDisplayString();
         boolean censorUrl = redirUrl != null;
 
-        Random r = ThreadLocalRandom.current();
+        Random r = new Random(urlStr.hashCode());
 
         for (int i = 0; i < urlStr.length(); i++) {
             char c = urlStr.charAt(i);
@@ -269,7 +269,7 @@ public class UrlDetails implements Comparable<UrlDetails> {
                 sb.append("<wbr>");
             }
             else {
-                if (censorUrl && r.nextDouble() < 0.05) {
+                if (censorUrl && r.nextDouble() < 0.1) {
                     sb.append('*');
                 }
                 else {
