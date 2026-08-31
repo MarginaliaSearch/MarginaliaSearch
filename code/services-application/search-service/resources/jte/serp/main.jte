@@ -1,8 +1,11 @@
 @import nu.marginalia.language.model.LanguageDefinition
+@import nu.marginalia.scrapestopper.ScrapeStopper
+@import nu.marginalia.search.ScrapeStopperInterceptor
 @import nu.marginalia.search.model.DecoratedSearchResults
 @import nu.marginalia.search.model.ClusteredUrlDetails
 @import nu.marginalia.search.model.NavbarModel
 @import nu.marginalia.search.model.ResultsPage
+@import nu.marginalia.search.svc.SearchResultRedirectService
 @import java.util.Map
 @import java.util.Optional
 
@@ -86,7 +89,15 @@
                 No search results found.  Try different search terms, or spelling variations.  The search engine currently
                 only supports queries in the English language.
             </div>
+        @elseif (SearchResultRedirectService.isEnabled())
+            <div class="border dark:border-gray-600 rounded flex space-x-4 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-100 text-sm p-4 items-center">
+                The search engine is currently under being hit so aggressively by bots it's
+                interfering with the ability to serve regular search traffic.
+                Emergency anti-scraping measures are enabled.  Sorry about the inconvenience.
+            </div>
+
         @endif
+        
 
         <div>
             <h1 class="sr-only"> Results </h1>
