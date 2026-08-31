@@ -247,7 +247,7 @@ public class UrlDetails implements Comparable<UrlDetails> {
         if (null != displayUrl) return displayUrl;
 
         StringBuilder sb = new StringBuilder();
-        String urlStr = url.withPathAndParam("/", null).toDisplayString();;
+        String urlStr = url.toDisplayString();
         boolean censorUrl = redirUrl != null;
 
         Random r = ThreadLocalRandom.current();
