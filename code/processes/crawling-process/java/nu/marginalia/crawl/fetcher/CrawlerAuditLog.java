@@ -2,7 +2,6 @@ package nu.marginalia.crawl.fetcher;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.buffering.RingBuffer;
 import nu.marginalia.crawl.fetcher.HttpFetcher.ContentTypeProbeResult;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.HttpFetchResult;
@@ -15,13 +14,15 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import com.github.luben.zstd.ZstdOutputStream;
 import org.apache.commons.io.IOUtils;
 
 @Singleton
 public class CrawlerAuditLog implements Closeable {
     private final BufferedOutputStream writer;
-    private final RingBuffer<String> messages = new RingBuffer<>(16);
+    private final ArrayBlockingQueue<String> messages = new ArrayBlockingQueue<>(256);
     private volatile boolean running = true;
 
     private final Thread writerThread;
@@ -44,15 +45,18 @@ public class CrawlerAuditLog implements Closeable {
 
         writerThread = Thread.ofPlatform().start(() -> {
             while (true) {
-                String message = messages.tryTake1C();
-                if (message != null) {
-                    try {
+                try {
+                    String message = messages.poll(100, TimeUnit.MILLISECONDS);
+                    if (message != null) {
                         writer.write(message.getBytes(StandardCharsets.UTF_8));
+                    } else if (!running) {
+                        break;
                     }
-                    catch (IOException ex) {}
-                } else if (!running) {
+                }
+                catch (InterruptedException ex) {
                     break;
                 }
+                catch (IOException ex) {}
             }
 
             IOUtils.closeQuietly(writer);
@@ -79,8 +83,7 @@ public class CrawlerAuditLog implements Closeable {
         if (msg.isBlank())
             return;
 
-        while (!messages.putNP(msg))
-            Thread.yield();
+        enqueue(msg);
     }
 
     public void logFetch(HttpFetchResult result, EdgeUrl url, Duration fetchDuration) {
@@ -97,8 +100,16 @@ public class CrawlerAuditLog implements Closeable {
                         String.format("%s: Fetch 304 Ref %s\n", timestamp(), url);
         };
 
-        while (!messages.putNP(msg))
-            Thread.yield();
+        enqueue(msg);
+    }
+
+    private void enqueue(String msg) {
+        try {
+            messages.put(msg);
+        }
+        catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private String timestamp() {
