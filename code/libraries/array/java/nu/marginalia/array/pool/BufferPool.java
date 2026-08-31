@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 
-public class BufferPool implements AutoCloseable {
+public class BufferPool implements PagePool {
     private static final Logger logger = LoggerFactory.getLogger(BufferPool.class);
 
     private final MemoryPage[] pages;

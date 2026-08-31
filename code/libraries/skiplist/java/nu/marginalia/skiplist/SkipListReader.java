@@ -3,7 +3,7 @@ package nu.marginalia.skiplist;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongList;
 import nu.marginalia.array.page.LongQueryBuffer;
-import nu.marginalia.array.pool.BufferPool;
+import nu.marginalia.array.pool.PagePool;
 import nu.marginalia.array.pool.MemoryPage;
 import nu.marginalia.ffi.NativeAlgos;
 import nu.marginalia.skiplist.compression.DocIdCompressor;
@@ -34,7 +34,7 @@ public class SkipListReader {
 
     static final int BLOCK_STRIDE = BLOCK_SIZE;
 
-    private final BufferPool indexPool;
+    private final PagePool indexPool;
     private final SkipListValueReader valuesReader;
     private final SkipListFormat format;
 
@@ -108,13 +108,13 @@ public class SkipListReader {
         return scratch.data;
     }
 
-    public SkipListReader(BufferPool indexPool,
+    public SkipListReader(PagePool indexPool,
                           SkipListValueReader valuesReader,
                           long blockStart) {
         this(indexPool, valuesReader, blockStart, SkipListFormat.CURRENT);
     }
 
-    public SkipListReader(BufferPool indexPool,
+    public SkipListReader(PagePool indexPool,
                           SkipListValueReader valuesReader,
                           long blockStart,
                           SkipListFormat format) {
@@ -1206,7 +1206,7 @@ public class SkipListReader {
         return ret;
     }
 
-    public static List<RecordView> parseBlocks(BufferPool pool, long offset) {
+    public static List<RecordView> parseBlocks(PagePool pool, long offset) {
         List<RecordView> ret = new ArrayList<>();
         RecordView block;
         do {

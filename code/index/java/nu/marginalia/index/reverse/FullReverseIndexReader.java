@@ -4,6 +4,8 @@ import it.unimi.dsi.fastutil.longs.LongList;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.array.pool.BufferPool;
+import nu.marginalia.array.pool.PagePool;
+import nu.marginalia.array.pool.UncachedBufferPool;
 import nu.marginalia.ffi.LinuxSystemCalls;
 import nu.marginalia.index.model.*;
 import nu.marginalia.index.reverse.positions.PositionCodec;
@@ -43,7 +45,7 @@ public class FullReverseIndexReader {
      *  directly instead of copying them through the fd above */
     private final Arena positionsArena;
     private final MemorySegment positionsSegment;
-    private final BufferPool dataPool;
+    private final PagePool dataPool;
     private final SkipListValueReader valueReader;
     private final SkipListFormat skipListFormat;
     private final String name;
@@ -92,9 +94,16 @@ public class FullReverseIndexReader {
 
         valueReader = new SkipListValueReader(documentValues);
 
-        dataPool = new BufferPool(documents, SkipListConstants.BLOCK_SIZE,
-                (int) (Long.getLong("index.bufferPoolSize", 512*1024*1024L) / SkipListConstants.BLOCK_SIZE)
-        );
+        if (Boolean.getBoolean("index.uncachedBufferPool")) {
+            dataPool = new UncachedBufferPool(documents, SkipListConstants.BLOCK_SIZE,
+                    (int) (Long.getLong("index.uncachedBufferPoolSize", 128*1024*1024L) / SkipListConstants.BLOCK_SIZE)
+            );
+        }
+        else {
+            dataPool = new BufferPool(documents, SkipListConstants.BLOCK_SIZE,
+                    (int) (Long.getLong("index.bufferPoolSize", 512*1024*1024L) / SkipListConstants.BLOCK_SIZE)
+            );
+        }
 
     }
 
