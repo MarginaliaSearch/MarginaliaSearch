@@ -13,6 +13,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * A class to hold details about a single search result.
@@ -237,18 +239,18 @@ public class UrlDetails implements Comparable<UrlDetails> {
         return sb.toString();
     }
 
+    private String displayUrl = null;
+
     /** Helper that inserts hyphenation hints and escapes
      * semantically meaningful codepoints into entity codes */
     public String displayUrl() {
-        StringBuilder sb = new StringBuilder();
-        String urlStr;
+        if (null != displayUrl) return displayUrl;
 
-        if (redirUrl != null) {
-            urlStr = url.withPathAndParam("/", null).toDisplayString();
-        }
-        else {
-            urlStr = url.toDisplayString();
-        }
+        StringBuilder sb = new StringBuilder();
+        String urlStr = url.withPathAndParam("/", null).toDisplayString();;
+        boolean censorUrl = redirUrl != null;
+
+        Random r = ThreadLocalRandom.current();
 
         for (int i = 0; i < urlStr.length(); i++) {
             char c = urlStr.charAt(i);
@@ -267,11 +269,18 @@ public class UrlDetails implements Comparable<UrlDetails> {
                 sb.append("<wbr>");
             }
             else {
-                sb.appendCodePoint(c);
+                if (censorUrl && r.nextDouble() < 0.05) {
+                    sb.append('*');
+                }
+                else {
+                    sb.appendCodePoint(c);
+                }
             }
         }
 
-        return sb.toString();
+        displayUrl = sb.toString();
+
+        return displayUrl;
     }
 
     public String userFacingUrl() {
