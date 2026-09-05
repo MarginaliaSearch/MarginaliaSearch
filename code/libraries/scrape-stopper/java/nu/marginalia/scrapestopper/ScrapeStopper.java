@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.InstantSource;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
@@ -29,7 +30,7 @@ public class ScrapeStopper {
 
                     tokens.values().removeIf(Token::isExpired);
                     tokensByIpZone.values().removeIf(Token::isExpired);
-                    validationRatePerZone.values().forEach(ValidationRate::updateTarget);
+                    validationRatePerZone.values().forEach(ValidationRate::updateDelay);
                 }
             }
             catch (InterruptedException ex) {
@@ -134,7 +135,7 @@ public class ScrapeStopper {
     }
 
     private ValidationRate getValidationRate(String zone) {
-        return validationRatePerZone.computeIfAbsent(zone, z -> new ValidationRate(2.0));
+        return validationRatePerZone.computeIfAbsent(zone, z -> new ValidationRate(InstantSource.system()));
     }
 
     public boolean isStrained(String zone, double threshold) {
@@ -237,29 +238,26 @@ class Token {
 }
 
 class ValidationRate {
-    private final double targetRps;
-
-    /** Seconds of additional delay per RPS of error, per update. */
-    private static final double GAIN = 0.5;
-
     private static final double DELAY_MIN = 1.0;
     private static final double DELAY_MAX = 5.0;
 
+    private final InstantSource clock;
     private final LongAdder validationCount = new LongAdder();
-    private Instant lastUpdate = Instant.now();
+    private Instant lastUpdate;
 
     private volatile double delay = DELAY_MIN;
 
-    public ValidationRate(double targetRps) {
-        this.targetRps = targetRps;
+    public ValidationRate(InstantSource clock) {
+        this.clock = clock;
+        this.lastUpdate = clock.instant();
     }
 
     public void register() {
         validationCount.increment();
     }
 
-    public synchronized void updateTarget() {
-        Instant now = Instant.now();
+    public synchronized void updateDelay() {
+        Instant now = clock.instant();
         double elapsedSecs = Duration.between(lastUpdate, now).toMillis() / 1000.;
         lastUpdate = now;
 
@@ -268,7 +266,7 @@ class ValidationRate {
 
         double measuredRps = validationCount.sumThenReset() / elapsedSecs;
 
-        delay = Math.clamp(delay + GAIN * (measuredRps - targetRps), DELAY_MIN, DELAY_MAX);
+        delay = Math.clamp(measuredRps, DELAY_MIN, DELAY_MAX);
     }
 
     public Duration getDelay() {
