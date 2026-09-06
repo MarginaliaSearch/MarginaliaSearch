@@ -205,6 +205,9 @@ public class SkipListReader {
                 if (nextBlock == currentBlock + BLOCK_STRIDE) {
                     sequentialReadsObserved++;
                 }
+                else {
+                    sequentialReadsObserved = 0;
+                }
 
 
                 currentBlockOffset = 0;
@@ -352,6 +355,9 @@ public class SkipListReader {
 
                 if (nextBlock == currentBlock + BLOCK_STRIDE) {
                     sequentialReadsObserved++;
+                }
+                else {
+                    sequentialReadsObserved = 0;
                 }
 
                 currentBlockOffset = 0;
