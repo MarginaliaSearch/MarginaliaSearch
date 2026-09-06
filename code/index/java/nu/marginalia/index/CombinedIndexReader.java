@@ -30,10 +30,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.CheckReturnValue;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -319,12 +316,15 @@ public class CombinedIndexReader {
         return newQueryBuilder(languageContext, query).withSourceTerms(termId);
     }
 
-    private SkipListValueRanges getDocumentRangesForDomains(@NotNull IntList domainIds) {
+    SkipListValueRanges getDocumentRangesForDomains(@NotNull IntList domainIds) {
         long[] rangesStarts = new long[domainIds.size()];
         long[] rangesEnds = new long[domainIds.size()];
 
         for (int i = 0; i < domainIds.size(); i++) {
             rangesStarts[i] = forwardIndexReader.getRankEncodedDocumentIdBase(domainIds.getInt(i));
+        }
+        Arrays.sort(rangesStarts);
+        for (int i = 0; i < rangesStarts.length; i++) {
             rangesEnds[i] = rangesStarts[i] + UrlIdCodec.DOCORD_COUNT;
         }
 
