@@ -899,8 +899,6 @@ public class SkipListReader {
         private void readOffsetsForBlock_Compressed(int n, long valuesOffset) {
             long[] decompressedData = decompressedBlock.data;
 
-            int searchStart = currentBlockIdx;
-
             while (offsetPos < inputKeys.length && currentBlockIdx < n) {
                 long kv = inputKeys[offsetPos];
 
@@ -919,7 +917,7 @@ public class SkipListReader {
                 }
 
                 if (decompressedData[currentBlockIdx] == kv) {
-                    valueOffsets[vLen++] = valuesOffset + 8L * (currentBlockIdx - searchStart) * (RECORD_SIZE - 1);
+                    valueOffsets[vLen++] = valuesOffset + 8L * currentBlockIdx * (RECORD_SIZE - 1);
                 }
                 else {
                     valueOffsets[vLen++] = -1;
@@ -944,7 +942,7 @@ public class SkipListReader {
                         valueOffsets[vLen++] = -1;
                         continue outer;
                     } else if (kv == pv) {
-                        long val = valuesOffset + 8L * (currentBlockIdx - searchStart) * (RECORD_SIZE - 1);
+                        long val = valuesOffset + 8L * currentBlockIdx * (RECORD_SIZE - 1);
                         valueOffsets[vLen++] = val;
                         offsetPos++;
 

@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -56,6 +57,44 @@ public class SkipListReaderTest {
             }
         }
         return LongArrayFactory.wrap(ms);
+    }
+
+    @Test
+    void testPartialKeyRead() throws IOException {
+        long[] keys = {1, 2, 3, 4};
+        long[] vals = {101, 102, 103, 104};
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
+            writer.writeList(createArray(keys, vals), keys.length);
+        }
+
+        for (boolean plain : new boolean[]{false, true}) {
+            if (plain) {
+                // Legacy uncompressed block with the same keys and value offsets.
+                var block = ByteBuffer.allocate(BLOCK_SIZE)
+                        .order(java.nio.ByteOrder.nativeOrder());
+
+                block.putInt(keys.length)
+                        .put((byte) 0)
+                        .put(FLAG_END_BLOCK)
+                        .putShort((short) 0)
+                        .putLong(0);
+
+                for (long key : keys)
+                    block.putLong(key);
+
+                Files.write(docsFile, block.array());
+            }
+
+            try (var pool = new BufferPool(docsFile, BLOCK_SIZE, 8);
+                 var values = new SkipListValueReader(valuesFile)) {
+
+                var reader = new SkipListReader(pool, values, 0);
+
+                reader.getKeys(new LongQueryBuffer(1));
+                Assertions.assertArrayEquals(new long[]{103, 103}, reader.getAllValues(new long[]{3}),
+                        "plain=" + plain);
+            }
+        }
     }
 
     /** Sequential doc ids compress to single byte deltas, so a compressed block
