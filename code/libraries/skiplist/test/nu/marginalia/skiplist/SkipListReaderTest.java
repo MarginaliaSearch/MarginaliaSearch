@@ -60,6 +60,30 @@ public class SkipListReaderTest {
     }
 
     @Test
+    void testSuccessiveReadsSameCompressedGroup() throws IOException {
+        for (int size : new int[]{4, 30, 7000}) {
+            long[] keys = LongStream.rangeClosed(1, size).map(v -> 2 * v).toArray();
+            long[] vals = LongStream.of(keys).map(v -> 100 + v).toArray();
+            long offset;
+
+            try (var writer = new SkipListWriter(docsFile, valuesFile)) {
+                offset = writer.writeList(createArray(keys, vals), keys.length);
+            }
+
+            try (var pool = new BufferPool(docsFile, BLOCK_SIZE, 8);
+                 var values = new SkipListValueReader(valuesFile)) {
+                var reader = new SkipListReader(pool, values, offset);
+
+                for (long key = 1; key <= 2L * size + 1; key++) {
+                    long expected = key % 2 == 0 ? 100 + key : 0;
+                    Assertions.assertArrayEquals(new long[]{expected, expected},
+                            reader.getAllValues(new long[]{key}), "key=" + key + ", size=" + size);
+                }
+            }
+        }
+    }
+
+    @Test
     void testPartialKeyRead() throws IOException {
         long[] keys = {1, 2, 3, 4};
         long[] vals = {101, 102, 103, 104};

@@ -204,7 +204,7 @@ int64_t ms_decompress_match(const uint8_t* base, int64_t pos, int64_t limit, int
             }
         }
 
-        recIdx += m;
+        recIdx += j;
     }
 
     return ((int64_t) recIdx << 32) | (uint32_t) keyIdx;

@@ -129,6 +129,11 @@ class DocIdCompressorTest {
                 expected[expectedConsumed++] = idx >= 0 ? valuesOffset + stride * idx : -1;
             }
 
+            int expectedRecord = Arrays.binarySearch(values, keys[keys.length - 1]);
+            if (expectedRecord < 0) expectedRecord = -expectedRecord - 1;
+            Assertions.assertEquals(expectedRecord, (int) (packed >>> 32),
+                    "Record cursor mismatch for seed " + iter);
+
             Assertions.assertEquals(expectedConsumed, consumed, "Consumed key count mismatch for seed " + iter);
             for (int i = 0; i < expectedConsumed; i++) {
                 Assertions.assertEquals(expected[i], actual[i], "Offset mismatch at " + i + " for seed " + iter);
