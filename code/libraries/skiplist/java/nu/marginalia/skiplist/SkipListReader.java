@@ -323,6 +323,8 @@ public class SkipListReader {
     public boolean tryRejectData(@NotNull LongQueryBuffer data) {
         assert data.isAscending();
 
+        if (!data.hasMore()) return false;
+
         try (var page = indexPool.get(currentBlock, readAhead())) {
 
             int n = headerNumRecords(page, currentBlockOffset);

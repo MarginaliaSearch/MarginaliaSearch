@@ -60,6 +60,33 @@ public class SkipListReaderTest {
     }
 
     @Test
+    void testRejectEmptyAndConsumedBuffers() throws IOException {
+        long[] keys = {1, 2, 3};
+        try (var writer = new SkipListWriter(docsFile, valuesFile)) {
+            writer.writeList(createArray(keys, keys), keys.length);
+        }
+
+        try (var pool = new BufferPool(docsFile, BLOCK_SIZE, 8);
+             var values = new SkipListValueReader(valuesFile)) {
+
+            var reader = new SkipListReader(pool, values, 0);
+            reader.rejectData(new LongQueryBuffer(0));
+            reader.rejectData(new LongQueryBuffer(16));
+
+            var consumed = new LongQueryBuffer(new long[]{100}, 1);
+            consumed.retainAndAdvance();
+
+            Assertions.assertFalse(reader.tryRejectData(consumed));
+            Assertions.assertFalse(reader.atEnd());
+
+            var candidates = new LongQueryBuffer(new long[]{1, 2, 3, 4}, 4);
+            reader.rejectData(candidates);
+            candidates.finalizeFiltering();
+            Assertions.assertArrayEquals(new long[]{4}, candidates.copyData());
+        }
+    }
+
+    @Test
     void testSuccessiveReadsSameCompressedGroup() throws IOException {
         for (int size : new int[]{4, 30, 7000}) {
             long[] keys = LongStream.rangeClosed(1, size).map(v -> 2 * v).toArray();
