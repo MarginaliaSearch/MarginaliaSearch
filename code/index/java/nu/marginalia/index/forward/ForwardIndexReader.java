@@ -58,7 +58,7 @@ public class ForwardIndexReader {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private static ForwardIndexVersion version;
+    private final ForwardIndexVersion version;
 
     public ForwardIndexReader(Path idsFile,
                               Path dataFile,
