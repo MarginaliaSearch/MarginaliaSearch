@@ -44,8 +44,10 @@ public class SearchResultRedirectService {
         this.urlClient = urlClient;
         this.scrapeStopper = scrapeStopper;
 
-        Executors.newSingleThreadScheduledExecutor()
-                .scheduleAtFixedRate(this::periodicUpdate, 0, 60, TimeUnit.SECONDS);
+        if (Boolean.getBoolean("search.useRedirectMitigations")) {
+            Executors.newSingleThreadScheduledExecutor()
+                    .scheduleAtFixedRate(this::periodicUpdate, 0, 60, TimeUnit.SECONDS);
+        }
     }
 
     private void periodicUpdate() {
