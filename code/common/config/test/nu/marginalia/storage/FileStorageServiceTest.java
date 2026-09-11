@@ -11,7 +11,7 @@ import nu.marginalia.test.TestMigrationLoader;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.testcontainers.containers.MariaDBContainer;
+import org.testcontainers.mariadb.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -28,7 +28,7 @@ import java.util.UUID;
 @Tag("slow")
 public class FileStorageServiceTest {
     @Container
-    static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb")
+    static MariaDBContainer mariaDBContainer = new MariaDBContainer("mariadb")
             .withDatabaseName("WMSA_prod")
             .withUsername("wmsa")
             .withPassword("wmsa")

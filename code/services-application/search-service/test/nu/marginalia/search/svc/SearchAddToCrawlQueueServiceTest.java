@@ -6,7 +6,7 @@ import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.test.TestMigrationLoader;
 import org.junit.jupiter.api.*;
-import org.testcontainers.containers.MariaDBContainer;
+import org.testcontainers.mariadb.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -16,7 +16,7 @@ import java.sql.SQLException;
 @Testcontainers
 class SearchAddToCrawlQueueServiceTest {
     @Container
-    static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb")
+    static MariaDBContainer mariaDBContainer = new MariaDBContainer("mariadb")
             .withDatabaseName("WMSA_prod")
             .withUsername("wmsa")
             .withPassword("wmsa")

@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
-@Tag("flakey")
+@Tag("flaky")
 class MarginaliaApiClientTest {
 
     @Test

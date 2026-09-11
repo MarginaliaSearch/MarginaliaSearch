@@ -17,7 +17,7 @@ import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.process.ProcessConfigurationModule;
 import nu.marginalia.service.module.DatabaseModule;
 import org.junit.jupiter.api.*;
-import org.testcontainers.containers.MariaDBContainer;
+import org.testcontainers.mariadb.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -29,7 +29,7 @@ import java.nio.file.Path;
 @Testcontainers
 class EncyclopediaMarginaliaNuSideloaderTest {
     @Container
-    static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb")
+    static MariaDBContainer mariaDBContainer = new MariaDBContainer("mariadb")
             .withDatabaseName("WMSA_prod")
             .withUsername("wmsa")
             .withPassword("wmsa")

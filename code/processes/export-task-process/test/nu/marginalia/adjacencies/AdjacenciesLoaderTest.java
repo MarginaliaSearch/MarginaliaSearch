@@ -5,7 +5,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import it.unimi.dsi.fastutil.longs.LongList;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.parallel.Execution;
-import org.testcontainers.containers.MariaDBContainer;
+import org.testcontainers.mariadb.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -18,7 +18,7 @@ public class AdjacenciesLoaderTest {
     private static HikariDataSource dataSource;
 
     @Container
-    static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb")
+    static MariaDBContainer mariaDBContainer = new MariaDBContainer("mariadb")
             .withDatabaseName("WMSA_prod")
             .withUsername("wmsa")
             .withPassword("wmsa")

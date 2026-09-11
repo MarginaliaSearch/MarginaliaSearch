@@ -4,7 +4,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'org.flywaydb:flyway-mysql:11.16.0'
+        classpath 'org.flywaydb:flyway-mysql:13.6.0'
     }
 }
 
@@ -12,7 +12,7 @@ plugins {
     id 'java'
 
     id 'jvm-test-suite'
-    id "org.flywaydb.flyway" version "11.16.0"
+    id "org.flywaydb.flyway" version "13.6.0"
 }
 
 java {
@@ -46,20 +46,19 @@ dependencies {
     implementation libs.trove
 
     implementation libs.bundles.mariadb
-    flywayMigration 'org.flywaydb:flyway-mysql:10.0.1'
+    flywayMigration 'org.flywaydb:flyway-mysql:13.6.0'
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
 
 
-    testImplementation platform('org.testcontainers:testcontainers-bom:1.21.4') {
+    testImplementation platform(libs.testcontainers.bom.get()) {
         exclude group: 'org.apache.commons'
     }
     testImplementation libs.commons.compress
     testImplementation libs.commons.codec
-    testImplementation 'org.testcontainers:mariadb:1.21.4'
-    testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
+    testImplementation libs.bundles.testcontainers
     testImplementation project(':code:libraries:test-helpers')
 }
 

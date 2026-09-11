@@ -93,8 +93,6 @@ public class DocumentTags {
 
     /** Matches an attribute value with the same semantics as jsoup's element[attr=value] selector */
     public static boolean attrIs(Element el, String key, String value) {
-        String val = el.attr(key).trim();
-
-        return value.equalsIgnoreCase(val);
+        return el.hasAttr(key) && value.equalsIgnoreCase(el.attr(key));
     }
 }

@@ -17,10 +17,10 @@ import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.test.TestMigrationLoader;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
-import org.testcontainers.containers.MariaDBContainer;
+import org.testcontainers.mariadb.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FileUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -35,7 +35,7 @@ class FeedFetcherServiceTest extends AbstractModule {
     FeedDb feedDb;
 
     @Container
-    static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb")
+    static MariaDBContainer mariaDBContainer = new MariaDBContainer("mariadb")
             .withDatabaseName("WMSA_prod")
             .withUsername("wmsa")
             .withPassword("wmsa")

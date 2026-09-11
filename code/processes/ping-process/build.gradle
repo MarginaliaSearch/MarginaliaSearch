@@ -22,6 +22,7 @@ tasks.distZip.enabled = false
 apply from: "$rootProject.projectDir/srcsets.gradle"
 
 dependencies {
+    compileOnly libs.jsr305
 
     implementation project(':code:common:db')
     implementation project(':code:common:model')
@@ -51,9 +52,9 @@ dependencies {
     implementation libs.bundles.httpcomponents
     implementation libs.commons.lang3
 
-    implementation 'org.bouncycastle:bcprov-jdk18on:1.80'
-    implementation 'org.bouncycastle:bcpkix-jdk18on:1.80'
-    implementation 'dnsjava:dnsjava:3.6.4'
+    implementation 'org.bouncycastle:bcprov-jdk18on:1.86'
+    implementation 'org.bouncycastle:bcpkix-jdk18on:1.86'
+    implementation 'dnsjava:dnsjava:3.6.5'
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
@@ -62,13 +63,12 @@ dependencies {
     testImplementation libs.wiremock
 
 
-    testImplementation platform('org.testcontainers:testcontainers-bom:1.21.4') {
+    testImplementation platform(libs.testcontainers.bom.get()) {
         exclude group: 'org.apache.commons'
     }
     testImplementation libs.commons.compress
     testImplementation libs.commons.codec
-    testImplementation 'org.testcontainers:mariadb:1.21.4'
-    testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
+    testImplementation libs.bundles.testcontainers
     testImplementation project(':code:libraries:test-helpers')
 
     testImplementation project(':code:processes:test-data')

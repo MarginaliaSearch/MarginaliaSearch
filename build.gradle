@@ -1,12 +1,12 @@
 plugins {
     id 'java'
-    id("org.jetbrains.gradle.plugin.idea-ext") version "1.0"
+    id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1"
     id "me.champeau.jmh" version "0.7.3"
-    id 'com.gradleup.shadow' version "9.2.2"
+    id 'com.gradleup.shadow' version "9.6.1"
 
     // This is a workaround for a bug in the Jib plugin that causes it to stall randomly
     // https://github.com/GoogleContainerTools/jib/issues/3347
-    id 'com.google.cloud.tools.jib' version '3.4.5' apply(false)
+    id 'com.google.cloud.tools.jib' version '3.5.4' apply(false)
     id 'com.adarshr.test-logger' version '4.0.0'
 }
 
@@ -54,14 +54,8 @@ subprojects.forEach {it ->
         reproducibleFileOrder = true
     }
 
-    // Kludge:  Fix netty compatibility
-    it.configurations.all {
-        resolutionStrategy.eachDependency { details ->
-            if (details.requested.group == 'io.netty'
-                    && details.requested.name != 'netty-tcnative-boringssl-static') {
-                details.useVersion '4.2.12.Final'
-            }
-        }
+    it.plugins.withId('java') { _ ->
+        it.dependencies.add('implementation', it.dependencies.platform('io.netty:netty-bom:4.2.18.Final'))
     }
 
 }
@@ -80,7 +74,7 @@ ext {
 
     dockerImageTag='latest'
     dockerImageRegistry='marginalia'
-    jibVersion = '3.4.5'
+    jibVersion = '3.5.4'
 }
 
 apply from: 'dist.gradle'

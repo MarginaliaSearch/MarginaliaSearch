@@ -4,17 +4,17 @@
 protobuf {
     protoc {
         if (osdetector.os == "osx") {
-            artifact = "com.google.protobuf:protoc:3.0.2:osx-x86_64"
+            artifact = "com.google.protobuf:protoc:4.36.1:osx-x86_64"
         } else {
-            artifact = "com.google.protobuf:protoc:3.0.2"
+            artifact = "com.google.protobuf:protoc:4.36.1"
         }
     }
     plugins {
         grpc {
             if (osdetector.os == "osx") {
-                artifact = "io.grpc:protoc-gen-grpc-java:1.1.2:osx-x86_64"
+                artifact = "io.grpc:protoc-gen-grpc-java:1.84.0:osx-x86_64"
             } else {
-                artifact = "io.grpc:protoc-gen-grpc-java:1.1.2"
+                artifact = "io.grpc:protoc-gen-grpc-java:1.84.0"
             }
         }
     }

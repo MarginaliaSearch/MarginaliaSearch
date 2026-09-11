@@ -230,7 +230,7 @@ public class DocumentKeywordsBuilder {
         wordToMeta.forEach((word, meta) -> {
             sb.append(word)
                     .append("->")
-                    .append(WordFlags.decode((byte) meta.longValue()))
+                    .append(WordFlags.decode((byte) meta))
                     .append(',')
                     .append(wordToPos.getOrDefault(word, new IntArrayList()))
                     .append(' ');

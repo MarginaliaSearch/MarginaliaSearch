@@ -6,11 +6,12 @@ import nu.marginalia.nodecfg.model.NodeConfiguration;
 import nu.marginalia.nodecfg.model.NodeProfile;
 import nu.marginalia.test.TestMigrationLoader;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.testcontainers.containers.MariaDBContainer;
+import org.testcontainers.mariadb.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -23,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Tag("slow")
 public class NodeConfigurationServiceTest {
     @Container
-    static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb")
+    static MariaDBContainer mariaDBContainer = new MariaDBContainer("mariadb")
             .withDatabaseName("WMSA_prod")
             .withUsername("wmsa")
             .withPassword("wmsa")
@@ -44,6 +45,14 @@ public class NodeConfigurationServiceTest {
         TestMigrationLoader.flywayMigration(dataSource);
 
         nodeConfigurationService = new NodeConfigurationService(dataSource);
+    }
+
+    @BeforeEach
+    void clearNodeConfigurations() throws SQLException {
+        try (var connection = dataSource.getConnection();
+             var statement = connection.createStatement()) {
+            statement.executeUpdate("DELETE FROM NODE_CONFIGURATION");
+        }
     }
 
     @Test

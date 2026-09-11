@@ -12,6 +12,8 @@ java {
 apply from: "$rootProject.projectDir/srcsets.gradle"
 
 dependencies {
+    compileOnly libs.jsr305
+    testCompileOnly libs.jsr305
     implementation project(':third-party:commons-codec')
 
     implementation project(':code:index:api')
@@ -72,13 +74,12 @@ dependencies {
     testImplementation libs.commons.lang3
     testImplementation project(':code:libraries:array')
 
-    testImplementation platform('org.testcontainers:testcontainers-bom:1.21.4') {
+    testImplementation platform(libs.testcontainers.bom.get()) {
         exclude group: 'org.apache.commons'
     }
     testImplementation libs.commons.compress
     testImplementation libs.commons.codec
-    testImplementation 'org.testcontainers:mariadb:1.21.4'
-    testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
+    testImplementation libs.bundles.testcontainers
     testImplementation project(':code:libraries:test-helpers')
     testImplementation project(':code:functions:language-processing')
     testImplementation project(':code:libraries:braille-block-punch-cards')

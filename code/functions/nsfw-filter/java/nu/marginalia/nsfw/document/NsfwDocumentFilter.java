@@ -6,7 +6,6 @@ import nu.marginalia.classifier.BinaryClassifierModel;
 import nu.marginalia.classifier.ClassifierSample;
 import nu.marginalia.classifier.ClassifierVocabulary;
 import nu.marginalia.language.model.DocumentSentence;
-import org.checkerframework.checker.units.qual.C;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

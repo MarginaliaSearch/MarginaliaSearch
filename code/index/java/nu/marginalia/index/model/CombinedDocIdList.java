@@ -2,7 +2,6 @@ package nu.marginalia.index.model;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import nu.marginalia.array.page.LongQueryBuffer;
-import org.checkerframework.checker.units.qual.C;
 
 import java.util.ArrayList;
 import java.util.Arrays;

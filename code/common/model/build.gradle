@@ -13,6 +13,7 @@ java {
 apply from: "$rootProject.projectDir/srcsets.gradle"
 
 dependencies {
+    compileOnly libs.jsr305
     implementation project(':code:libraries:braille-block-punch-cards')
     implementation project(':code:libraries:coded-sequence')
 

@@ -9,7 +9,7 @@ import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.test.TestMigrationLoader;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.parallel.Execution;
-import org.testcontainers.containers.MariaDBContainer;
+import org.testcontainers.mariadb.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -31,7 +31,7 @@ import static org.mockito.Mockito.when;
 public class DomainInformationServiceTest {
 
     @Container
-    static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb")
+    static MariaDBContainer mariaDBContainer = new MariaDBContainer("mariadb")
             .withDatabaseName("WMSA_prod")
             .withUsername("wmsa")
             .withPassword("wmsa")
