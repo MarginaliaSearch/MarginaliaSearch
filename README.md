@@ -92,12 +92,9 @@ for more information.
 
 ## Funding
 
-### Donations
+Consider [donating to the project](https://about.marginalia-search.com/article/supporting/).
 
-Consider [donating to the project](https://www.marginalia.nu/marginalia-search/supporting/).
-
-### Grants
-
+### NLnet / NGI0 Entrust Fund
 This project was funded through the [NGI0 Entrust Fund](https://nlnet.nl/entrust), a fund established by [NLnet](https://nlnet.nl) with financial support from the European Commission's [Next Generation Internet](https://ngi.eu/) programme, under the aegis of DG Communications Networks, Content and Technology under grant agreement No 101069594.
 
 ![NLnet Foundation](nlnet.png)
