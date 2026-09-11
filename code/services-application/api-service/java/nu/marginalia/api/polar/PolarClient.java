@@ -23,6 +23,9 @@ import java.util.concurrent.*;
 @Singleton
 public class PolarClient {
 
+    // https://polar.sh/docs/api-reference/versioning
+    private static final String API_VERSION = "2026-04";
+
     private final HttpClient client;
     private final String baseUri;
 
@@ -101,6 +104,13 @@ public class PolarClient {
 
     }
 
+    private HttpRequest.Builder requestBuilder(URI uri) {
+        return HttpRequest.newBuilder(uri)
+                .header("Authorization", "bearer " + accessToken)
+                .header("Polar-Version", API_VERSION)
+                .timeout(Duration.ofSeconds(5));
+    }
+
     private void revalidateKeys() {
 
         logger.info("Revalidating Polar keys");
@@ -152,11 +162,9 @@ public class PolarClient {
 
         URI uri = URI.create(baseUri + apiPath);
 
-        HttpRequest req = HttpRequest.newBuilder(uri)
-                .header("Authorization", "bearer " + accessToken)
+        HttpRequest req = requestBuilder(uri)
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body))
-                .timeout(Duration.ofSeconds(5))
                 .build();
 
         try {
@@ -206,10 +214,8 @@ public class PolarClient {
 
         URI uri = URI.create(baseUri + apiPath);
 
-        HttpRequest req = HttpRequest.newBuilder(uri)
-                .header("Authorization", "bearer " + accessToken)
+        HttpRequest req = requestBuilder(uri)
                 .GET()
-                .timeout(Duration.ofSeconds(5))
                 .build();
 
         try {
@@ -256,10 +262,8 @@ public class PolarClient {
 
         URI uri = URI.create(baseUri + apiPath);
 
-        HttpRequest req = HttpRequest.newBuilder(uri)
-                .header("Authorization", "bearer " + accessToken)
+        HttpRequest req = requestBuilder(uri)
                 .GET()
-                .timeout(Duration.ofSeconds(5))
                 .build();
 
         List<PolarSubscription> ret = new ArrayList<>();
@@ -296,10 +300,8 @@ public class PolarClient {
 
         URI uri = URI.create(baseUri + apiPath);
 
-        HttpRequest req = HttpRequest.newBuilder(uri)
-                .header("Authorization", "bearer " + accessToken)
+        HttpRequest req = requestBuilder(uri)
                 .GET()
-                .timeout(Duration.ofSeconds(5))
                 .build();
 
         List<PolarSubscription> ret = new ArrayList<>();
@@ -379,11 +381,9 @@ public class PolarClient {
 
         URI uri = URI.create(baseUri + apiPath);
 
-        HttpRequest req = HttpRequest.newBuilder(uri)
-                .header("Authorization", "bearer " + accessToken)
+        HttpRequest req = requestBuilder(uri)
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(request)))
-                .timeout(Duration.ofSeconds(5))
                 .build();
 
         try {
