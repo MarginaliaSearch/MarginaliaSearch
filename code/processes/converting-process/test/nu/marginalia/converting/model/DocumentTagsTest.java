@@ -61,6 +61,7 @@ class DocumentTagsTest {
                 <html><head>
                 <meta property="datePublished" content="a">
                 <meta property="DATEPUBLISHED " content="b">
+                <meta property="DATEPUBLISHED" content="case-insensitive">
                 <meta property="something-else" content="c">
                 <meta content="d">
                 </head></html>

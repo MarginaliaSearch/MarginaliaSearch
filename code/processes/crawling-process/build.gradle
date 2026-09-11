@@ -22,6 +22,7 @@ tasks.distZip.enabled = false
 apply from: "$rootProject.projectDir/srcsets.gradle"
 
 dependencies {
+    compileOnly libs.jsr305
 
     implementation project(':code:common:db')
     implementation project(':code:common:model')

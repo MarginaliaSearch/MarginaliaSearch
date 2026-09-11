@@ -13,7 +13,6 @@ dependencies {
     implementation libs.zstd
     implementation libs.commons.compress
     implementation libs.ffi
-    implementation libs.databind
     implementation libs.bundles.gson
 
     implementation libs.xz

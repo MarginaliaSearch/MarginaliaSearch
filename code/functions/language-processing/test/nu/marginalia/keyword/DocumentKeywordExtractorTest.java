@@ -47,7 +47,7 @@ class DocumentKeywordExtractorTest {
 
         keywords.getWordToMeta().forEach((k, v) -> {
             if (k.contains("_")) {
-                System.out.println(k + " " + WordFlags.decode((byte) v.longValue()));
+                System.out.println(k + " " + WordFlags.decode((byte) v));
             }
         });
     }

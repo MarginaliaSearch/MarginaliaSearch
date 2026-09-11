@@ -13,6 +13,7 @@ java {
 apply from: "$rootProject.projectDir/srcsets.gradle"
 
 dependencies {
+    compileOnly libs.jsr305
     implementation libs.bundles.slf4j
 
     implementation libs.notnull

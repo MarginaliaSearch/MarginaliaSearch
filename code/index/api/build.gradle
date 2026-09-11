@@ -12,6 +12,7 @@ java {
 apply from: "$rootProject.projectDir/srcsets.gradle"
 
 dependencies {
+    compileOnly libs.jsr305
     implementation project(':code:common:model')
     implementation project(':code:common:config')
     implementation project(':code:common:service')

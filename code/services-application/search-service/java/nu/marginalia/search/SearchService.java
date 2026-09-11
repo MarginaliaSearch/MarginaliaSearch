@@ -60,14 +60,14 @@ public class SearchService extends JoobyService {
     throws Exception {
         super(params,
                 List.of(), // No GRPC services
-                List.of(new SearchFrontPageService_(frontPageService),
-                        new SearchQueryService_(searchQueryService),
-                        new SearchResultRedirectService_(resultRedirectService),
-                        new SearchSiteInfoService_(siteInfoService),
-                        new SearchCrosstalkService_(crosstalkService),
-                        new SearchAddToCrawlQueueService_(addToCrawlQueueService),
-                        new SearchFilterService_(searchFilterService),
-                        new SearchBrowseService_(searchBrowseService)
+                List.of(new SearchFrontPageServiceHtmx_(frontPageService),
+                        new SearchQueryServiceHtmx_(searchQueryService),
+                        new SearchResultRedirectServiceHtmx_(resultRedirectService),
+                        new SearchSiteInfoServiceHtmx_(siteInfoService),
+                        new SearchCrosstalkServiceHtmx_(crosstalkService),
+                        new SearchAddToCrawlQueueServiceHtmx_(addToCrawlQueueService),
+                        new SearchFilterServiceHtmx_(searchFilterService),
+                        new SearchBrowseServiceHtmx_(searchBrowseService)
                 ));
         this.websiteUrl = websiteUrl;
 

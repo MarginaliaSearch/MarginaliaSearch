@@ -1,7 +1,7 @@
 plugins {
     id 'java'
 
-    id "com.google.protobuf" version "0.9.4"
+    id "com.google.protobuf" version "0.10.0"
     id 'jvm-test-suite'
     id "me.champeau.jmh" version "0.7.3"
 }
@@ -20,6 +20,7 @@ apply from: "$rootProject.projectDir/protobuf.gradle"
 apply from: "$rootProject.projectDir/srcsets.gradle"
 
 dependencies {
+    compileOnly libs.jsr305
     implementation project(':code:common:model')
     implementation project(':code:common:config')
     implementation project(':code:common:service')

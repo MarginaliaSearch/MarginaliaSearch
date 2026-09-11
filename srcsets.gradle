@@ -39,6 +39,10 @@ if (project.plugins.hasPlugin('application')) {
 
 
     shadowJar {
+        // Service providers must reach the transformer before duplicate entries are removed.
+        filesMatching(['META-INF/services/**', 'META-INF/*.kotlin_module']) {
+            duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        }
         mergeServiceFiles()
 
         archiveBaseName = application.applicationName
