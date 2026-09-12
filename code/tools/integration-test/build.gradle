@@ -39,7 +39,6 @@ dependencies {
     implementation libs.bundles.slf4j
     implementation libs.hikaricp
     implementation libs.bundles.grpc
-    implementation libs.mockito
     implementation libs.notnull
     implementation libs.guice
     implementation libs.fastutil
@@ -47,6 +46,6 @@ dependencies {
     implementation libs.bundles.httpcomponents
 
     testImplementation libs.bundles.junit
+    testImplementation libs.mockito
     testImplementation project(':code:libraries:test-helpers')
 }
-

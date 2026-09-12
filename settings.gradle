@@ -219,6 +219,7 @@ dependencyResolutionManagement {
             library('jsoup','org.jsoup','jsoup').version('1.23.2')
             library('snakeyaml','org.yaml','snakeyaml').version('2.7')
 
+            library('junit.bom', 'org.junit', 'junit-bom').version('6.1.3')
             library('junit.jupiter','org.junit.jupiter','junit-jupiter-api').version('6.1.3')
             library('junit.jupiter.engine','org.junit.jupiter','junit-jupiter-engine').version('6.1.3')
             library('mockito','org.mockito','mockito-junit-jupiter').version('5.23.0')
