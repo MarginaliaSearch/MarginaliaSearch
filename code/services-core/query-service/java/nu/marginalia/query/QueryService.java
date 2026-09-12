@@ -9,7 +9,6 @@ import nu.marginalia.functions.searchquery.QueryGRPCService;
 import nu.marginalia.linkgraph.AggregateLinkGraphService;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.service.server.JoobyService;
-import nu.marginalia.service.server.SparkService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
