@@ -23,7 +23,7 @@ class SiteRedirectCommandTest {
     }
 
     Optional<String> testAndGetRedirect(String query) {
-        var resOpt = command.process(null, SearchParameters.defaultsForQuery(query, 1));
+        var resOpt = command.process(SearchParameters.defaultsForQuery(query, 1));
         if (resOpt.isEmpty())
             return Optional.empty();
         var res = (String) resOpt.get();

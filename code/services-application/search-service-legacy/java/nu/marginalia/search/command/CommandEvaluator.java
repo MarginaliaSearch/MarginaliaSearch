@@ -2,7 +2,6 @@ package nu.marginalia.search.command;
 
 import com.google.inject.Inject;
 import nu.marginalia.search.command.commands.*;
-import spark.Response;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,14 +29,14 @@ public class CommandEvaluator {
         defaultCommand = search;
     }
 
-    public Object eval(Response response, SearchParameters parameters) {
+    public Object eval(SearchParameters parameters) {
         for (var cmd : specialCommands) {
-            var maybe = cmd.process(response, parameters);
+            var maybe = cmd.process(parameters);
             if (maybe.isPresent())
                 return maybe.get();
         }
 
-        return defaultCommand.process(response, parameters).orElse("");
+        return defaultCommand.process(parameters).orElse("");
     }
 
 }

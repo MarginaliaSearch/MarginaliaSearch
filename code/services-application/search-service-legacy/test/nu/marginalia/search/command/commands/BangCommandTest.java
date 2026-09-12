@@ -14,7 +14,7 @@ class BangCommandTest {
     @Test
     public void testG() {
         try {
-            bangCommand.process(null,
+            bangCommand.process(
                     new SearchParameters(" !g test",
                     null, null, null, null, null, null, false, 1)
             );

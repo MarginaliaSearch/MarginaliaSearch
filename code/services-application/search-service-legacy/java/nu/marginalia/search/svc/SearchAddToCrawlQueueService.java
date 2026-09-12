@@ -6,9 +6,8 @@ import nu.marginalia.WebsiteUrl;
 import nu.marginalia.db.DbDomainQueries;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
+import io.jooby.Context;
+import io.jooby.exception.NotFoundException;
 
 import java.sql.SQLException;
 
@@ -28,9 +27,9 @@ public class SearchAddToCrawlQueueService {
         this.dataSource = dataSource;
     }
 
-    public Object suggestCrawling(Request request, Response response) throws SQLException {
-        int id = Integer.parseInt(request.queryParams("id"));
-        boolean nomisclick = "on".equals(request.queryParams("nomisclick"));
+    public Object suggestCrawling(Context ctx) throws SQLException {
+        int id = Integer.parseInt(ctx.lookup("id").valueOrNull());
+        boolean nomisclick = "on".equals(ctx.lookup("nomisclick").valueOrNull());
 
         String domainName = getDomainName(id);
 
@@ -42,7 +41,7 @@ public class SearchAddToCrawlQueueService {
             logger.info("Nomisclick not set, not adding {} to crawl queue", domainName);
         }
 
-        response.redirect(websiteUrl.withPath("/site/" + domainName));
+        ctx.sendRedirect(websiteUrl.withPath("/site/" + domainName));
 
         return "";
     }
@@ -61,7 +60,7 @@ public class SearchAddToCrawlQueueService {
     private String getDomainName(int id) {
         var domain = domainQueries.getDomain(id);
         if (domain.isEmpty())
-            Spark.halt(404);
+            throw new NotFoundException("Domain not found");
         return domain.get().toString();
     }
 }
