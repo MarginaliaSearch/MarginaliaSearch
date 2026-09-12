@@ -57,7 +57,6 @@ dependencies {
 
 
     implementation libs.notnull
-    implementation libs.guava
     implementation dependencies.create(libs.guice.get()) {
         exclude group: 'com.google.guava'
     }
@@ -83,5 +82,4 @@ dependencies {
     testImplementation project(':code:libraries:test-helpers')
     testImplementation project(':code:functions:language-processing')
     testImplementation project(':code:libraries:braille-block-punch-cards')
-    testImplementation project(':code:libraries:test-helpers')
 }

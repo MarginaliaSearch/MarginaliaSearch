@@ -63,7 +63,7 @@ dependencies {
     }
     testImplementation libs.commons.compress
     testImplementation libs.commons.codec
-    testImplementation 'io.jooby:jooby-test:4.5.4'
+    testImplementation libs.jooby.test
     testImplementation libs.bundles.testcontainers
     testImplementation project(':code:libraries:test-helpers')
 }

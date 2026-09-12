@@ -39,6 +39,5 @@ dependencies {
     testImplementation libs.commons.compress
     testImplementation libs.commons.codec
     testImplementation libs.bundles.testcontainers
-    testImplementation project(':code:libraries:test-helpers')
 
 }

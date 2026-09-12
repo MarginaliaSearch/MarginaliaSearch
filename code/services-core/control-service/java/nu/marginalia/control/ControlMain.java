@@ -29,10 +29,12 @@ import java.util.zip.ZipFile;
 
 public class ControlMain extends MainClass {
     private final ControlService service;
+    private final Initialization initialization;
 
     @Inject
-    public ControlMain(ControlService service) {
+    public ControlMain(ControlService service, Initialization initialization) {
         this.service = service;
+        this.initialization = initialization;
     }
 
     public static void main(String... args) throws Exception {
@@ -59,7 +61,6 @@ public class ControlMain extends MainClass {
 
 
         var main = injector.getInstance(ControlMain.class);
-        injector.getInstance(Initialization.class).setReady();
 
         Jooby.runApp(new String[] { "application.env=prod" }, main.server(), ExecutionMode.WORKER, () -> new Jooby() {
             {
@@ -74,6 +75,7 @@ public class ControlMain extends MainClass {
 
     public void start(Jooby jooby) {
         service.startJooby(jooby);
+        jooby.onStarted(initialization::setReady);
     }
 
     static void downloadAncillaryFiles(Path dataPath) throws Exception {

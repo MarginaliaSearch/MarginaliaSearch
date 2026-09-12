@@ -25,7 +25,6 @@ dependencies {
     implementation libs.jsoup
     implementation libs.commons.lang3
 
-    testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
 }

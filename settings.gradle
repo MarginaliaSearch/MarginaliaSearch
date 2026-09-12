@@ -150,6 +150,10 @@ dependencyResolutionManagement {
 
     versionCatalogs {
         libs {
+            version('bouncycastle', '1.86')
+            version('flyway', '13.6.0')
+            plugin('flyway', 'org.flywaydb.flyway').versionRef('flyway')
+
             library('mariadb-client', 'org.mariadb.jdbc', 'mariadb-java-client').version('3.5.10')
             library('hikaricp', 'com.zaxxer:HikariCP:7.1.0')
 
@@ -163,11 +167,9 @@ dependencyResolutionManagement {
 
             library('prometheus', 'io.prometheus', 'prometheus-metrics-core').version('1.8.0')
             library('prometheus-server', 'io.prometheus', 'prometheus-metrics-exporter-httpserver').version('1.8.0')
-            library('prometheus-client', 'io.prometheus', 'client_java_parent').version('1.8.0')
             library('prometheus-jvm', 'io.prometheus', 'prometheus-metrics-instrumentation-jvm').version('1.8.0')
 
             library('slf4j.api', 'org.slf4j', 'slf4j-api').version('2.0.19')
-            library('slf4j.jdk14', 'org.slf4j', 'slf4j-jdk14').version('2.0.19')
 
             library('log4j.api', 'org.apache.logging.log4j', 'log4j-api').version('2.26.1')
             library('log4j.core', 'org.apache.logging.log4j', 'log4j-core').version('2.26.1')
@@ -180,9 +182,7 @@ dependencyResolutionManagement {
             library('trove', 'net.sf.trove4j', 'trove4j').version('3.0.3')
             library('fastutil', 'it.unimi.dsi', 'fastutil').version('8.5.19')
 
-            library('hll', 'net.agkn', 'hll').version('1.6.0')
             library('duckdb', 'org.duckdb', 'duckdb_jdbc').version('1.5.5.1')
-            library('okhttp3','com.squareup.okhttp3','okhttp').version('5.5.0')
 
             library('jwarc', 'org.netpreserve', 'jwarc').version('0.37.0')
 
@@ -195,26 +195,31 @@ dependencyResolutionManagement {
             library('commons.io','commons-io','commons-io').version('2.22.0')
             library('commons.codec', 'commons-codec', 'commons-codec').version('1.22.1')
 
+            library('bouncycastle.provider', 'org.bouncycastle', 'bcprov-jdk18on').versionRef('bouncycastle')
+            library('bouncycastle.pkix', 'org.bouncycastle', 'bcpkix-jdk18on').versionRef('bouncycastle')
+            library('dnsjava', 'dnsjava', 'dnsjava').version('3.6.5')
+
             library('ffi','com.github.jnr','jnr-ffi').version('2.3.1')
 
             library('crawlercommons', 'com.github.crawler-commons', 'crawler-commons').version('1.6')
 
             library('stanford.corenlp','edu.stanford.nlp','stanford-corenlp').version('4.5.10')
-            library('opennlp','org.apache.opennlp','opennlp-tools').version('2.5.11')
+            library('opennlp','org.apache.opennlp','opennlp-tools').version('2.5.12')
             library('fasttext','com.github.vinhkhuc','jfasttext').version('0.5')
             library('roaringbitmap','org.roaringbitmap','RoaringBitmap').version('1.6.23')
             library('opencsv','com.opencsv','opencsv').version('5.12.0')
             library('bucket4j','com.bucket4j','bucket4j_jdk17-core').version('8.19.0')
 
             library('gson','com.google.code.gson','gson').version('2.14.0')
+            library('jackson.bom', 'com.fasterxml.jackson', 'jackson-bom').version('2.22.2')
             library('gson-type-adapter','com.github.Marcono1234','gson-record-type-adapter-factory').version('0.3.0')
 
             library('zstd','com.github.luben','zstd-jni').version('1.5.7-16')
             library('lz4','at.yawk.lz4','lz4-java').version('1.11.2')
             library('xz','org.tukaani','xz').version('1.12')
 
-            library('flyway.core','org.flywaydb','flyway-core').version('13.6.0')
-            library('flyway.mysql','org.flywaydb','flyway-mysql').version('13.6.0')
+            library('flyway.core','org.flywaydb','flyway-core').versionRef('flyway')
+            library('flyway.mysql','org.flywaydb','flyway-mysql').versionRef('flyway')
 
             library('jsoup','org.jsoup','jsoup').version('1.23.2')
             library('snakeyaml','org.yaml','snakeyaml').version('2.7')
@@ -239,12 +244,14 @@ dependencyResolutionManagement {
             library('javax.annotation','javax.annotation','javax.annotation-api').version('1.3.2')
 
             library('curator-framework', 'org.apache.curator','curator-framework').version('5.9.0')
-            library('curator-x-discovery', 'org.apache.curator','curator-x-discovery').version('5.9.0')
+            library('curator-recipes', 'org.apache.curator','curator-recipes').version('5.9.0')
+            library('zookeeper', 'org.apache.zookeeper', 'zookeeper').version('3.9.5')
 
             library('slop', 'nu.marginalia', 'slop').version('0.0.21-SNAPSHOT')
             library('jooby-netty','io.jooby','jooby-netty').version(joobyVersion)
             library('jooby-jte','io.jooby','jooby-jte').version(joobyVersion)
             library('jooby-apt','io.jooby','jooby-apt').version(joobyVersion)
+            library('jooby-test','io.jooby','jooby-test').version(joobyVersion)
 
             library('wiremock', 'org.wiremock','wiremock').version('3.13.2')
             library('jte','gg.jte','jte').version('3.2.4')
@@ -252,8 +259,8 @@ dependencyResolutionManagement {
             library('pdfbox', 'org.apache.pdfbox', 'pdfbox').version('3.0.8')
 
             bundle('slf4j', ['slf4j.api', 'log4j.api', 'log4j.core', 'log4j.slf4j'])
-            bundle('slf4j.test', ['slf4j.jdk14'])
-            bundle('prometheus', ['prometheus', 'prometheus-server', 'prometheus-client', 'prometheus-jvm'])
+            bundle('slf4j.test', ['log4j.slf4j'])
+            bundle('prometheus', ['prometheus', 'prometheus-server', 'prometheus-jvm'])
             bundle('mariadb', ['mariadb-client', 'hikaricp'])
             bundle('nlp', ['stanford.corenlp', 'opennlp', 'fasttext'])
             bundle('selenium', ['selenium.chrome', 'selenium.java'])
@@ -266,7 +273,7 @@ dependencyResolutionManagement {
             bundle('testcontainers', ['testcontainers.mariadb', 'testcontainers.junit'])
             bundle('flyway', ['flyway.core', 'flyway.mysql'])
             bundle('jooby', ['jooby-netty', 'jooby-jte'])
-            bundle('curator', ['curator-framework', 'curator-x-discovery'])
+            bundle('curator', ['curator-framework', 'curator-recipes', 'zookeeper'])
         }
     }
 }

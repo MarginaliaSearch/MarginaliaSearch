@@ -37,7 +37,6 @@ dependencies {
     implementation libs.gson
     implementation libs.commons.lang3
     implementation libs.bundles.protobuf
-    implementation libs.guava
     libs.bundles.grpc.get().each {
         implementation dependencies.create(it) {
             exclude group: 'com.google.guava'

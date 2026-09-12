@@ -8,6 +8,7 @@ import io.jooby.Jooby;
 import io.jooby.StatusCode;
 import io.jooby.test.MockContext;
 import io.jooby.test.MockRouter;
+import nu.marginalia.api.feeds.FeedsClient;
 import nu.marginalia.api.polar.PolarBenefit;
 import nu.marginalia.api.polar.PolarBenefits;
 import nu.marginalia.api.polar.PolarClient;
@@ -73,6 +74,7 @@ public class ApiV2Test {
             protected void configure() {
                 bind(HikariDataSource.class).toInstance(dataSource);
                 bind(GrpcChannelPoolFactoryIf.class).toInstance(testGrpcChannelPoolFactory);
+                bind(FeedsClient.class).toInstance(Mockito.mock(FeedsClient.class));
                 bind(PolarClient.class).toInstance(PolarClient.asDisabled());
                 bind(PolarBenefits.class).toInstance(PolarBenefits.asDisabled());
             }

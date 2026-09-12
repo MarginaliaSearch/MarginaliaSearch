@@ -17,10 +17,12 @@ import io.jooby.Server;
 
 public class SearchMain extends MainClass {
     private final SearchService service;
+    private final Initialization initialization;
 
     @Inject
-    public SearchMain(SearchService service) {
+    public SearchMain(SearchService service, Initialization initialization) {
         this.service = service;
+        this.initialization = initialization;
     }
 
     public static void main(String... args) {
@@ -41,7 +43,6 @@ public class SearchMain extends MainClass {
         orchestrateBoot(registry, configuration);
 
         var main = injector.getInstance(SearchMain.class);
-        injector.getInstance(Initialization.class).setReady();
 
         Jooby.runApp(new String[] { "application.env=prod" }, main.server(), ExecutionMode.WORKER, () -> new Jooby() {
             {
@@ -56,5 +57,6 @@ public class SearchMain extends MainClass {
 
     public void start(Jooby jooby) {
         service.startJooby(jooby);
+        jooby.onStarted(initialization::setReady);
     }
 }

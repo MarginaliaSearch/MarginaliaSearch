@@ -228,6 +228,15 @@ class SearchHttpTest {
     }
 
     @Test
+    void returns500ForSearchBackendFailures() throws Exception {
+        when(commands.eval(any())).thenThrow(new IllegalStateException("backend unavailable"));
+        var response = get("/search?query=hello");
+        assertEquals(500, response.statusCode());
+        assertTrue(response.headers().firstValue("Content-Type").orElseThrow().startsWith("text/html"));
+        assertTrue(response.body().contains("An error occurred when communicating"));
+    }
+
+    @Test
     void servesHealthEndpoints() throws Exception {
         assertEquals("pong", get("/internal/ping").body());
         assertEquals("ok", get("/internal/started").body());
