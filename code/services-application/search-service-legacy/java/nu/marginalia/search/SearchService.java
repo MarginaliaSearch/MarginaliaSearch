@@ -6,19 +6,28 @@ import io.prometheus.metrics.core.metrics.Histogram;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.search.svc.*;
 import nu.marginalia.service.server.BaseServiceParams;
-import nu.marginalia.service.server.SparkService;
-import nu.marginalia.service.server.StaticResources;
+import nu.marginalia.service.server.JoobyService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.*;
+import io.jooby.*;
+import io.jooby.exception.BadRequestException;
+import io.jooby.handler.AssetSource;
+import io.jooby.handler.AssetHandler;
+import nu.marginalia.search.exceptions.RedirectException;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
-public class SearchService extends SparkService {
+public class SearchService extends JoobyService {
 
     private final WebsiteUrl websiteUrl;
-    private final StaticResources staticResources;
+    private final SearchFrontPageService frontPageService;
+    private final SearchErrorPageService errorPageService;
+    private final SearchAddToCrawlQueueService addToCrawlQueueService;
+    private final SearchSiteInfoService siteInfoService;
+    private final SearchCrosstalkService crosstalkService;
+    private final SearchQueryService searchQueryService;
 
     private static final Logger logger = LoggerFactory.getLogger(SearchService.class);
     private static final Histogram wmsa_search_service_request_time = Histogram.builder()
@@ -36,7 +45,6 @@ public class SearchService extends SparkService {
     @Inject
     public SearchService(BaseServiceParams params,
                          WebsiteUrl websiteUrl,
-                         StaticResources staticResources,
                          SearchFrontPageService frontPageService,
                          SearchErrorPageService errorPageService,
                          SearchAddToCrawlQueueService addToCrawlQueueService,
@@ -45,94 +53,84 @@ public class SearchService extends SparkService {
                          SearchQueryService searchQueryService)
     throws Exception
     {
-        super(params);
+        super(params, List.of(), List.of());
 
         this.websiteUrl = websiteUrl;
-        this.staticResources = staticResources;
+        this.frontPageService = frontPageService;
+        this.errorPageService = errorPageService;
+        this.addToCrawlQueueService = addToCrawlQueueService;
+        this.siteInfoService = siteInfoService;
+        this.crosstalkService = crosstalkService;
+        this.searchQueryService = searchQueryService;
+    }
 
-        Spark.staticFiles.expireTime(600);
+    @Override
+    public void startJooby(Jooby jooby) {
+        super.startJooby(jooby);
 
-        Spark.before("/search", this::denyPrefetch);
-        Spark.before("/site/:site", this::denyPrefetch);
+        jooby.before(ctx -> ctx.setResponseType(MediaType.HTML));
 
-        SearchServiceMetrics.get("/search", searchQueryService::pathSearch);
+        jooby.get("/search", timed(ctx -> {
+            denyPrefetch(ctx);
+            return searchQueryService.pathSearch(ctx);
+        }));
+        jooby.get("/", timed(frontPageService::render));
+        jooby.get("/news.xml", timed(frontPageService::renderNewsFeed));
+        jooby.post("/site/suggest/", timed(addToCrawlQueueService::suggestCrawling));
+        jooby.get("/site-search/{site}/*", timed(this::siteSearchRedir));
+        jooby.get("/site/{site}", timed(ctx -> {
+            denyPrefetch(ctx);
+            return siteInfoService.handle(ctx);
+        }));
+        jooby.post("/site/{site}", timed(ctx -> {
+            denyPrefetch(ctx);
+            return siteInfoService.handlePost(ctx);
+        }));
+        jooby.get("/crosstalk/", timed(crosstalkService::handle));
 
-        SearchServiceMetrics.get("/", frontPageService::render);
-        SearchServiceMetrics.get("/news.xml", frontPageService::renderNewsFeed);
-        SearchServiceMetrics.get("/:resource", this::serveStatic);
+        var assets = AssetSource.create(getClass().getClassLoader(), "/static/search");
+        jooby.assets("/*", assets).setMaxAge(600).setETag(true);
+        jooby.assets("/opensearch.xml", new AssetHandler("opensearch.xml", assets))
+                .setMaxAge(600).setETag(true)
+                .setMediaTypeResolver(asset -> MediaType.valueOf("application/opensearchdescription+xml"));
 
-        SearchServiceMetrics.post("/site/suggest/", addToCrawlQueueService::suggestCrawling);
-
-        SearchServiceMetrics.get("/site-search/:site/*", this::siteSearchRedir);
-
-        SearchServiceMetrics.get("/site/:site", siteInfoService::handle);
-        SearchServiceMetrics.post("/site/:site", siteInfoService::handlePost);
-
-        SearchServiceMetrics.get("/crosstalk/", crosstalkService::handle);
-
-        Spark.exception(Exception.class, (e,p,q) -> {
-            logger.error("Error during processing", e);
-            wmsa_search_service_error_count.labelValues(p.pathInfo(), p.requestMethod()).inc();
-            errorPageService.serveError(p, q);
+        jooby.error(RedirectException.class, (ctx, cause, code) ->
+                ctx.sendRedirect(((RedirectException) cause).newUrl));
+        jooby.error((ctx, cause, code) -> {
+            if (code.value() < 500) {
+                ctx.setResponseCode(code).send(code.toString());
+                return;
+            }
+            logger.error("Error during processing", cause);
+            wmsa_search_service_error_count.labelValues(ctx.getRequestPath(), ctx.getMethod()).inc();
+            ctx.setResponseCode(code);
+            errorPageService.serveError(ctx);
         });
-
-        Spark.awaitInitialization();
     }
 
-
-    private void denyPrefetch(Request request, Response response) {
-        if (request.headers().contains("Sec-Purpose"))
-            Spark.halt(400);
+    private void denyPrefetch(Context ctx) {
+        if (!ctx.header("Sec-Purpose").isMissing())
+            throw new BadRequestException("Prefetch is not allowed");
     }
 
-
-    /** Wraps a route with a timer and a counter */
-    private static class SearchServiceMetrics implements Route {
-        private final Route delegatedRoute;
-
-        static void get(String path, Route route) {
-            Spark.get(path, new SearchServiceMetrics(route));
-        }
-        static void post(String path, Route route) {
-            Spark.post(path, new SearchServiceMetrics(route));
-        }
-
-        private SearchServiceMetrics(Route delegatedRoute) {
-            this.delegatedRoute = delegatedRoute;
-        }
-
-        @Override
-        public Object handle(Request request, Response response) throws Exception {
-            return wmsa_search_service_request_time
-                    .labelValues(request.matchedPath(), request.requestMethod())
-                    .time(() -> {
-                        try {
-                            return delegatedRoute.handle(request, response);
-                        } catch (Exception e) {
-                            logger.error("Error", e);
-                            throw new RuntimeException(e);
-                        }
-                    });
-        }
+    /** Wraps a route with a timer. */
+    private static Route.Handler timed(Route.Handler route) {
+        return ctx -> {
+            try (var timer = wmsa_search_service_request_time
+                    .labelValues(ctx.getRoute().getPattern(), ctx.getMethod()).startTimer()) {
+                return route.apply(ctx);
+            }
+        };
     }
 
-    private Object serveStatic(Request request, Response response) {
-        String resource = request.params("resource");
-        staticResources.serveStatic("search", resource, request, response);
-        return "";
-    }
-
-    private Object siteSearchRedir(Request request, Response response) {
-        final String site = request.params("site");
-        final String searchTerms;
-
-        if (request.splat().length == 0) searchTerms = "";
-        else searchTerms = request.splat()[0];
+    private Object siteSearchRedir(Context ctx) {
+        final String site = ctx.path("site").value();
+        final String searchTerms = ctx.path("*").value("");
 
         final String query = URLEncoder.encode(String.format("%s site:%s", searchTerms, site), StandardCharsets.UTF_8).trim();
-        final String profile = request.queryParamOrDefault("profile", "yolo");
+        final String profile = ctx.query("profile").value("yolo");
 
-        response.redirect(websiteUrl.withPath("search?query="+query+"&profile="+profile));
+        ctx.sendRedirect(websiteUrl.withPath("search?query="+query+"&profile="+profile));
 
         return "";
     }

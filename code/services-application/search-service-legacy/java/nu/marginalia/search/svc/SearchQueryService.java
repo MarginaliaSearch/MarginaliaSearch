@@ -10,8 +10,7 @@ import nu.marginalia.search.exceptions.RedirectException;
 import nu.marginalia.service.server.RateLimiter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
+import io.jooby.Context;
 
 import java.io.IOException;
 
@@ -39,39 +38,39 @@ public class SearchQueryService {
         this.scrapeStopperInterceptor = scrapeStopperInterceptor;
     }
 
-    public Object pathSearch(Request request, Response response) {
+    public Object pathSearch(Context ctx) {
 
-        SearchParameters params = parseParameters(request);
+        SearchParameters params = parseParameters(ctx);
 
-        var intercept = scrapeStopperInterceptor.intercept("S", params.query(), rateLimiter, request, response);
+        var intercept = scrapeStopperInterceptor.intercept("S", params.query(), rateLimiter, ctx);
         if (intercept instanceof ScrapeStopperInterceptor.InterceptRedirect redir)
             return redir.result();
 
         try {
-            return searchCommandEvaulator.eval(response,
+            return searchCommandEvaulator.eval(
                     params.withSst(intercept.sst())
             );
         }
         catch (RedirectException ex) {
-            response.redirect(ex.newUrl);
+            ctx.sendRedirect(ex.newUrl);
         }
         catch (Exception ex) {
             logger.error("Error", ex);
-            errorPageService.serveError(request, response);
+            errorPageService.serveError(ctx);
         }
 
         return "";
     }
 
-    private SearchParameters parseParameters(Request request) {
+    private SearchParameters parseParameters(Context ctx) {
         try {
-            final String queryParam = request.queryParams("query");
+            final String queryParam = ctx.query("query").valueOrNull();
 
             if (null == queryParam || queryParam.isBlank()) {
                 throw new RedirectException(websiteUrl.url());
             }
 
-            return new SearchParameters(queryParam.trim(), request);
+            return new SearchParameters(queryParam.trim(), ctx);
         }
         catch (Exception ex) {
             // Bots keep sending bad requests, suppress the error otherwise it will

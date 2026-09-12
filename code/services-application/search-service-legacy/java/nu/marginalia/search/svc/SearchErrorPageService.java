@@ -6,8 +6,7 @@ import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
+import io.jooby.Context;
 
 import java.io.IOException;
 import java.util.Map;
@@ -26,8 +25,8 @@ public class SearchErrorPageService {
         this.indexMqClient = indexMqClient;
     }
 
-    public void serveError(Request request, Response rsp) {
-        rsp.body(renderError(request, "Internal error",
+    public void serveError(Context ctx) {
+        ctx.setResponseType("text/html").send(renderError(ctx, "Internal error",
                 """
                     An error occurred when communicating with the search engine index.
                     <p>
@@ -37,11 +36,11 @@ public class SearchErrorPageService {
                 """));
     }
 
-    private String renderError(Request request, String title, String message) {
+    private String renderError(Context ctx, String title, String message) {
         return renderer.render(Map.of("title", title, "message", message,
-                "profile", request.queryParamOrDefault("profile", ""),
-                "js", request.queryParamOrDefault("js", ""),
-                "query", request.queryParamOrDefault("query", "")
+                "profile", ctx.query("profile").value(""),
+                "js", ctx.query("js").value(""),
+                "query", ctx.query("query").value("")
                 ));
     }
 }
