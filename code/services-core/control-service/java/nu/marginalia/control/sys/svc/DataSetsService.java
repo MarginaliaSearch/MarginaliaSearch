@@ -6,9 +6,11 @@ import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.db.DomainTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
+import io.jooby.Context;
+import io.jooby.Jooby;
+
+import static io.jooby.ParamSource.QUERY;
+import static io.jooby.ParamSource.FORM;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -30,14 +32,14 @@ public class DataSetsService {
         this.domainTypes = domainTypes;
     }
 
-    public void register() throws IOException {
+    public void register(Jooby jooby) throws IOException {
         var datasetsRenderer = rendererFactory.renderer("control/sys/data-sets");
 
-        Spark.get("/datasets", this::dataSetsModel, datasetsRenderer::render);
-        Spark.post("/datasets", this::updateDataSets, datasetsRenderer::render);
+        jooby.get("/datasets", ctx -> datasetsRenderer.render(dataSetsModel(ctx)));
+        jooby.post("/datasets", ctx -> datasetsRenderer.render(updateDataSets(ctx)));
     }
 
-    public Object dataSetsModel(Request request, Response response) {
+    public Object dataSetsModel(Context ctx) {
         return Map.of(
                 "blogs", domainTypes.getUrlForSelection(DomainTypes.Type.BLOG),
                 "crawl", domainTypes.getUrlForSelection(DomainTypes.Type.CRAWL),
@@ -45,13 +47,13 @@ public class DataSetsService {
                 );
     }
 
-    public Object updateDataSets(Request request, Response response) throws SQLException {
+    public Object updateDataSets(Context ctx) throws SQLException {
 
-        updateUrl(DomainTypes.Type.BLOG, request.queryParamOrDefault("blogs", ""));
-        updateUrl(DomainTypes.Type.CRAWL, request.queryParamOrDefault("crawl", ""));
-        updateUrl(DomainTypes.Type.SMALL, request.queryParamOrDefault("smallweb", ""));
+        updateUrl(DomainTypes.Type.BLOG, ctx.lookup("blogs", QUERY, FORM).value(""));
+        updateUrl(DomainTypes.Type.CRAWL, ctx.lookup("crawl", QUERY, FORM).value(""));
+        updateUrl(DomainTypes.Type.SMALL, ctx.lookup("smallweb", QUERY, FORM).value(""));
 
-        return dataSetsModel(request, response);
+        return dataSetsModel(ctx);
     }
 
     private void updateUrl(DomainTypes.Type type, String newValue) {

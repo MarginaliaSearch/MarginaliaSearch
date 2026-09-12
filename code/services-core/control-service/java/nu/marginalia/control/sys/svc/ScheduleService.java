@@ -6,9 +6,11 @@ import nu.marginalia.control.Redirects;
 import nu.marginalia.schedule.ActorScheduleRow;
 import nu.marginalia.schedule.ActorScheduleRow.*;
 import nu.marginalia.schedule.ActorScheduleService;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
+import io.jooby.Context;
+import io.jooby.Jooby;
+
+import static io.jooby.ParamSource.QUERY;
+import static io.jooby.ParamSource.FORM;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -27,14 +29,14 @@ public class ScheduleService {
         this.actorScheduleService = actorScheduleService;
     }
 
-    public void register() throws IOException {
+    public void register(Jooby jooby) throws IOException {
         var schedulesRenderer = rendererFactory.renderer("control/sys/schedules");
 
-        Spark.get("/schedules", this::schedulesModel, schedulesRenderer::render);
-        Spark.post("/schedules", this::updateSchedule, Redirects.redirectToSchedules);
+        jooby.get("/schedules", ctx -> schedulesRenderer.render(schedulesModel(ctx)));
+        jooby.post("/schedules", ctx -> Redirects.redirectToSchedules.render(updateSchedule(ctx)));
     }
 
-    private Object schedulesModel(Request request, Response response) {
+    private Object schedulesModel(Context ctx) {
         List<WindowSchedule> windowSchedules = new ArrayList<>();
         List<TriggerSchedule> triggerSchedules = new ArrayList<>();
         List<IntervalSchedule> intervalSchedules = new ArrayList<>();
@@ -54,22 +56,22 @@ public class ScheduleService {
         );
     }
 
-    private Object updateSchedule(Request request, Response response) throws SQLException {
-        String scheduleName = request.queryParams("scheduleName");
-        String type = request.queryParams("type");
+    private Object updateSchedule(Context ctx) throws SQLException {
+        String scheduleName = ctx.lookup("scheduleName", QUERY, FORM).valueOrNull();
+        String type = ctx.lookup("type", QUERY, FORM).valueOrNull();
 
         switch (type) {
             case "window" -> {
-                int startHour = Integer.parseInt(request.queryParams("startHour"));
-                int endHour = Integer.parseInt(request.queryParams("endHour"));
+                int startHour = Integer.parseInt(ctx.lookup("startHour", QUERY, FORM).valueOrNull());
+                int endHour = Integer.parseInt(ctx.lookup("endHour", QUERY, FORM).valueOrNull());
                 actorScheduleService.updateWindow(ActorScheduleRow.Window.valueOf(scheduleName), startHour, endHour);
             }
             case "trigger" -> {
-                int triggerHour = Integer.parseInt(request.queryParams("triggerHour"));
+                int triggerHour = Integer.parseInt(ctx.lookup("triggerHour", QUERY, FORM).valueOrNull());
                 actorScheduleService.updateTrigger(ActorScheduleRow.Trigger.valueOf(scheduleName), triggerHour);
             }
             case "interval" -> {
-                int intervalHours = Integer.parseInt(request.queryParams("intervalHours"));
+                int intervalHours = Integer.parseInt(ctx.lookup("intervalHours", QUERY, FORM).valueOrNull());
                 actorScheduleService.updateInterval(ActorScheduleRow.Interval.valueOf(scheduleName), intervalHours);
             }
             default -> throw new IllegalArgumentException("Unknown schedule type: " + type);

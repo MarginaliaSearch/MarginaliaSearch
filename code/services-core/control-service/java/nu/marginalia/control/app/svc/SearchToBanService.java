@@ -9,12 +9,15 @@ import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.model.EdgeUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
+import io.jooby.Context;
+import io.jooby.Jooby;
+
+import static io.jooby.ParamSource.QUERY;
+import static io.jooby.ParamSource.FORM;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.stream.Stream;
 import java.util.Objects;
 import java.util.concurrent.TimeoutException;
 
@@ -35,21 +38,21 @@ public class SearchToBanService {
         this.queryClient = queryClient;
     }
 
-    public void register() throws IOException {
+    public void register(Jooby jooby) throws IOException {
         var searchToBanRenderer = rendererFactory.renderer("control/app/search-to-ban");
 
-        Spark.get("/search-to-ban", this::handle, searchToBanRenderer::render);
-        Spark.post("/search-to-ban", this::handle, searchToBanRenderer::render);
+        jooby.get("/search-to-ban", ctx -> searchToBanRenderer.render(handle(ctx)));
+        jooby.post("/search-to-ban", ctx -> searchToBanRenderer.render(handle(ctx)));
     }
 
-    public Object handle(Request request, Response response) throws TimeoutException {
-        if (Objects.equals(request.requestMethod(), "POST")) {
-            executeBlacklisting(request);
+    public Object handle(Context ctx) throws TimeoutException {
+        if (Objects.equals(ctx.getMethod(), "POST")) {
+            executeBlacklisting(ctx);
 
-            return findResults(request.queryParams("query"));
+            return findResults(ctx.lookup("query", QUERY, FORM).valueOrNull());
         }
 
-        return findResults(request.queryParams("q"));
+        return findResults(ctx.lookup("q", QUERY, FORM).valueOrNull());
     }
 
     private Object findResults(String q) throws TimeoutException {
@@ -60,10 +63,12 @@ public class SearchToBanService {
         }
     }
 
-    private void executeBlacklisting(Request request) {
-        String query = request.queryParams("query");
-        for (var param : request.queryParams()) {
-            logger.info(param + ": " + request.queryParams(param));
+    private void executeBlacklisting(Context ctx) {
+        String query = ctx.lookup("query", QUERY, FORM).valueOrNull();
+        var parameterNames = Stream.concat(ctx.query().toMultimap().keySet().stream(), ctx.form().toMultimap().keySet().stream())
+                .distinct().toList();
+        for (var param : parameterNames) {
+            logger.info(param + ": " + ctx.lookup(param, QUERY, FORM).valueOrNull());
             if ("query".equals(param)) {
                 continue;
             }

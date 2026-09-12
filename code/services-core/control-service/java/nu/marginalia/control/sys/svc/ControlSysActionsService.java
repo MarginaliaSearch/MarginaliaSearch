@@ -17,9 +17,11 @@ import nu.marginalia.service.ServiceId;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageType;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
+import io.jooby.Context;
+import io.jooby.Jooby;
+
+import static io.jooby.ParamSource.QUERY;
+import static io.jooby.ParamSource.FORM;
 
 import java.util.*;
 
@@ -64,29 +66,29 @@ public class ControlSysActionsService {
         return mqFactory.createOutbox(inboxName, 0, outboxName, 0, UUID.randomUUID());
     }
 
-    public void register() {
+    public void register(Jooby jooby) {
         try {
             var actionsView = rendererFactory.renderer("control/sys/sys-actions");
 
-            Spark.get("/actions", this::actionsModel, actionsView::render);
-            Spark.post("/actions/recalculate-adjacencies-graph", this::calculateAdjacencies, Redirects.redirectToOverview);
-            Spark.post("/actions/discover-new-domains", this::discoverNewDomains, Redirects.redirectToOverview);
-            Spark.post("/actions/export-all", this::exportAll, Redirects.redirectToOverview);
-            Spark.post("/actions/reindex-all", this::reindexAll, Redirects.redirectToOverview);
-            Spark.post("/actions/reprocess-all", this::reprocessAll, Redirects.redirectToOverview);
-            Spark.post("/actions/recrawl-all", this::recrawlAll, Redirects.redirectToOverview);
-            Spark.post("/actions/flush-api-caches", this::flushApiCaches, Redirects.redirectToOverview);
-            Spark.post("/actions/reload-blogs-list", this::reloadBlogsList, Redirects.redirectToOverview);
+            jooby.get("/actions", ctx -> actionsView.render(actionsModel(ctx)));
+            jooby.post("/actions/recalculate-adjacencies-graph", ctx -> Redirects.redirectToOverview.render(calculateAdjacencies(ctx)));
+            jooby.post("/actions/discover-new-domains", ctx -> Redirects.redirectToOverview.render(discoverNewDomains(ctx)));
+            jooby.post("/actions/export-all", ctx -> Redirects.redirectToOverview.render(exportAll(ctx)));
+            jooby.post("/actions/reindex-all", ctx -> Redirects.redirectToOverview.render(reindexAll(ctx)));
+            jooby.post("/actions/reprocess-all", ctx -> Redirects.redirectToOverview.render(reprocessAll(ctx)));
+            jooby.post("/actions/recrawl-all", ctx -> Redirects.redirectToOverview.render(recrawlAll(ctx)));
+            jooby.post("/actions/flush-api-caches", ctx -> Redirects.redirectToOverview.render(flushApiCaches(ctx)));
+            jooby.post("/actions/reload-blogs-list", ctx -> Redirects.redirectToOverview.render(reloadBlogsList(ctx)));
 
-            Spark.post("/actions/update-nsfw-filters", this::updateNsfwFilters, Redirects.redirectToOverview);
+            jooby.post("/actions/update-nsfw-filters", ctx -> Redirects.redirectToOverview.render(updateNsfwFilters(ctx)));
         }
         catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private Object exportAll(Request request, Response response) {
-        String exportType = request.queryParams("exportType");
+    private Object exportAll(Context ctx) {
+        String exportType = ctx.lookup("exportType", QUERY, FORM).valueOrNull();
 
         switch (exportType) {
             case "atags":
@@ -102,7 +104,7 @@ public class ControlSysActionsService {
         return "";
     }
 
-    private Object actionsModel(Request request, Response response) {
+    private Object actionsModel(Context ctx) {
         try {
             List<Map<String, Object>> eligibleNodes = new ArrayList<>();
             for (var node : nodeConfigurationService.getAll()) {
@@ -141,13 +143,13 @@ public class ControlSysActionsService {
         }
     }
 
-    public Object discoverNewDomains(Request request, Response response) throws Exception {
+    public Object discoverNewDomains(Context ctx) throws Exception {
         int node;
         int goal;
 
         try {
-            node = Integer.parseInt(request.queryParams("node"));
-            goal = Integer.parseInt(request.queryParams("goal"));
+            node = Integer.parseInt(ctx.lookup("node", QUERY, FORM).valueOrNull());
+            goal = Integer.parseInt(ctx.lookup("goal", QUERY, FORM).valueOrNull());
         }
         catch (NumberFormatException e) {
             throw new ControlValidationError("Bad parameters", "Node and goal must both be numeric", "/actions");
@@ -164,7 +166,7 @@ public class ControlSysActionsService {
         return "";
     }
 
-    public Object reloadBlogsList(Request request, Response response) throws Exception {
+    public Object reloadBlogsList(Context ctx) throws Exception {
         eventLog.logEvent("USER-ACTION", "RELOAD-BLOGS-LIST");
 
         domainTypes.reloadDomainsList(DomainTypes.Type.BLOG);
@@ -172,7 +174,7 @@ public class ControlSysActionsService {
         return "";
     }
 
-    public Object updateNsfwFilters(Request request, Response response) throws Exception {
+    public Object updateNsfwFilters(Context ctx) throws Exception {
         eventLog.logEvent("USER-ACTION", "UPDATE-NSFW-FILTERS");
 
         executorClient.updateNsfwFilters();
@@ -180,14 +182,14 @@ public class ControlSysActionsService {
         return "";
     }
 
-    public Object flushApiCaches(Request request, Response response) throws Exception {
+    public Object flushApiCaches(Context ctx) throws Exception {
         eventLog.logEvent("USER-ACTION", "FLUSH-API-CACHES");
         apiOutbox.sendNotice("FLUSH_CACHES", "");
 
         return "";
     }
 
-    public Object calculateAdjacencies(Request request, Response response) throws Exception {
+    public Object calculateAdjacencies(Context ctx) throws Exception {
         eventLog.logEvent("USER-ACTION", "CALCULATE-ADJACENCIES");
 
         // This is technically not a partitioned operation, but we execute it at node 1
@@ -198,7 +200,7 @@ public class ControlSysActionsService {
         return "";
     }
 
-    public Object reindexAll(Request request, Response response) throws Exception {
+    public Object reindexAll(Context ctx) throws Exception {
         eventLog.logEvent("USER-ACTION", "REINDEX-ALL");
 
         controlActorService.start(ControlActor.REINDEX_ALL);
@@ -206,7 +208,7 @@ public class ControlSysActionsService {
         return "";
     }
 
-    public Object reprocessAll(Request request, Response response) throws Exception {
+    public Object reprocessAll(Context ctx) throws Exception {
         eventLog.logEvent("USER-ACTION", "REPROCESS-ALL");
 
         controlActorService.start(ControlActor.REPROCESS_ALL);
@@ -214,7 +216,7 @@ public class ControlSysActionsService {
         return "";
     }
 
-    public Object recrawlAll(Request request, Response response) throws Exception {
+    public Object recrawlAll(Context ctx) throws Exception {
         eventLog.logEvent("USER-ACTION", "RECRAWL-ALL");
 
         controlActorService.start(ControlActor.RECRAWL_ALL);

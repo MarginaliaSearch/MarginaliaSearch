@@ -9,9 +9,11 @@ import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
+import io.jooby.Context;
+import io.jooby.Jooby;
+
+import static io.jooby.ParamSource.QUERY;
+import static io.jooby.ParamSource.FORM;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -31,13 +33,13 @@ public class ControlFileStorageService {
         this.executorClient = executorClient;
     }
 
-    public void register() throws IOException {
-        Spark.post("/storage/:fid/delete", this::flagFileForDeletionRequest, Redirects.redirectToStorage);
+    public void register(Jooby jooby) throws IOException {
+        jooby.post("/storage/{fid}/delete", ctx -> Redirects.redirectToStorage.render(flagFileForDeletionRequest(ctx)));
 
-        Spark.post("/nodes/:id/storage/:fid/delete", this::deleteFileStorage);
-        Spark.post("/nodes/:id/storage/:fid/enable", this::enableFileStorage);
-        Spark.post("/nodes/:id/storage/:fid/disable", this::disableFileStorage);
-        Spark.get("/nodes/:id/storage/:fid/transfer", this::downloadFileFromStorage);
+        jooby.post("/nodes/{id}/storage/{fid}/delete", this::deleteFileStorage);
+        jooby.post("/nodes/{id}/storage/{fid}/enable", this::enableFileStorage);
+        jooby.post("/nodes/{id}/storage/{fid}/disable", this::disableFileStorage);
+        jooby.get("/nodes/{id}/storage/{fid}/transfer", this::downloadFileFromStorage);
 
     }
 
@@ -49,35 +51,36 @@ public class ControlFileStorageService {
         }
     }
 
-    public String redirectToOverview(Request request) {
-        return redirectToOverview(Integer.parseInt(request.params("id")));
+    public String redirectToOverview(Context ctx) {
+        return redirectToOverview(Integer.parseInt(ctx.path("id").value()));
     }
 
-    private Object deleteFileStorage(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-        int fileId = Integer.parseInt(request.params("fid"));
+    private Object deleteFileStorage(Context ctx) throws SQLException {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
+        int fileId = Integer.parseInt(ctx.path("fid").value());
 
         fileStorageService.flagFileForDeletion(new FileStorageId(fileId));
 
-        return redirectToOverview(request);
+        return redirectToOverview(ctx);
     }
 
-    public Object downloadFileFromStorage(Request request, Response response) throws IOException, SQLException {
-        var fileStorageId = FileStorageId.parse(request.params("fid"));
+    public Object downloadFileFromStorage(Context ctx) throws IOException, SQLException {
+        var fileStorageId = FileStorageId.parse(ctx.path("fid").value());
 
-        String path = request.queryParams("path");
+        String path = ctx.lookup("path", QUERY, FORM).valueOrNull();
 
-        response.header("content-disposition", "attachment; filename=\""+path+"\"");
+        ctx.setResponseHeader("content-disposition", "attachment; filename=\""+path+"\"");
 
         if (path.endsWith(".txt") || path.endsWith(".log"))
-            response.type("text/plain");
+            ctx.setResponseType("text/plain");
         else
-            response.type("application/octet-stream");
+            ctx.setResponseType("application/octet-stream");
 
         var storage = fileStorageService.getStorage(fileStorageId);
 
-        try (var urlStream = executorClient.remoteFileURL(storage, path).openStream()) {
-            urlStream.transferTo(response.raw().getOutputStream());
+        try (var urlStream = executorClient.remoteFileURL(storage, path).openStream();
+             var output = ctx.responseStream()) {
+            urlStream.transferTo(output);
         }
         catch (FileNotFoundException ex) {
             logger.warn("File {} not found in storage {} (404)", path, fileStorageId);
@@ -87,9 +90,9 @@ public class ControlFileStorageService {
         return "";
     }
 
-    private Object enableFileStorage(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-        FileStorageId fileId = new FileStorageId(Integer.parseInt(request.params("fid")));
+    private Object enableFileStorage(Context ctx) throws SQLException {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
+        FileStorageId fileId = new FileStorageId(Integer.parseInt(ctx.path("fid").value()));
 
         var storage = fileStorageService.getStorage(fileId);
         if (storage.type() == FileStorageType.CRAWL_DATA) {
@@ -101,17 +104,17 @@ public class ControlFileStorageService {
         return "";
     }
 
-    private Object disableFileStorage(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-        int fileId = Integer.parseInt(request.params("fid"));
+    private Object disableFileStorage(Context ctx) throws SQLException {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
+        int fileId = Integer.parseInt(ctx.path("fid").value());
 
         fileStorageService.disableFileStorage(new FileStorageId(fileId));
 
         return "";
     }
 
-    public Object flagFileForDeletionRequest(Request request, Response response) throws SQLException {
-        FileStorageId fid = new FileStorageId(Long.parseLong(request.params(":fid")));
+    public Object flagFileForDeletionRequest(Context ctx) throws SQLException {
+        FileStorageId fid = new FileStorageId(Long.parseLong(ctx.path("fid").value()));
         fileStorageService.flagFileForDeletion(fid);
         return "";
     }

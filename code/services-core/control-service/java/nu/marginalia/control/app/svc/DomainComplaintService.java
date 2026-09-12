@@ -9,9 +9,11 @@ import nu.marginalia.control.app.model.DomainComplaintModel;
 import nu.marginalia.model.EdgeDomain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
+import io.jooby.Context;
+import io.jooby.Jooby;
+
+import static io.jooby.ParamSource.QUERY;
+import static io.jooby.ParamSource.FORM;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -42,14 +44,14 @@ public class DomainComplaintService {
         this.randomExplorationService = randomExplorationService;
     }
 
-    public void register() throws IOException {
+    public void register(Jooby jooby) throws IOException {
         var domainComplaintsRenderer = rendererFactory.renderer("control/app/domain-complaints");
 
-        Spark.get("/complaints", this::complaintsModel, domainComplaintsRenderer::render);
-        Spark.post("/complaints/:domain", this::reviewComplaint, Redirects.redirectToComplaints);
+        jooby.get("/complaints", ctx -> domainComplaintsRenderer.render(complaintsModel(ctx)));
+        jooby.post("/complaints/{domain}", ctx -> Redirects.redirectToComplaints.render(reviewComplaint(ctx)));
     }
 
-    private Object complaintsModel(Request request, Response response) {
+    private Object complaintsModel(Context ctx) {
         Map<Boolean, List<DomainComplaintModel>> complaintsByReviewed =
                 getComplaints().stream().collect(Collectors.partitioningBy(DomainComplaintModel::reviewed));
 
@@ -62,9 +64,9 @@ public class DomainComplaintService {
         return Map.of("complaintsNew", unreviewed, "complaintsReviewed", reviewed);
     }
 
-    private Object reviewComplaint(Request request, Response response) {
-        var domain = new EdgeDomain(request.params("domain"));
-        String action = request.queryParams("action");
+    private Object reviewComplaint(Context ctx) {
+        var domain = new EdgeDomain(ctx.path("domain").value());
+        String action = ctx.lookup("action", QUERY, FORM).valueOrNull();
 
         logger.info("Reviewing complaint for domain {} with action {}", domain, action);
 
@@ -81,8 +83,7 @@ public class DomainComplaintService {
         }
         catch (Exception ex) {
             logger.error("Error reviewing complaint for domain " + domain, ex);
-            Spark.halt(500);
-            return "";
+            throw new io.jooby.exception.StatusCodeException(io.jooby.StatusCode.SERVER_ERROR);
         }
     }
 

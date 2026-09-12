@@ -17,9 +17,8 @@ import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
+import io.jooby.Context;
+import io.jooby.Jooby;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -58,20 +57,20 @@ public class AbortedProcessService {
         this.nodeConfigurationService = nodeConfigurationService;
     }
 
-    public void register() throws IOException {
+    public void register(Jooby jooby) throws IOException {
         var abortedProcessesRenderer = rendererFactory.renderer("control/sys/aborted-processes");
 
-        Spark.get("/aborted-processes", this::abortedProcessesModel, abortedProcessesRenderer::render);
-        Spark.get("/aborted-processes/", this::abortedProcessesModel, abortedProcessesRenderer::render);
-        Spark.post("/aborted-processes/:id", this::restartProcess, redirectControl.renderRedirectAcknowledgement("Restarting...", "/"));
+        jooby.get("/aborted-processes", ctx -> abortedProcessesRenderer.render(abortedProcessesModel(ctx)));
+        jooby.get("/aborted-processes/", ctx -> abortedProcessesRenderer.render(abortedProcessesModel(ctx)));
+        jooby.post("/aborted-processes/{id}", ctx -> redirectControl.renderRedirectAcknowledgement("Restarting...", "/").render(restartProcess(ctx)));
     }
 
-    private Object abortedProcessesModel(Request request, Response response) {
+    private Object abortedProcessesModel(Context ctx) {
         return Map.of("abortedProcesses", getAbortedProcesses());
     }
 
-    private Object restartProcess(Request request, Response response) throws SQLException {
-        long msgId = Long.parseLong(request.params("id"));
+    private Object restartProcess(Context ctx) throws SQLException {
+        long msgId = Long.parseLong(ctx.path("id").value());
         mqPersistence.updateMessageState(msgId, MqMessageState.NEW);
         return "";
     }

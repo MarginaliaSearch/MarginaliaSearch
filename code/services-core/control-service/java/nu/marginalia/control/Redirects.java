@@ -1,6 +1,5 @@
 package nu.marginalia.control;
 
-import spark.ResponseTransformer;
 
 public class Redirects {
     public static final HtmlRedirect redirectToApiKeys = new HtmlRedirect("/api-keys");
@@ -12,12 +11,10 @@ public class Redirects {
     public static final HtmlRedirect redirectToMessageQueue = new HtmlRedirect("/message-queue");
     public static final HtmlRedirect redirectToSchedules = new HtmlRedirect("/schedules");
 
-    public static class HtmlRedirect implements ResponseTransformer {
+    public static class HtmlRedirect implements ControlRendererFactory.Renderer {
         private final String html;
 
-        /** Because Spark doesn't have a redirect method that works with relative URLs
-         * (without explicitly providing the external address), we use HTML and let the
-         * browser resolve the relative redirect instead */
+        /** Let the browser resolve relative redirect destinations. */
         public HtmlRedirect(String destination) {
             this.html = """
                         <?doctype html>
@@ -26,7 +23,7 @@ public class Redirects {
         }
 
         @Override
-        public String render(Object any) throws Exception {
+        public String render(Object any) {
             return html;
         }
     }
