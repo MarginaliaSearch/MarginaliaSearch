@@ -6,15 +6,18 @@ import gnu.trove.list.array.TIntArrayList;
 import nu.marginalia.browse.RandomDomainSuggestionsDao;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.model.EdgeDomain;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
+import io.jooby.Context;
+import io.jooby.Jooby;
+
+import static io.jooby.ParamSource.QUERY;
+import static io.jooby.ParamSource.FORM;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import java.util.Objects;
 
 public class RandomExplorationService {
@@ -33,20 +36,20 @@ public class RandomExplorationService {
         this.suggestionsDao = suggestionsDao;
     }
 
-    public void register() throws IOException {
+    public void register(Jooby jooby) throws IOException {
         var reviewRandomDomainsRenderer = rendererFactory.renderer("control/app/review-random-domains");
         var suggestionsRenderer = rendererFactory.renderer("control/app/random-domain-suggestions");
 
-        Spark.get("/random-domains/review", this::reviewRandomDomainsModel, reviewRandomDomainsRenderer::render);
-        Spark.post("/random-domains/review", this::reviewRandomDomainsAction);
+        jooby.get("/random-domains/review", ctx -> reviewRandomDomainsRenderer.render(reviewRandomDomainsModel(ctx)));
+        jooby.post("/random-domains/review", this::reviewRandomDomainsAction);
 
-        Spark.get("/random-domains/suggestions", this::suggestionsModel, suggestionsRenderer::render);
-        Spark.post("/random-domains/suggestions/approve", this::approveSuggestionsAction);
-        Spark.post("/random-domains/suggestions/reject", this::rejectSuggestionsAction);
+        jooby.get("/random-domains/suggestions", ctx -> suggestionsRenderer.render(suggestionsModel(ctx)));
+        jooby.post("/random-domains/suggestions/approve", this::approveSuggestionsAction);
+        jooby.post("/random-domains/suggestions/reject", this::rejectSuggestionsAction);
     }
 
-    private Object reviewRandomDomainsModel(Request request, Response response) throws SQLException {
-        String afterVal = Objects.requireNonNullElse(request.queryParams("after"), "0");
+    private Object reviewRandomDomainsModel(Context ctx) throws SQLException {
+        String afterVal = Objects.requireNonNullElse(ctx.lookup("after", QUERY, FORM).valueOrNull(), "0");
         int after = Integer.parseInt(afterVal);
         var domains = getDomains(after, 25);
         int nextAfter = domains.stream().mapToInt(RandomExplorationService.RandomDomainResult::id).max().orElse(Integer.MAX_VALUE);
@@ -56,10 +59,10 @@ public class RandomExplorationService {
 
     }
 
-    private Object reviewRandomDomainsAction(Request request, Response response) throws SQLException {
-        removeRandomDomains(collectSelectedDomainIds(request));
+    private Object reviewRandomDomainsAction(Context ctx) throws SQLException {
+        removeRandomDomains(collectSelectedDomainIds(ctx));
 
-        String after = request.queryParams("after");
+        String after = ctx.lookup("after", QUERY, FORM).valueOrNull();
 
         return """
                 <?doctype html>
@@ -124,8 +127,8 @@ public class RandomExplorationService {
 
     public record RandomDomainResult(int id, String domainName) {}
 
-    private Object suggestionsModel(Request request, Response response) throws SQLException {
-        String afterVal = Objects.requireNonNullElse(request.queryParams("after"), "0");
+    private Object suggestionsModel(Context ctx) throws SQLException {
+        String afterVal = Objects.requireNonNullElse(ctx.lookup("after", QUERY, FORM).valueOrNull(), "0");
         int after = Integer.parseInt(afterVal);
         var suggestions = suggestionsDao.listSuggestions(after, 25);
         int nextAfter = suggestions.stream()
@@ -137,21 +140,22 @@ public class RandomExplorationService {
                 "hasSuggestions", !suggestions.isEmpty());
     }
 
-    private Object approveSuggestionsAction(Request request, Response response) throws SQLException {
-        suggestionsDao.approveSuggestions(collectSelectedDomainIds(request));
-        return suggestionsRedirect(request.queryParams("after"));
+    private Object approveSuggestionsAction(Context ctx) throws SQLException {
+        suggestionsDao.approveSuggestions(collectSelectedDomainIds(ctx));
+        return suggestionsRedirect(ctx.lookup("after", QUERY, FORM).valueOrNull());
     }
 
-    private Object rejectSuggestionsAction(Request request, Response response) throws SQLException {
-        suggestionsDao.rejectSuggestions(collectSelectedDomainIds(request));
-        return suggestionsRedirect(request.queryParams("after"));
+    private Object rejectSuggestionsAction(Context ctx) throws SQLException {
+        suggestionsDao.rejectSuggestions(collectSelectedDomainIds(ctx));
+        return suggestionsRedirect(ctx.lookup("after", QUERY, FORM).valueOrNull());
     }
 
-    private int[] collectSelectedDomainIds(Request request) {
+    private int[] collectSelectedDomainIds(Context ctx) {
         TIntArrayList idList = new TIntArrayList();
-        request.queryParams().forEach(key -> {
+        Stream.concat(ctx.query().toMultimap().keySet().stream(), ctx.form().toMultimap().keySet().stream())
+                .distinct().forEach(key -> {
             if (key.startsWith("domain-")) {
-                String value = request.queryParams(key);
+                String value = ctx.lookup(key, QUERY, FORM).valueOrNull();
                 if ("on".equalsIgnoreCase(value)) {
                     int id = Integer.parseInt(key.substring(7));
                     idList.add(id);

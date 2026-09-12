@@ -16,9 +16,11 @@ import nu.marginalia.storage.model.FileStorageState;
 import nu.marginalia.storage.model.FileStorageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
+import io.jooby.Context;
+import io.jooby.Jooby;
+
+import static io.jooby.ParamSource.QUERY;
+import static io.jooby.ParamSource.FORM;
 
 import java.nio.file.Path;
 import java.sql.SQLException;
@@ -58,80 +60,46 @@ public class ControlNodeActionsService {
         this.exportClient = exportClient;
     }
 
-    public void register() {
-        Spark.post("/nodes/:node/actions/repartition-index", this::triggerRepartition,
-                redirectControl.renderRedirectAcknowledgement("Repartitioning", "..")
-        );
-        Spark.post("/nodes/:node/actions/sideload-encyclopedia", this::sideloadEncyclopedia,
-                redirectControl.renderRedirectAcknowledgement("Sideloading", "..")
-        );
-        Spark.post("/nodes/:node/actions/sideload-dirtree", this::sideloadDirtree,
-                redirectControl.renderRedirectAcknowledgement("Sideloading", "..")
-        );
-        Spark.post("/nodes/:node/actions/sideload-reddit", this::sideloadReddit,
-                redirectControl.renderRedirectAcknowledgement("Sideloading", "..")
-        );
-        Spark.post("/nodes/:node/actions/sideload-warc", this::sideloadWarc,
-                redirectControl.renderRedirectAcknowledgement("Sideloading", "..")
-        );
-        Spark.post("/nodes/:node/actions/sideload-stackexchange", this::sideloadStackexchange,
-                redirectControl.renderRedirectAcknowledgement("Sideloading", "..")
-        );
-        Spark.post("/nodes/:node/actions/export-segmentation", this::exportSegmentationModel,
-                redirectControl.renderRedirectAcknowledgement("Exporting", "..")
-        );
-        Spark.post("/nodes/:node/actions/download-sample-data", this::downloadSampleData,
-                redirectControl.renderRedirectAcknowledgement("Downloading", "..")
-        );
-        Spark.post("/nodes/:id/actions/new-crawl", this::triggerCrawl,
-                redirectControl.renderRedirectAcknowledgement("Crawling", "..")
-        );
-        Spark.post("/nodes/:id/actions/recrawl-single-domain", this::triggerSingleDomainRecrawl,
-                redirectControl.renderRedirectAcknowledgement("Recrawling", "..")
-        );
-        Spark.post("/nodes/:id/actions/process", this::triggerProcess,
-                redirectControl.renderRedirectAcknowledgement("Processing", "..")
-        );
-        Spark.post("/nodes/:id/actions/load", this::triggerLoadSelected,
-                redirectControl.renderRedirectAcknowledgement("Loading", "..")
-        );
-        Spark.post("/nodes/:id/actions/restore-backup", this::triggerRestoreBackup,
-                redirectControl.renderRedirectAcknowledgement("Restoring", "..")
-        );
-        Spark.post("/nodes/:id/actions/export-db-data", this::exportDbData,
-                redirectControl.renderRedirectAcknowledgement("Exporting", "..")
-        );
-        Spark.post("/nodes/:id/actions/export-from-crawl-data", this::exportFromCrawlData,
-                redirectControl.renderRedirectAcknowledgement("Exporting", "..")
-        );
-        Spark.post("/nodes/:id/actions/export-sample-data", this::exportSampleData,
-                redirectControl.renderRedirectAcknowledgement("Exporting", "..")
-        );
-        Spark.post("/nodes/:id/actions/export-dom-sample-data", this::exportDomSampleData,
-                redirectControl.renderRedirectAcknowledgement("Exporting", "..")
-        );
+    public void register(Jooby jooby) {
+        jooby.post("/nodes/{node}/actions/repartition-index", ctx -> redirectControl.renderRedirectAcknowledgement("Repartitioning", "..").render(triggerRepartition(ctx)));
+        jooby.post("/nodes/{node}/actions/sideload-encyclopedia", ctx -> redirectControl.renderRedirectAcknowledgement("Sideloading", "..").render(sideloadEncyclopedia(ctx)));
+        jooby.post("/nodes/{node}/actions/sideload-dirtree", ctx -> redirectControl.renderRedirectAcknowledgement("Sideloading", "..").render(sideloadDirtree(ctx)));
+        jooby.post("/nodes/{node}/actions/sideload-reddit", ctx -> redirectControl.renderRedirectAcknowledgement("Sideloading", "..").render(sideloadReddit(ctx)));
+        jooby.post("/nodes/{node}/actions/sideload-warc", ctx -> redirectControl.renderRedirectAcknowledgement("Sideloading", "..").render(sideloadWarc(ctx)));
+        jooby.post("/nodes/{node}/actions/sideload-stackexchange", ctx -> redirectControl.renderRedirectAcknowledgement("Sideloading", "..").render(sideloadStackexchange(ctx)));
+        jooby.post("/nodes/{node}/actions/export-segmentation", ctx -> redirectControl.renderRedirectAcknowledgement("Exporting", "..").render(exportSegmentationModel(ctx)));
+        jooby.post("/nodes/{node}/actions/download-sample-data", ctx -> redirectControl.renderRedirectAcknowledgement("Downloading", "..").render(downloadSampleData(ctx)));
+        jooby.post("/nodes/{id}/actions/new-crawl", ctx -> redirectControl.renderRedirectAcknowledgement("Crawling", "..").render(triggerCrawl(ctx)));
+        jooby.post("/nodes/{id}/actions/recrawl-single-domain", ctx -> redirectControl.renderRedirectAcknowledgement("Recrawling", "..").render(triggerSingleDomainRecrawl(ctx)));
+        jooby.post("/nodes/{id}/actions/process", ctx -> redirectControl.renderRedirectAcknowledgement("Processing", "..").render(triggerProcess(ctx)));
+        jooby.post("/nodes/{id}/actions/load", ctx -> redirectControl.renderRedirectAcknowledgement("Loading", "..").render(triggerLoadSelected(ctx)));
+        jooby.post("/nodes/{id}/actions/restore-backup", ctx -> redirectControl.renderRedirectAcknowledgement("Restoring", "..").render(triggerRestoreBackup(ctx)));
+        jooby.post("/nodes/{id}/actions/export-db-data", ctx -> redirectControl.renderRedirectAcknowledgement("Exporting", "..").render(exportDbData(ctx)));
+        jooby.post("/nodes/{id}/actions/export-from-crawl-data", ctx -> redirectControl.renderRedirectAcknowledgement("Exporting", "..").render(exportFromCrawlData(ctx)));
+        jooby.post("/nodes/{id}/actions/export-sample-data", ctx -> redirectControl.renderRedirectAcknowledgement("Exporting", "..").render(exportSampleData(ctx)));
+        jooby.post("/nodes/{id}/actions/export-dom-sample-data", ctx -> redirectControl.renderRedirectAcknowledgement("Exporting", "..").render(exportDomSampleData(ctx)));
     }
 
-    private Object downloadSampleData(Request request, Response response) {
-        String set = request.queryParams("sample");
+    private Object downloadSampleData(Context ctx) {
+        String set = ctx.lookup("sample", QUERY, FORM).valueOrNull();
 
         if (set == null)
             throw new ControlValidationError("No sample specified", "A sample data set must be specified", "..");
         if (!Set.of("sample-s", "sample-m", "sample-l", "sample-xl").contains(set))
             throw new ControlValidationError("Invalid sample specified", "A valid sample data set must be specified", "..");
 
-        executorClient.downloadSampleData(Integer.parseInt(request.params("node")), set);
+        executorClient.downloadSampleData(Integer.parseInt(ctx.path("node").value()), set);
 
         logger.info("Downloading sample data set {}", set);
 
         return "";
     }
 
-    public Object sideloadEncyclopedia(Request request, Response response) {
+    public Object sideloadEncyclopedia(Context ctx) {
 
-        String source = request.queryParams("source");
-        String baseUrl = request.queryParams("baseUrl");
-        int nodeId = Integer.parseInt(request.params("node"));
+        String source = ctx.lookup("source", QUERY, FORM).valueOrNull();
+        String baseUrl = ctx.lookup("baseUrl", QUERY, FORM).valueOrNull();
+        int nodeId = Integer.parseInt(ctx.path("node").value());
 
         if (baseUrl == null)
             throw new ControlValidationError("No baseUrl specified", "A baseUrl must be specified", "..");
@@ -145,11 +113,11 @@ public class ControlNodeActionsService {
         return "";
     }
 
-    public Object sideloadDirtree(Request request, Response response) {
+    public Object sideloadDirtree(Context ctx) {
 
-        final int nodeId = Integer.parseInt(request.params("node"));
+        final int nodeId = Integer.parseInt(ctx.path("node").value());
 
-        Path sourcePath = parseSourcePath(request.queryParams("source"));
+        Path sourcePath = parseSourcePath(ctx.lookup("source", QUERY, FORM).valueOrNull());
 
         eventLog.logEvent("USER-ACTION", "SIDELOAD DIRTREE " + nodeId);
 
@@ -157,11 +125,11 @@ public class ControlNodeActionsService {
 
         return "";
     }
-    public Object sideloadReddit(Request request, Response response) {
+    public Object sideloadReddit(Context ctx) {
 
-        final int nodeId = Integer.parseInt(request.params("node"));
+        final int nodeId = Integer.parseInt(ctx.path("node").value());
 
-        Path sourcePath = parseSourcePath(request.queryParams("source"));
+        Path sourcePath = parseSourcePath(ctx.lookup("source", QUERY, FORM).valueOrNull());
 
         eventLog.logEvent("USER-ACTION", "SIDELOAD REDDIT " + nodeId);
 
@@ -169,10 +137,10 @@ public class ControlNodeActionsService {
 
         return "";
     }
-    public Object sideloadWarc(Request request, Response response) {
+    public Object sideloadWarc(Context ctx) {
 
-        final int nodeId = Integer.parseInt(request.params("node"));
-        Path sourcePath = parseSourcePath(request.queryParams("source"));
+        final int nodeId = Integer.parseInt(ctx.path("node").value());
+        Path sourcePath = parseSourcePath(ctx.lookup("source", QUERY, FORM).valueOrNull());
 
         eventLog.logEvent("USER-ACTION", "SIDELOAD WARC " + nodeId);
 
@@ -180,11 +148,11 @@ public class ControlNodeActionsService {
 
         return "";
     }
-    public Object sideloadStackexchange(Request request, Response response) {
+    public Object sideloadStackexchange(Context ctx) {
 
-        final int nodeId = Integer.parseInt(request.params("node"));
+        final int nodeId = Integer.parseInt(ctx.path("node").value());
 
-        String source = request.queryParams("source");
+        String source = ctx.lookup("source", QUERY, FORM).valueOrNull();
         if (source == null)
             throw new ControlValidationError("No source specified", "A source file/directory must be specified", "..");
         Path sourcePath = Path.of(source);
@@ -196,16 +164,16 @@ public class ControlNodeActionsService {
         return "";
     }
 
-    public Object triggerRepartition(Request request, Response response) throws Exception {
-        indexMqClient.triggerRepartition(Integer.parseInt(request.params("node")));
+    public Object triggerRepartition(Context ctx) throws Exception {
+        indexMqClient.triggerRepartition(Integer.parseInt(ctx.path("node").value()));
 
         return "";
     }
 
-    private Object triggerCrawl(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
+    private Object triggerCrawl(Context ctx) throws SQLException {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
 
-        var toCrawl = parseSourceFileStorageId(request.queryParams("source"));
+        var toCrawl = parseSourceFileStorageId(ctx.lookup("source", QUERY, FORM).valueOrNull());
 
         changeActiveStorage(nodeId, FileStorageType.CRAWL_DATA, toCrawl);
 
@@ -217,11 +185,11 @@ public class ControlNodeActionsService {
         return "";
     }
 
-    private Object triggerSingleDomainRecrawl(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
+    private Object triggerSingleDomainRecrawl(Context ctx) throws SQLException {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
 
-        var toCrawl = parseSourceFileStorageId(request.queryParams("source"));
-        var targetDomainName = Objects.requireNonNull(request.queryParams("targetDomainName"));
+        var toCrawl = parseSourceFileStorageId(ctx.lookup("source", QUERY, FORM).valueOrNull());
+        var targetDomainName = Objects.requireNonNull(ctx.lookup("targetDomainName", QUERY, FORM).valueOrNull());
 
         crawlClient.triggerRecrawlSingleDomain(
                 nodeId,
@@ -232,10 +200,10 @@ public class ControlNodeActionsService {
         return "";
     }
 
-    private Object triggerProcess(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-        boolean isAutoload = "on".equalsIgnoreCase(request.queryParams("autoload"));
-        var toProcess = parseSourceFileStorageId(request.queryParams("source"));
+    private Object triggerProcess(Context ctx) throws SQLException {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
+        boolean isAutoload = "on".equalsIgnoreCase(ctx.lookup("autoload", QUERY, FORM).valueOrNull());
+        var toProcess = parseSourceFileStorageId(ctx.lookup("source", QUERY, FORM).valueOrNull());
 
         changeActiveStorage(nodeId, FileStorageType.PROCESSED_DATA, toProcess);
 
@@ -249,9 +217,9 @@ public class ControlNodeActionsService {
         return "";
     }
 
-    private Object triggerLoadSelected(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-        String[] values = request.queryParamsValues("source");
+    private Object triggerLoadSelected(Context ctx) throws SQLException {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
+        String[] values = ctx.lookup("source", QUERY, FORM).toList().toArray(String[]::new);
 
         if (values.length == 0) {
             throw new ControlValidationError("No source specified", "At least one source storage must be specified", "..");
@@ -266,10 +234,10 @@ public class ControlNodeActionsService {
         return "";
     }
 
-    private Object triggerRestoreBackup(Request request, Response response) {
-        int nodeId = Integer.parseInt(request.params("id"));
+    private Object triggerRestoreBackup(Context ctx) {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
 
-        var toLoad = parseSourceFileStorageId(request.queryParams("source"));
+        var toLoad = parseSourceFileStorageId(ctx.lookup("source", QUERY, FORM).valueOrNull());
 
         executorClient.restoreBackup(nodeId, toLoad);
 
@@ -293,49 +261,49 @@ public class ControlNodeActionsService {
         }
     }
 
-    private Object exportDbData(Request req, Response rsp) {
-        exportClient.exportData(Integer.parseInt(req.params("id")));
+    private Object exportDbData(Context ctx) {
+        exportClient.exportData(Integer.parseInt(ctx.path("id").value()));
 
         return "";
     }
 
-    private Object exportSegmentationModel(Request req, Response rsp) {
+    private Object exportSegmentationModel(Context ctx) {
         exportClient.exportSegmentationModel(
-                Integer.parseInt(req.params("node")),
-                req.queryParams("source"));
+                Integer.parseInt(ctx.path("node").value()),
+                ctx.lookup("source", QUERY, FORM).valueOrNull());
 
         return "";
     }
 
-    private Object exportFromCrawlData(Request req, Response rsp) throws Exception {
-        String exportType = req.queryParams("exportType");
-        FileStorageId source = parseSourceFileStorageId(req.queryParams("source"));
+    private Object exportFromCrawlData(Context ctx) throws Exception {
+        String exportType = ctx.lookup("exportType", QUERY, FORM).valueOrNull();
+        FileStorageId source = parseSourceFileStorageId(ctx.lookup("source", QUERY, FORM).valueOrNull());
 
         switch (exportType) {
-            case "atags" -> exportClient.exportAtags(Integer.parseInt(req.params("id")), source);
-            case "rss" -> exportClient.exportRssFeeds(Integer.parseInt(req.params("id")), source);
-            case "termFreq" -> exportClient.exportTermFrequencies(Integer.parseInt(req.params("id")), source);
+            case "atags" -> exportClient.exportAtags(Integer.parseInt(ctx.path("id").value()), source);
+            case "rss" -> exportClient.exportRssFeeds(Integer.parseInt(ctx.path("id").value()), source);
+            case "termFreq" -> exportClient.exportTermFrequencies(Integer.parseInt(ctx.path("id").value()), source);
             default -> throw new ControlValidationError("No export type specified", "An export type must be specified", "..");
         }
 
         return "";
     }
 
-    private Object exportSampleData(Request req, Response rsp) {
-        FileStorageId source = parseSourceFileStorageId(req.queryParams("source"));
-        int size = Integer.parseInt(req.queryParams("size"));
-        String ctFilter = req.queryParams("ctFilter");
-        String name = req.queryParams("name");
+    private Object exportSampleData(Context ctx) {
+        FileStorageId source = parseSourceFileStorageId(ctx.lookup("source", QUERY, FORM).valueOrNull());
+        int size = Integer.parseInt(ctx.lookup("size", QUERY, FORM).valueOrNull());
+        String ctFilter = ctx.lookup("ctFilter", QUERY, FORM).valueOrNull();
+        String name = ctx.lookup("name", QUERY, FORM).valueOrNull();
 
-        exportClient.exportSampleData(Integer.parseInt(req.params("id")), source, size, ctFilter, name);
+        exportClient.exportSampleData(Integer.parseInt(ctx.path("id").value()), source, size, ctFilter, name);
 
         return "";
     }
 
-    private Object exportDomSampleData(Request req, Response rsp) throws Exception {
+    private Object exportDomSampleData(Context ctx) throws Exception {
         // Sanity check to ensure we run this on the right node,
         // should be ensured by the UI as well.
-        if (1 != Integer.parseInt(req.params("id")))
+        if (1 != Integer.parseInt(ctx.path("id").value()))
             throw new IllegalArgumentException("Must only be run on node 1");
 
         exportClient.exportDomSampleData();

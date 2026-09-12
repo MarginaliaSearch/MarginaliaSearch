@@ -7,8 +7,7 @@ import nu.marginalia.db.DbDomainQueries;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
+import io.jooby.Context;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -48,13 +47,13 @@ public class ScreenshotService {
         return false;
     }
 
-    public Object serveScreenshotRequest(Request request, Response response) {
-        if (Strings.isNullOrEmpty(request.params("id"))) {
-            response.redirect("https://search.marginalia.nu/");
+    public Object serveScreenshotRequest(Context ctx) {
+        if (Strings.isNullOrEmpty(ctx.path("id").value(""))) {
+            ctx.sendRedirect("https://search.marginalia.nu/");
             return null;
         }
 
-        int id = parseInt(request.params("id"));
+        int id = parseInt(ctx.path("id").value(""));
 
         try (var conn = dataSource.getConnection();
              var ps = conn.prepareStatement("""
@@ -66,12 +65,13 @@ public class ScreenshotService {
             ps.setInt(1, id);
             var rsp = ps.executeQuery();
             if (rsp.next()) {
-                response.type(rsp.getString(1));
-                response.status(200);
-                response.header("Cache-control", "public,max-age=3600");
+                ctx.setResponseType(rsp.getString(1));
+                ctx.setResponseCode(200);
+                ctx.setResponseHeader("Cache-control", "public,max-age=3600");
 
-                try (var is = rsp.getBlob(2).getBinaryStream()) {
-                    IOUtils.copy(is, response.raw().getOutputStream());
+                try (var is = rsp.getBlob(2).getBinaryStream();
+                     var output = ctx.responseStream()) {
+                    IOUtils.copy(is, output);
                 }
 
                 return "";
@@ -84,15 +84,15 @@ public class ScreenshotService {
             logger.warn("SQL error", ex);
         }
 
-        return serveSvgPlaceholder(response, id);
+        return serveSvgPlaceholder(ctx, id);
     }
 
-    private Object serveSvgPlaceholder(Response response, int id) {
+    private Object serveSvgPlaceholder(Context ctx, int id) {
 
         var name = domainQueries.getDomain(id).map(Object::toString)
                 .orElse("[Screenshot Not Yet Captured]");
 
-        response.type("image/svg+xml");
+        ctx.setResponseType("image/svg+xml");
         
         return """
                 <?xml version="1.0" encoding="UTF-8" standalone="no"?>

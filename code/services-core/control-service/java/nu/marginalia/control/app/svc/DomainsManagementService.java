@@ -11,9 +11,11 @@ import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
+import io.jooby.Context;
+import io.jooby.Jooby;
+
+import static io.jooby.ParamSource.QUERY;
+import static io.jooby.ParamSource.FORM;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -41,29 +43,29 @@ public class DomainsManagementService {
         this.rendererFactory = rendererFactory;
     }
 
-    public void register() throws IOException {
+    public void register(Jooby jooby) throws IOException {
 
         var domainsViewRenderer = rendererFactory.renderer("control/app/domains");
         var addDomainsTxtViewRenderer = rendererFactory.renderer("control/app/domains-new");
         var addDomainsUrlViewRenderer = rendererFactory.renderer("control/app/domains-new-url");
         var addDomainsAfterReportRenderer = rendererFactory.renderer("control/app/domains-new-report");
 
-        Spark.get("/domain", this::getDomains, domainsViewRenderer::render);
-        Spark.get("/domain/new", this::addDomainsTextfield, addDomainsTxtViewRenderer::render);
-        Spark.post("/domain/new", this::addDomainsTextfield, addDomainsAfterReportRenderer::render);
-        Spark.get("/domain/new-url", this::addDomainsFromDownload, addDomainsUrlViewRenderer::render);
-        Spark.post("/domain/new-url", this::addDomainsFromDownload, addDomainsAfterReportRenderer::render);
-        Spark.post("/domain/:id/assign/:node", this::assignDomain, new Redirects.HtmlRedirect("/domain"));
+        jooby.get("/domain", ctx -> domainsViewRenderer.render(getDomains(ctx)));
+        jooby.get("/domain/new", ctx -> addDomainsTxtViewRenderer.render(addDomainsTextfield(ctx)));
+        jooby.post("/domain/new", ctx -> addDomainsAfterReportRenderer.render(addDomainsTextfield(ctx)));
+        jooby.get("/domain/new-url", ctx -> addDomainsUrlViewRenderer.render(addDomainsFromDownload(ctx)));
+        jooby.post("/domain/new-url", ctx -> addDomainsAfterReportRenderer.render(addDomainsFromDownload(ctx)));
+        jooby.post("/domain/{id}/assign/{node}", ctx -> new Redirects.HtmlRedirect("/domain").render(assignDomain(ctx)));
 
     }
 
-    private Object addDomainsTextfield(Request request, Response response) throws SQLException {
-        if ("GET".equals(request.requestMethod())) {
+    private Object addDomainsTextfield(Context ctx) throws SQLException {
+        if ("GET".equals(ctx.getMethod())) {
             return "";
         }
-        else if ("POST".equals(request.requestMethod())) {
-            String nodeStr = request.queryParams("node");
-            String domainsStr = request.queryParams("domains");
+        else if ("POST".equals(ctx.getMethod())) {
+            String nodeStr = ctx.lookup("node", QUERY, FORM).valueOrNull();
+            String domainsStr = ctx.lookup("domains", QUERY, FORM).valueOrNull();
 
             int node = Integer.parseInt(nodeStr);
 
@@ -117,13 +119,13 @@ public class DomainsManagementService {
         return Map.entry(validDomains, invalidDomains);
     }
 
-    private Object addDomainsFromDownload(Request request, Response response) throws SQLException, URISyntaxException, IOException, InterruptedException {
-        if ("GET".equals(request.requestMethod())) {
+    private Object addDomainsFromDownload(Context ctx) throws SQLException, URISyntaxException, IOException, InterruptedException {
+        if ("GET".equals(ctx.getMethod())) {
             return "";
         }
-        else if ("POST".equals(request.requestMethod())) {
-            String nodeStr = request.queryParams("node");
-            URI domainsUrl = new URI(request.queryParams("url"));
+        else if ("POST".equals(ctx.getMethod())) {
+            String nodeStr = ctx.lookup("node", QUERY, FORM).valueOrNull();
+            URI domainsUrl = new URI(ctx.lookup("url", QUERY, FORM).valueOrNull());
 
             int node = Integer.parseInt(nodeStr);
 
@@ -194,10 +196,10 @@ public class DomainsManagementService {
     }
 
 
-    private Object assignDomain(Request request, Response response) throws SQLException {
+    private Object assignDomain(Context ctx) throws SQLException {
 
-        String idStr = request.params(":id");
-        String nodeStr = request.params(":node");
+        String idStr = ctx.path("id").value();
+        String nodeStr = ctx.path("node").value();
 
         int id = Integer.parseInt(idStr);
         int node = Integer.parseInt(nodeStr);
@@ -213,23 +215,23 @@ public class DomainsManagementService {
         return "";
     }
 
-    private DomainSearchResultModel getDomains(Request request, Response response) throws SQLException {
+    private DomainSearchResultModel getDomains(Context ctx) throws SQLException {
         List<DomainModel> ret = new ArrayList<>();
 
-        String filterRaw = Objects.requireNonNullElse(request.queryParams("filter"), "*");
+        String filterRaw = Objects.requireNonNullElse(ctx.lookup("filter", QUERY, FORM).valueOrNull(), "*");
 
         String filter;
         if (filterRaw.isBlank()) filter = "%";
         else filter = filterRaw.replace('*', '%');
 
-        int page = Integer.parseInt(Objects.requireNonNullElse(request.queryParams("page"), "0"));
+        int page = Integer.parseInt(Objects.requireNonNullElse(ctx.lookup("page", QUERY, FORM).valueOrNull(), "0"));
         boolean hasMore = false;
         int count = 10;
 
-        String field = Objects.requireNonNullElse(request.queryParams("field"), "domain");
+        String field = Objects.requireNonNullElse(ctx.lookup("field", QUERY, FORM).valueOrNull(), "domain");
         Map<String, Boolean> selectedField = Map.of(field, true);
 
-        String affinity = Objects.requireNonNullElse(request.queryParams("affinity"), "all");
+        String affinity = Objects.requireNonNullElse(ctx.lookup("affinity", QUERY, FORM).valueOrNull(), "all");
         Map<String, Boolean> selectedAffinity = Map.of(affinity, true);
 
         StringJoiner queryJoiner = new StringJoiner(" ");

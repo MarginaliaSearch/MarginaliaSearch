@@ -8,9 +8,11 @@ import nu.marginalia.executor.client.ExecutorClient;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.nodecfg.model.NodeProfile;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
+import io.jooby.Context;
+import io.jooby.Jooby;
+
+import static io.jooby.ParamSource.QUERY;
+import static io.jooby.ParamSource.FORM;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -37,44 +39,44 @@ public class WideDomainsService {
         this.executorClient = executorClient;
     }
 
-    public void register() throws IOException {
+    public void register(Jooby jooby) throws IOException {
         var renderer = rendererFactory.renderer("control/app/wide-domains");
 
-        Spark.get("/wide-domains", this::wideDomainsModel, renderer::render);
-        Spark.post("/wide-domains", this::updateRoots, new Redirects.HtmlRedirect("/wide-domains"));
-        Spark.post("/wide-domains/migrate", this::triggerMigration, new Redirects.HtmlRedirect("/wide-domains"));
-        Spark.post("/wide-domains/cleanup", this::triggerCleanup, new Redirects.HtmlRedirect("/wide-domains"));
+        jooby.get("/wide-domains", ctx -> renderer.render(wideDomainsModel(ctx)));
+        jooby.post("/wide-domains", ctx -> new Redirects.HtmlRedirect("/wide-domains").render(updateRoots(ctx)));
+        jooby.post("/wide-domains/migrate", ctx -> new Redirects.HtmlRedirect("/wide-domains").render(triggerMigration(ctx)));
+        jooby.post("/wide-domains/cleanup", ctx -> new Redirects.HtmlRedirect("/wide-domains").render(triggerCleanup(ctx)));
     }
 
-    private Object wideDomainsModel(Request request, Response response) {
+    private Object wideDomainsModel(Context ctx) {
         return Map.of(
                 "roots", listRoots(),
                 "hasWideNode", wideNodeId().isPresent());
     }
 
-    private Object updateRoots(Request request, Response response) {
-        String domainParam = request.queryParams("domain");
+    private Object updateRoots(Context ctx) {
+        String domainParam = ctx.lookup("domain", QUERY, FORM).valueOrNull();
         if (domainParam == null || domainParam.isBlank()) {
             return "";
         }
 
         String topDomain = new EdgeDomain(domainParam).topDomain;
 
-        if ("add".equals(request.queryParams("act"))) {
+        if ("add".equals(ctx.lookup("act", QUERY, FORM).valueOrNull())) {
             addRoot(topDomain);
-        } else if ("del".equals(request.queryParams("act"))) {
+        } else if ("del".equals(ctx.lookup("act", QUERY, FORM).valueOrNull())) {
             removeRoot(topDomain);
         }
 
         return "";
     }
 
-    private Object triggerMigration(Request request, Response response) {
+    private Object triggerMigration(Context ctx) {
         wideNodeId().ifPresent(nodeId -> executorClient.startFsm(nodeId, "MIGRATE_DOMAINS"));
         return "";
     }
 
-    private Object triggerCleanup(Request request, Response response) {
+    private Object triggerCleanup(Context ctx) {
         // Cleanup runs on the batch-capable nodes that domains may have been migrated away from.
         for (var config : nodeConfigurationService.getAll()) {
             if (config.disabled() || config.profile().isWideDomains() || !config.profile().permitBatchCrawl()) {

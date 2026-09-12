@@ -19,9 +19,11 @@ import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
+import io.jooby.Context;
+import io.jooby.Jooby;
+
+import static io.jooby.ParamSource.QUERY;
+import static io.jooby.ParamSource.FORM;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -68,7 +70,7 @@ public class ControlNodeService {
         this.crawlDataService = crawlDataService;
     }
 
-    public void register() throws IOException {
+    public void register(Jooby jooby) throws IOException {
         var nodeListRenderer = rendererFactory.renderer("control/node/nodes-list");
         var overviewRenderer = rendererFactory.renderer("control/node/node-overview");
         var actionsRenderer = rendererFactory.renderer("control/node/node-actions");
@@ -80,51 +82,47 @@ public class ControlNodeService {
         var configRenderer = rendererFactory.renderer("control/node/node-config");
 
 
-        Spark.get("/nodes", this::nodeListModel, nodeListRenderer::render);
-        Spark.get("/nodes/:id", this::nodeOverviewModel, overviewRenderer::render);
-        Spark.get("/nodes/:id/", this::nodeOverviewModel, overviewRenderer::render);
-        Spark.get("/nodes/:id/actors", this::nodeActorsModel, actorsRenderer::render);
-        Spark.get("/nodes/:id/actions", this::nodeActionsModel, actionsRenderer::render);
-        Spark.get("/nodes/:id/storage/", this::nodeStorageConfModel, storageConfRenderer::render);
-        Spark.get("/nodes/:id/storage/conf", this::nodeStorageConfModel, storageConfRenderer::render);
-        Spark.get("/nodes/:id/storage/details", this::nodeStorageDetailsModel, storageDetailsRenderer::render);
+        jooby.get("/nodes", ctx -> nodeListRenderer.render(nodeListModel(ctx)));
+        jooby.get("/nodes/{id}", ctx -> overviewRenderer.render(nodeOverviewModel(ctx)));
+        jooby.get("/nodes/{id}/", ctx -> overviewRenderer.render(nodeOverviewModel(ctx)));
+        jooby.get("/nodes/{id}/actors", ctx -> actorsRenderer.render(nodeActorsModel(ctx)));
+        jooby.get("/nodes/{id}/actions", ctx -> actionsRenderer.render(nodeActionsModel(ctx)));
+        jooby.get("/nodes/{id}/storage/", ctx -> storageConfRenderer.render(nodeStorageConfModel(ctx)));
+        jooby.get("/nodes/{id}/storage/conf", ctx -> storageConfRenderer.render(nodeStorageConfModel(ctx)));
+        jooby.get("/nodes/{id}/storage/details", ctx -> storageDetailsRenderer.render(nodeStorageDetailsModel(ctx)));
 
-        Spark.get("/nodes/:id/storage/crawl-parquet-info", crawlDataService::crawlParquetInfo, storageCrawlParquetDetails::render);
+        jooby.get("/nodes/{id}/storage/crawl-parquet-info", ctx -> storageCrawlParquetDetails.render(crawlDataService.crawlParquetInfo(ctx)));
 
-        Spark.post("/nodes/:id/process/:processBase/stop", this::stopProcess,
-                redirectControl.renderRedirectAcknowledgement("Stopping", "../..")
-        );
+        jooby.post("/nodes/{id}/process/{processBase}/stop", ctx -> redirectControl.renderRedirectAcknowledgement("Stopping", "../..").render(stopProcess(ctx)));
 
-        Spark.get("/nodes/:id/storage/:view", this::nodeStorageListModel, storageListRenderer::render);
+        jooby.get("/nodes/{id}/storage/{view}", ctx -> storageListRenderer.render(nodeStorageListModel(ctx)));
 
-        Spark.get("/nodes/:id/configuration", this::nodeConfigModel, configRenderer::render);
-        Spark.post("/nodes/:id/configuration", this::updateConfigModel, configRenderer::render);
+        jooby.get("/nodes/{id}/configuration", ctx -> configRenderer.render(nodeConfigModel(ctx)));
+        jooby.post("/nodes/{id}/configuration", ctx -> configRenderer.render(updateConfigModel(ctx)));
 
-        Spark.post("/nodes/:id/storage/reset-state/:fid", this::resetState,
-                redirectControl.renderRedirectAcknowledgement("Restoring", "..")
-        );
-        Spark.post("/nodes/:id/fsms/:fsm/start", this::startFsm);
-        Spark.post("/nodes/:id/fsms/:fsm/stop", this::stopFsm);
+        jooby.post("/nodes/{id}/storage/reset-state/{fid}", ctx -> redirectControl.renderRedirectAcknowledgement("Restoring", "..").render(resetState(ctx)));
+        jooby.post("/nodes/{id}/fsms/{fsm}/start", this::startFsm);
+        jooby.post("/nodes/{id}/fsms/{fsm}/stop", this::stopFsm);
     }
 
-    private Object resetState(Request request, Response response) throws SQLException {
-        fileStorageService.setFileStorageState(FileStorageId.parse(request.params("fid")), FileStorageState.UNSET);
+    private Object resetState(Context ctx) throws SQLException {
+        fileStorageService.setFileStorageState(FileStorageId.parse(ctx.path("fid").value()), FileStorageState.UNSET);
         return "";
     }
 
-    public Object startFsm(Request req, Response rsp) throws Exception {
-        executorClient.startFsm(Integer.parseInt(req.params("id")), req.params("fsm").toUpperCase());
+    public Object startFsm(Context ctx) throws Exception {
+        executorClient.startFsm(Integer.parseInt(ctx.path("id").value()), ctx.path("fsm").value().toUpperCase());
 
-        return redirectToOverview(req);
+        return redirectToOverview(ctx);
     }
 
-    public Object stopFsm(Request req, Response rsp) throws Exception {
-        executorClient.stopFsm(Integer.parseInt(req.params("id")), req.params("fsm").toUpperCase());
+    public Object stopFsm(Context ctx) throws Exception {
+        executorClient.stopFsm(Integer.parseInt(ctx.path("id").value()), ctx.path("fsm").value().toUpperCase());
 
-        return redirectToOverview(req);
+        return redirectToOverview(ctx);
     }
 
-    private Object nodeListModel(Request request, Response response) throws SQLException {
+    private Object nodeListModel(Context ctx) throws SQLException {
         var configs = nodeConfigurationService.getAll();
 
         int nextId = configs.stream().mapToInt(NodeConfiguration::node).map(i -> i+1).max().orElse(1);
@@ -134,9 +132,9 @@ public class ControlNodeService {
                 "nextNodeId", nextId);
     }
 
-    private Object stopProcess(Request request, Response response) {
-        int nodeId = Integer.parseInt(request.params("id"));
-        String processBase = request.params("processBase");
+    private Object stopProcess(Context ctx) {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
+        String processBase = ctx.path("processBase").value();
 
         executorClient.stopProcess(nodeId, processBase);
 
@@ -151,12 +149,12 @@ public class ControlNodeService {
         }
     }
 
-    public String redirectToOverview(Request request) {
-        return redirectToOverview(Integer.parseInt(request.params("id")));
+    public String redirectToOverview(Context ctx) {
+        return redirectToOverview(Integer.parseInt(ctx.path("id").value()));
     }
 
-    private Object nodeActorsModel(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
+    private Object nodeActorsModel(Context ctx) throws SQLException {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
 
         return Map.of(
                 "tab", Map.of("actors", true),
@@ -165,13 +163,13 @@ public class ControlNodeService {
         );
     }
 
-    private Object nodeActionsModel(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
+    private Object nodeActionsModel(Context ctx) throws SQLException {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
 
         return Map.of(
                 "tab", Map.of("actions", true),
                 "node", nodeConfigurationService.get(nodeId),
-                "view", Map.of(request.queryParams("view"), true),
+                "view", Map.of(ctx.lookup("view", QUERY, FORM).valueOrNull(), true),
                 "uploadDirContents", executorClient.listSideloadDir(nodeId),
                 "allBackups",
                         fileStorageService.getEachFileStorage(nodeId, FileStorageType.BACKUP),
@@ -182,8 +180,8 @@ public class ControlNodeService {
         );
     }
 
-    private Object nodeStorageConfModel(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
+    private Object nodeStorageConfModel(Context ctx) throws SQLException {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
 
         return Map.of(
                 "tab", Map.of("storage", true),
@@ -194,9 +192,9 @@ public class ControlNodeService {
     }
 
 
-    private Object nodeStorageListModel(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-        String view = request.params("view");
+    private Object nodeStorageListModel(Context ctx) throws SQLException {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
+        String view = ctx.path("view").value();
 
         FileStorageType type = switch(view) {
             case "backup" -> FileStorageType.BACKUP;
@@ -214,9 +212,9 @@ public class ControlNodeService {
         );
     }
 
-    private Object nodeStorageDetailsModel(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-        var fsid = FileStorageId.parse(request.queryParams("fid"));
+    private Object nodeStorageDetailsModel(Context ctx) throws SQLException {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
+        var fsid = FileStorageId.parse(ctx.lookup("fid", QUERY, FORM).valueOrNull());
         var storage = getFileStorageWithRelatedEntries(nodeId, fsid);
 
         String view = switch(storage.type()) {
@@ -237,8 +235,8 @@ public class ControlNodeService {
 
         if (storage.type() == FileStorageType.CRAWL_DATA) {
             var cdFiles = crawlDataService.getCrawlDataFiles(fsid,
-                    request.queryParams("filterDomain"),
-                    request.queryParams("afterDomain")
+                    ctx.lookup("filterDomain", QUERY, FORM).valueOrNull(),
+                    ctx.lookup("afterDomain", QUERY, FORM).valueOrNull()
             );
             ret.put("crawlDataFiles", cdFiles);
         }
@@ -248,8 +246,8 @@ public class ControlNodeService {
     }
 
 
-    private Object nodeConfigModel(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
+    private Object nodeConfigModel(Context ctx) throws SQLException {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
 
         Map<String, Path> storage = new HashMap<>();
 
@@ -266,23 +264,23 @@ public class ControlNodeService {
                 "storage", storage);
     }
 
-    private Object updateConfigModel(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-        String act = request.queryParams("act");
+    private Object updateConfigModel(Context ctx) throws SQLException {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
+        String act = ctx.lookup("act", QUERY, FORM).valueOrNull();
 
         if ("config".equals(act)) {
             var oldConfig = nodeConfigurationService.get(nodeId);
 
             var newConfig = new NodeConfiguration(
                     nodeId,
-                    request.queryParams("description"),
-                    "on".equalsIgnoreCase(request.queryParams("acceptQueries")),
-                    "on".equalsIgnoreCase(request.queryParams("autoClean")),
-                    "on".equalsIgnoreCase(request.queryParams("includeInPrecession")),
-                    "on".equalsIgnoreCase(request.queryParams("keepWarcs")),
-                    "on".equalsIgnoreCase(request.queryParams("autoAssignDomains")),
-                    NodeProfile.valueOf(request.queryParams("profile")),
-                    "on".equalsIgnoreCase(request.queryParams("disabled"))
+                    ctx.lookup("description", QUERY, FORM).valueOrNull(),
+                    "on".equalsIgnoreCase(ctx.lookup("acceptQueries", QUERY, FORM).valueOrNull()),
+                    "on".equalsIgnoreCase(ctx.lookup("autoClean", QUERY, FORM).valueOrNull()),
+                    "on".equalsIgnoreCase(ctx.lookup("includeInPrecession", QUERY, FORM).valueOrNull()),
+                    "on".equalsIgnoreCase(ctx.lookup("keepWarcs", QUERY, FORM).valueOrNull()),
+                    "on".equalsIgnoreCase(ctx.lookup("autoAssignDomains", QUERY, FORM).valueOrNull()),
+                    NodeProfile.valueOf(ctx.lookup("profile", QUERY, FORM).valueOrNull()),
+                    "on".equalsIgnoreCase(ctx.lookup("disabled", QUERY, FORM).valueOrNull())
             );
 
             nodeConfigurationService.save(newConfig);
@@ -299,14 +297,14 @@ public class ControlNodeService {
             throw new UnsupportedOperationException();
         }
         else {
-            Spark.halt(400);
+            throw new io.jooby.exception.BadRequestException("Invalid action");
         }
 
-        return nodeConfigModel(request, response);
+        return nodeConfigModel(ctx);
     }
 
-    private Object nodeOverviewModel(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
+    private Object nodeOverviewModel(Context ctx) throws SQLException {
+        int nodeId = Integer.parseInt(ctx.path("id").value());
         var config = nodeConfigurationService.get(nodeId);
 
         var actors = executorClient.getActorStates(nodeId).states()

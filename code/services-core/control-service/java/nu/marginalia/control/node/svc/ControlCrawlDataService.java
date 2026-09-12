@@ -9,10 +9,12 @@ import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
+import io.jooby.Context;
 
 import javax.annotation.Nullable;
+import static io.jooby.ParamSource.QUERY;
+import static io.jooby.ParamSource.FORM;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.sql.DriverManager;
@@ -52,17 +54,17 @@ public class ControlCrawlDataService {
 
 
 
-    public Object crawlParquetInfo(Request request, Response response) throws SQLException {
+    public Object crawlParquetInfo(Context ctx) throws SQLException {
 
-        int nodeId = Integer.parseInt(request.params("id"));
-        var fsid = FileStorageId.parse(request.queryParams("fid"));
+        int nodeId = Integer.parseInt(ctx.path("id").value());
+        var fsid = FileStorageId.parse(ctx.lookup("fid", QUERY, FORM).valueOrNull());
 
-        String path = request.queryParams("path");
+        String path = ctx.lookup("path", QUERY, FORM).valueOrNull();
 
-        int after = Integer.parseInt(request.queryParamOrDefault("page", "0"));
-        String urlGlob = request.queryParamOrDefault("urlGlob", null);
-        String selectedContentType = request.queryParamOrDefault("contentType", "ALL");
-        String selectedHttpStatus = request.queryParamOrDefault("httpStatus", "ALL");
+        int after = Integer.parseInt(ctx.lookup("page", QUERY, FORM).value("0"));
+        String urlGlob = ctx.lookup("urlGlob", QUERY, FORM).valueOrNull();
+        String selectedContentType = ctx.lookup("contentType", QUERY, FORM).value("ALL");
+        String selectedHttpStatus = ctx.lookup("httpStatus", QUERY, FORM).value("ALL");
 
         int effectiveStatusCode = selectedHttpStatus.equals("ALL") ? -1 : Integer.parseInt(selectedHttpStatus);
 

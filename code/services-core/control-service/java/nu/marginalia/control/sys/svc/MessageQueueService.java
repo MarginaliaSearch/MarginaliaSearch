@@ -8,9 +8,11 @@ import nu.marginalia.control.Redirects;
 import nu.marginalia.control.sys.model.MessageQueueEntry;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.persistence.MqPersistence;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
+import io.jooby.Context;
+import io.jooby.Jooby;
+
+import static io.jooby.ParamSource.QUERY;
+import static io.jooby.ParamSource.FORM;
 
 import java.io.IOException;
 import java.sql.ResultSet;
@@ -35,33 +37,33 @@ public class MessageQueueService {
 
     }
 
-    public void register() throws IOException {
+    public void register(Jooby jooby) throws IOException {
         var messageQueueRenderer = rendererFactory.renderer("control/sys/message-queue");
         var updateMessageStateRenderer = rendererFactory.renderer("control/sys/update-message-state");
         var newMessageRenderer = rendererFactory.renderer("control/sys/new-message");
         var viewMessageRenderer = rendererFactory.renderer("control/sys/view-message");
 
-        Spark.get("/message-queue", this::listMessageQueueModel, messageQueueRenderer::render);
-        Spark.post("/message-queue/", this::createMessage, Redirects.redirectToMessageQueue);
-        Spark.get("/message-queue/new", this::newMessageModel, newMessageRenderer::render);
-        Spark.get("/message-queue/:id", this::viewMessageModel, viewMessageRenderer::render);
-        Spark.get("/message-queue/:id/reply", this::replyMessageModel, newMessageRenderer::render);
-        Spark.get("/message-queue/:id/edit", this::viewMessageForEditStateModel, updateMessageStateRenderer::render);
-        Spark.post("/message-queue/:id/edit", this::editMessageState, Redirects.redirectToMessageQueue);
+        jooby.get("/message-queue", ctx -> messageQueueRenderer.render(listMessageQueueModel(ctx)));
+        jooby.post("/message-queue/", ctx -> Redirects.redirectToMessageQueue.render(createMessage(ctx)));
+        jooby.get("/message-queue/new", ctx -> newMessageRenderer.render(newMessageModel(ctx)));
+        jooby.get("/message-queue/{id}", ctx -> viewMessageRenderer.render(viewMessageModel(ctx)));
+        jooby.get("/message-queue/{id}/reply", ctx -> newMessageRenderer.render(replyMessageModel(ctx)));
+        jooby.get("/message-queue/{id}/edit", ctx -> updateMessageStateRenderer.render(viewMessageForEditStateModel(ctx)));
+        jooby.post("/message-queue/{id}/edit", ctx -> Redirects.redirectToMessageQueue.render(editMessageState(ctx)));
 
     }
 
 
-    public Object viewMessageModel(Request request, Response response) {
-        return Map.of("message", getMessage(Long.parseLong(request.params("id"))),
-                "relatedMessages", getRelatedMessages(Long.parseLong(request.params("id"))));
+    public Object viewMessageModel(Context ctx) {
+        return Map.of("message", getMessage(Long.parseLong(ctx.path("id").value())),
+                "relatedMessages", getRelatedMessages(Long.parseLong(ctx.path("id").value())));
     }
 
 
-    public Object listMessageQueueModel(Request request, Response response) throws SQLException {
-        String inboxParam = request.queryParams("inbox");
-        String instanceParam = request.queryParams("instance");
-        String afterParam = request.queryParams("after");
+    public Object listMessageQueueModel(Context ctx) throws SQLException {
+        String inboxParam = ctx.lookup("inbox", QUERY, FORM).valueOrNull();
+        String instanceParam = ctx.lookup("instance", QUERY, FORM).valueOrNull();
+        String afterParam = ctx.lookup("after", QUERY, FORM).valueOrNull();
 
         long afterId = Optional.ofNullable(afterParam).map(Long::parseLong).orElse(Long.MAX_VALUE);
 
@@ -128,8 +130,8 @@ public class MessageQueueService {
         return inboxes;
     }
 
-    public Object newMessageModel(Request request, Response response) {
-        String idParam = request.queryParams("id");
+    public Object newMessageModel(Context ctx) {
+        String idParam = ctx.lookup("id", QUERY, FORM).valueOrNull();
         if (null == idParam)
             return Map.of("relatedId", "-1");
 
@@ -140,8 +142,8 @@ public class MessageQueueService {
         return Map.of("relatedId", "-1");
     }
 
-    public Object replyMessageModel(Request request, Response response) {
-        String idParam = request.params("id");
+    public Object replyMessageModel(Context ctx) {
+        String idParam = ctx.path("id").value();
 
         var message = getMessage(Long.parseLong(idParam));
 
@@ -150,12 +152,12 @@ public class MessageQueueService {
                 "function", "REPLY");
     }
 
-    public Object createMessage(Request request, Response response) throws Exception {
-        String recipient = request.queryParams("recipientInbox");
-        String sender = request.queryParams("senderInbox");
-        String relatedMessage = request.queryParams("relatedId");
-        String function = request.queryParams("function");
-        String payload = request.queryParams("payload");
+    public Object createMessage(Context ctx) throws Exception {
+        String recipient = ctx.lookup("recipientInbox", QUERY, FORM).valueOrNull();
+        String sender = ctx.lookup("senderInbox", QUERY, FORM).valueOrNull();
+        String relatedMessage = ctx.lookup("relatedId", QUERY, FORM).valueOrNull();
+        String function = ctx.lookup("function", QUERY, FORM).valueOrNull();
+        String payload = ctx.lookup("payload", QUERY, FORM).valueOrNull();
 
         persistence.sendNewMessage(recipient,
                 sender.isBlank() ? null : sender,
@@ -167,13 +169,13 @@ public class MessageQueueService {
         return "";
     }
 
-    public Object viewMessageForEditStateModel(Request request, Response response) throws SQLException {
-        return persistence.getMessage(Long.parseLong(request.params("id")));
+    public Object viewMessageForEditStateModel(Context ctx) throws SQLException {
+        return persistence.getMessage(Long.parseLong(ctx.path("id").value()));
     }
 
-    public Object editMessageState(Request request, Response response) throws SQLException {
-        MqMessageState state = MqMessageState.valueOf(request.queryParams("state"));
-        long id = Long.parseLong(request.params("id"));
+    public Object editMessageState(Context ctx) throws SQLException {
+        MqMessageState state = MqMessageState.valueOf(ctx.lookup("state", QUERY, FORM).valueOrNull());
+        long id = Long.parseLong(ctx.path("id").value());
         persistence.updateMessageState(id, state);
         return "";
     }

@@ -3,6 +3,9 @@ package nu.marginalia.control;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import io.jooby.ExecutionMode;
+import io.jooby.Jooby;
+import io.jooby.Server;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.service.MainClass;
@@ -25,9 +28,11 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipFile;
 
 public class ControlMain extends MainClass {
+    private final ControlService service;
 
     @Inject
     public ControlMain(ControlService service) {
+        this.service = service;
     }
 
     public static void main(String... args) throws Exception {
@@ -53,8 +58,22 @@ public class ControlMain extends MainClass {
         orchestrateBoot(registry, configuration);
 
 
-        injector.getInstance(ControlMain.class);
+        var main = injector.getInstance(ControlMain.class);
         injector.getInstance(Initialization.class).setReady();
+
+        Jooby.runApp(new String[] { "application.env=prod" }, main.server(), ExecutionMode.WORKER, () -> new Jooby() {
+            {
+                main.start(this);
+            }
+        });
+    }
+
+    public Server server() {
+        return service.createServer();
+    }
+
+    public void start(Jooby jooby) {
+        service.startJooby(jooby);
     }
 
     static void downloadAncillaryFiles(Path dataPath) throws Exception {

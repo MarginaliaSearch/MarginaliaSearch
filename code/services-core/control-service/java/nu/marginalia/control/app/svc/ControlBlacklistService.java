@@ -8,9 +8,11 @@ import nu.marginalia.control.app.model.BlacklistedDomainModel;
 import nu.marginalia.model.EdgeDomain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
+import io.jooby.Context;
+import io.jooby.Jooby;
+
+import static io.jooby.ParamSource.QUERY;
+import static io.jooby.ParamSource.FORM;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -33,23 +35,23 @@ public class ControlBlacklistService {
     }
 
 
-    public void register() throws IOException {
+    public void register(Jooby jooby) throws IOException {
         var blacklistRenderer = rendererFactory.renderer("control/app/blacklist");
 
-        Spark.get("/blacklist", this::blacklistModel, blacklistRenderer::render);
-        Spark.post("/blacklist", this::updateBlacklist, Redirects.redirectToBlacklist);
+        jooby.get("/blacklist", ctx -> blacklistRenderer.render(blacklistModel(ctx)));
+        jooby.post("/blacklist", ctx -> Redirects.redirectToBlacklist.render(updateBlacklist(ctx)));
     }
 
-    private Object blacklistModel(Request request, Response response) {
+    private Object blacklistModel(Context ctx) {
         return Map.of("blacklist", lastNAdditions(100));
     }
 
-    private Object updateBlacklist(Request request, Response response) {
-        var domain = new EdgeDomain(request.queryParams("domain"));
-        if ("add".equals(request.queryParams("act"))) {
-            var comment = Objects.requireNonNullElse(request.queryParams("comment"), "");
+    private Object updateBlacklist(Context ctx) {
+        var domain = new EdgeDomain(ctx.lookup("domain", QUERY, FORM).valueOrNull());
+        if ("add".equals(ctx.lookup("act", QUERY, FORM).valueOrNull())) {
+            var comment = Objects.requireNonNullElse(ctx.lookup("comment", QUERY, FORM).valueOrNull(), "");
             addToBlacklist(domain, comment);
-        } else if ("del".equals(request.queryParams("act"))) {
+        } else if ("del".equals(ctx.lookup("act", QUERY, FORM).valueOrNull())) {
             removeFromBlacklist(domain);
         }
 

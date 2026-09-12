@@ -5,9 +5,11 @@ import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.control.ControlValidationError;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.db.DomainRankingSetsService;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
+import io.jooby.Context;
+import io.jooby.Jooby;
+
+import static io.jooby.ParamSource.QUERY;
+import static io.jooby.ParamSource.FORM;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -24,27 +26,27 @@ public class ControlDomainRankingSetsService {
         this.domainRankingSetsService = domainRankingSetsService;
     }
 
-    public void register() throws IOException {
+    public void register(Jooby jooby) throws IOException {
         var datasetsRenderer = rendererFactory.renderer("control/sys/domain-ranking-sets");
         var updateDatasetRenderer = rendererFactory.renderer("control/sys/update-domain-ranking-set");
         var newDatasetRenderer = rendererFactory.renderer("control/sys/new-domain-ranking-set");
 
-        Spark.get("/domain-ranking-sets", this::rankingSetsModel, datasetsRenderer::render);
-        Spark.get("/domain-ranking-sets/new", (rq,rs) -> new Object(), newDatasetRenderer::render);
-        Spark.get("/domain-ranking-sets/:id", this::rankingSetModel, updateDatasetRenderer::render);
-        Spark.post("/domain-ranking-sets/:id", this::alterSetModel, Redirects.redirectToRankingDataSets);
+        jooby.get("/domain-ranking-sets", ctx -> datasetsRenderer.render(rankingSetsModel(ctx)));
+        jooby.get("/domain-ranking-sets/new", ctx -> newDatasetRenderer.render(new Object()));
+        jooby.get("/domain-ranking-sets/{id}", ctx -> updateDatasetRenderer.render(rankingSetModel(ctx)));
+        jooby.post("/domain-ranking-sets/{id}", ctx -> Redirects.redirectToRankingDataSets.render(alterSetModel(ctx)));
     }
 
-    private Object alterSetModel(Request request, Response response) throws SQLException {
-        final String act = request.queryParams("act");
-        final String id = request.params("id");
+    private Object alterSetModel(Context ctx) throws SQLException {
+        final String act = ctx.lookup("act", QUERY, FORM).valueOrNull();
+        final String id = ctx.path("id").value();
 
         if ("update".equals(act)) {
             domainRankingSetsService.upsert(new DomainRankingSetsService.DomainRankingSet(
                     id,
-                    request.queryParams("description"),
-                    Integer.parseInt(request.queryParams("depth")),
-                    request.queryParams("definition")
+                    ctx.lookup("description", QUERY, FORM).valueOrNull(),
+                    Integer.parseInt(ctx.lookup("depth", QUERY, FORM).valueOrNull()),
+                    ctx.lookup("definition", QUERY, FORM).valueOrNull()
             ));
             return "";
         }
@@ -61,7 +63,7 @@ public class ControlDomainRankingSetsService {
             return "";
         }
         else if ("create".equals(act)) {
-            if (domainRankingSetsService.get(request.queryParams("name")).isPresent()) {
+            if (domainRankingSetsService.get(ctx.lookup("name", QUERY, FORM).valueOrNull()).isPresent()) {
                 throw new ControlValidationError("Ranking set with that name already exists",
                         """
                                 Ensure the new data set has a unique name and try again.
@@ -70,10 +72,10 @@ public class ControlDomainRankingSetsService {
             }
 
             domainRankingSetsService.upsert(new DomainRankingSetsService.DomainRankingSet(
-                    request.queryParams("name").toUpperCase(),
-                    request.queryParams("description"),
-                    Integer.parseInt(request.queryParams("depth")),
-                    request.queryParams("definition")
+                    ctx.lookup("name", QUERY, FORM).valueOrNull().toUpperCase(),
+                    ctx.lookup("description", QUERY, FORM).valueOrNull(),
+                    Integer.parseInt(ctx.lookup("depth", QUERY, FORM).valueOrNull()),
+                    ctx.lookup("definition", QUERY, FORM).valueOrNull()
             ));
             return "";
         }
@@ -84,11 +86,11 @@ public class ControlDomainRankingSetsService {
             "/domain-ranking-sets");
     }
 
-    private Object rankingSetsModel(Request request, Response response) {
+    private Object rankingSetsModel(Context ctx) {
         return Map.of("rankingSets", domainRankingSetsService.getAll());
     }
-    private Object rankingSetModel(Request request, Response response) throws SQLException {
-        var model = domainRankingSetsService.get(request.params("id")).orElseThrow();
+    private Object rankingSetModel(Context ctx) throws SQLException {
+        var model = domainRankingSetsService.get(ctx.path("id").value()).orElseThrow();
         return Map.of("rankingSet", model);
     }
 }

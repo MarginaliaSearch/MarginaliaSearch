@@ -5,10 +5,11 @@ import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.control.app.model.ApiKeyModel;
-import org.eclipse.jetty.util.StringUtil;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
+import io.jooby.Context;
+import io.jooby.Jooby;
+
+import static io.jooby.ParamSource.QUERY;
+import static io.jooby.ParamSource.FORM;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -30,30 +31,30 @@ public class ApiKeyService {
         this.rendererFactory = rendererFactory;
     }
 
-    public void register() throws IOException {
+    public void register(Jooby jooby) throws IOException {
 
         var apiKeysRenderer = rendererFactory.renderer("control/app/api-keys");
 
-        Spark.get("/api-keys", this::apiKeysModel, apiKeysRenderer::render);
-        Spark.post("/api-keys", this::createApiKey, Redirects.redirectToApiKeys);
-        Spark.delete("/api-keys/:key", this::deleteApiKey, Redirects.redirectToApiKeys);
+        jooby.get("/api-keys", ctx -> apiKeysRenderer.render(apiKeysModel(ctx)));
+        jooby.post("/api-keys", ctx -> Redirects.redirectToApiKeys.render(createApiKey(ctx)));
+        jooby.delete("/api-keys/{key}", ctx -> Redirects.redirectToApiKeys.render(deleteApiKey(ctx)));
         // HTML forms don't support the DELETE verb :-(
-        Spark.post("/api-keys/:key/delete", this::deleteApiKey, Redirects.redirectToApiKeys);
+        jooby.post("/api-keys/{key}/delete", ctx -> Redirects.redirectToApiKeys.render(deleteApiKey(ctx)));
 
     }
 
-    private Object createApiKey(Request request, Response response) {
-        String license = request.queryParams("license");
-        String name = request.queryParams("name");
-        String email = request.queryParams("email");
-        int rate = Integer.parseInt(request.queryParams("rate"));
+    private Object createApiKey(Context ctx) {
+        String license = ctx.lookup("license", QUERY, FORM).valueOrNull();
+        String name = ctx.lookup("name", QUERY, FORM).valueOrNull();
+        String email = ctx.lookup("email", QUERY, FORM).valueOrNull();
+        int rate = Integer.parseInt(ctx.lookup("rate", QUERY, FORM).valueOrNull());
 
-        if (StringUtil.isBlank(license) ||
-                StringUtil.isBlank(name) ||
-                StringUtil.isBlank(email) ||
+        if ((license == null || license.isBlank()) ||
+                (name == null || name.isBlank()) ||
+                (email == null || email.isBlank()) ||
                 rate <= 0)
         {
-            response.status(400);
+            ctx.setResponseCode(400);
             return "";
         }
 
@@ -62,13 +63,13 @@ public class ApiKeyService {
         return "";
     }
 
-    private Object deleteApiKey(Request request, Response response) {
-        String licenseKey = request.params("key");
+    private Object deleteApiKey(Context ctx) {
+        String licenseKey = ctx.path("key").value();
         deleteApiKey(licenseKey);
         return "";
     }
 
-    private Object apiKeysModel(Request request, Response response) {
+    private Object apiKeysModel(Context ctx) {
         return Map.of("apikeys", getApiKeys());
     }
 
