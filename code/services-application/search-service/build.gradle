@@ -95,7 +95,6 @@ dependencies {
     testImplementation libs.bundles.testcontainers
     testImplementation project(':code:libraries:test-helpers')
 
-    testImplementation dependencies.create(libs.spark.get())
 }
 
 interface InjectedExecOps {

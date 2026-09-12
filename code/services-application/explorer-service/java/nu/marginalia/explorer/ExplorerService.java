@@ -10,8 +10,6 @@ import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.service.server.JoobyService;
-import nu.marginalia.service.server.SparkService;
-import nu.marginalia.service.server.StaticResources;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.SQLException;
@@ -21,7 +19,6 @@ public class ExplorerService extends JoobyService {
 
     private final MustacheRenderer<Object> renderer;
     private final HikariDataSource dataSource;
-    private final StaticResources staticResources;
 
     record SearchResult(
             String domain,
@@ -42,8 +39,7 @@ public class ExplorerService extends JoobyService {
     @Inject
     public ExplorerService(BaseServiceParams params,
                            RendererFactory rendererFactory,
-                           HikariDataSource dataSource,
-                           StaticResources staticResources
+                           HikariDataSource dataSource
                            ) throws Exception
 
     {
@@ -53,7 +49,6 @@ public class ExplorerService extends JoobyService {
         renderer = rendererFactory.renderer("explorer/explorer");
 
         this.dataSource = dataSource;
-        this.staticResources = staticResources;
     }
 
     public void startJooby(Jooby jooby) {

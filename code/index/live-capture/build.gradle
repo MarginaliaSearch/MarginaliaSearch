@@ -39,7 +39,6 @@ dependencies {
     implementation libs.commons.lang3
     implementation libs.commons.io
     implementation libs.httpclient
-    implementation libs.wiremock
 
     implementation libs.prometheus
     implementation libs.guava
@@ -55,16 +54,13 @@ dependencies {
     implementation dependencies.create(libs.guice.get()) {
         exclude group: 'com.google.guava'
     }
-    implementation dependencies.create(libs.spark.get()) {
-        exclude group: 'org.eclipse.jetty'
-    }
-    implementation libs.bundles.jetty
     implementation libs.bundles.gson
     implementation libs.bundles.mariadb
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
+    testImplementation libs.wiremock
 
     testImplementation platform(libs.testcontainers.bom.get()) {
         exclude group: 'org.apache.commons'

@@ -11,12 +11,13 @@ import nu.marginalia.language.config.LanguageConfiguration;
 import nu.marginalia.search.model.NavbarModel;
 import nu.marginalia.search.rendering.MockedSearchResults;
 import nu.marginalia.search.svc.SearchFrontPageService;
-import nu.marginalia.service.server.StaticResources;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
+import io.jooby.ExecutionMode;
+import io.jooby.Jooby;
+import io.jooby.ServerOptions;
+import io.jooby.handler.AssetSource;
+import io.jooby.netty.NettyServer;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -26,7 +27,6 @@ import java.util.Map;
 public class JtePaperDoll {
     final CodeResolver codeResolver = new DirectoryCodeResolver(Path.of(".").toAbsolutePath().resolve("resources/jte"));
     final TemplateEngine templateEngine = TemplateEngine.create(codeResolver, ContentType.Html);
-    final StaticResources staticResources = new StaticResources();
     LanguageConfiguration languageConfiguration;
 
     private String render(String template, Object obj) {
@@ -41,105 +41,68 @@ public class JtePaperDoll {
         return str.toString();
     }
 
-    private Object serveStatic(Request request, Response response) {
-        String resource = request.params("resource");
-        staticResources.serveStatic("search", resource, request, response);
-        return "";
-    }
-
     @Test
     public void searchResults() throws Exception {
         if (!Boolean.getBoolean("runPaperDoll")) {
             return;
         }
+        var server = new NettyServer(new ServerOptions().setPort(9999).setCompressionLevel(1));
+        try {
+            server.start(createApp());
+            Thread.currentThread().join();
+        } finally {
+            server.stop();
+        }
+    }
+
+    Jooby createApp() throws Exception {
         languageConfiguration = new LanguageConfiguration();
-
         System.setProperty("test-env", "true");
-        System.out.println(Path.of(".").toAbsolutePath());
 
-        Spark.staticFileLocation("static");
-        Spark.port(9999);
-
-        Spark.after((rq, rs) -> {
-            rs.header("Content-Encoding", "gzip");
-        });
-        Spark.get("/suggest/", (rq, rs) -> {
-            rs.type("application/json");
+        var app = new Jooby().setExecutionMode(ExecutionMode.WORKER);
+        app.before(ctx -> ctx.setResponseType("text/html"));
+        app.assets("/*", AssetSource.create(getClass().getClassLoader(), "/static"));
+        app.get("/suggest/", ctx -> {
+            ctx.setResponseType("application/json");
             return "[\"pla\",\"plaa\",\"plab\",\"plac\",\"pla2b\",\"pla2l\",\"plaaz\",\"plac1\",\"placa\",\"place\"]";
         });
-        Spark.get("/",
-                (rq, rs) -> MockedSearchResults.mockRegularSearchResults(),
-                ret -> this.render("serp/main.jte", Map.of("results", ret, "navbar", NavbarModel.SEARCH, "languageDefinitions", languageConfiguration.languagesMap()))
-        );
-        Spark.get("/filter",
-                (rq, rs) -> new Object(),
-                ret -> this.render("filter/main.jte",
-                        Map.of("navbar", NavbarModel.SEARCH,
-                                "languageDefinitions", languageConfiguration.languagesMap(),
-                                "filter", SearchFilterSpec.defaultForUser("WEB", "ADHOC")
-                                ))
-        );
-        Spark.get("/site-focus",
-                (rq, rs) -> MockedSearchResults.mockSiteFocusResults(),
-                ret -> this.render("serp/main.jte", Map.of("results", ret, "navbar", NavbarModel.SEARCH))
-        );
-        Spark.get("/errors",
-                (rq, rs) ->  MockedSearchResults.mockErrorData(),
-                ret -> this.render("serp/error.jte", Map.of("model", ret, "navbar", NavbarModel.LIMBO, "languageDefinitions", languageConfiguration.languagesMap()))
-        );
-        Spark.get("/first",
-                (rq, rs) ->  new Object(),
-                ret -> this.render("serp/start.jte", Map.of( "navbar", NavbarModel.SEARCH,
-                                                                                "model", new SearchFrontPageService.IndexModel(List.of(), "2024-01-01", 1),
-                                                                             "websiteUrl", new WebsiteUrl("https://localhost:9999/")
-                        ))
-        );
-        Spark.get("/explore",
-                (rq, rs) ->  MockedSearchResults.mockBrowseResults(32),
-                ret -> this.render("explore/main.jte", Map.of( "navbar", NavbarModel.EXPLORE,
-                        "results", ret)
-                )
-        );
+        app.get("/", ctx -> render("serp/main.jte", Map.of(
+                "results", MockedSearchResults.mockRegularSearchResults(), "navbar", NavbarModel.SEARCH,
+                "languageDefinitions", languageConfiguration.languagesMap())));
+        app.get("/filter", ctx -> render("filter/main.jte", Map.of(
+                "navbar", NavbarModel.SEARCH, "languageDefinitions", languageConfiguration.languagesMap(),
+                "filter", SearchFilterSpec.defaultForUser("WEB", "ADHOC"))));
+        app.get("/site-focus", ctx -> render("serp/main.jte", Map.of(
+                "results", MockedSearchResults.mockSiteFocusResults(), "navbar", NavbarModel.SEARCH)));
+        app.get("/errors", ctx -> render("serp/error.jte", Map.of(
+                "model", MockedSearchResults.mockErrorData(), "navbar", NavbarModel.LIMBO,
+                "languageDefinitions", languageConfiguration.languagesMap())));
+        app.get("/first", ctx -> render("serp/start.jte", Map.of(
+                "navbar", NavbarModel.SEARCH,
+                "model", new SearchFrontPageService.IndexModel(List.of(), "2024-01-01", 1),
+                "websiteUrl", new WebsiteUrl("https://localhost:9999/"))));
+        app.get("/explore", ctx -> render("explore/main.jte", Map.of(
+                "navbar", NavbarModel.EXPLORE, "results", MockedSearchResults.mockBrowseResults(32))));
 
-        Spark.get("/site-info",
-                (rq, rs) ->  {
-                    if ("links".equals(rq.queryParams("view"))) {
-                        return MockedSearchResults.mockBacklinkData();
-                    }
-                    else if ("docs".equals(rq.queryParams("view"))) {
-                        return MockedSearchResults.mockDocsData();
-                    }
-                    else if ("report".equals(rq.queryParams("view"))) {
-                        return MockedSearchResults.mockReportDomain();
-                    }
-                    else if ("traffic".equals(rq.queryParams("view"))) {
-                        return MockedSearchResults.mockTrafficReport();
-                    }
-                    else if ("availability".equals(rq.queryParams("view"))) {
-                        return MockedSearchResults.mockAvailabilityData();
-                    }
-                    else if ("secevents".equals(rq.queryParams("view"))) {
-                        return MockedSearchResults.mockSecurityEvents();
-                    }
-                    else if ("secdetails".equals(rq.queryParams("view"))) {
-                        return MockedSearchResults.mockSecurityDetails();
-                    }
-                    else return MockedSearchResults.mockSiteInfoData();
-
-                },
-                ret -> this.render("siteinfo/main.jte", Map.of("model", ret, "navbar", NavbarModel.SITEINFO))
-        );
-        Spark.get("/site-info-start",
-                (rq, rs) -> MockedSearchResults.mockSiteInfoOverview(),
-                ret -> this.render("siteinfo/start.jte", Map.of("model", ret, "navbar", NavbarModel.SITEINFO))
-        );
-
-        Spark.get("/site-info-crosstalk-ab",
-                (rq, rs) -> MockedSearchResults.mockCrosstalkModel(),
-                ret -> this.render("siteinfo/crosstalk.jte", Map.of("model", ret, "navbar", NavbarModel.SITEINFO))
-        );
-        Spark.get("/screenshot/*", (rq, rsp) -> {
-            rsp.type("image/svg+xml");
+        app.get("/site-info", ctx -> {
+            Object model = switch (ctx.query("view").value("")) {
+                case "links" -> MockedSearchResults.mockBacklinkData();
+                case "docs" -> MockedSearchResults.mockDocsData();
+                case "report" -> MockedSearchResults.mockReportDomain();
+                case "traffic" -> MockedSearchResults.mockTrafficReport();
+                case "availability" -> MockedSearchResults.mockAvailabilityData();
+                case "secevents" -> MockedSearchResults.mockSecurityEvents();
+                case "secdetails" -> MockedSearchResults.mockSecurityDetails();
+                default -> MockedSearchResults.mockSiteInfoData();
+            };
+            return render("siteinfo/main.jte", Map.of("model", model, "navbar", NavbarModel.SITEINFO));
+        });
+        app.get("/site-info-start", ctx -> render("siteinfo/start.jte", Map.of(
+                "model", MockedSearchResults.mockSiteInfoOverview(), "navbar", NavbarModel.SITEINFO)));
+        app.get("/site-info-crosstalk-ab", ctx -> render("siteinfo/crosstalk.jte", Map.of(
+                "model", MockedSearchResults.mockCrosstalkModel(), "navbar", NavbarModel.SITEINFO)));
+        app.get("/screenshot/*", ctx -> {
+            ctx.setResponseType("image/svg+xml");
 
             return """
                     <svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
@@ -174,9 +137,7 @@ public class JtePaperDoll {
         });
 
 
-        Spark.init();
-
-        for (;;);
+        return app;
     }
 
 }
