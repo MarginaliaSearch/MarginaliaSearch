@@ -50,7 +50,6 @@ dependencies {
         exclude group: 'com.google.guava'
     }
     implementation libs.bundles.mariadb
-    implementation libs.guava
 
     libs.bundles.grpc.get().each {
         implementation dependencies.create(it) {
@@ -66,7 +65,6 @@ dependencies {
     testImplementation libs.commons.codec
     testImplementation libs.bundles.testcontainers
     testImplementation project(':code:libraries:test-helpers')
-    testImplementation libs.commons.codec
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito

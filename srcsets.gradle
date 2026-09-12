@@ -67,6 +67,8 @@ if (project.plugins.hasPlugin('application')) {
 
 dependencies {
     testImplementation platform(libs.junit.bom)
+    // Keep Jackson modules pulled in by test tools on the same release.
+    testImplementation platform(libs.jackson.bom)
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 sourceSets {

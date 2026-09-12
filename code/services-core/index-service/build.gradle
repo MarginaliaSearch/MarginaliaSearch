@@ -68,7 +68,6 @@ dependencies {
     implementation libs.trove
     implementation libs.fastutil
     implementation libs.bundles.gson
-    implementation libs.guava
     libs.bundles.grpc.get().each {
         implementation dependencies.create(it) {
             exclude group: 'com.google.guava'

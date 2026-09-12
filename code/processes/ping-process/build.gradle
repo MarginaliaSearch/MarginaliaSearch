@@ -52,9 +52,9 @@ dependencies {
     implementation libs.bundles.httpcomponents
     implementation libs.commons.lang3
 
-    implementation 'org.bouncycastle:bcprov-jdk18on:1.86'
-    implementation 'org.bouncycastle:bcpkix-jdk18on:1.86'
-    implementation 'dnsjava:dnsjava:3.6.5'
+    implementation libs.bouncycastle.provider
+    implementation libs.bouncycastle.pkix
+    implementation libs.dnsjava
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit

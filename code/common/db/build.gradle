@@ -4,7 +4,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'org.flywaydb:flyway-mysql:13.6.0'
+        classpath libs.flyway.mysql
     }
 }
 
@@ -12,7 +12,7 @@ plugins {
     id 'java'
 
     id 'jvm-test-suite'
-    id "org.flywaydb.flyway" version "13.6.0"
+    alias(libs.plugins.flyway)
 }
 
 java {
@@ -46,7 +46,7 @@ dependencies {
     implementation libs.trove
 
     implementation libs.bundles.mariadb
-    flywayMigration 'org.flywaydb:flyway-mysql:13.6.0'
+    flywayMigration libs.flyway.mysql
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
@@ -71,4 +71,3 @@ flyway {
     locations = ['filesystem:resources/db/migration']
     cleanDisabled = false
 }
-
