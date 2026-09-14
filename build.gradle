@@ -62,7 +62,7 @@ subprojects.forEach {it ->
 
 ext {
     jvmVersion = 26
-    dockerImageBase='amazoncorretto:26.0.0'
+    dockerImageBase='amazoncorretto:26.0.0@sha256:6ea266d64d1995d81834934a070fe185331d5d1659baf464896b02db651d227c'
 
     dockerImageTag='latest'
     dockerImageRegistry='marginalia'
