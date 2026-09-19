@@ -8,6 +8,7 @@ import org.jsoup.select.NodeFilter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /** Prune the DOM and remove noisy branches with a lot of tags and not a lot of text.
  * This removes a lot of noise and keeps segments that are more or less just plain text.
@@ -85,47 +86,34 @@ public class DomPruningFilter implements NodeFilter {
         return true;
     }
 
-    final List<String> badClassNames = List.of("cookie-banner", "cookie", "cookie-notice", "cookie-policy",
+    final Set<String> badTagNames = Set.of("nav", "iframe", "noscript", "svg", "footer", "header",
+                                           "dialog", "details-dialog", "template", "script", "style", "menu");
+    final Set<String> badClassNames = Set.of("cookie-banner", "cookie", "cookie-notice", "cookie-policy",
                                                "nav", "navigation", "footer", "header", "menu", "toolbar", "tooltip",
                                                 "alert", "alertdialog", "banner", "onetrust-consent-sdk");
-    final List<String> badAriaRoles = List.of("alert", "alertdialog", "navigation", "banner", "dialog", "menu", "toolbar", "tooltip");
+    final Set<String> badAriaRoles = Set.of("alert", "alertdialog", "navigation", "banner", "dialog", "menu", "toolbar", "tooltip");
 
 
     private boolean shouldAlwaysPurge(Element el) {
 
-        String tagName = el.tagName();
-
-        if ("nav".equalsIgnoreCase(tagName))
-            return true;
-        if ("iframe".equalsIgnoreCase(tagName))
-            return true;
-        if ("noscript".equalsIgnoreCase(tagName))
-            return true;
-        if ("svg".equalsIgnoreCase(tagName))
-            return true;
-        if ("footer".equalsIgnoreCase(tagName))
-            return true;
-        if ("header".equalsIgnoreCase(tagName))
+        if (badTagNames.contains(el.nodeName()))
             return true;
 
-        var classNames = el.classNames();
+        var classNames = el.classList();
 
         for (var clazz : classNames) {
-            for (var bad : badClassNames) {
-                if (clazz.equalsIgnoreCase(bad))
-                    return true;
-            }
-        }
-
-        var role = el.attr("role");
-
-        for (var bad : badAriaRoles) {
-            if (bad.equalsIgnoreCase(role))
+            if (badClassNames.contains(clazz.toLowerCase()))
                 return true;
         }
 
+        var role = el.attr("role");
+        if (badAriaRoles.contains(role.toLowerCase()))
+            return true;
+
         var ariaHidden = el.attr("aria-hidden");
         if ("true".equalsIgnoreCase(ariaHidden))
+            return true;
+        if (el.hasAttr("hidden"))
             return true;
 
         return false;

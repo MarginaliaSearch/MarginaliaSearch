@@ -9,6 +9,55 @@ import java.io.IOException;
 class DomPruningFilterTest {
 
     @Test
+    public void testNonContentElements() {
+        var doc = Jsoup.parse("""
+                <main>
+                  <article><p>An article about <code>&lt;dialog&gt;</code> elements.</p></article>
+                  <dialog><p>Closed dialog content.</p></dialog>
+                  <dialog open><p>Open dialog content.</p></dialog>
+                  <details-dialog><p>Custom dialog content.</p></details-dialog>
+                  <template><article><p>Template content.</p></article></template>
+                  <script>window.message = 'Script content';</script>
+                  <style>.message::before { content: 'Style content'; }</style>
+                  <menu><li>Menu content.</li></menu>
+                  <details><summary>More information</summary><p>Article details.</p></details>
+                </main>
+                """);
+
+        doc.body().filter(new DomPruningFilter(0.5));
+
+        Assertions.assertEquals("An article about <dialog> elements. More information Article details.",
+                doc.body().text());
+        Assertions.assertTrue(doc.select("dialog, details-dialog, template, script, style, menu").isEmpty());
+    }
+
+    @Test
+    public void testHiddenAttribute() {
+        var doc = Jsoup.parse("""
+                <main>
+                  <article><p>The repository README is available.</p></article>
+                  <div id="ajax-error-message" class="ajax-error-message flash flash-error" hidden>
+                    You can’t perform that action at this time.
+                  </div>
+                  <include-fragment>
+                    <div data-show-on-forbidden-error hidden>
+                      <h3>Uh oh!</h3>
+                      <p>There was an error while loading. Please reload this page.</p>
+                    </div>
+                  </include-fragment>
+                  <div hidden="hidden"><p>Another hidden fallback.</p></div>
+                  <div hidden="false"><p>The hidden attribute still hides this.</p></div>
+                  <div><p>A visible error message should remain.</p></div>
+                </main>
+                """);
+
+        doc.body().filter(new DomPruningFilter(0.5));
+
+        Assertions.assertEquals("The repository README is available. A visible error message should remain.",
+                doc.body().text());
+    }
+
+    @Test
     public void testLinksArePreserved() throws IOException {
         String html = """
             <main class="readable">
