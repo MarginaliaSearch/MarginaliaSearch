@@ -36,6 +36,48 @@ public class FullPreindexDocuments {
         this.file = file;
     }
 
+    public static boolean compressionEnabled() {
+        return Boolean.parseBoolean(System.getProperty("index.compressFullPreindex", "true"));
+    }
+
+    public boolean isCompressed() {
+        return documents instanceof CompressedFullPreindexDocuments;
+    }
+
+    public static FullPreindexDocuments open(Path file, boolean compressed) throws IOException {
+        return new FullPreindexDocuments(compressed
+                ? CompressedFullPreindexDocuments.open(file)
+                : LongArrayFactory.mmapForReadingShared(file), file);
+    }
+
+    /** Replace a sorted raw scratch file with compressed storage, releasing the raw file on success. */
+    public FullPreindexDocuments compress() throws IOException {
+        if (isCompressed()) return this;
+
+        FullPreindexDocuments result = null;
+
+        Path compressedFile = Files.createTempFile(file.getParent(), "docs", ".dat.zst");
+        try {
+            try (var writer = new CompressedFullPreindexDocuments.Writer(compressedFile)) {
+                writer.put(documents, 0, documents.size());
+            }
+
+            result = open(compressedFile, true);
+
+            delete();
+
+            return result;
+        }
+        catch (IOException | RuntimeException | Error e) {
+            if (result != null)
+                result.close();
+
+            Files.deleteIfExists(compressedFile);
+
+            throw e;
+        }
+    }
+
     public static FullPreindexDocuments construct(
             Path docsFile,
             Path workDir,
@@ -110,8 +152,9 @@ public class FullPreindexDocuments {
     }
 
     public void delete() throws IOException {
-        Files.delete(this.file);
         documents.close();
+
+        Files.delete(this.file);
     }
 
     public void close() {

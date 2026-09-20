@@ -1,7 +1,7 @@
 package nu.marginalia.array.algo;
 
 import nu.marginalia.array.LongArray;
-import nu.marginalia.array.LongArrayFileWriter;
+import nu.marginalia.array.LongArrayWriter;
 import nu.marginalia.ffi.NativeAlgos;
 
 import java.io.IOException;
@@ -12,9 +12,9 @@ import java.io.IOException;
 public class TwoArrayOperations {
 
 
-    // Merge directly onto disk
+    // Merge into a sequential writer
     public static long mergeArraysN(int n,
-                                    LongArrayFileWriter out,
+                                    LongArrayWriter out,
                                     LongArray a, LongArray b,
                                     long aStart, long aEnd,
                                     long bStart, long bEnd) throws IOException

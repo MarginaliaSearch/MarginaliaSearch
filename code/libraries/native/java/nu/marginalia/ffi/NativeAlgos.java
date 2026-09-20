@@ -34,6 +34,8 @@ public class NativeAlgos {
     private final MethodHandle decompressDocIds;
     private final MethodHandle decompressMatch;
     private final MethodHandle decodeVarintBatch;
+    private final MethodHandle encodeFullPreindex;
+    private final MethodHandle decodeFullPreindex;
 
     public static final NativeAlgos instance;
 
@@ -45,6 +47,13 @@ public class NativeAlgos {
     private NativeAlgos(Path libFile) {
         SymbolLookup libraryLookup = SymbolLookup.libraryLookup(libFile, Arena.global());
         var nativeLinker = Linker.nativeLinker();
+
+        // These operate on whole blocks in native memory. Use ordinary downcalls
+        // so block processing does not delay safepoints as a critical call would.
+        encodeFullPreindex = nativeLinker.downcallHandle(libraryLookup.findOrThrow("ms_encode_full_preindex"),
+                FunctionDescriptor.ofVoid(ADDRESS, ADDRESS, JAVA_INT));
+        decodeFullPreindex = nativeLinker.downcallHandle(libraryLookup.findOrThrow("ms_decode_full_preindex"),
+                FunctionDescriptor.ofVoid(ADDRESS, ADDRESS, JAVA_INT));
 
         MemorySegment handle = libraryLookup.findOrThrow("ms_sort_64");
         qsortHandle = nativeLinker.downcallHandle(handle, FunctionDescriptor.ofVoid(ADDRESS, JAVA_LONG, JAVA_LONG));
@@ -145,6 +154,40 @@ public class NativeAlgos {
     private static final MethodHandle DECOMPRESS_DOC_IDS = isAvailable ? instance.decompressDocIds : null;
     private static final MethodHandle DECOMPRESS_MATCH = isAvailable ? instance.decompressMatch : null;
     private static final MethodHandle DECODE_VARINT_BATCH = isAvailable ? instance.decodeVarintBatch : null;
+    private static final MethodHandle ENCODE_FULL_PREINDEX = isAvailable ? instance.encodeFullPreindex : null;
+    private static final MethodHandle DECODE_FULL_PREINDEX = isAvailable ? instance.decodeFullPreindex : null;
+
+    // Make preindex data more compressible by reordering it into a compressor friendly format
+    public static void encodePreindexData(MemorySegment input, int records, MemorySegment output) {
+        checkPreindexBuffers(input, records, output, input);
+        try {
+            ENCODE_FULL_PREINDEX.invokeExact(input, output, records);
+        }
+        catch (Throwable t) {
+            throw new RuntimeException("Failed to encode full preindex block", t);
+        }
+    }
+
+    // undo `encodePreindexData`
+    public static void decodePreindexData(MemorySegment input, int records, MemorySegment output) {
+        checkPreindexBuffers(input, records, output, output);
+        try {
+            DECODE_FULL_PREINDEX.invokeExact(input, output, records);
+        }
+        catch (Throwable t) {
+            throw new RuntimeException("Failed to decode full preindex block", t);
+        }
+    }
+
+    private static void checkPreindexBuffers(MemorySegment input, int records, MemorySegment output,
+                                             MemorySegment longs) {
+        if (records < 0 || 24L * records > input.byteSize() || 24L * records > output.byteSize())
+            throw new IllegalArgumentException("Invalid full preindex block dimensions");
+        if (!input.isNative() || !output.isNative() || output.isReadOnly() || (longs.address() & 7) != 0)
+            throw new IllegalArgumentException("Full preindex kernel requires aligned native buffers and writable output");
+        if (input.asSlice(0, 24L * records).asOverlappingSlice(output.asSlice(0, 24L * records)).isPresent())
+            throw new IllegalArgumentException("Full preindex buffers must not overlap");
+    }
 
     /** Decompress n doc ids from the compressed representation in the input segment,
      *  starting at position pos, into the output array.  Returns the input position

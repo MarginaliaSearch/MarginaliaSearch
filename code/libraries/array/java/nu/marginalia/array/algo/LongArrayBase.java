@@ -18,7 +18,12 @@ public interface LongArrayBase extends BulkTransferArray<LongBuffer> {
     void set(long pos, long value);
 
 
-    /** Return the memory segment backing the array */
+    /** True if array exposes a contiguous backing memory segment. */
+    default boolean hasMemorySegment() { return true; }
+
+    /** Return the memory segment backing the array.
+     * @throws UnsupportedOperationException if {@link #hasMemorySegment()} is false
+     */
     MemorySegment getMemorySegment();
 
     /** Set a sequence of value in the array starting at the specified position */

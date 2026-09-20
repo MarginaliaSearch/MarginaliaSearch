@@ -9,7 +9,9 @@ import java.lang.foreign.MemorySegment;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.*;
 
 class LongArrayFileWriterTest {
     Path file;
@@ -76,4 +78,36 @@ class LongArrayFileWriterTest {
             }
         }
     }
+
+
+    @Test
+    void testPutWithoutMemorySegment() throws IOException {
+        LongArray source = mock(LongArray.class);
+
+        when(source.hasMemorySegment()).thenReturn(false);
+        when(source.size()).thenReturn(150_010L);
+        when(source.get(anyLong())).thenAnswer(call -> -((long) call.getArgument(0)));
+
+        try (var writer = LongArrayFileWriter.create(file)) {
+            writer.put(123);
+            writer.put(source, 10, 150_010);
+            writer.put(source, source.size(), source.size());
+            writer.put(456);
+            assertThrows(IndexOutOfBoundsException.class, () -> writer.put(source, -1, 1));
+            assertThrows(IndexOutOfBoundsException.class, () -> writer.put(source, 0, source.size() + 1));
+            assertThrows(IllegalArgumentException.class, () -> writer.put(source, 2, 1));
+        }
+
+        verify(source, never()).getMemorySegment();
+
+        try (var array = LongArrayFactory.mmapForReadingConfined(file)) {
+            assertEquals(150_002, array.size());
+            assertEquals(123, array.get(0));
+            for (int i = 0; i < 150_000; i++) {
+                assertEquals(-(10L + i), array.get(1 + i));
+            }
+            assertEquals(456, array.get(150_001));
+        }
+    }
+
 }
