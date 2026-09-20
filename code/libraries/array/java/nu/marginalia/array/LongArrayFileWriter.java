@@ -10,7 +10,7 @@ import java.nio.file.StandardOpenOption;
 
 import static java.lang.foreign.ValueLayout.JAVA_LONG;
 
-public class LongArrayFileWriter implements AutoCloseable {
+public class LongArrayFileWriter implements LongArrayWriter, AutoCloseable {
     private static final int BUFFER_SIZE_LONGS = 128 * 1024;
     private static final long MAX_CHUNK_BYTES = 1L << 30;
 
@@ -42,13 +42,21 @@ public class LongArrayFileWriter implements AutoCloseable {
         buffer.setAtIndex(JAVA_LONG, bufferPos++, value);
     }
 
+    @Override
     public void put(LongArray source, long start, long end) throws IOException {
         long length = end - start;
 
         if (length < 0)
             throw new IllegalArgumentException("Negative range");
-        if (end > source.size())
+        if (start < 0 || end > source.size())
             throw new IndexOutOfBoundsException("Range exceeds source array");
+
+        if (!source.hasMemorySegment()) {
+            for (long i = start; i < end; i++) {
+                put(source.get(i));
+            }
+            return;
+        }
 
         MemorySegment sourceSegment = source.getMemorySegment();
 

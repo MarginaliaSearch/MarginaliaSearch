@@ -14,16 +14,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static nu.marginalia.array.algo.TwoArrayOperations.mergeArraysN;
-
 /** Contains the data that would go into a reverse index,
  * that is, a mapping from words to documents, minus the actual
  * index structure that makes the data quick to access while
  * searching.
  * <p>
  * Two preindexes can be merged into a third preindex containing
- * the union of their data.  This operation requires no additional
- * RAM.
+ * the union of their data.
  */
 public class FullPreindex {
     final FullPreindexWordSegments segments;
@@ -42,12 +39,25 @@ public class FullPreindex {
                                                  DocIdRewriter docIdRewriter,
                                                  Path workDir) throws IOException
     {
+        return constructPreindex(journalInstance, positionsFileConstructor, docIdRewriter, workDir,
+                FullPreindexDocuments.compressionEnabled());
+    }
+
+    public static FullPreindex constructPreindex(IndexJournalPage journalInstance,
+                                                 PositionsFileConstructor positionsFileConstructor,
+                                                 DocIdRewriter docIdRewriter,
+                                                 Path workDir,
+                                                 boolean compress) throws IOException
+    {
         Path segmentWordsFile = Files.createTempFile(workDir, "segment_words", ".dat");
         Path segmentCountsFile = Files.createTempFile(workDir, "segment_counts", ".dat");
         Path docsFile = Files.createTempFile(workDir, "docs", ".dat");
 
         var segments = FullPreindexWordSegments.construct(journalInstance, segmentWordsFile, segmentCountsFile);
         var docs = FullPreindexDocuments.construct(docsFile, workDir, journalInstance, docIdRewriter, positionsFileConstructor, segments);
+        if (compress) {
+            docs = docs.compress();
+        }
         return new FullPreindex(segments, docs);
     }
 
@@ -115,17 +125,24 @@ public class FullPreindex {
     public static FullPreindexReference merge(Path destDir,
                                               FullPreindex left,
                                               FullPreindex right) throws IOException {
+        return merge(destDir, left, right, FullPreindexDocuments.compressionEnabled());
+    }
+
+    public static FullPreindexReference merge(Path destDir,
+                                              FullPreindex left,
+                                              FullPreindex right,
+                                              boolean compress) throws IOException {
 
         Path wordsFile = Files.createTempFile(destDir, "segment_words", ".dat");
         Path countsFile = Files.createTempFile(destDir, "segment_counts", ".dat");
-        Path docsFile = Files.createTempFile(destDir, "docs", ".dat");
+        Path docsFile = Files.createTempFile(destDir, "docs", compress ? ".dat.zst" : ".dat");
 
         var leftIter = left.segments.iterator(FullPreindexDocuments.RECORD_SIZE_LONGS);
         var rightIter = right.segments.iterator(FullPreindexDocuments.RECORD_SIZE_LONGS);
 
         try (var wordsWriter = LongArrayFileWriter.create(wordsFile);
              var countsWriter = LongArrayFileWriter.create(countsFile);
-             var docsWriter = LongArrayFileWriter.create(docsFile))
+             var docsWriter = new FullPreindexDocWriter(docsFile, compress))
         {
             var plan = new MergePlan(wordsWriter, countsWriter, docsWriter);
 
@@ -161,20 +178,19 @@ public class FullPreindex {
             }
         }
 
-        return new FullPreindexReference(wordsFile, countsFile, docsFile);
+        return new FullPreindexReference(wordsFile, countsFile, docsFile, compress);
     }
 
     private record MergePlan(LongArrayFileWriter wordsWriter,
                              LongArrayFileWriter countsWriter,
-                             LongArrayFileWriter docsWriter)
+                             FullPreindexDocWriter docsWriter)
     {
         void mergeSegments(FullPreindexWordSegments.SegmentIterator leftIter,
                            FullPreindexWordSegments.SegmentIterator rightIter,
                            FullPreindexDocuments left,
                            FullPreindexDocuments right) throws IOException
         {
-            long segSize = mergeArraysN(FullPreindexDocuments.RECORD_SIZE_LONGS,
-                    docsWriter,
+            long segSize = docsWriter.merge(
                     left.documents,
                     right.documents,
                     leftIter.startOffset, leftIter.endOffset,
