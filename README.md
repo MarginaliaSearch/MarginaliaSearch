@@ -66,19 +66,19 @@ You can email <kontakt@marginalia.nu> with any questions or feedback.
 The bulk of the project is available with AGPL 3.0, with exceptions. Some parts are co-licensed under MIT, 
 third party code may have different licenses. See the appropriate readme.md / license.md.
 
-## Funding and sponsorships
+# Donations, Sponsorships and Grants
 
 Consider [donating to the project](https://about.marginalia-search.com/article/supporting/).
 
-### NLnet / NGI0 Entrust Fund
+## Grant: NLnet / NGI0 Entrust Fund
 
 This project was funded through the [NGI0 Entrust Fund](https://nlnet.nl/entrust), a fund established by [NLnet](https://nlnet.nl) with financial support from the European Commission's [Next Generation Internet](https://ngi.eu/) programme, under the aegis of DG Communications Networks, Content and Technology under grant agreement No 101069594.
 
 <img src="nlnet.png" width=20% height=20% alt="NLnet foundation.png"> <img src="NGI0Entrust_tag.svg" width=20% height=20% alt="NGI0 Entrust">
 
-### SerpAPI
+## Sponsorship: SerpAPI
 
-The project received a $10k sponsorship from SerpAPI.
+The project received a sponsorship from SerpAPI.
 
 <img src="serpapi.png" width=20% height=20%>
 
