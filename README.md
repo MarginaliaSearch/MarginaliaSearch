@@ -90,12 +90,20 @@ cycles of this project. After about 2-3 months it gets noticeably stale with man
 For development purposes, crawling is discouraged and sample data is available. See [📄&nbsp;run/readme.md](run/readme.md)
 for more information. 
 
-## Funding
+## Funding and sponsorships
 
 Consider [donating to the project](https://about.marginalia-search.com/article/supporting/).
 
 ### NLnet / NGI0 Entrust Fund
+
 This project was funded through the [NGI0 Entrust Fund](https://nlnet.nl/entrust), a fund established by [NLnet](https://nlnet.nl) with financial support from the European Commission's [Next Generation Internet](https://ngi.eu/) programme, under the aegis of DG Communications Networks, Content and Technology under grant agreement No 101069594.
 
-![NLnet Foundation](nlnet.png)
-![NGI0](NGI0Entrust_tag.svg)
+<img src="nlnet.png" width=20% height=20% alt="NLnet foundation.png"> <img src="NGI0Entrust_tag.svg" width=20% height=20% alt="NGI0 Entrust">
+
+### SerpAPI
+
+The project received a $10k sponsorship from SerpAPI.
+
+<img src="serpapi.svg" width=20% height=20%>
+
+[SerpApi's Search Index API](https://serpapi.com/marginalia-search): Real-time web data for AI agents. SerpApi's Search Index API delivers fresh, structured results in JSON and Markdown, alongside a core API for public search engine results across Google, DuckDuckGo, Bing, YouTube, Amazon, and more.
