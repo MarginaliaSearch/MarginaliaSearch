@@ -104,6 +104,6 @@ This project was funded through the [NGI0 Entrust Fund](https://nlnet.nl/entrust
 
 The project received a $10k sponsorship from SerpAPI.
 
-<img src="serpapi.svg" width=20% height=20%>
+<img src="serpapi.png" width=20% height=20%>
 
 [SerpApi's Search Index API](https://serpapi.com/marginalia-search): Real-time web data for AI agents. SerpApi's Search Index API delivers fresh, structured results in JSON and Markdown, alongside a core API for public search engine results across Google, DuckDuckGo, Bing, YouTube, Amazon, and more.
