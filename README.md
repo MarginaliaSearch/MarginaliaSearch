@@ -66,7 +66,7 @@ You can email <kontakt@marginalia.nu> with any questions or feedback.
 The bulk of the project is available with AGPL 3.0, with exceptions. Some parts are co-licensed under MIT, 
 third party code may have different licenses. See the appropriate readme.md / license.md.
 
-# Donations, Sponsorships and Grants
+# Donations, Sponsorships, and Grants
 
 Consider [donating to the project](https://about.marginalia-search.com/article/supporting/).
 
