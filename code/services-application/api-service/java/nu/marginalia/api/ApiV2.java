@@ -287,6 +287,11 @@ public class ApiV2 implements Extension {
 
     @NotNull
     private Object search(Context ctx) {
+
+        ctx.setResponseHeader("Access-Control-Allow-Origin", "*");
+        ctx.setResponseHeader("Access-Control-Allow-Methods", "GET,POST");
+        ctx.setResponseHeader("Access-Control-Allow-Headers", "API-Key,X-Requested-With,Content-Type,Accept,Origin");
+
         Value apiKeyVal = ctx.header("API-Key");
         if (apiKeyVal.isMissing()) {
             ctx.setResponseCode(400);
@@ -408,6 +413,11 @@ public class ApiV2 implements Extension {
 
     @NotNull
     private Object searchUnranked(Context ctx) {
+
+        ctx.setResponseHeader("Access-Control-Allow-Origin", "*");
+        ctx.setResponseHeader("Access-Control-Allow-Methods", "GET,POST");
+        ctx.setResponseHeader("Access-Control-Allow-Headers", "API-Key,X-Requested-With,Content-Type,Accept,Origin");
+
         Value apiKeyVal = ctx.header("API-Key");
         if (apiKeyVal.isMissing()) {
             ctx.setResponseCode(400);
@@ -516,6 +526,11 @@ public class ApiV2 implements Extension {
 
     @NotNull
     private Object siteInfo(Context ctx) {
+
+        ctx.setResponseHeader("Access-Control-Allow-Origin", "*");
+        ctx.setResponseHeader("Access-Control-Allow-Methods", "GET,POST");
+        ctx.setResponseHeader("Access-Control-Allow-Headers", "API-Key,X-Requested-With,Content-Type,Accept,Origin");
+
         Value apiKeyVal = ctx.header("API-Key");
         if (apiKeyVal.isMissing()) {
             ctx.setResponseCode(400);
@@ -607,6 +622,11 @@ public class ApiV2 implements Extension {
 
     @NotNull
     private Object siteFeedUrl(Context ctx) {
+
+        ctx.setResponseHeader("Access-Control-Allow-Origin", "*");
+        ctx.setResponseHeader("Access-Control-Allow-Methods", "GET,POST");
+        ctx.setResponseHeader("Access-Control-Allow-Headers", "API-Key,X-Requested-With,Content-Type,Accept,Origin");
+
         Value apiKeyVal = ctx.header("API-Key");
         if (apiKeyVal.isMissing()) {
             ctx.setResponseCode(400);
@@ -671,6 +691,11 @@ public class ApiV2 implements Extension {
 
     @NotNull
     private Object relatedDomains(Context ctx, Relation relation) {
+
+        ctx.setResponseHeader("Access-Control-Allow-Origin", "*");
+        ctx.setResponseHeader("Access-Control-Allow-Methods", "GET,POST");
+        ctx.setResponseHeader("Access-Control-Allow-Headers", "API-Key,X-Requested-With,Content-Type,Accept,Origin");
+
         Value apiKeyVal = ctx.header("API-Key");
         if (apiKeyVal.isMissing()) {
             ctx.setResponseCode(400);
