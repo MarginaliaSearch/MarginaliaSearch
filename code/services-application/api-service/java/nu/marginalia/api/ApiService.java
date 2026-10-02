@@ -2,6 +2,8 @@ package nu.marginalia.api;
 
 import com.google.inject.Inject;
 import io.jooby.*;
+import io.jooby.handler.Cors;
+import io.jooby.handler.CorsHandler;
 import nu.marginalia.api.svc.LicenseService;
 import nu.marginalia.api.svc.ResponseCache;
 import nu.marginalia.service.client.ServiceNotAvailableException;
@@ -52,6 +54,11 @@ public class ApiService extends JoobyService {
         jooby.setSessionStore(SessionStore.memory(Cookie.session("marginalia-session")));
 
         jooby.errorCode(ServiceNotAvailableException.class, StatusCode.BAD_GATEWAY);
+
+        jooby.use(new CorsHandler(new Cors()
+                .setOrigin("*")
+                .setHeaders("API-Key", "X-Requested-With", "Content-Type", "Accept", "Origin")
+                .setMethods("GET", "POST")));
 
         jooby.install(apiV1);
         jooby.install(apiV2);
