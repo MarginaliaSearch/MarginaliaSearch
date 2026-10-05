@@ -1,3 +1,5 @@
+<img width="348" height="160" alt="marginalia" src="https://github.com/user-attachments/assets/c0cd48c5-bc85-44cd-be7c-00d0e617aed1" />
+
 # Marginalia Search
 
 This is the source code for [Marginalia Search](https://search.marginalia.nu). 
