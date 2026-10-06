@@ -76,9 +76,9 @@ This project was funded through the [NGI0 Entrust Fund](https://nlnet.nl/entrust
 
 <img src="nlnet.png" width=20% height=20% alt="NLnet foundation.png"> <img src="NGI0Entrust_tag.svg" width=20% height=20% alt="NGI0 Entrust">
 
-## Sponsorship: SerpAPI
+## Sponsorship: SerpApi
 
-The project received a sponsorship from SerpAPI.
+The project received a sponsorship from SerpApi.
 
 <img src="serpapi.png" width=20% height=20%>
 
