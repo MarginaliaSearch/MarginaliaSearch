@@ -73,6 +73,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpFetcherImpl.class);
+    private static final int MAX_SITEMAP_DOCUMENTS = 10;
+    private static final int MAX_SITEMAP_URLS = 20_000;
     private final String userAgentString;
     private final String userAgentIdentifier;
 
@@ -494,17 +496,22 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
 
             EdgeUrl rootSitemapUrl = new EdgeUrl(root);
 
+            seenSitemaps.add(rootSitemapUrl.toString());
             sitemapQueue.add(rootSitemapUrl);
 
             int fetchedSitemaps = 0;
 
-            while (!sitemapQueue.isEmpty() && ret.size() < 20_000 && ++fetchedSitemaps < 10) {
+            while (!sitemapQueue.isEmpty() && ret.size() < MAX_SITEMAP_URLS && fetchedSitemaps < MAX_SITEMAP_DOCUMENTS) {
                 var head = sitemapQueue.removeFirst();
+                fetchedSitemaps++;
 
                 switch (fetchSingleSitemap(head)) {
                     case SitemapResult.SitemapUrls(List<String> urls) -> {
 
                         for (var url : urls) {
+                            if (ret.size() >= MAX_SITEMAP_URLS)
+                                break;
+
                             if (seenUrls.add(url)) {
                                 EdgeUrl.parse(url)
                                         .filter(u -> u.domain.equals(rootSitemapUrl.domain))
@@ -515,11 +522,10 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                     }
                     case SitemapResult.SitemapReferences(List<String> refs) -> {
                         for (var ref : refs) {
-                            if (seenSitemaps.add(ref)) {
-                                EdgeUrl.parse(ref)
-                                        .filter(url -> url.domain.equals(rootSitemapUrl.domain))
-                                        .ifPresent(sitemapQueue::addFirst);
-                            }
+                            EdgeUrl.parse(ref)
+                                    .filter(url -> url.domain.equals(rootSitemapUrl.domain))
+                                    .filter(url -> seenSitemaps.add(url.toString()))
+                                    .ifPresent(sitemapQueue::addFirst);
                         }
                     }
                     case SitemapResult.SitemapError() -> {}
@@ -543,7 +549,6 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
         getRequest.addHeader("User-Agent", userAgentString);
         getRequest.addHeader("Accept-Encoding", "gzip");
         getRequest.addHeader("Accept", "text/*, */*;q=0.9");
-        getRequest.addHeader("User-Agent", userAgentString);
 
         try (var sl = new SendLock()) {
             return client.execute(getRequest, response -> {
