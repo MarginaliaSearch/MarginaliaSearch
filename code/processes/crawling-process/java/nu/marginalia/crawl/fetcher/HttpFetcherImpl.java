@@ -596,10 +596,21 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                             }
                             yield new SitemapResult.SitemapUrls(Collections.unmodifiableList(urls));
                         }
-                        case "rss", "atom" -> {
+                        case "rss" -> {
                             List<String> urls = new ArrayList<>();
                             for (var locTag : parsedSitemap.select("link, url")) {
                                 urls.add(locTag.text().trim());
+                            }
+                            yield new SitemapResult.SitemapUrls(Collections.unmodifiableList(urls));
+                        }
+                        case "feed", "atom" -> {
+                            List<String> urls = new ArrayList<>();
+                            for (var link : parsedSitemap.select("entry > link[href]")) {
+                                String rel = link.attr("rel");
+                                if ((rel.isEmpty() || rel.equalsIgnoreCase("alternate"))
+                                        && !link.attr("href").isBlank()) {
+                                    urls.add(link.absUrl("href"));
+                                }
                             }
                             yield new SitemapResult.SitemapUrls(Collections.unmodifiableList(urls));
                         }
