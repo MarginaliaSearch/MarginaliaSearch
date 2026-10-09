@@ -481,11 +481,6 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
 
     }
 
-    @Override
-    public SitemapRetriever createSitemapRetriever() {
-        return new SitemapRetriever();
-    }
-
     /** Recursively fetch sitemaps */
     @Override
     public List<EdgeUrl> fetchSitemapUrls(String root, CrawlDelayTimer delayTimer) {
