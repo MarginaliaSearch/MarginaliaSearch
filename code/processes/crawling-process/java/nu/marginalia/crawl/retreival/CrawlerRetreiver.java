@@ -1,6 +1,7 @@
 package nu.marginalia.crawl.retreival;
 
 import crawlercommons.robots.SimpleRobotRules;
+import nu.marginalia.ContentTypes;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.contenttype.ContentType;
 import nu.marginalia.crawl.CrawlerMain;
@@ -293,8 +294,9 @@ public class CrawlerRetreiver implements AutoCloseable {
 
 
 
-    private DomainStateDb.SummaryRecord sniffRootDocument(EdgeUrl rootUrl, SimpleRobotRules robotsRules, CrawlDelayTimer timer) {
+    DomainStateDb.SummaryRecord sniffRootDocument(EdgeUrl rootUrl, SimpleRobotRules robotsRules, CrawlDelayTimer timer) {
         Optional<String> feedLink = Optional.empty();
+        Optional<EdgeUrl> humanJsonLink = Optional.empty();
 
         try {
             EdgeUrl url = rootUrl.withPathAndParam("/", null);
@@ -330,6 +332,21 @@ public class CrawlerRetreiver implements AutoCloseable {
                 String rel = link.attr("rel");
                 String type = link.attr("type");
 
+                if (humanJsonLink.isEmpty() && rel.equalsIgnoreCase("human-json")) {
+
+                    humanJsonLink = humanJsonLink.or(() -> {
+                        String href = link.attr("href").trim();
+
+                        if (href.isEmpty()) {
+                            return Optional.empty();
+                        }
+
+                        return linkParser.parseLink(linkParser.getBaseLink(doc, url), href)
+                                    .filter(crawlFrontier::isSameDomain)
+                                    .filter(u -> isAllowedProtocol(u.proto));
+                    });
+                }
+
                 if (rel.equals("icon") || rel.equals("shortcut icon")) {
                     String href = link.attr("href");
 
@@ -353,28 +370,16 @@ public class CrawlerRetreiver implements AutoCloseable {
             }
 
 
-            if (feedLink.isEmpty()) {
-                feedLink = guessFeedUrl(rootUrl, timer, robotsRules);
-            }
+            humanJsonLink.ifPresent(humans -> fetchHumansJson(humans, robotsRules, timer));
+            fetchFavicon(faviconUrl, robotsRules, timer);
 
-            // Download the sitemap if available
-            feedLink.ifPresent(s -> fetcher.fetchSitemapUrls(s, timer));
+            // Use the feed as a sitemap if available
+            feedLink = feedLink
+                    .or(() -> guessFeedUrl(rootUrl, timer, robotsRules));
 
-            // Grab the favicon if it exists
+            // Use the feed as a sitemap
+            feedLink.ifPresent(s -> crawlFrontier.addAllToQueue(fetcher.fetchSitemapUrls(s, timer)));
 
-            if (robotsRules.isAllowed(faviconUrl.toString())) {
-                if (fetcher.fetchContent(faviconUrl, warcRecorder, cookies, timer, ContentTags.empty(), HttpFetcher.ProbeType.DISABLED)
-                        instanceof HttpFetchResult.ResultOk iconResult)
-                {
-                    String contentType = iconResult.header("Content-Type");
-                    byte[] iconData = iconResult.getBodyBytes();
-
-                    domainStateDb.saveIcon(
-                            domain,
-                            new DomainStateDb.FaviconRecord(contentType, iconData)
-                    );
-                }
-            }
             timer.waitFetchDelay(0);
 
         }
@@ -397,6 +402,33 @@ public class CrawlerRetreiver implements AutoCloseable {
         }
     }
 
+    private void fetchHumansJson(EdgeUrl url, SimpleRobotRules robotsRules, CrawlDelayTimer timer) {
+        if (!robotsRules.isAllowed(url.toString()))
+            return;
+
+        fetcher.fetchContent(url, warcRecorder, cookies, timer, ContentTags.empty(), HttpFetcher.ProbeType.DISABLED);
+        timer.waitFetchDelay(0);
+    }
+
+    private void fetchFavicon(EdgeUrl url, SimpleRobotRules robotsRules, CrawlDelayTimer timer) {
+        if (!robotsRules.isAllowed(url.toString()))
+            return;
+
+        if (fetcher.fetchContent(url, warcRecorder, cookies, timer, ContentTags.empty(), HttpFetcher.ProbeType.DISABLED)
+                instanceof HttpFetchResult.ResultOk iconResult)
+        {
+            String contentType = iconResult.header("Content-Type");
+            byte[] iconData = iconResult.getBodyBytes();
+
+            domainStateDb.saveIcon(
+                    domain,
+                    new DomainStateDb.FaviconRecord(contentType, iconData)
+            );
+        }
+
+        timer.waitFetchDelay(0);
+    }
+
     private final List<String> likelyFeedEndpoints = List.of(
             "rss.xml",
             "atom.xml",
@@ -410,7 +442,7 @@ public class CrawlerRetreiver implements AutoCloseable {
             "blog/rss"
     );
 
-    private Optional<String> guessFeedUrl(EdgeUrl rootUrl, CrawlDelayTimer timer, SimpleRobotRules robotsRules) throws InterruptedException {
+    private Optional<String> guessFeedUrl(EdgeUrl rootUrl, CrawlDelayTimer timer, SimpleRobotRules robotsRules) {
         var oldDomainStateRecord = domainStateDb.getSummary(domain);
 
         // If we are already aware of an old feed URL, then we can just revalidate it
@@ -434,7 +466,7 @@ public class CrawlerRetreiver implements AutoCloseable {
         return Optional.empty();
     }
 
-    private boolean validateFeedUrl(String url, CrawlDelayTimer timer) throws InterruptedException {
+    private boolean validateFeedUrl(String url, CrawlDelayTimer timer) {
         var parsedOpt = EdgeUrl.parse(url);
         if (parsedOpt.isEmpty())
             return false;
