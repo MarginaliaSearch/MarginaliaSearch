@@ -20,6 +20,8 @@ import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.body.DocumentBodyExtractor;
 import nu.marginalia.model.body.HttpFetchResult;
 import nu.marginalia.model.crawldata.CrawlerDomainStatus;
+import org.jsoup.Jsoup;
+import org.jsoup.parser.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -478,19 +480,18 @@ public class CrawlerRetreiver implements AutoCloseable {
             return false;
         }
 
-        // Extract the beginning of the
         Optional<String> bodyOpt = DocumentBodyExtractor.asString(ok).getBody();
         if (bodyOpt.isEmpty())
             return false;
-        String body = bodyOpt.get();
-        body = body.substring(0, Math.min(128, body.length())).toLowerCase();
 
-        if (body.contains("<atom"))
-            return true;
-        if (body.contains("<rss"))
-            return true;
+        var feed = Jsoup.parse(bodyOpt.get(), url, Parser.xmlParser());
+        if (feed.childrenSize() == 0)
+            return false;
 
-        return false;
+        return switch (feed.child(0).normalName()) {
+            case "rss", "feed", "atom" -> true;
+            default -> false;
+        };
     }
 
     public HttpFetchResult fetchContentWithReference(EdgeUrl top,
