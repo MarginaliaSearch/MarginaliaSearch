@@ -24,7 +24,7 @@ import java.util.concurrent.*;
 public class PolarClient {
 
     // https://polar.sh/docs/api-reference/versioning
-    private static final String API_VERSION = "2026-04";
+    private static final String API_VERSION = "2026-10";
 
     private final HttpClient client;
     private final String baseUri;
