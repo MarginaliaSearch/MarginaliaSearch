@@ -88,7 +88,7 @@ public class LicenseService {
 
     private ApiLicense getFromDb(String key) throws NoSuchKeyException {
         try (var conn = dataSource.getConnection();
-            var stmt = conn.prepareStatement("SELECT LICENSE,NAME,RATE,SITE_INFO_RATE FROM EC_API_KEY WHERE LICENSE_KEY=?")) {
+            var stmt = conn.prepareStatement("SELECT LICENSE_KEY,LICENSE,NAME,RATE,SITE_INFO_RATE FROM EC_API_KEY WHERE LICENSE_KEY=?")) {
 
             stmt.setString(1, key);
 
@@ -98,7 +98,7 @@ public class LicenseService {
                 int rate = rsp.getInt("RATE");
                 int siteInfoRate = rsp.getInt("SITE_INFO_RATE");
 
-                return new ApiLicense(key,
+                return new ApiLicense(rsp.getString("LICENSE_KEY"),
                         rsp.getString("LICENSE"),
                         rsp.getString("NAME"),
                         rate,
