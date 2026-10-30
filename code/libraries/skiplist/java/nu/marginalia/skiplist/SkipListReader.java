@@ -1095,19 +1095,41 @@ public class SkipListReader {
     }
 
     private long findNextBlock(MemoryPage page, int fc, long targetValue) {
-        // The pointer distances are not strictly increasing in the V0 format due to a construction bug.
-        // TODO: After 2027-01-01 we can drop support for this historical quirk and simplify the function
-        int furthestBelow = 0;
+        return switch (format) {
+            case SkipListFormat.V0 -> {
+                // The pointer distances are not strictly increasing in the V0 format due to a construction bug.
+                // TODO: After 2027-01-01 we can drop support for this historical quirk and simplify the function
+                int furthestBelow = 0;
 
-        for (int i = 0; i < fc; i++) {
-            long blockMaxValue = page.getLong(currentBlockOffset + DATA_BLOCK_HEADER_SIZE + 8 * i);
-            if (blockMaxValue >= targetValue) {
-                return currentBlock + (long) BLOCK_STRIDE * (furthestBelow + 1);
+                for (int i = 0; i < fc; i++) {
+                    long blockMaxValue = page.getLong(currentBlockOffset + DATA_BLOCK_HEADER_SIZE + 8 * i);
+                    if (blockMaxValue >= targetValue) {
+                        yield currentBlock + (long) BLOCK_STRIDE * (furthestBelow + 1);
+                    }
+                    furthestBelow = Math.max(furthestBelow, format.skipOffsetForPointer(i));
+                }
+
+                yield currentBlock + (long) BLOCK_STRIDE * Math.max(1, furthestBelow);
             }
-            furthestBelow = Math.max(furthestBelow, format.skipOffsetForPointer(i));
-        }
+            case SkipListFormat.V1 -> {
+                int i;
 
-        return currentBlock + (long) BLOCK_STRIDE * Math.max(1, furthestBelow);
+                for (i = 0; i < fc; i++) {
+                    long blockMaxValue = page.getLong(currentBlockOffset + DATA_BLOCK_HEADER_SIZE + 8 * i);
+                    if (blockMaxValue >= targetValue) {
+                        break;
+                    }
+                }
+
+                if (i > SkipListFormat.LINEAR_POINTERS) {
+                    // In the quadratic domain, we need to pick the previous offset to jump to,
+                    // to find a better lookup resolution and identify the correct block
+                    --i;
+                }
+
+                yield currentBlock + (long) BLOCK_STRIDE * format.skipOffsetForPointer(i);
+            }
+        };
     }
 
 
