@@ -21,7 +21,6 @@ import org.apache.hc.core5.http.Header;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -164,11 +163,6 @@ public class CrawlerMockFetcherTest {
         @Override
         public SimpleRobotRules fetchRobotRules(EdgeUrl rootUrl, WarcRecorder recorder) {
             return new SimpleRobotRules();
-        }
-
-        @Override
-        public SitemapRetriever createSitemapRetriever() {
-            return Mockito.mock(SitemapRetriever.class);
         }
 
         @Override

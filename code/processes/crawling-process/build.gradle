@@ -68,8 +68,8 @@ dependencies {
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
     testImplementation libs.wiremock
+    testImplementation libs.slop
 
     testImplementation project(':code:libraries:geo-ip')
     testImplementation project(':code:processes:test-data')
 }
-

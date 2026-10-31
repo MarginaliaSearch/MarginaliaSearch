@@ -28,7 +28,7 @@ public enum SkipListFormat {
     };
 
     public static final SkipListFormat CURRENT = V1;
-    private static final int LINEAR_POINTERS = 16;
+    public static final int LINEAR_POINTERS = 16;
 
     private final int version;
 

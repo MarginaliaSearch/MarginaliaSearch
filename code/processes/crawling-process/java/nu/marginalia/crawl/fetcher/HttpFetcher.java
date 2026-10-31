@@ -32,8 +32,6 @@ public interface HttpFetcher extends AutoCloseable {
 
     SimpleRobotRules fetchRobotRules(EdgeUrl rootUrl, WarcRecorder recorder);
 
-    SitemapRetriever createSitemapRetriever();
-
     enum ProbeType {
         DISABLED,
         FULL,

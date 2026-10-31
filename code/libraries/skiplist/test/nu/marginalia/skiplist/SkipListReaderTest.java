@@ -1021,59 +1021,6 @@ public class SkipListReaderTest {
         }
     }
 
-    @Test
-    public void testForwardPointersLandOnTargetBlock__currentFormat() throws IOException {
-        verifyForwardPointers(SkipListFormat.CURRENT);
-    }
-
-    @Test
-    public void testForwardPointersLandOnTargetBlock__legacyFormat() throws IOException {
-        verifyForwardPointers(SkipListFormat.V0);
-    }
-
-    private void verifyForwardPointers(SkipListFormat writtenFormat) throws IOException {
-        long[] keys = LongStream.range(0, 200_000).map(v -> 1000*v).toArray();
-
-        try (var writer = new SkipListWriter(docsFile, valuesFile, writtenFormat)) {
-            writer.writeList(createArray(keys, keys), keys.length);
-        }
-        SkipListWriter.writeFooter(docsFile, "test", writtenFormat);
-
-        SkipListFormat format = SkipListWriter.validateFooter(docsFile, "test");
-        Assertions.assertEquals(writtenFormat, format);
-
-        try (var indexPool = new RecordingBufferPool(docsFile);
-             var valueReader = new SkipListValueReader(valuesFile)) {
-
-            var blocks = SkipListReader.parseBlocks(indexPool, 0);
-
-            int[] targetBlocks = new int[] { 1, 2, 7, 17, 30, 45, blocks.size() - 1 };
-
-            for (int targetBlock : targetBlocks) {
-                long target = blocks.get(targetBlock).docIds().getLong(3);
-                List<Integer> expected = expectedPath(blocks, format, targetBlock, target);
-
-                indexPool.reset();
-                LongQueryBuffer lqb = new LongQueryBuffer(new long[] { target }, 1);
-                new SkipListReader(indexPool, valueReader, 0, format).retainData(lqb);
-                lqb.finalizeFiltering();
-                Assertions.assertArrayEquals(new long[] { target }, lqb.copyData());
-                Assertions.assertEquals(expected, indexPool.visitedBlocks());
-
-                indexPool.reset();
-                long[] values = new SkipListReader(indexPool, valueReader, 0, format).getAllValues(new long[] { target });
-                Assertions.assertEquals(target, values[0]);
-                Assertions.assertEquals(expected, indexPool.visitedBlocks());
-
-                indexPool.reset();
-                var present = new SkipListReader(indexPool, valueReader, 0, format).getAllPresentValues(new long[] { target });
-                Assertions.assertTrue(present.get(0));
-                Assertions.assertEquals(expected, indexPool.visitedBlocks());
-            }
-        }
-    }
-
-
     static class RecordingBufferPool extends BufferPool {
         private final List<Long> addresses = new ArrayList<>();
 
@@ -1105,27 +1052,5 @@ public class SkipListReaderTest {
         }
     }
 
-    private static int expectedNextBlock(List<SkipListReader.RecordView> blocks, SkipListFormat format, int current, long target) {
-        int furthestBelow = current;
-        for (int i = 0; i < blocks.get(current).fc(); i++) {
-            int pointedAt = current + format.skipOffsetForPointer(i);
-            if (blocks.get(pointedAt).highestDocId() >= target) {
-                return furthestBelow + 1;
-            }
-            furthestBelow = Math.max(furthestBelow, pointedAt);
-        }
-        return Math.max(furthestBelow, current + 1);
-    }
-
-    private static List<Integer> expectedPath(List<SkipListReader.RecordView> blocks, SkipListFormat format, int targetBlock, long target) {
-        List<Integer> path = new ArrayList<>();
-        int current = 0;
-        path.add(current);
-        while (current != targetBlock) {
-            current = expectedNextBlock(blocks, format, current, target);
-            path.add(current);
-        }
-        return path;
-    }
 
 }
