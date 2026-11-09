@@ -334,7 +334,7 @@ public class CrawlerMain extends ProcessMainClass {
             FROM DOMAIN_AVAILABILITY_INFORMATION
             INNER JOIN EC_DOMAIN ON EC_DOMAIN.ID=DOMAIN_ID
             WHERE DOMAIN_ID = ?
-                """)
+            """)
         ) {
             Instant now = Instant.now();
 
