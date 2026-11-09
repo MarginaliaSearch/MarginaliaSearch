@@ -696,7 +696,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
     @Override
     public boolean retryRequest(HttpResponse response, int executionCount, HttpContext context) {
         return switch (response.getCode()) {
-            case 500, 503 -> executionCount <= 2;
+            case 500, 502, 503 -> executionCount <= 2;
             case 429 -> executionCount <= 3;
             default -> false;
         };
@@ -713,7 +713,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
         int statusCode = response.getCode();
 
         // Give 503 a bit more time
-        if (statusCode == 503) return TimeValue.ofSeconds(5);
+        if (statusCode == 503 || statusCode == 502) return TimeValue.ofSeconds(5);
 
         if (statusCode == 429) {
             // get the Retry-After header

@@ -33,7 +33,7 @@ public class RetryStrategy implements HttpRequestRetryStrategy {
     @Override
     public boolean retryRequest(HttpResponse response, int executionCount, HttpContext context) {
         return switch (response.getCode()) {
-            case 500, 503 -> executionCount <= 2;
+            case 500, 502, 503 -> executionCount <= 2;
             case 429 -> executionCount <= 3;
             default -> false;
         };
