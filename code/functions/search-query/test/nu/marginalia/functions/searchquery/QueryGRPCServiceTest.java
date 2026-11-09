@@ -72,7 +72,6 @@ class QueryGRPCServiceTest {
                         domainQueries,
                         languageConfiguration
                 ),
-                new NsfwDomainFilter(dataSource, List.of(), List.of()),
                 null,
                 domainQueries,
                 filterStore,

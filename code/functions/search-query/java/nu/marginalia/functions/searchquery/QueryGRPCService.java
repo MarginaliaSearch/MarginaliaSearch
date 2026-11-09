@@ -9,6 +9,7 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import io.prometheus.metrics.core.metrics.Counter;
 import io.prometheus.metrics.core.metrics.Histogram;
+import nu.marginalia.WmsaHome;
 import nu.marginalia.api.searchquery.*;
 import nu.marginalia.api.searchquery.model.CompiledSearchFilterSpec;
 import nu.marginalia.api.searchquery.model.SearchFilterDefaults;
@@ -26,9 +27,10 @@ import nu.marginalia.service.server.DiscoverableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.OptionalInt;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 @Singleton
@@ -58,25 +60,31 @@ public class QueryGRPCService
 
 
     private final QueryFactory queryFactory;
-    private final NsfwDomainFilter nsfwDomainFilter;
     private final IndexClient indexClient;
     private final DbDomainQueries domainQueries;
     private final SearchFilterCache searchFilterCache;
 
+    // for right to be forgotten requests
+    private static final Set<String> blockedUrls = new HashSet<>();
+
     @Inject
     public QueryGRPCService(QueryFactory queryFactory,
-                            NsfwDomainFilter nsfwDomainFilter,
                             IndexClient indexClient,
                             DbDomainQueries domainQueries,
                             SearchFilterStore searchFilterStore,
-                            SearchFilterCache searchFilterCache)
-    {
+                            SearchFilterCache searchFilterCache) throws IOException {
         this.queryFactory = queryFactory;
-        this.nsfwDomainFilter = nsfwDomainFilter;
         this.indexClient = indexClient;
         this.domainQueries = domainQueries;
         this.searchFilterCache = searchFilterCache;
         searchFilterStore.loadDefaultConfigs();
+
+        Path blockedUrlsTxt = WmsaHome.getDataPath().resolve("blocked-urls.txt");
+        if (Files.isRegularFile(blockedUrlsTxt)) {
+            for (String blockedUrl : Files.readAllLines(blockedUrlsTxt)) {
+                blockedUrls.add(blockedUrl.trim());
+            }
+        }
     }
 
     private Optional<CompiledSearchFilterSpec> getFilter(RpcQsQuery request) {
@@ -176,7 +184,6 @@ public class QueryGRPCService
 
             // Convert results to response and send it back
             var responseBuilder = RpcQsResponse.newBuilder()
-                    .addAllResults(response.results())
                     .setPagination(
                             RpcQsResultPagination.newBuilder()
                                     .setPage(pagination.page())
@@ -185,6 +192,12 @@ public class QueryGRPCService
                     )
                     .setSpecs(query.indexQuery)
                     .addAllSearchTermsHuman(query.searchTermsHuman);
+
+            for (var result: response.results()) {
+                if (!blockedUrls.contains(result.getUrl())) {
+                    responseBuilder.addResults(result);
+                }
+            }
 
             if (query.domain != null) {
                 responseBuilder.setDomain(query.domain);
@@ -266,10 +279,16 @@ public class QueryGRPCService
                     .labelValues(Integer.toString(request.getQueryLimits().getTimeoutMs()), Integer.toString(request.getQueryLimits().getResultsTotal()))
                     .time(() -> indexClient.executeQueries(unrankedQueryPrototype.build(), cursor));
 
-            responseObserver.onNext(RpcQsUnrankedResponse.newBuilder()
-                    .setEncodedCursor(response.cursor().encode())
-                    .addAllResults(response.results())
-                    .build());
+            var responseBuilder = RpcQsUnrankedResponse.newBuilder()
+                    .setEncodedCursor(response.cursor().encode());
+
+            for (var result: response.results()) {
+                if (!blockedUrls.contains(result.getUrl())) {
+                    responseBuilder.addResults(result);
+                }
+            }
+
+            responseObserver.onNext(responseBuilder.build());
 
             responseObserver.onCompleted();
         }
