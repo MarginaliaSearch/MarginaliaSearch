@@ -49,8 +49,8 @@ public class RetryStrategy implements HttpRequestRetryStrategy {
 
         int statusCode = response.getCode();
 
-        // Give 503 a bit more time
-        if (statusCode == 503) return TimeValue.ofSeconds(5);
+        // Give potentially overloaded servers a bit more time
+        if (statusCode == 503 || statusCode == 502) return TimeValue.ofSeconds(5);
 
         if (statusCode == 429) {
             // get the Retry-After header
