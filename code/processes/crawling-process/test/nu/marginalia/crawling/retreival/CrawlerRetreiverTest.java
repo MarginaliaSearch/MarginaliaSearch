@@ -170,7 +170,7 @@ class CrawlerRetreiverTest {
 
             // Convert the WARC file to a Slop file
             SlopCrawlDataRecord
-                    .convertWarc("www.marginalia.nu", new UserAgent("test.marginalia.nu", "test.marginalia.nu"), tempFile, slopFile);
+                    .convertWarc("www.marginalia.nu", new UserAgent("test.marginalia.nu", "test.marginalia.nu", ""), tempFile, slopFile);
 
             CrawledDomain domain = null;
             Map<String, CrawledDocument> documents = new HashMap<>();
@@ -507,7 +507,7 @@ class CrawlerRetreiverTest {
 
     private void convertToSlop(Path warcFile, Path slopFile) throws IOException {
         SlopCrawlDataRecord.convertWarc("www.marginalia.nu",
-                new UserAgent("test", "test"), warcFile, slopFile);
+                new UserAgent("test", "test", ""), warcFile, slopFile);
     }
 
 

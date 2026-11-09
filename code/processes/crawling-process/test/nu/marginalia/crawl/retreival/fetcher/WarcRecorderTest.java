@@ -209,7 +209,7 @@ class WarcRecorderTest {
 
         SlopCrawlDataRecord.convertWarc(
                 "www.marginalia.nu",
-                new UserAgent("test", "test"),
+                new UserAgent("test", "test", ""),
                 fileNameWarc,
                 fileNameSlop);
 

@@ -253,7 +253,7 @@ public class CrawlingThenConvertingIntegrationTest {
         }
 
         SlopCrawlDataRecord.convertWarc(specs.domain(),
-                new UserAgent("test", "test"),
+                new UserAgent("test", "test", ""),
                 fileName, fileName2);
 
         try (var reader = new SlopSerializableCrawlDataStream(fileName2)) {

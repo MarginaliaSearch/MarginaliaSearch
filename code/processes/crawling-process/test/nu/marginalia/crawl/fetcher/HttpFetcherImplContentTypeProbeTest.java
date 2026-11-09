@@ -82,7 +82,7 @@ class HttpFetcherImplContentTypeProbeTest {
 
     @BeforeEach
     public void setUp() {
-        fetcher = new HttpFetcherImpl(new UserAgent("test.marginalia.nu", "test.marginalia.nu"));
+        fetcher = new HttpFetcherImpl(new UserAgent("test.marginalia.nu", "test.marginalia.nu", ""));
     }
 
     @AfterEach

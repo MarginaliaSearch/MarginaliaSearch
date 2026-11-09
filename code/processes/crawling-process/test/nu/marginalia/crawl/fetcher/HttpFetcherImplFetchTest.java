@@ -157,7 +157,7 @@ class HttpFetcherImplFetchTest {
 
     @BeforeEach
     public void setUp() throws IOException {
-        fetcher = new HttpFetcherImpl(new UserAgent("test.marginalia.nu", "test.marginalia.nu"));
+        fetcher = new HttpFetcherImpl(new UserAgent("test.marginalia.nu", "test.marginalia.nu", ""));
         warcFile = Files.createTempFile(getClass().getSimpleName(), ".warc");
         warcRecorder = new WarcRecorder(warcFile);
     }

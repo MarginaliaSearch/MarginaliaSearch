@@ -177,7 +177,7 @@ public class IntegrationTest {
         SlopCrawlDataRecord.convertWarc(
                 "www.example.com",
                 new UserAgent("search.marginalia.nu",
-                        "search.marginalia.nu"),
+                        "search.marginalia.nu", ""),
                 warcData,
                 crawlDataSlop);
 
@@ -311,7 +311,7 @@ public class IntegrationTest {
         SlopCrawlDataRecord.convertWarc(
                 "www.example.com",
                 new UserAgent("search.marginalia.nu",
-                        "search.marginalia.nu"),
+                        "search.marginalia.nu", ""),
                 warcData,
                 crawlDataSlop);
 

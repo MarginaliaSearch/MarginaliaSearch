@@ -34,7 +34,7 @@ class HttpFetcherImplSitemapTest {
     @BeforeEach
     void setUp() {
         server.resetAll();
-        fetcher = new HttpFetcherImpl(new UserAgent("test.marginalia.nu", "test.marginalia.nu"));
+        fetcher = new HttpFetcherImpl(new UserAgent("test.marginalia.nu", "test.marginalia.nu", ""));
         timer = mock(CrawlDelayTimer.class);
     }
 

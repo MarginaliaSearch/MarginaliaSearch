@@ -12,8 +12,8 @@ public class WmsaHome {
     public static UserAgent getUserAgent()  {
         return new UserAgent(
                 System.getProperty("crawler.userAgentString", "Mozilla/5.0 (compatible; Marginalia-like bot; +https://git.marginalia.nu/))"),
-                System.getProperty("crawler.userAgentIdentifier", "search.marginalia.nu")
-        );
+                System.getProperty("crawler.userAgentIdentifier", "search.marginalia.nu"),
+                System.getProperty("crawler.userAgentFrom", ""));
     }
 
 

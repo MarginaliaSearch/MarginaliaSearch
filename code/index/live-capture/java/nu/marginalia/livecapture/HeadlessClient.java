@@ -29,8 +29,6 @@ public class HeadlessClient implements AutoCloseable {
     private final URI headlessURI;
     private final Gson gson = GsonFactory.get();
 
-    private final String userAgent = WmsaHome.getUserAgent().uaString();
-
     public HeadlessClient(URI headlessURI) {
         this.headlessURI = headlessURI;
     }

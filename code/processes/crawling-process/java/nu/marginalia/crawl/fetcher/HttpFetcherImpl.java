@@ -16,6 +16,7 @@ import nu.marginalia.model.body.HttpFetchResult;
 import nu.marginalia.model.crawldata.CrawlerDomainStatus;
 import nu.marginalia.proxy.SocksProxyConfiguration;
 import nu.marginalia.proxy.SocksProxyManager;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hc.client5.http.ConnectionKeepAliveStrategy;
 import org.apache.hc.client5.http.HttpRequestRetryStrategy;
 import org.apache.hc.client5.http.classic.HttpClient;
@@ -77,6 +78,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
     private static final int MAX_SITEMAP_URLS = 20_000;
     private final String userAgentString;
     private final String userAgentIdentifier;
+    private final String userAgentFrom;
 
     private final CookieStore cookies = new BasicCookieStore();
     private final SocksProxyManager proxyManager;
@@ -201,6 +203,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
         }
         this.userAgentString = userAgent.uaString();
         this.userAgentIdentifier = userAgent.uaIdentifier();
+        this.userAgentFrom = userAgent.uaFrom();
         this.auditLog = auditLog;
     }
 
@@ -219,6 +222,7 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
         }
         this.userAgentString = userAgent;
         this.userAgentIdentifier = userAgent;
+        this.userAgentFrom = userAgent;
         this.auditLog = null;
     }
 
@@ -258,6 +262,9 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
                                 .addHeader("User-Agent", userAgentString)
                                 .addHeader("Accept-Encoding", "gzip")
                                 .build();
+                }
+                if (StringUtils.isNotBlank(userAgentFrom)) {
+                    request.addHeader("From", userAgentFrom);
                 }
             } catch (URISyntaxException e) {
                 return new DomainProbeResult.Error(CrawlerDomainStatus.ERROR, "Invalid URL");
@@ -340,10 +347,13 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
         }
 
         try {
-            ClassicHttpRequest head = ClassicRequestBuilder.head(url.asURI())
+            var head = ClassicRequestBuilder.head(url.asURI())
                     .addHeader("User-Agent", userAgentString)
                     .addHeader("Accept-Encoding", "gzip")
                     .build();
+            if (StringUtils.isNotBlank(userAgentFrom)) {
+                head.addHeader("From", userAgentFrom);
+            }
 
             cookies.paintRequest(head);
 
@@ -450,6 +460,9 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
 
             HttpGet request = new HttpGet(url.asURI());
             request.addHeader("User-Agent", userAgentString);
+            if (StringUtils.isNotBlank(userAgentFrom)) {
+                request.addHeader("From", userAgentFrom);
+            }
             request.addHeader("Accept-Encoding", "gzip");
             request.addHeader("Accept-Language", "en,*;q=0.5");
             request.addHeader("Accept", "text/html, application/xhtml+xml, text/*;q=0.8");
@@ -544,14 +557,17 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
 
 
     private SitemapResult fetchSingleSitemap(EdgeUrl sitemapUrl) throws URISyntaxException {
-        HttpGet getRequest = new HttpGet(sitemapUrl.asURI());
+        HttpGet request = new HttpGet(sitemapUrl.asURI());
 
-        getRequest.addHeader("User-Agent", userAgentString);
-        getRequest.addHeader("Accept-Encoding", "gzip");
-        getRequest.addHeader("Accept", "text/*, */*;q=0.9");
+        request.addHeader("User-Agent", userAgentString);
+        if (StringUtils.isNotBlank(userAgentFrom)) {
+            request.addHeader("From", userAgentFrom);
+        }
+        request.addHeader("Accept-Encoding", "gzip");
+        request.addHeader("Accept", "text/*, */*;q=0.9");
 
         try (var sl = new SendLock()) {
-            return client.execute(getRequest, response -> {
+            return client.execute(request, response -> {
                 try {
                     if (response.getCode() != 200) {
                         return new SitemapResult.SitemapError();
@@ -650,7 +666,9 @@ public class HttpFetcherImpl implements HttpFetcher, HttpRequestRetryStrategy {
             request.addHeader("User-Agent", userAgentString);
             request.addHeader("Accept-Encoding", "gzip");
             request.addHeader("Accept", "text/*, */*;q=0.9");
-
+            if (StringUtils.isNotBlank(userAgentFrom)) {
+                request.addHeader("From", userAgentFrom);
+            }
             HttpFetchResult result = recorder.fetch(client, new DomainCookies(), request);
 
             return DocumentBodyExtractor.asBytes(result).mapOpt((contentType, body) ->
