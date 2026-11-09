@@ -341,6 +341,7 @@ public class MqPersistence {
 
         throw new IllegalArgumentException("No message with id " + id);
     }
+
     /**  Marks unclaimed messages addressed to this inbox with instanceUUID and tick,
      * then returns these messages.
      */
@@ -367,11 +368,14 @@ public class MqPersistence {
                         STATE,
                         SENDER_INBOX IS NOT NULL AS EXPECTS_RESPONSE
                      FROM MESSAGE_QUEUE
-                     WHERE OWNER_INSTANCE=? AND OWNER_TICK=?
+                     WHERE  OWNER_INSTANCE=? 
+                     AND    OWNER_TICK=?
+                     AND    RECIPIENT_INBOX=?
                      """)
         ) {
             queryStmt.setString(1, instanceUUID);
             queryStmt.setLong(2, tick);
+            queryStmt.setString(3, inboxName);
             var rs = queryStmt.executeQuery();
 
             List<MqMessage> messages = new ArrayList<>(expected);
@@ -396,7 +400,6 @@ public class MqPersistence {
 
     }
 
-
     /**  Marks unclaimed messages addressed to this inbox with instanceUUID and tick,
      * then returns these messages.
      */
@@ -417,11 +420,14 @@ public class MqPersistence {
              var queryStmt = conn.prepareStatement("""
                      SELECT SELF.ID, SELF.RELATED_ID, SELF.FUNCTION, SELF.PAYLOAD, PARENT.STATE FROM MESSAGE_QUEUE SELF
                      LEFT JOIN MESSAGE_QUEUE PARENT ON SELF.RELATED_ID=PARENT.ID
-                     WHERE SELF.OWNER_INSTANCE=? AND SELF.OWNER_TICK=?
+                     WHERE  SELF.OWNER_INSTANCE=?
+                     AND    SELF.OWNER_TICK=?
+                     AND    SELF.RECIPIENT_INBOX=?
                      """)
         ) {
             queryStmt.setString(1, instanceUUID);
             queryStmt.setLong(2, tick);
+            queryStmt.setString(3, inboxName);
             var rs = queryStmt.executeQuery();
 
             List<MqMessage> messages = new ArrayList<>(expected);

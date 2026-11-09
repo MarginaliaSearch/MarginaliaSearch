@@ -195,4 +195,56 @@ public class MqPersistenceTest {
         var messagePollSecondTime = persistence.pollInbox(recipientId+":0", instanceId , 1, 10);
         assertEquals(0, messagePollSecondTime.size());
     }
+
+    @Test
+    public void testPollInboxIsolation() throws Exception {
+
+        String instanceId = UUID.randomUUID().toString();
+        long tick = 1234L;
+
+        long request = sendMessage(recipientId, senderId, "function", "payload", Duration.ofSeconds(30));
+        long response = persistence.sendResponse(request, MqMessageState.OK, "response");
+
+        var replies = persistence.pollReplyInbox(senderId+":0", instanceId, tick, 1);
+        assertEquals(1, replies.size());
+
+        var responseMessage = replies.iterator().next();
+        assertEquals(response, responseMessage.msgId());
+
+        long id = sendMessage(recipientId, null, "function", "payload", Duration.ofSeconds(30));
+
+        // The reply retains the same owner and tick as this inbox's next claim.
+        var messages = persistence.pollInbox(recipientId+":0", instanceId, tick, 1);
+        assertEquals(1, messages.size());
+
+        var message = messages.iterator().next();
+        assertEquals(id, message.msgId());
+    }
+
+    @Test
+    public void testPollReplyInboxIsolation() throws Exception {
+
+        String instanceId = UUID.randomUUID().toString();
+        long tick = 1234L;
+
+        long id = sendMessage(recipientId, null, "function", "payload", Duration.ofSeconds(30));
+
+        var messages = persistence.pollInbox(recipientId+":0", instanceId, tick, 1);
+        assertEquals(1, messages.size());
+
+        var message = messages.iterator().next();
+        assertEquals(id, message.msgId());
+
+        long request = sendMessage(recipientId, senderId, "function", "payload", Duration.ofSeconds(30));
+        long response = persistence.sendResponse(request, MqMessageState.ERR, "response");
+
+        // The notice has no parent, reading it as a reply would yield a null parent state.
+        var replies = persistence.pollReplyInbox(senderId+":0", instanceId, tick, 1);
+        assertEquals(1, replies.size());
+
+        var responseMessage = replies.iterator().next();
+        assertEquals(response, responseMessage.msgId());
+        assertEquals(request, responseMessage.relatedId());
+        assertEquals(MqMessageState.ERR, responseMessage.state());
+    }
 }
