@@ -296,8 +296,8 @@ public class FeedFetcherService {
                               Duration timeout)
             throws InterruptedException, ExecutionException, TimeoutException, IOException
     {
-        long deadline = System.nanoTime() + timeout.toNanos();
-        long nextProgress = System.nanoTime() + PROGRESS_INTERVAL.toNanos();
+        final Instant deadline = Instant.now().plus(timeout);
+
         int today = (int) LocalDate.now().toEpochDay();
         int completed = 0;
         var pending = definitions.iterator();
