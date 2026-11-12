@@ -40,6 +40,15 @@ public class SimpleFeedParser {
 
     public static List<ItemData> parse(String content) {
         var doc = Jsoup.parse(content, Parser.xmlParser());
+        var root = doc.children().first();
+        if (root == null) {
+            throw new IllegalArgumentException("Empty feed document");
+        }
+        String rootName = root.normalName();
+        rootName = rootName.substring(rootName.lastIndexOf(':') + 1);
+        if (!rootName.equals("rss") && !rootName.equals("feed") && !rootName.equals("rdf")) {
+            throw new IllegalArgumentException("Expected an RSS or Atom document, found " + root.tagName());
+        }
         List<ItemData> ret = new ArrayList<>();
 
         doc.select("item, entry").forEach(element -> {

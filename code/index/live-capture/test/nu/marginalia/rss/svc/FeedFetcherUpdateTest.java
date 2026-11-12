@@ -37,6 +37,7 @@ class FeedFetcherUpdateTest {
     private final FeedDbWriter writer = mock(FeedDbWriter.class);
     private final DomainCoordinator coordinator = mock(DomainCoordinator.class);
     private final ServiceHeartbeat heartbeat = mock(ServiceHeartbeat.class);
+    private final ServiceAdHocTaskHeartbeat taskHeartbeat = mock(ServiceAdHocTaskHeartbeat.class);
     private final FeedFetcherService fetcher = new FeedFetcherService(db, mock(DomainTypes.class), coordinator,
             null, null, heartbeat, null);
     private final EdgeDomain domain = new EdgeDomain("example.com");
@@ -52,7 +53,7 @@ class FeedFetcherUpdateTest {
         when(db.getFeed(domain)).thenReturn(oldData);
         when(db.getEtag(domain)).thenReturn("etag");
         when(db.getLastFetch(domain)).thenReturn(42);
-        when(heartbeat.createServiceAdHocTaskHeartbeat(anyString())).thenReturn(mock(ServiceAdHocTaskHeartbeat.class));
+        when(heartbeat.createServiceAdHocTaskHeartbeat(anyString())).thenReturn(taskHeartbeat);
     }
 
     @Test
@@ -68,6 +69,7 @@ class FeedFetcherUpdateTest {
         verify(writer).saveFetchDate(domain.toString(), 42);
         verify(writer).setErrorCount(domain.toString(), 3);
         verify(db).switchDb(writer);
+        verify(taskHeartbeat).progress(anyString(), eq(1), eq(1));
     }
 
     @Test
@@ -251,5 +253,66 @@ class FeedFetcherUpdateTest {
         verify(writer).saveFetchDate(domain.toString(), 42);
         verify(writer).setErrorCount(domain.toString(), 4);
         verify(writer).saveFeed(oldData);
+    }
+
+    @Test
+    void invalidFeedRetainsData() throws Exception {
+        var service = spy(fetcher);
+        when(coordinator.tryLockDomain(eq(domain), any(Duration.class))).thenReturn(Optional.of(() -> {}));
+        doReturn(new FeedFetcherService.FetchResult.Success("<html>Temporarily unavailable</html>", "new-etag"))
+                .when(service).fetchFeedData(eq(definition), any(), any(), any());
+
+        service.updateFeedsSynchronous(FeedFetcherService.UpdateMode.REFRESH);
+
+        verify(writer).saveFeed(oldData);
+        verify(writer).saveEtag(domain.toString(), "etag");
+        verify(writer, never()).saveEtag(domain.toString(), "new-etag");
+        verify(writer).setErrorCount(domain.toString(), 4);
+        verify(db).switchDb(writer);
+    }
+
+    @Test
+    void firstFailureRetainsDefinition() throws Exception {
+        var service = spy(fetcher);
+        when(db.getFeed(domain)).thenReturn(FeedItems.none());
+        when(db.getAllErrorCounts()).thenReturn(Map.of());
+        when(coordinator.tryLockDomain(eq(domain), any(Duration.class))).thenReturn(Optional.of(() -> {}));
+        doReturn(new FeedFetcherService.FetchResult.TransientError()).when(service)
+                .fetchFeedData(eq(definition), any(), any(), any());
+
+        service.updateFeedsSynchronous(FeedFetcherService.UpdateMode.REFRESH);
+
+        verify(writer).saveFeed(new FeedItems(domain.toString(), definition.feedUrl(), "", List.of()));
+        verify(writer).setErrorCount(domain.toString(), 1);
+        verify(service).fetchFeedData(eq(definition), any(), isNull(), isNull());
+    }
+
+    @Test
+    void emptyFeedResetsErrors() throws Exception {
+        var service = spy(fetcher);
+        when(coordinator.tryLockDomain(eq(domain), any(Duration.class))).thenReturn(Optional.of(() -> {}));
+        doReturn(new FeedFetcherService.FetchResult.Success("<rss><channel/></rss>", "new-etag"))
+                .when(service).fetchFeedData(eq(definition), any(), any(), any());
+
+        service.updateFeedsSynchronous(FeedFetcherService.UpdateMode.REFRESH);
+
+        verify(writer).saveFeed(argThat(data -> data.domain().equals(domain.toString()) && data.items().isEmpty()));
+        verify(writer).saveEtag(domain.toString(), "new-etag");
+        verify(writer, never()).setErrorCount(anyString(), anyInt());
+    }
+
+    @Test
+    void repeatedFailuresDropFeed() throws Exception {
+        var service = spy(fetcher);
+        when(db.getAllErrorCounts()).thenReturn(Map.of(domain.toString(), 9));
+        when(coordinator.tryLockDomain(eq(domain), any(Duration.class))).thenReturn(Optional.of(() -> {}));
+        doReturn(new FeedFetcherService.FetchResult.TransientError()).when(service)
+                .fetchFeedData(eq(definition), any(), any(), any());
+
+        service.updateFeedsSynchronous(FeedFetcherService.UpdateMode.REFRESH);
+
+        verify(writer).setErrorCount(domain.toString(), 10);
+        verify(writer, never()).saveFeed(any());
+        verify(db).switchDb(writer);
     }
 }

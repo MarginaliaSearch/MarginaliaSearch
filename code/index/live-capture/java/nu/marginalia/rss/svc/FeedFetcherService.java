@@ -18,8 +18,8 @@ import nu.marginalia.rss.db.FeedDbWriter;
 import nu.marginalia.rss.model.FeedDefinition;
 import nu.marginalia.rss.model.FeedItem;
 import nu.marginalia.rss.model.FeedItems;
-import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.service.control.ServiceAdHocTaskHeartbeat;
+import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageType;
@@ -46,21 +46,21 @@ import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.time.*;
-import java.util.zip.GZIPInputStream;
 import java.nio.file.Files;
 import java.sql.SQLException;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.Future;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
+import java.util.zip.GZIPInputStream;
 
 @Singleton
 public class FeedFetcherService {
@@ -69,6 +69,7 @@ public class FeedFetcherService {
     private static final Duration FETCH_TIMEOUT = Duration.ofSeconds(30);
     private static final int FETCH_CONCURRENCY = 64;
     private static final Duration UPDATE_TIMEOUT = Duration.ofHours(1);
+    private static final Duration PROGRESS_INTERVAL = Duration.ofSeconds(10);
     private static final Duration DOMAIN_TIMEOUT = Duration.ofSeconds(5);
     private static final Logger logger = LoggerFactory.getLogger(FeedFetcherService.class);
 
@@ -296,13 +297,15 @@ public class FeedFetcherService {
             throws InterruptedException, ExecutionException, TimeoutException, IOException
     {
         long deadline = System.nanoTime() + timeout.toNanos();
+        long nextProgress = System.nanoTime() + PROGRESS_INTERVAL.toNanos();
         int today = (int) LocalDate.now().toEpochDay();
         int completed = 0;
         var pending = definitions.iterator();
         ExecutorService workers = Executors.newVirtualThreadPerTaskExecutor();
         ExecutorService fetchExecutor = Executors.newVirtualThreadPerTaskExecutor();
         var results = new ExecutorCompletionService<FeedUpdate>(workers);
-        Set<Future<FeedUpdate>> active = new HashSet<>();
+        Map<Future<FeedUpdate>, FeedDefinition> active = new LinkedHashMap<>();
+        heartbeat.progress("Updating " + definitions.size() + " feeds", 0, definitions.size());
 
         try {
             while (pending.hasNext() || !active.isEmpty()) {
@@ -315,23 +318,38 @@ public class FeedFetcherService {
 
                 while (pending.hasNext() && active.size() < FETCH_CONCURRENCY) {
                     var feed = pending.next();
-                    active.add(results.submit(() -> fetchUpdate(feed, updateMode, today, fetchExecutor)));
+                    active.put(results.submit(() -> fetchUpdate(feed, updateMode, today, fetchExecutor)), feed);
                 }
 
-                var future = results.poll(Math.max(0, deadline - System.nanoTime()), TimeUnit.NANOSECONDS);
-                if (future == null) {
-                    throw new TimeoutException();
+                long wait = Math.min(deadline, nextProgress) - System.nanoTime();
+                var future = results.poll(Math.max(0, wait), TimeUnit.NANOSECONDS);
+                if (future != null) {
+                    var feed = active.remove(future);
+                    try {
+                        saveUpdate(future.get(), writer, journal, errorCounts);
+                    }
+                    catch (ExecutionException ex) {
+                        logger.error("Failed to update feed {}", feed.feedUrl(), ex.getCause());
+                        throw ex;
+                    }
+                    completed++;
                 }
-                active.remove(future);
-                saveUpdate(future.get(), writer, journal, errorCounts);
 
-                if (++completed % 1_000 == 0) {
-                    heartbeat.progress("Updated " + completed + "/" + definitions.size() + " feeds", completed, definitions.size());
+                if (System.nanoTime() >= nextProgress || completed == definitions.size() ||
+                        (future != null && completed % 1_000 == 0)) {
+                    heartbeat.progress("Updated " + completed + "/" + definitions.size() + " feeds; " +
+                            active.size() + " active", completed, definitions.size());
+                    logger.info("Updated {}/{} feeds; {} active, including {}", completed, definitions.size(), active.size(),
+                            active.values().stream().limit(5).map(FeedDefinition::feedUrl).toList());
+                    nextProgress = System.nanoTime() + PROGRESS_INTERVAL.toNanos();
                 }
+            }
+            if (System.nanoTime() >= deadline) {
+                throw new TimeoutException();
             }
         }
         finally {
-            for (var future : active) {
+            for (var future : active.keySet()) {
                 future.cancel(true);
             }
             workers.shutdownNow();
@@ -344,16 +362,22 @@ public class FeedFetcherService {
     }
 
     private record FeedUpdate(FeedDefinition feed, FeedItems oldData, String oldEtag,
-                              int lastFetch, int fetchDate, FetchResult result) {}
+                              int fetchDate, FetchResult result, @Nullable FeedItems parsed) {}
 
     private FeedUpdate fetchUpdate(FeedDefinition feed, UpdateMode updateMode, int today, ExecutorService fetchExecutor)
             throws InterruptedException
     {
         EdgeDomain domain = new EdgeDomain(feed.domain());
         FeedItems oldData = feedDb.getFeed(domain);
+        boolean known = !oldData.domain().isBlank();
+        if (!known) {
+            // Keep the definition available for a later attempt when its first fetch fails or is deferred.
+            oldData = new FeedItems(domain.toString(), feed.feedUrl(), "", List.of());
+        }
         int lastFetch = feedDb.getLastFetch(domain);
-        String etag = feedDb.getEtag(domain);
-        String modifiedSince = updateMode == UpdateMode.REFRESH ? getIfModifiedSinceDate(feedDb) : null;
+        String etag = known ? feedDb.getEtag(domain) : null;
+        String modifiedSince = updateMode == UpdateMode.REFRESH && !oldData.updated().isBlank()
+                ? getIfModifiedSinceDate(feedDb) : null;
         DomainSkip skip = shouldSkip(domain, lastFetch, today);
         FetchResult result;
         int fetchDate = lastFetch;
@@ -364,20 +388,32 @@ public class FeedFetcherService {
         else {
             var lock = domainCoordinator.tryLockDomain(domain, DOMAIN_TIMEOUT);
             if (lock.isEmpty()) {
+                logger.info("Deferring feed {}: domain is busy", feed.feedUrl());
                 result = new FetchResult.Deferred();
             }
             else {
                 try (DomainLock domainLock = lock.get()) {
                     result = fetchFeedData(feed, fetchExecutor, modifiedSince, updateMode == UpdateMode.REFRESH ? etag : null);
-                    if (skip == DomainSkip.NO_SKIP_TODAY &&
-                            (result instanceof FetchResult.Success || result instanceof FetchResult.NotModified)) {
-                        fetchDate = today;
-                    }
                 }
             }
         }
 
-        return new FeedUpdate(feed, oldData, etag, lastFetch, fetchDate, result);
+        FeedItems parsed = null;
+        if (result instanceof FetchResult.Success success) {
+            try {
+                parsed = parseFeed(success.value(), feed);
+            }
+            catch (RuntimeException ex) {
+                logger.warn("Error parsing feed {}", feed.feedUrl(), ex);
+                result = new FetchResult.TransientError();
+            }
+        }
+        if (skip == DomainSkip.NO_SKIP_TODAY &&
+                (result instanceof FetchResult.Success || result instanceof FetchResult.NotModified)) {
+            fetchDate = today;
+        }
+
+        return new FeedUpdate(feed, oldData, etag, fetchDate, result, parsed);
     }
 
     private void saveUpdate(FeedUpdate update, FeedDbWriter writer, FeedJournal journal, Map<String, Integer> errorCounts)
@@ -392,7 +428,7 @@ public class FeedFetcherService {
         switch (update.result()) {
             case FetchResult.Success(String value, String etag) -> {
                 writer.saveEtag(domain, etag);
-                writer.saveFeed(parseFeed(value, feed));
+                writer.saveFeed(update.parsed());
                 journal.record(feed.feedUrl(), value);
             }
             case FetchResult.NotModified() -> {
@@ -413,6 +449,7 @@ public class FeedFetcherService {
                 writer.setErrorCount(domain, errorCount);
                 if (errorCount < 10) {
                     writer.saveFeed(update.oldData());
+                    writer.saveEtag(domain, update.oldEtag());
                 }
             }
             case FetchResult.PermanentError() -> {
@@ -514,7 +551,8 @@ public class FeedFetcherService {
             return new FetchResult.TransientError();
         }
         catch (ExecutionException ex) {
-            logger.debug("Error fetching feed {}", feed.feedUrl(), ex.getCause());
+            logger.info("Error fetching feed {}: {}", feed.feedUrl(), ex.getCause().toString());
+            logger.debug("Feed fetch failure", ex.getCause());
             return new FetchResult.TransientError();
         }
         finally {
@@ -578,6 +616,7 @@ public class FeedFetcherService {
     private Optional<String> decodeBodyText(HttpGet request, ClassicHttpResponse response) throws IOException {
         Header contentTypeHeader = response.getFirstHeader("Content-Type");
         if (contentTypeHeader == null) {
+            logger.info("Feed response has no Content-Type: {}", request.getRequestUri());
             return Optional.empty();
         }
         ContentType contentType = ContentType.parse(contentTypeHeader.getValue());
@@ -753,28 +792,21 @@ public class FeedFetcherService {
     }
 
     public FeedItems parseFeed(String feedData, FeedDefinition definition) {
-        try {
-            List<SimpleFeedParser.ItemData> rawItems = SimpleFeedParser.parse(feedData);
+        List<SimpleFeedParser.ItemData> rawItems = SimpleFeedParser.parse(feedData);
+        boolean keepUriFragment = rawItems.size() < 2 || areFragmentsDisparate(rawItems);
 
-            boolean keepUriFragment = rawItems.size() < 2 || areFragmentsDisparate(rawItems);
+        var items = rawItems.stream()
+                .map(item -> FeedItem.fromItem(item, keepUriFragment))
+                .filter(new IsFeedItemDateValid())
+                .sorted()
+                .limit(MAX_FEED_ITEMS)
+                .toList();
 
-            var items = rawItems.stream()
-                    .map(item -> FeedItem.fromItem(item, keepUriFragment))
-                    .filter(new IsFeedItemDateValid())
-                    .sorted()
-                    .limit(MAX_FEED_ITEMS)
-                    .toList();
-
-            return new FeedItems(
-                    definition.domain(),
-                    definition.feedUrl(),
-                    LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
-                    items);
-
-        } catch (Exception e) {
-            logger.debug("Exception", e);
-            return FeedItems.none();
-        }
+        return new FeedItems(
+                definition.domain(),
+                definition.feedUrl(),
+                LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                items);
     }
 
     /** Decide whether to keep URI fragments in the feed items.
