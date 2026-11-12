@@ -14,6 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.time.Duration;
+import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -207,5 +209,47 @@ class FeedFetcherUpdateTest {
         });
 
         verify(db).switchDb(writer);
+    }
+
+    @Test
+    void skippedFeedRetainsState() throws Exception {
+        var hosted = new EdgeDomain("test.substack.com");
+        var feed = new FeedDefinition(hosted.toString(), "https://test.substack.com/feed", "");
+        var data = new FeedItems(hosted.toString(), feed.feedUrl(), "", List.of());
+        int yesterday = (int) LocalDate.now().toEpochDay() - 1;
+        when(db.getAllFeeds()).thenReturn(List.of(feed));
+        when(db.getFeed(hosted)).thenReturn(data);
+        when(db.getEtag(hosted)).thenReturn("old-etag");
+        when(db.getLastFetch(hosted)).thenReturn(yesterday);
+        when(db.getAllErrorCounts()).thenReturn(Map.of(hosted.toString(), 3));
+
+        var cleanFetcher = new FeedFetcherService(db, mock(DomainTypes.class), coordinator, null, null, heartbeat, null) {
+            @Override
+            public Collection<FeedDefinition> readDefinitionsFromSystem() {
+                return List.of(feed);
+            }
+        };
+        cleanFetcher.updateFeedsSynchronous(FeedFetcherService.UpdateMode.CLEAN);
+
+        verifyNoInteractions(coordinator);
+        verify(writer).saveFeed(data);
+        verify(writer).saveEtag(hosted.toString(), "old-etag");
+        verify(writer).saveFetchDate(hosted.toString(), yesterday);
+        verify(writer).setErrorCount(hosted.toString(), 3);
+        verify(db).switchDb(writer);
+    }
+
+    @Test
+    void failedFetchRetainsDate() throws Exception {
+        var service = spy(fetcher);
+        when(coordinator.tryLockDomain(eq(domain), any(Duration.class))).thenReturn(Optional.of(() -> {}));
+        doReturn(new FeedFetcherService.FetchResult.TransientError()).when(service)
+                .fetchFeedData(eq(definition), any(), any(), any());
+
+        service.updateFeedsSynchronous(FeedFetcherService.UpdateMode.REFRESH);
+
+        verify(writer).saveFetchDate(domain.toString(), 42);
+        verify(writer).setErrorCount(domain.toString(), 4);
+        verify(writer).saveFeed(oldData);
     }
 }

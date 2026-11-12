@@ -352,14 +352,14 @@ public class FeedFetcherService {
         EdgeDomain domain = new EdgeDomain(feed.domain());
         FeedItems oldData = feedDb.getFeed(domain);
         int lastFetch = feedDb.getLastFetch(domain);
-        String etag = updateMode == UpdateMode.REFRESH ? feedDb.getEtag(domain) : null;
+        String etag = feedDb.getEtag(domain);
         String modifiedSince = updateMode == UpdateMode.REFRESH ? getIfModifiedSinceDate(feedDb) : null;
         DomainSkip skip = shouldSkip(domain, lastFetch, today);
         FetchResult result;
-        int fetchDate = 0;
+        int fetchDate = lastFetch;
 
         if (skip == DomainSkip.SKIP_TODAY) {
-            result = new FetchResult.NotModified();
+            result = new FetchResult.Deferred();
         }
         else {
             var lock = domainCoordinator.tryLockDomain(domain, DOMAIN_TIMEOUT);
@@ -368,8 +368,9 @@ public class FeedFetcherService {
             }
             else {
                 try (DomainLock domainLock = lock.get()) {
-                    result = fetchFeedData(feed, fetchExecutor, modifiedSince, etag);
-                    if (skip == DomainSkip.NO_SKIP_TODAY && !(result instanceof FetchResult.TransientError)) {
+                    result = fetchFeedData(feed, fetchExecutor, modifiedSince, updateMode == UpdateMode.REFRESH ? etag : null);
+                    if (skip == DomainSkip.NO_SKIP_TODAY &&
+                            (result instanceof FetchResult.Success || result instanceof FetchResult.NotModified)) {
                         fetchDate = today;
                     }
                 }
@@ -402,7 +403,6 @@ public class FeedFetcherService {
                 // Local contention says nothing about the health of the remote feed.
                 writer.saveFeed(update.oldData());
                 writer.saveEtag(domain, update.oldEtag());
-                writer.saveFetchDate(domain, update.lastFetch());
                 int errorCount = errorCounts.getOrDefault(domain, 0);
                 if (errorCount > 0) {
                     writer.setErrorCount(domain, errorCount);
@@ -420,13 +420,13 @@ public class FeedFetcherService {
         }
     }
 
-    private enum DomainSkip {
+    enum DomainSkip {
         NEVER,
         NO_SKIP_TODAY,
         SKIP_TODAY,
     }
 
-    private DomainSkip shouldSkip(EdgeDomain domain, int lastFetch, int today) {
+    static DomainSkip shouldSkip(EdgeDomain domain, int lastFetch, int today) {
         // We can't fetch these domains every day, since we can't hammer them with too many parallel requests,
         // they become a bottleneck
         int fetchCadence = switch (domain.topDomain) {
@@ -440,10 +440,11 @@ public class FeedFetcherService {
             return DomainSkip.NEVER;
         }
 
-        // We lack fetch date, so let's generate one based on hash code,
-        // so that we'll get a nice, reasonably uniform distribution
+        // Spread undated feeds across the cadence without making their eligibility independent of the day.
         if (lastFetch == 0) {
-            lastFetch = today - (domain.hashCode() & 0x7FFF_FFFF) % (fetchCadence + 1);
+            return Math.floorMod(today, fetchCadence) == Math.floorMod(domain.hashCode(), fetchCadence)
+                    ? DomainSkip.NO_SKIP_TODAY
+                    : DomainSkip.SKIP_TODAY;
         }
 
         if (today < (lastFetch + fetchCadence)) {
