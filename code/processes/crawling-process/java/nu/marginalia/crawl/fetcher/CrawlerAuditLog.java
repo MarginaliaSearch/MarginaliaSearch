@@ -17,15 +17,18 @@ import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import com.github.luben.zstd.ZstdOutputStream;
-import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class CrawlerAuditLog implements Closeable {
-    private final BufferedOutputStream writer;
-    private final ArrayBlockingQueue<String> messages = new ArrayBlockingQueue<>(256);
-    private volatile boolean running = true;
+    private static final Logger logger = LoggerFactory.getLogger(CrawlerAuditLog.class);
 
+    private final Path logFile;
+    private final ArrayBlockingQueue<String> messages = new ArrayBlockingQueue<>(256);
     private final Thread writerThread;
+
+    private volatile boolean running = true;
 
     @Inject
     public CrawlerAuditLog(ProcessConfiguration processConfiguration) {
@@ -36,31 +39,58 @@ public class CrawlerAuditLog implements Closeable {
     }
 
     public CrawlerAuditLog(Path logFile) {
+        this.logFile = logFile;
+        this.writerThread = Thread.ofPlatform()
+                             .name("crawler-audit-log")
+                             .start(this::writerThread);
+    }
+
+    private void writerThread() {
+        final BufferedOutputStream writer;
+
         try {
             Files.createDirectories(logFile.getParent());
-            this.writer = new BufferedOutputStream(new ZstdOutputStream(Files.newOutputStream(logFile)));
+            writer = new BufferedOutputStream(new ZstdOutputStream(Files.newOutputStream(logFile), -1), 65536);
         } catch (IOException e) {
-            throw new UncheckedIOException(e);
+            running = false;
+            logger.error("Error creating ZSTD output stream", e);
+            return;
         }
 
-        writerThread = Thread.ofPlatform().start(() -> {
-            while (true) {
-                try {
-                    String message = messages.poll(100, TimeUnit.MILLISECONDS);
-                    if (message != null) {
-                        writer.write(message.getBytes(StandardCharsets.UTF_8));
-                    } else if (!running) {
-                        break;
-                    }
-                }
-                catch (InterruptedException ex) {
-                    break;
-                }
-                catch (IOException ex) {}
+        try (writer) {
+            while (running && !Thread.interrupted()) {
+                final String message = messages.poll(100, TimeUnit.MILLISECONDS);
+
+                if (message == null)
+                    continue;
+
+                writeMessage(writer, message);
             }
 
-            IOUtils.closeQuietly(writer);
-        });
+            running = false;
+
+            // Consume lingering entries in queue
+            while (!messages.isEmpty()) {
+                String message = messages.take();
+                writeMessage(writer, message);
+            }
+        }
+        catch (InterruptedException ex) {
+            logger.warn("Interrupted while waiting for ZSTD output stream", ex);
+        }
+        catch (IOException ex) {
+            logger.warn("Error closing crawler audit log", ex);
+        }
+
+        running = false;
+    }
+
+    private void writeMessage(BufferedOutputStream writer, String message) {
+        try {
+            writer.write(message.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException ex) {
+            logger.warn("Error writing crawler audit log", ex);
+        }
     }
 
     public void logProbe(ContentTypeProbeResult result, EdgeUrl url) {
@@ -104,10 +134,17 @@ public class CrawlerAuditLog implements Closeable {
     }
 
     private void enqueue(String msg) {
+        // cheap path when queue isn't empty, or we're closed
+        if (!running || messages.offer(msg))
+            return;
+
         try {
-            messages.put(msg);
+            // We offer with timeout to protect against unlikely TOCTOU in running state that could deadlock the caller
+            // if the writer thread isn't around anymore to drain the messages queue.
+            while (running && !messages.offer(msg, 30, TimeUnit.SECONDS));
         }
         catch (InterruptedException ex) {
+            logger.warn("Interrupted while waiting for audit log submission", ex);
             Thread.currentThread().interrupt();
         }
     }
