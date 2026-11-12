@@ -191,13 +191,23 @@ public class FeedFetcherService {
         return (feedDataHash = feedDb.getDataHash());
     }
 
-    public void start(UpdateMode updateMode) {
+    public synchronized void start(UpdateMode updateMode) {
         if (updating) {
             return;
         }
         updating = true;
         requestStop = false;
-        updateThread = Thread.ofPlatform().name("Feed update").start(() -> updateFeedsSynchronous(updateMode));
+        updateThread = Thread.ofPlatform().name("Feed update").start(() -> {
+            try {
+                updateFeedsSynchronous(updateMode);
+            }
+            finally {
+                synchronized (this) {
+                    updateThread = null;
+                    updating = false;
+                }
+            }
+        });
     }
 
     public boolean isRunning() {
@@ -205,12 +215,17 @@ public class FeedFetcherService {
     }
 
     public void stop() throws InterruptedException {
-        if (updating)
-            updateThread.interrupt();
-        if (updateThread != null)
-            updateThread.join();
-        updateThread = null;
-        updating = false;
+        final Thread thread;
+        synchronized (this) {
+            requestStop = true;
+            thread = updateThread;
+            if (thread != null) {
+                thread.interrupt();
+            }
+        }
+        if (thread != null) {
+            thread.join();
+        }
     }
 
     void updateFeedsSynchronous(UpdateMode updateMode) {
@@ -218,7 +233,13 @@ public class FeedFetcherService {
     }
 
     void updateFeedsSynchronous(UpdateMode updateMode, Duration timeout) {
-        try (FeedDbWriter writer = feedDb.createWriter();
+        FeedDbWriter writer = feedDb.createWriter();
+        if (writer == null) {
+            logger.error("Could not create a feed database writer");
+            return;
+        }
+        boolean published = false;
+        try (writer;
              FeedJournal feedJournal = FeedJournal.create();
              var heartbeat = serviceHeartbeat.createServiceAdHocTaskHeartbeat("Update Rss Feeds"))
         {
@@ -233,8 +254,15 @@ public class FeedFetcherService {
             logger.info("Found {} feed definitions", definitions.size());
             fetchUpdates(definitions, updateMode, writer, feedJournal, heartbeat, errorCounts, timeout);
 
-            feedDb.switchDb(writer);
-            feedDataHash = null;
+            // Serialize publication with stop(), so cancellation cannot publish a partial update.
+            synchronized (this) {
+                if (requestStop || Thread.currentThread().isInterrupted()) {
+                    throw new InterruptedException();
+                }
+                feedDb.switchDb(writer);
+                feedDataHash = null;
+                published = true;
+            }
         }
         catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
@@ -247,7 +275,14 @@ public class FeedFetcherService {
             logger.error("Error updating feeds", ex);
         }
         finally {
-            updating = false;
+            if (!published) {
+                try {
+                    Files.deleteIfExists(writer.getDbPath());
+                }
+                catch (IOException ex) {
+                    logger.warn("Could not remove discarded feed database {}", writer.getDbPath(), ex);
+                }
+            }
         }
     }
 
