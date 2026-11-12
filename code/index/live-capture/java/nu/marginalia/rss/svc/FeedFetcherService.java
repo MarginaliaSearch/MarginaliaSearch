@@ -25,6 +25,7 @@ import nu.marginalia.storage.model.FileStorageType;
 import nu.marginalia.util.SimpleBlockingThreadPool;
 import org.apache.hc.client5.http.ConnectionKeepAliveStrategy;
 import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.cookie.StandardCookieSpec;
@@ -32,10 +33,9 @@ import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.core5.http.*;
 import org.apache.hc.core5.http.io.SocketConfig;
-import org.apache.hc.core5.http.io.entity.EntityUtils;
-import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.hc.core5.http.message.MessageSupport;
 import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.core5.io.Closer;
 import org.apache.hc.core5.util.TimeValue;
 import org.apache.hc.core5.util.Timeout;
 import org.slf4j.Logger;
@@ -52,9 +52,11 @@ import java.nio.file.Files;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
@@ -62,6 +64,8 @@ import java.util.function.Predicate;
 @Singleton
 public class FeedFetcherService {
     private static final int MAX_FEED_ITEMS = 10;
+    static final int MAX_FEED_BYTES = 8 * 1024 * 1024;
+    private static final Duration FETCH_TIMEOUT = Duration.ofSeconds(30);
     private static final Logger logger = LoggerFactory.getLogger(FeedFetcherService.class);
 
     private final FeedDb feedDb;
@@ -120,7 +124,7 @@ public class FeedFetcherService {
         final RequestConfig defaultRequestConfig = RequestConfig.custom()
                 .setCookieSpec(StandardCookieSpec.IGNORE)
                 .setResponseTimeout(10, TimeUnit.SECONDS)
-                .setConnectionRequestTimeout(5, TimeUnit.MINUTES)
+                .setConnectionRequestTimeout(5, TimeUnit.SECONDS)
                 .build();
 
         httpClient = HttpClients.custom()
@@ -395,72 +399,99 @@ public class FeedFetcherService {
     }
 
     FetchResult fetchFeedData(FeedDefinition feed,
-                                      ExecutorService executorService,
-                                      @Nullable String ifModifiedSinceDate,
-                                      @Nullable String ifNoneMatchTag)
+                              ExecutorService executorService,
+                              @Nullable String ifModifiedSinceDate,
+                              @Nullable String ifNoneMatchTag) throws InterruptedException
     {
+        return fetchFeedData(feed, executorService, ifModifiedSinceDate, ifNoneMatchTag, FETCH_TIMEOUT);
+    }
+
+    FetchResult fetchFeedData(FeedDefinition feed,
+                              ExecutorService executorService,
+                              @Nullable String ifModifiedSinceDate,
+                              @Nullable String ifNoneMatchTag,
+                              Duration timeout) throws InterruptedException
+    {
+        final HttpGet request;
         try {
-            URI uri = new URI(feed.feedUrl());
+            request = new HttpGet(feed.feedUrl());
+        }
+        catch (IllegalArgumentException ex) {
+            logger.warn("Invalid feed URL: {}", feed.feedUrl(), ex);
+            return new FetchResult.TransientError();
+        }
 
-            var requestBuilder = ClassicRequestBuilder.get(uri)
-                    .setHeader("User-Agent", WmsaHome.getUserAgent().uaIdentifier())
-                    .setHeader("Accept-Encoding", "gzip")
-                    .setHeader("Accept", "text/*, */*;q=0.9");
+        request.setHeader("User-Agent", WmsaHome.getUserAgent().uaIdentifier());
+        request.setHeader("Accept-Encoding", "gzip");
+        request.setHeader("Accept", "text/*, */*;q=0.9");
 
-            // Set the If-Modified-Since or If-None-Match headers if we have them
-            // though since there are certain idiosyncrasies in server implementations,
-            // we avoid setting both at the same time as that may turn a 304 into a 200.
-            if (ifNoneMatchTag != null) {
-                requestBuilder.addHeader("If-None-Match", ifNoneMatchTag);
-            } else if (ifModifiedSinceDate != null) {
-                requestBuilder.addHeader("If-Modified-Since", ifModifiedSinceDate);
+        // Some servers return 200 instead of 304 when both validators are present.
+        if (ifNoneMatchTag != null) {
+            request.setHeader("If-None-Match", ifNoneMatchTag);
+        } else if (ifModifiedSinceDate != null) {
+            request.setHeader("If-Modified-Since", ifModifiedSinceDate);
+        }
+
+        var future = executorService.submit(() -> fetch(request));
+        try {
+            return future.get(timeout.toNanos(), TimeUnit.NANOSECONDS);
+        }
+        catch (TimeoutException ex) {
+            logger.warn("Timed out fetching feed after {}: {}", timeout, feed.feedUrl());
+            return new FetchResult.TransientError();
+        }
+        catch (ExecutionException ex) {
+            logger.debug("Error fetching feed {}", feed.feedUrl(), ex.getCause());
+            return new FetchResult.TransientError();
+        }
+        finally {
+            if (!future.isDone()) {
+                // Interrupting a worker alone does not reliably close a blocking HTTP socket.
+                request.cancel();
+                future.cancel(true);
             }
+        }
+    }
 
-            return httpClient.execute(requestBuilder.build(), rsp -> {
-                try {
-                    logger.info("Code: {}, URL: {}", rsp.getCode(), uri);
+    private FetchResult fetch(HttpGet request) throws IOException {
+        var response = httpClient.executeOpen(null, request, null);
+        boolean consumed = false;
+        try {
+            logger.info("Code: {}, URL: {}", response.getCode(), request.getRequestUri());
 
-                    switch (rsp.getCode()) {
-                        case 200 -> {
-                            if (rsp.getEntity() == null) {
-                                return new FetchResult.TransientError(); // No content to read, treat as transient error
-                            }
-
-                            Optional<String> bodyText = decodeBodyText(rsp);
-                            if (bodyText.isEmpty())
-                                return new FetchResult.TransientError();
-
-                            // Grab the ETag header if it exists
-                            Header etagHeader = rsp.getFirstHeader("ETag");
-                            String newEtagValue = etagHeader == null ? null : etagHeader.getValue();
-
-                            return new FetchResult.Success(bodyText.get(), newEtagValue);
-                        }
-                        case 304 -> {
-                            return new FetchResult.NotModified(); // via If-Modified-Since semantics
-                        }
-                        case 404 -> {
-                            return new FetchResult.PermanentError(); // never try again
-                        }
-                        default -> {
-                            return new FetchResult.TransientError(); // we try again later
-                        }
+            return switch (response.getCode()) {
+                case 200 -> {
+                    if (response.getEntity() == null) {
+                        yield new FetchResult.TransientError();
                     }
-                }
-                catch (Exception ex) {
-                    logger.warn("Errror in http client response handler", ex);
-                    return new FetchResult.TransientError();
-                }
-                finally {
-                    EntityUtils.consumeQuietly(rsp.getEntity());
-                }
-            });
-        }
-        catch (Exception ex) {
-            logger.debug("Error fetching feed", ex);
-        }
 
-        return new FetchResult.TransientError();
+                    Optional<String> bodyText = decodeBodyText(request, response);
+                    if (bodyText.isEmpty()) {
+                        yield new FetchResult.TransientError();
+                    }
+                    consumed = true;
+
+                    Header etag = response.getFirstHeader("ETag");
+                    yield new FetchResult.Success(bodyText.get(), etag == null ? null : etag.getValue());
+                }
+                case 304 -> {
+                    consumed = true;
+                    yield new FetchResult.NotModified();
+                }
+                case 404 -> new FetchResult.PermanentError();
+                default -> new FetchResult.TransientError();
+            };
+        }
+        finally {
+            // Closing an unread entity drains it for reuse, which can stall on error bodies too.
+            if (consumed) {
+                response.close();
+            }
+            else {
+                request.cancel();
+                Closer.closeQuietly(response);
+            }
+        }
     }
 
     public sealed interface FetchResult {
@@ -470,31 +501,39 @@ public class FeedFetcherService {
         record PermanentError()  implements FetchResult {}
     }
 
-    private Optional<String> decodeBodyText(ClassicHttpResponse rsp) throws IOException {
-
-        Header contentTypeHeader = rsp.getFirstHeader("Content-Type");
+    private Optional<String> decodeBodyText(HttpGet request, ClassicHttpResponse response) throws IOException {
+        Header contentTypeHeader = response.getFirstHeader("Content-Type");
         if (contentTypeHeader == null) {
             return Optional.empty();
         }
         ContentType contentType = ContentType.parse(contentTypeHeader.getValue());
 
-        byte[] responseBytes;
+        InputStream content = response.getEntity().getContent();
+        Header encoding = response.getFirstHeader("Content-Encoding");
+        if (encoding != null && "gzip".equalsIgnoreCase(encoding.getValue())) {
+            content = new GZIPInputStream(content);
+        }
 
-        Header contentEncoding = rsp.getFirstHeader("Content-Encoding");
-        if (contentEncoding != null && "gzip".equalsIgnoreCase(contentEncoding.getValue())) {
-            try (InputStream gzipStream = new GZIPInputStream(rsp.getEntity().getContent());
-                 ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-                gzipStream.transferTo(baos);
-                responseBytes = baos.toByteArray();
+        try (InputStream stream = content) {
+            try {
+                byte[] bytes = stream.readNBytes(MAX_FEED_BYTES + 1);
+                if (bytes.length > MAX_FEED_BYTES) {
+                    throw new IOException("Feed exceeds " + MAX_FEED_BYTES + " decoded bytes");
+                }
+                return Optional.of(DocumentBodyToString.getStringData(contentType, bytes));
+            }
+            catch (IOException | RuntimeException ex) {
+                request.cancel();
+                throw ex;
             }
         }
-        else {
-            responseBytes = EntityUtils.toByteArray(rsp.getEntity());
-        }
+    }
 
-        return Optional.of(
-                DocumentBodyToString.getStringData(contentType, responseBytes)
-        );
+    private InputStream openStream(URL url) throws IOException {
+        var connection = url.openConnection();
+        connection.setConnectTimeout(15_000);
+        connection.setReadTimeout(10_000);
+        return connection.getInputStream();
     }
 
     public Collection<FeedDefinition> readDefinitionsFromSystem() throws IOException {
@@ -508,7 +547,7 @@ public class FeedFetcherService {
             }
             logger.info("Fetching from {}", url);
 
-            try (var feedStream = new GZIPInputStream(url.openStream())) {
+            try (var feedStream = new GZIPInputStream(openStream(url))) {
                 CSVReader reader = new CSVReader(new java.io.InputStreamReader(feedStream));
 
                 for (String[] row : reader) {
@@ -570,7 +609,7 @@ public class FeedFetcherService {
         List<FeedDefinition> definitions = new ArrayList<>();
 
         byte[] streamBytes;
-        try (var urlStream = new URL(sourceUrl).openStream()) {
+        try (var urlStream = openStream(URI.create(sourceUrl).toURL())) {
             streamBytes = urlStream.readNBytes(32*1024*1024);  // zip bomb safety
         }
         catch (IOException ex) {
