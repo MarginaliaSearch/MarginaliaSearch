@@ -19,10 +19,10 @@ import nu.marginalia.rss.model.FeedDefinition;
 import nu.marginalia.rss.model.FeedItem;
 import nu.marginalia.rss.model.FeedItems;
 import nu.marginalia.service.control.ServiceHeartbeat;
+import nu.marginalia.service.control.ServiceAdHocTaskHeartbeat;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageType;
-import nu.marginalia.util.SimpleBlockingThreadPool;
 import org.apache.hc.client5.http.ConnectionKeepAliveStrategy;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
@@ -53,11 +53,12 @@ import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.Future;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
@@ -66,6 +67,8 @@ public class FeedFetcherService {
     private static final int MAX_FEED_ITEMS = 10;
     static final int MAX_FEED_BYTES = 8 * 1024 * 1024;
     private static final Duration FETCH_TIMEOUT = Duration.ofSeconds(30);
+    private static final int FETCH_CONCURRENCY = 64;
+    private static final Duration UPDATE_TIMEOUT = Duration.ofHours(1);
     private static final Duration DOMAIN_TIMEOUT = Duration.ofSeconds(5);
     private static final Logger logger = LoggerFactory.getLogger(FeedFetcherService.class);
 
@@ -211,155 +214,174 @@ public class FeedFetcherService {
     }
 
     void updateFeedsSynchronous(UpdateMode updateMode) {
+        updateFeedsSynchronous(updateMode, UPDATE_TIMEOUT);
+    }
+
+    void updateFeedsSynchronous(UpdateMode updateMode, Duration timeout) {
         try (FeedDbWriter writer = feedDb.createWriter();
-             ExecutorService fetchExecutor = Executors.newVirtualThreadPerTaskExecutor();
              FeedJournal feedJournal = FeedJournal.create();
-             var heartbeat = serviceHeartbeat.createServiceAdHocTaskHeartbeat("Update Rss Feeds")
-        ) {
-
-            // Read the feed definitions from the database, if they are not available, read them from the system's
-            // RSS exports instead
-
+             var heartbeat = serviceHeartbeat.createServiceAdHocTaskHeartbeat("Update Rss Feeds"))
+        {
             Collection<FeedDefinition> definitions = feedDb.getAllFeeds();
             Map<String, Integer> errorCounts = feedDb.getAllErrorCounts();
 
-            Collection<FeedDefinition> datasetFeeds;
-
-            // If we didn't get any definitions, or a clean update is requested, read the definitions from the system
-            // instead
             if (definitions == null || definitions.isEmpty() || updateMode == UpdateMode.CLEAN) {
                 definitions = readDefinitionsFromSystem();
             }
-
-            // Sync feed definitions from the small web dataset, adding any missing feeds
             definitions = mergeSmallWebDatasetFeeds(definitions);
 
             logger.info("Found {} feed definitions", definitions.size());
+            fetchUpdates(definitions, updateMode, writer, feedJournal, heartbeat, errorCounts, timeout);
 
-            final AtomicInteger definitionsUpdated = new AtomicInteger(0);
-            final int totalDefinitions = definitions.size();
-
-            SimpleBlockingThreadPool executor = new SimpleBlockingThreadPool("FeedFetcher", 64, 4);
-
-            int today = (int) ((LocalDate.now().toEpochDay()) & 0x7FFF_FFFFL);
-
-            for (var feed : definitions) {
-                if (Thread.interrupted() || requestStop)
-                    break;
-
-                executor.submitQuietly(() -> {
-                    try {
-                        EdgeDomain domain = new EdgeDomain(feed.domain());
-                        var oldData = feedDb.getFeed(domain);
-
-                        int lastFetch = feedDb.getLastFetch(domain);
-
-                        @Nullable
-                        String ifModifiedSinceDate = switch(updateMode) {
-                            case REFRESH -> getIfModifiedSinceDate(feedDb);
-                            case CLEAN -> null;
-                        };
-
-                        @Nullable
-                        String ifNoneMatchTag = switch (updateMode) {
-                            case REFRESH -> feedDb.getEtag(domain);
-                            case CLEAN -> null;
-                        };
-
-                        FetchResult feedData;
-                        DomainSkip domainSkip = shouldSkip(domain, lastFetch, today);
-                        if (domainSkip == DomainSkip.SKIP_TODAY) {
-                            feedData = new FetchResult.NotModified();
-                        }
-                        else {
-                            var lock = domainCoordinator.tryLockDomain(domain, DOMAIN_TIMEOUT);
-                            if (lock.isEmpty()) {
-                                feedData = new FetchResult.Deferred();
-                            }
-                            else {
-                                try (DomainLock domainLock = lock.get()) {
-                                    feedData = fetchFeedData(feed, fetchExecutor, ifModifiedSinceDate, ifNoneMatchTag);
-
-                                    if (domainSkip == DomainSkip.NO_SKIP_TODAY && !(feedData instanceof FetchResult.TransientError)) {
-                                        writer.saveFetchDate(domain.toString(), today);
-                                    }
-                                }
-                            }
-                        }
-
-                        switch (feedData) {
-                            case FetchResult.Success(String value, String etag) -> {
-                                writer.saveEtag(feed.domain(), etag);
-                                writer.saveFeed(parseFeed(value, feed));
-
-                                feedJournal.record(feed.feedUrl(), value);
-                            }
-                            case FetchResult.NotModified() -> {
-                                writer.saveEtag(feed.domain(), ifNoneMatchTag);
-                                writer.saveFeed(oldData);
-                            }
-                            case FetchResult.Deferred() -> {
-                                // Local contention says nothing about the health of the remote feed.
-                                writer.saveFeed(oldData);
-                                writer.saveEtag(feed.domain(), ifNoneMatchTag);
-                                writer.saveFetchDate(feed.domain(), lastFetch);
-                                int errorCount = errorCounts.getOrDefault(feed.domain().toLowerCase(), 0);
-                                if (errorCount > 0) {
-                                    writer.setErrorCount(feed.domain().toLowerCase(), errorCount);
-                                }
-                            }
-                            case FetchResult.TransientError() -> {
-                                int errorCount = errorCounts.getOrDefault(feed.domain().toLowerCase(), 0);
-                                writer.setErrorCount(feed.domain().toLowerCase(), ++errorCount);
-
-                                if (errorCount < 10) {
-                                    // Permit the server a few days worth of retries before we drop the feed entirely
-                                    writer.saveFeed(oldData);
-                                }
-                            }
-                            case FetchResult.PermanentError() -> {
-                            } // let the definition be forgotten about
-                        }
-
-                    }
-                    finally {
-                        if ((definitionsUpdated.incrementAndGet() % 1_000) == 0) {
-                            // Update the progress every 1k feeds, to avoid hammering the database and flooding the logs
-                            heartbeat.progress("Updated " + definitionsUpdated + "/" + totalDefinitions + " feeds", definitionsUpdated.get(), totalDefinitions);
-                        }
-                    }
-                });
-            }
-
-
-            if (!requestStop) { // Graceful shutdown
-                executor.shutDown();
-                // Wait for the executor to finish, but give up after 60 minutes to avoid hanging indefinitely
-                for (int waitedMinutes = 0; waitedMinutes < 60; waitedMinutes++) {
-                    if (executor.awaitTermination(1, TimeUnit.MINUTES)) break;
-                }
-                executor.shutDownNow();
-
-                // Wait for any in-progress writes to finish before switching the database
-                // in case we ended up murdering the writer with shutDownNow.  It's a very
-                // slim chance but this increases the odds of a clean switch over.
-
-                TimeUnit.SECONDS.sleep(5);
-
-                feedDb.switchDb(writer);
-                feedDataHash = null; // invalidate hash
-            }
-            else { // Manual termination
-                executor.shutDownNow();
-                writer.close();
-                Files.deleteIfExists(writer.getDbPath());
-            }
-
-        } catch (SQLException|InterruptedException|IOException e) {
-            logger.error("Error updating feeds", e);
+            feedDb.switchDb(writer);
+            feedDataHash = null;
+        }
+        catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            logger.info("Feed update interrupted");
+        }
+        catch (TimeoutException ex) {
+            logger.warn("Feed update exceeded {} and was discarded", timeout);
+        }
+        catch (SQLException | IOException | ExecutionException | RuntimeException ex) {
+            logger.error("Error updating feeds", ex);
         }
         finally {
             updating = false;
+        }
+    }
+
+    private void fetchUpdates(Collection<FeedDefinition> definitions,
+                              UpdateMode updateMode,
+                              FeedDbWriter writer,
+                              FeedJournal journal,
+                              ServiceAdHocTaskHeartbeat heartbeat,
+                              Map<String, Integer> errorCounts,
+                              Duration timeout)
+            throws InterruptedException, ExecutionException, TimeoutException, IOException
+    {
+        long deadline = System.nanoTime() + timeout.toNanos();
+        int today = (int) LocalDate.now().toEpochDay();
+        int completed = 0;
+        var pending = definitions.iterator();
+        ExecutorService workers = Executors.newVirtualThreadPerTaskExecutor();
+        ExecutorService fetchExecutor = Executors.newVirtualThreadPerTaskExecutor();
+        var results = new ExecutorCompletionService<FeedUpdate>(workers);
+        Set<Future<FeedUpdate>> active = new HashSet<>();
+
+        try {
+            while (pending.hasNext() || !active.isEmpty()) {
+                if (Thread.currentThread().isInterrupted() || requestStop) {
+                    throw new InterruptedException();
+                }
+                if (System.nanoTime() >= deadline) {
+                    throw new TimeoutException();
+                }
+
+                while (pending.hasNext() && active.size() < FETCH_CONCURRENCY) {
+                    var feed = pending.next();
+                    active.add(results.submit(() -> fetchUpdate(feed, updateMode, today, fetchExecutor)));
+                }
+
+                var future = results.poll(Math.max(0, deadline - System.nanoTime()), TimeUnit.NANOSECONDS);
+                if (future == null) {
+                    throw new TimeoutException();
+                }
+                active.remove(future);
+                saveUpdate(future.get(), writer, journal, errorCounts);
+
+                if (++completed % 1_000 == 0) {
+                    heartbeat.progress("Updated " + completed + "/" + definitions.size() + " feeds", completed, definitions.size());
+                }
+            }
+        }
+        finally {
+            for (var future : active) {
+                future.cancel(true);
+            }
+            workers.shutdownNow();
+            fetchExecutor.shutdownNow();
+            // Workers only return results; a task that is slow to cancel cannot write to the closing database.
+            if (!workers.awaitTermination(5, TimeUnit.SECONDS)) {
+                logger.warn("Feed workers did not terminate within five seconds");
+            }
+        }
+    }
+
+    private record FeedUpdate(FeedDefinition feed, FeedItems oldData, String oldEtag,
+                              int lastFetch, int fetchDate, FetchResult result) {}
+
+    private FeedUpdate fetchUpdate(FeedDefinition feed, UpdateMode updateMode, int today, ExecutorService fetchExecutor)
+            throws InterruptedException
+    {
+        EdgeDomain domain = new EdgeDomain(feed.domain());
+        FeedItems oldData = feedDb.getFeed(domain);
+        int lastFetch = feedDb.getLastFetch(domain);
+        String etag = updateMode == UpdateMode.REFRESH ? feedDb.getEtag(domain) : null;
+        String modifiedSince = updateMode == UpdateMode.REFRESH ? getIfModifiedSinceDate(feedDb) : null;
+        DomainSkip skip = shouldSkip(domain, lastFetch, today);
+        FetchResult result;
+        int fetchDate = 0;
+
+        if (skip == DomainSkip.SKIP_TODAY) {
+            result = new FetchResult.NotModified();
+        }
+        else {
+            var lock = domainCoordinator.tryLockDomain(domain, DOMAIN_TIMEOUT);
+            if (lock.isEmpty()) {
+                result = new FetchResult.Deferred();
+            }
+            else {
+                try (DomainLock domainLock = lock.get()) {
+                    result = fetchFeedData(feed, fetchExecutor, modifiedSince, etag);
+                    if (skip == DomainSkip.NO_SKIP_TODAY && !(result instanceof FetchResult.TransientError)) {
+                        fetchDate = today;
+                    }
+                }
+            }
+        }
+
+        return new FeedUpdate(feed, oldData, etag, lastFetch, fetchDate, result);
+    }
+
+    private void saveUpdate(FeedUpdate update, FeedDbWriter writer, FeedJournal journal, Map<String, Integer> errorCounts)
+            throws IOException
+    {
+        FeedDefinition feed = update.feed();
+        String domain = feed.domain().toLowerCase();
+        if (update.fetchDate() > 0) {
+            writer.saveFetchDate(domain, update.fetchDate());
+        }
+
+        switch (update.result()) {
+            case FetchResult.Success(String value, String etag) -> {
+                writer.saveEtag(domain, etag);
+                writer.saveFeed(parseFeed(value, feed));
+                journal.record(feed.feedUrl(), value);
+            }
+            case FetchResult.NotModified() -> {
+                writer.saveEtag(domain, update.oldEtag());
+                writer.saveFeed(update.oldData());
+            }
+            case FetchResult.Deferred() -> {
+                // Local contention says nothing about the health of the remote feed.
+                writer.saveFeed(update.oldData());
+                writer.saveEtag(domain, update.oldEtag());
+                writer.saveFetchDate(domain, update.lastFetch());
+                int errorCount = errorCounts.getOrDefault(domain, 0);
+                if (errorCount > 0) {
+                    writer.setErrorCount(domain, errorCount);
+                }
+            }
+            case FetchResult.TransientError() -> {
+                int errorCount = errorCounts.getOrDefault(domain, 0) + 1;
+                writer.setErrorCount(domain, errorCount);
+                if (errorCount < 10) {
+                    writer.saveFeed(update.oldData());
+                }
+            }
+            case FetchResult.PermanentError() -> {
+            }
         }
     }
 
