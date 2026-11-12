@@ -584,7 +584,7 @@ public class FeedFetcherService {
         var response = httpClient.executeOpen(null, request, null);
         boolean consumed = false;
         try {
-            logger.info("Code: {}, URL: {}", response.getCode(), request.getRequestUri());
+            logger.debug("Code: {}, URL: {}", response.getCode(), request.getRequestUri());
 
             return switch (response.getCode()) {
                 case 200 -> {
