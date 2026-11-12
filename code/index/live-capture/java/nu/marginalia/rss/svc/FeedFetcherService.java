@@ -68,7 +68,7 @@ public class FeedFetcherService {
     static final int MAX_FEED_BYTES = 8 * 1024 * 1024;
     private static final Duration FETCH_TIMEOUT = Duration.ofSeconds(30);
     private static final int FETCH_CONCURRENCY = 64;
-    private static final Duration UPDATE_TIMEOUT = Duration.ofHours(1);
+    private static final Duration UPDATE_TIMEOUT = Duration.ofHours(4);
     private static final Duration PROGRESS_INTERVAL = Duration.ofSeconds(10);
     private static final Duration DOMAIN_TIMEOUT = Duration.ofSeconds(5);
     private static final Logger logger = LoggerFactory.getLogger(FeedFetcherService.class);
@@ -298,21 +298,25 @@ public class FeedFetcherService {
     {
         final Instant deadline = Instant.now().plus(timeout);
 
-        int today = (int) LocalDate.now().toEpochDay();
-        int completed = 0;
+        final int today = (int) LocalDate.now().toEpochDay();
         var pending = definitions.iterator();
+
         ExecutorService workers = Executors.newVirtualThreadPerTaskExecutor();
-        ExecutorService fetchExecutor = Executors.newVirtualThreadPerTaskExecutor();
+
         var results = new ExecutorCompletionService<FeedUpdate>(workers);
         Map<Future<FeedUpdate>, FeedDefinition> active = new LinkedHashMap<>();
         heartbeat.progress("Updating " + definitions.size() + " feeds", 0, definitions.size());
 
-        try {
+        try (ExecutorService fetchExecutor = Executors.newVirtualThreadPerTaskExecutor()) {
+
+            int completed = 0;
+            Instant nextProgress = Instant.now().plus(PROGRESS_INTERVAL);
+
             while (pending.hasNext() || !active.isEmpty()) {
                 if (Thread.currentThread().isInterrupted() || requestStop) {
                     throw new InterruptedException();
                 }
-                if (System.nanoTime() >= deadline) {
+                if (Instant.now().isAfter(deadline)) {
                     throw new TimeoutException();
                 }
 
@@ -321,30 +325,43 @@ public class FeedFetcherService {
                     active.put(results.submit(() -> fetchUpdate(feed, updateMode, today, fetchExecutor)), feed);
                 }
 
-                long wait = Math.min(deadline, nextProgress) - System.nanoTime();
-                var future = results.poll(Math.max(0, wait), TimeUnit.NANOSECONDS);
-                if (future != null) {
-                    var feed = active.remove(future);
-                    try {
-                        saveUpdate(future.get(), writer, journal, errorCounts);
-                    }
-                    catch (ExecutionException ex) {
-                        logger.error("Failed to update feed {}", feed.feedUrl(), ex.getCause());
-                        throw ex;
-                    }
-                    completed++;
+                Duration wait;
+                if (deadline.isBefore(nextProgress)) {
+                    wait = Duration.between(Instant.now(), deadline);
+                }
+                else {
+                    wait = Duration.between(Instant.now(), deadline);
                 }
 
-                if (System.nanoTime() >= nextProgress || completed == definitions.size() ||
-                        (future != null && completed % 1_000 == 0)) {
+                final Future<FeedUpdate> future;
+                if (!wait.isPositive()) {
+                    future = null;
+                }
+                else {
+                    future = results.poll(wait.toNanos(), TimeUnit.NANOSECONDS);
+                    if (future != null) {
+                        var feed = active.remove(future);
+                        try {
+                            saveUpdate(future.get(), writer, journal, errorCounts);
+                        } catch (ExecutionException ex) {
+                            logger.error("Failed to update feed {}", feed.feedUrl(), ex.getCause());
+                            throw ex;
+                        }
+                        completed++;
+                    }
+                }
+
+                if (Instant.now().isAfter(nextProgress)
+                        || completed == definitions.size()
+                        || (future != null && completed % 1_000 == 0))
+                {
                     heartbeat.progress("Updated " + completed + "/" + definitions.size() + " feeds; " +
                             active.size() + " active", completed, definitions.size());
-                    logger.info("Updated {}/{} feeds; {} active, including {}", completed, definitions.size(), active.size(),
-                            active.values().stream().limit(5).map(FeedDefinition::feedUrl).toList());
-                    nextProgress = System.nanoTime() + PROGRESS_INTERVAL.toNanos();
+                    nextProgress = Instant.now().plus(PROGRESS_INTERVAL);
                 }
             }
-            if (System.nanoTime() >= deadline) {
+
+            if (Instant.now().isAfter(deadline.plusSeconds(300))) {
                 throw new TimeoutException();
             }
         }
@@ -353,7 +370,6 @@ public class FeedFetcherService {
                 future.cancel(true);
             }
             workers.shutdownNow();
-            fetchExecutor.shutdownNow();
             // Workers only return results; a task that is slow to cancel cannot write to the closing database.
             if (!workers.awaitTermination(5, TimeUnit.SECONDS)) {
                 logger.warn("Feed workers did not terminate within five seconds");
