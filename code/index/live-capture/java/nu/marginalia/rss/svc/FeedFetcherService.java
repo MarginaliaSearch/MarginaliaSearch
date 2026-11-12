@@ -129,6 +129,8 @@ public class FeedFetcherService {
                 .setUserAgent(WmsaHome.getUserAgent().uaIdentifier())
                 .setConnectionManager(connectionManager)
                 .disableContentCompression()
+                // Retry on the next feed update instead of holding a worker through Retry-After.
+                .disableAutomaticRetries()
                 .setKeepAliveStrategy(new ConnectionKeepAliveStrategy() {
                     // Default keep-alive duration is 3 minutes, but this is too long for us,
                     // as we are either going to re-use it fairly quickly or close it for a long time.
@@ -392,7 +394,7 @@ public class FeedFetcherService {
         return cutoffInstant.atZone(ZoneId.of("GMT")).format(DateTimeFormatter.RFC_1123_DATE_TIME);
     }
 
-    private FetchResult fetchFeedData(FeedDefinition feed,
+    FetchResult fetchFeedData(FeedDefinition feed,
                                       ExecutorService executorService,
                                       @Nullable String ifModifiedSinceDate,
                                       @Nullable String ifNoneMatchTag)
