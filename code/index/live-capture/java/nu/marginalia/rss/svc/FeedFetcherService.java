@@ -66,6 +66,7 @@ public class FeedFetcherService {
     private static final int MAX_FEED_ITEMS = 10;
     static final int MAX_FEED_BYTES = 8 * 1024 * 1024;
     private static final Duration FETCH_TIMEOUT = Duration.ofSeconds(30);
+    private static final Duration DOMAIN_TIMEOUT = Duration.ofSeconds(5);
     private static final Logger logger = LoggerFactory.getLogger(FeedFetcherService.class);
 
     private final FeedDb feedDb;
@@ -271,14 +272,18 @@ public class FeedFetcherService {
                             feedData = new FetchResult.NotModified();
                         }
                         else {
-                            try (DomainLock domainLock = domainCoordinator.lockDomain(new EdgeDomain(feed.domain()))) {
-                                feedData = fetchFeedData(feed, fetchExecutor, ifModifiedSinceDate, ifNoneMatchTag);
+                            var lock = domainCoordinator.tryLockDomain(domain, DOMAIN_TIMEOUT);
+                            if (lock.isEmpty()) {
+                                feedData = new FetchResult.Deferred();
+                            }
+                            else {
+                                try (DomainLock domainLock = lock.get()) {
+                                    feedData = fetchFeedData(feed, fetchExecutor, ifModifiedSinceDate, ifNoneMatchTag);
 
-                                if (domainSkip == DomainSkip.NO_SKIP_TODAY && !(feedData instanceof FetchResult.TransientError)) {
-                                    writer.saveFetchDate(domain.toString(), today);
+                                    if (domainSkip == DomainSkip.NO_SKIP_TODAY && !(feedData instanceof FetchResult.TransientError)) {
+                                        writer.saveFetchDate(domain.toString(), today);
+                                    }
                                 }
-                            } catch (Exception ex) {
-                                feedData = new FetchResult.TransientError();
                             }
                         }
 
@@ -292,6 +297,16 @@ public class FeedFetcherService {
                             case FetchResult.NotModified() -> {
                                 writer.saveEtag(feed.domain(), ifNoneMatchTag);
                                 writer.saveFeed(oldData);
+                            }
+                            case FetchResult.Deferred() -> {
+                                // Local contention says nothing about the health of the remote feed.
+                                writer.saveFeed(oldData);
+                                writer.saveEtag(feed.domain(), ifNoneMatchTag);
+                                writer.saveFetchDate(feed.domain(), lastFetch);
+                                int errorCount = errorCounts.getOrDefault(feed.domain().toLowerCase(), 0);
+                                if (errorCount > 0) {
+                                    writer.setErrorCount(feed.domain().toLowerCase(), errorCount);
+                                }
                             }
                             case FetchResult.TransientError() -> {
                                 int errorCount = errorCounts.getOrDefault(feed.domain().toLowerCase(), 0);
@@ -497,6 +512,7 @@ public class FeedFetcherService {
     public sealed interface FetchResult {
         record Success(String value, String etag) implements FetchResult {}
         record NotModified() implements FetchResult {}
+        record Deferred() implements FetchResult {}
         record TransientError() implements FetchResult {}
         record PermanentError()  implements FetchResult {}
     }

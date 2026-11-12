@@ -34,9 +34,14 @@ public class LocalDomainCoordinator implements DomainCoordinator {
 
         sem.acquire();
 
-        Thread.sleep(timeUntilNextRequest(key));
-
-        return new LocalDomainLock(key, sem);
+        try {
+            Thread.sleep(timeUntilNextRequest(key));
+            return new LocalDomainLock(key, sem);
+        }
+        catch (InterruptedException ex) {
+            sem.release();
+            throw ex;
+        }
     }
 
     public Optional<DomainLock> tryLockDomain(EdgeDomain domain) {
@@ -75,9 +80,14 @@ public class LocalDomainCoordinator implements DomainCoordinator {
                 return Optional.empty();
             }
 
-            Thread.sleep(timeUntilNextRequest);
-
-            return Optional.of(new LocalDomainLock(key, sem));
+            try {
+                Thread.sleep(timeUntilNextRequest);
+                return Optional.of(new LocalDomainLock(key, sem));
+            }
+            catch (InterruptedException ex) {
+                sem.release();
+                throw ex;
+            }
         }
         else {
             // We don't have a lock, so we return an empty optional
