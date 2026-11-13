@@ -56,26 +56,6 @@ final class CompressedFullPreindexDocuments implements LongArray {
         return block[(int) (absolute - storage.currentStart)];
     }
 
-    /** Copy decoded longs without routing them through a contiguous LongArray backing store. */
-    void copyTo(long pos, MemorySegment destination, int destinationPos, int count) {
-        Objects.checkFromIndexSize(pos, count, length);
-
-        long absolute = start + pos;
-
-        while (count > 0) {
-            long[] block = storage.blockAt(absolute);
-
-            int within = (int) (absolute - storage.currentStart);
-            int chunk = Math.min(count, storage.blockLongs - within);
-
-            MemorySegment.copy(block, within, destination, ValueLayout.JAVA_LONG, 8L * destinationPos, chunk);
-
-            absolute += chunk;
-            destinationPos += chunk;
-            count -= chunk;
-        }
-    }
-
     @Override
     public long size() { return length; }
 
@@ -342,28 +322,20 @@ final class CompressedFullPreindexDocuments implements LongArray {
             }
         }
 
-        void put(LongArray source, long start, long end) throws IOException {
-            if (closed) throw new IllegalStateException("Writer is closed");
-
-            Objects.checkFromToIndex(start, end, source.size());
-
-            while (start < end) {
-                if (position == blockLongs)
-                    flush();
-
-                int chunk = (int) Math.min(end - start, blockLongs - position);
-
-                if (source instanceof CompressedFullPreindexDocuments compressedSource) {
-                    compressedSource.copyTo(start, bufferSegment, position, chunk);
-                }
-                else {
-                    MemorySegment.copy(source.getMemorySegment(), 8 * start, bufferSegment, 8L * position, 8L * chunk);
-                }
-
-                position += chunk;
-                length += chunk;
-                start += chunk;
+        void put(long documentId, long positionOffset, long metadata) throws IOException {
+            if (closed) {
+                throw new IllegalStateException("Writer is closed");
             }
+
+            if (position == blockLongs) {
+                flush();
+            }
+
+            bufferSegment.setAtIndex(ValueLayout.JAVA_LONG, position++, documentId);
+            bufferSegment.setAtIndex(ValueLayout.JAVA_LONG, position++, positionOffset);
+            bufferSegment.setAtIndex(ValueLayout.JAVA_LONG, position++, metadata);
+
+            length += 3;
         }
 
         private void flush() throws IOException {

@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
+import java.util.function.LongUnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
@@ -215,7 +216,8 @@ public class SkipListWriter implements AutoCloseable {
         assert (buffer.position() % 8) == 0;
     }
 
-    private void copyValues(LongArray input, long inputOffset, int n) throws IOException {
+    private void copyValues(LongArray input, long inputOffset, int n,
+                            LongUnaryOperator firstValueTransform) throws IOException {
 
         for (int i = 0; i < n; i++) {
             if (valuesBuffer.remaining() < 8*(RECORD_SIZE-1)) {
@@ -223,13 +225,19 @@ public class SkipListWriter implements AutoCloseable {
             }
 
             long valuePairOffset = inputOffset + (long) RECORD_SIZE * i;
-            for (int j = 1; j < RECORD_SIZE; j++) {
-                valuesBuffer.putLong(input.get(valuePairOffset + j));
-            }
+            valuesBuffer.putLong(firstValueTransform.applyAsLong(input.get(valuePairOffset + 1)));
+            valuesBuffer.putLong(input.get(valuePairOffset + 2));
         }
     }
 
     public long writeList(LongArray input, int n) throws IOException {
+        return writeList(input, n, LongUnaryOperator.identity());
+    }
+
+    /** Transforms the first value of each record on output, leaving keys, second values,
+     * and the input array unchanged.
+     */
+    public long writeList(LongArray input, int n, LongUnaryOperator firstValueTransform) throws IOException {
         long startPos = documentsChannel.position();
         assert (startPos % 8) == 0 : "Not long aligned?!" + startPos;
         assert input.isSortedN(RECORD_SIZE, 0,  RECORD_SIZE*n) : ("Not sorted @ " + LongStream.range(0, n*RECORD_SIZE).map(input::get).mapToObj(Long::toString).collect(Collectors.joining(", ")));
@@ -249,7 +257,7 @@ public class SkipListWriter implements AutoCloseable {
             writeCompactBlockHeader(docsBuffer, n, (byte) 0, (byte) (FLAG_END_BLOCK | FLAG_COMPRESSED_BLOCK | FLAG_COMPACT_BLOCK));
 
             writeDocIds(compressorInput, n);
-            copyValues(input, 0, n);
+            copyValues(input, 0, n, firstValueTransform);
 
             docsBuffer.flip();
 
@@ -272,7 +280,7 @@ public class SkipListWriter implements AutoCloseable {
                 docsBuffer.putLong(input.get((long) RECORD_SIZE * i));
             }
 
-            copyValues(input, 0, n);
+            copyValues(input, 0, n, firstValueTransform);
 
             docsBuffer.flip();
 
@@ -335,7 +343,7 @@ public class SkipListWriter implements AutoCloseable {
             writeDocIds(compressorInput, rootBlockCapacity);
 
             // Write the values
-            copyValues(input, valueOffset, rootBlockCapacity);
+            copyValues(input, valueOffset, rootBlockCapacity, firstValueTransform);
 
             // Move offset to next block's data
             valueOffset += RECORD_SIZE * rootBlockCapacity;
@@ -386,7 +394,7 @@ public class SkipListWriter implements AutoCloseable {
             writeDocIds(compressorInput, blockSize);
 
             // Write the values
-            copyValues(input, valueOffset, blockSize);
+            copyValues(input, valueOffset, blockSize, firstValueTransform);
 
             // Move offset to next block's data
             valueOffset += (long) RECORD_SIZE * blockSize;

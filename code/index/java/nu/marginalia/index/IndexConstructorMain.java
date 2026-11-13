@@ -1,5 +1,6 @@
 package nu.marginalia.index;
 
+import com.google.common.io.MoreFiles;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import nu.marginalia.IndexLocations;
@@ -102,9 +103,9 @@ public class IndexConstructorMain extends ProcessMainClass {
             return;
         }
 
-        try (var filesStream = Files.list(dir).filter(Files::isRegularFile)) {
+        try (var filesStream = Files.list(dir)) {
             for (Path file : filesStream.toList()) {
-                Files.delete(file);
+                MoreFiles.deleteRecursively(file);
             }
         }
         catch (IOException ex) {

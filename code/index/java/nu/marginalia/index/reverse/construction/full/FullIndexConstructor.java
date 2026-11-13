@@ -1,25 +1,24 @@
 package nu.marginalia.index.reverse.construction.full;
 
+import com.google.common.io.MoreFiles;
 import nu.marginalia.index.journal.IndexJournal;
 import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.index.reverse.construction.DocIdRewriter;
-import nu.marginalia.index.reverse.construction.IndexMergeOrdering;
-import nu.marginalia.index.reverse.construction.PositionsFileConstructor;
 import nu.marginalia.process.control.ProcessHeartbeat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class FullIndexConstructor {
-
-    private static final Logger logger = LoggerFactory.getLogger(FullIndexConstructor.class);
-
     public enum CreateReverseIndexSteps {
         CONSTRUCT,
         MERGE,
@@ -34,12 +33,13 @@ public class FullIndexConstructor {
     private final DocIdRewriter docIdRewriter;
     private final Path tmpDir;
 
-    public FullIndexConstructor( Path outputFileDocs,
+    public FullIndexConstructor(Path outputFileDocs,
                                 Path outputFileDocsValues,
                                 Path outputFileWords,
                                 Path outputFilePositions,
                                 DocIdRewriter docIdRewriter,
-                                Path tmpDir) {
+                                Path tmpDir)
+    {
         this.outputFileDocs = outputFileDocs;
         this.outputFileDocsValues = outputFileDocsValues;
         this.outputFileWords = outputFileWords;
@@ -52,84 +52,79 @@ public class FullIndexConstructor {
                                    String processName,
                                    IndexJournal journal) throws IOException
     {
+        int workers = Integer.getInteger("index.fullConstructionThreads", Math.min(4, Runtime.getRuntime().availableProcessors()));
+        if (workers < 1) {
+            throw new IllegalArgumentException("Index construction needs at least one worker");
+        }
+
+        Path workDir = Files.createTempDirectory(tmpDir, "full-index-");
+        try {
+            construct(processHeartbeat, processName, journal, workDir, workers);
+        }
+        catch (IOException | RuntimeException | Error e) {
+            try {
+                MoreFiles.deleteRecursively(workDir);
+            }
+            catch (IOException cleanupFailure) {
+                e.addSuppressed(cleanupFailure);
+            }
+            throw e;
+        }
+        MoreFiles.deleteRecursively(workDir);
+    }
+
+    private void construct(ProcessHeartbeat processHeartbeat,
+                           String processName,
+                           IndexJournal journal,
+                           Path workDir,
+                           int workers) throws IOException
+    {
+        boolean compress = FullPreindex.compressionEnabled();
+
         try (var heartbeat = processHeartbeat.createProcessTaskHeartbeat(CreateReverseIndexSteps.class, processName);
              var preindexHeartbeat = processHeartbeat.createAdHocTaskHeartbeat("constructPreindexes");
-             var posConstructor = new PositionsFileConstructor(outputFilePositions)
-        ) {
+             var executor = Executors.newFixedThreadPool(workers))
+        {
             heartbeat.progress(CreateReverseIndexSteps.CONSTRUCT);
 
-            AtomicInteger progress = new AtomicInteger(0);
+            List<Callable<List<FullPreindexReference>>> tasks = new ArrayList<>();
 
-            var journalVersions = journal.pages();
+            List<IndexJournalPage> pages = journal.pages();
 
-            List<FullPreindexReference> preindexes = journalVersions
-                .parallelStream()
-                .map(in -> {
-                    preindexHeartbeat.progress("PREINDEX", progress.incrementAndGet(), journalVersions.size());
-                    return construct(in, posConstructor);
-                })
-                .toList();
+            AtomicInteger progress = new AtomicInteger();
+            for (var page : pages) {
+                tasks.add(() -> {
+                    var result = FullPreindexBuilder.constructRuns(page, docIdRewriter, workDir, compress);
+                    preindexHeartbeat.progress("PREINDEX", progress.incrementAndGet(), pages.size());
+                    return result;
+                });
+            }
+
+            List<FullPreindexReference> runs = new ArrayList<>();
+            for (var future : executor.invokeAll(tasks)) {
+                runs.addAll(future.get());
+            }
 
             heartbeat.progress(CreateReverseIndexSteps.MERGE);
+            var merged = FullPreindex.mergeAll(workDir, runs, compress, executor);
 
-            IndexMergeOrdering.mergeAll(preindexes, this::merge)
-                .ifPresent((index) -> {
-                    heartbeat.progress(CreateReverseIndexSteps.FINALIZE);
-                    finalizeIndex(index);
-                    heartbeat.progress(CreateReverseIndexSteps.FINISHED);
-                });
-
+            if (merged.isPresent()) {
+                heartbeat.progress(CreateReverseIndexSteps.FINALIZE);
+                try (var preindex = merged.get().open()) {
+                    preindex.finalizeIndex(outputFileDocs, outputFileDocsValues, outputFileWords, outputFilePositions);
+                }
+            }
             heartbeat.progress(CreateReverseIndexSteps.FINISHED);
         }
-    }
-
-    private FullPreindexReference construct(IndexJournalPage journalInstance, PositionsFileConstructor positionsFileConstructor) {
-        try {
-            return FullPreindex
-                    .constructPreindex(journalInstance, positionsFileConstructor, docIdRewriter, tmpDir)
-                    .closeToReference();
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            var failure = new InterruptedIOException("Index construction interrupted");
+            failure.initCause(e);
+            throw failure;
         }
-        catch (IOException e) {
-            logger.error("Error constructing preindex", e);
-            throw new RuntimeException(e);
+        catch (UncheckedIOException|ExecutionException e) {
+            throw new IOException("Index construction failed", e.getCause());
         }
     }
-
-    private FullPreindexReference merge(FullPreindexReference leftR, FullPreindexReference rightR) {
-        try {
-            var left = leftR.open();
-            var right = rightR.open();
-
-            try {
-                return FullPreindex.merge(tmpDir, left, right);
-            } finally {
-                left.delete();
-                right.delete();
-            }
-        }
-        catch (IOException e) {
-            logger.error("Error merging preindex", e);
-            throw new RuntimeException(e);
-        }
-
-
-    }
-
-    private void finalizeIndex(FullPreindexReference finalPR) {
-        try {
-            var finalP = finalPR.open();
-            finalP.finalizeIndex(
-                    outputFileDocs,
-                    outputFileDocsValues,
-                    outputFileWords
-            );
-            finalP.delete();
-        }
-        catch (IOException e) {
-            logger.error("Error finalizing index", e);
-            throw new RuntimeException(e);
-        }
-    }
-
 
 }

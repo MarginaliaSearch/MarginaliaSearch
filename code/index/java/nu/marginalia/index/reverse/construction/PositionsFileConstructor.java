@@ -2,113 +2,59 @@ package nu.marginalia.index.reverse.construction;
 
 import nu.marginalia.index.reverse.positions.PositionCodec;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-/** A class for constructing a positions file.  This class is thread-safe.
- *
- * <p></p>
- *
- * The positions data is concatenated in the file, with each term's metadata
- * followed by its positions.  The metadata is a single byte, and the positions
- * are encoded varints.
- * <p></p>
- *
- * It is the responsibility of the caller to keep track of the byte offset of
- * each posting in the file.
- */
+/** Creates a positions run, batching payloads to avoid a write per posting. */
 public class PositionsFileConstructor implements AutoCloseable {
-    private final FileChannel channel;
+    private final BufferedOutputStream output;
+    private long filePosition;
+    private boolean closed;
 
     public PositionsFileConstructor(Path file) throws IOException {
-        channel = FileChannel.open(file, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
-        channel.position(channel.size());
+        output = new BufferedOutputStream(Files.newOutputStream(file,
+                StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE), 1024 * 1024);
     }
 
-    /** Represents a block of positions lists.  Each writer thread should hold on to
-     * a block object to ensure the locality of its positions lists.
-     * When finished, commit() must be run.
-     * */
-    public class PositionsFileBlock {
-        private final ByteBuffer workBuffer = ByteBuffer.allocate(1024*1024*16);
-        private long position = -1;
-
-        private PositionsFileBlock() throws IOException {
-            allocateSpace();
+    public long add(byte[] bytes, int offset, int size) throws IOException {
+        checkOpen();
+        if (size < 0 || size > 0xFFFF || filePosition + size >= (1L << 48)) {
+            throw new IllegalArgumentException("Positions exceed the packed offset/length limits");
         }
 
-        public boolean fitsData(int size) {
-            return workBuffer.remaining() >= size;
-        }
-
-        public void commit() throws IOException {
-            workBuffer.position(0);
-            workBuffer.limit(workBuffer.capacity());
-            int pos = 0;
-            while (workBuffer.hasRemaining()) {
-                pos += channel.write(workBuffer, this.position + pos);
-            }
-        }
-
-        /** Grow the file and allocate space for the new block,
-         ... we'll fill it in with the real data in commit()
-        */
-        private void allocateSpace() throws IOException {
-            workBuffer.clear();
-
-            // we must synchronize this section since multiple concurrent allocations would yield
-            // incorrect positions
-            synchronized (PositionsFileConstructor.this) {
-                position = channel.position();
-                while (workBuffer.hasRemaining()) {
-                    channel.write(workBuffer);
-                }
-            }
-
-            workBuffer.clear();
-        }
-
-        public long position() {
-            return this.position + workBuffer.position();
-        }
-        public void put(byte b) {
-            workBuffer.put(b);
-        }
-        public void put(ByteBuffer buffer) {
-            workBuffer.put(buffer);
-        }
+        long encodedOffset = PositionCodec.encode(size, filePosition);
+        output.write(bytes, offset, size);
+        filePosition += size;
+        return encodedOffset;
     }
 
-    public PositionsFileBlock getBlock() throws IOException {
-        return new PositionsFileBlock();
-    }
-
-    /** Add a term to the positions file
-     *
-     * @param block a block token to ensure data locality
-     * @param termMeta the term metadata
-     * @param positionsBuffer the positions of the term
-     *
-     * @return the offset of the term in the file, with the size of the data in the highest byte
+    /** Returns the destination offset so callers can relocate posting pointers
+     * without decoding their position payloads.
      */
-    public long add(PositionsFileBlock block, ByteBuffer positionsBuffer) throws IOException {
-        int size = positionsBuffer.remaining();
-
-        if (!block.fitsData(size)) {
-            block.commit();
-            block.allocateSpace();
+    public long copyRange(PositionsFileReader source, long offset, long length) throws IOException {
+        checkOpen();
+        if (length < 0 || length >= (1L << 48) - filePosition) {
+            throw new IllegalArgumentException("Positions exceed 48-bit offsets");
         }
 
-        long offset = block.position();
-        block.put(positionsBuffer);
-        return PositionCodec.encode(size, offset);
+        long destinationOffset = filePosition;
+        source.copyTo(offset, length, output);
+        filePosition += length;
+        return destinationOffset;
     }
 
+    private void checkOpen() {
+        if (closed) {
+            throw new IllegalStateException("Positions writer is closed");
+        }
+    }
+
+    @Override
     public void close() throws IOException {
-        channel.force(false);
-        channel.close();
+        closed = true;
+        output.close();
     }
 }

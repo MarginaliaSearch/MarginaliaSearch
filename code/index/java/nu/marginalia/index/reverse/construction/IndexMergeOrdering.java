@@ -30,13 +30,13 @@ public final class IndexMergeOrdering {
 
     public static <T> Optional<T> mergeAll(List<T> items, BinaryOperator<T> merge)
     {
-        return mergeAll(items, item -> 1L, merge, ForkJoinPool.commonPool());
+        return mergeAll(ForkJoinPool.commonPool(), items, item -> 1L, merge);
     }
 
-    public static <T> Optional<T> mergeAll(List<T> items,
-                                         ToLongFunction<T> size,
-                                         BinaryOperator<T> merge,
-                                         Executor executor)
+    public static <T> Optional<T> mergeAll(Executor executor,
+                                           List<T> items,
+                                           ToLongFunction<T> size,
+                                           BinaryOperator<T> merge)
     {
         if (items.isEmpty()) return Optional.empty();
         if (items.size() == 1) return Optional.of(items.getFirst());

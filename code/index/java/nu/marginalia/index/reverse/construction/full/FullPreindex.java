@@ -5,14 +5,22 @@ import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.array.LongArrayFileWriter;
 import nu.marginalia.btree.BTreeWriter;
 import nu.marginalia.index.config.ReverseIndexParameters;
-import nu.marginalia.index.journal.IndexJournalPage;
-import nu.marginalia.index.reverse.construction.DocIdRewriter;
+import nu.marginalia.index.reverse.construction.IndexMergeOrdering;
 import nu.marginalia.index.reverse.construction.PositionsFileConstructor;
+import nu.marginalia.index.reverse.construction.PositionsFileReader;
+import nu.marginalia.index.reverse.positions.PositionCodec;
 import nu.marginalia.skiplist.SkipListWriter;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.Executor;
+
+import static nu.marginalia.array.algo.TwoArrayOperations.mergeArraysN;
 
 /** Contains the data that would go into a reverse index,
  * that is, a mapping from words to documents, minus the actual
@@ -22,64 +30,46 @@ import java.nio.file.Path;
  * Two preindexes can be merged into a third preindex containing
  * the union of their data.
  */
-public class FullPreindex {
-    final FullPreindexWordSegments segments;
-    final FullPreindexDocuments documents;
+public class FullPreindex implements AutoCloseable {
+    static final int RECORD_SIZE_LONGS = 3;
 
-    public FullPreindex(FullPreindexWordSegments segments, FullPreindexDocuments documents) {
+    final FullPreindexWordSegments segments;
+    /** Records are (document id, encoded positions offset, term metadata). */
+    final LongArray documents;
+    final Path positionsFile;
+
+    FullPreindex(FullPreindexWordSegments segments, LongArray documents, Path positionsFile) {
         this.segments = segments;
         this.documents = documents;
+        this.positionsFile = positionsFile;
     }
 
-    /** Constructs a new preindex with the data associated with reader.  The backing files
-     * will have randomly assigned names.
-     */
-    public static FullPreindex constructPreindex(IndexJournalPage journalInstance,
-                                                 PositionsFileConstructor positionsFileConstructor,
-                                                 DocIdRewriter docIdRewriter,
-                                                 Path workDir) throws IOException
+    static boolean compressionEnabled() {
+        return Boolean.parseBoolean(System.getProperty("index.compressFullPreindex", "true"));
+    }
+
+    static Optional<FullPreindexReference> mergeAll(Path workDir,
+                                                    List<FullPreindexReference> runs,
+                                                    boolean compress,
+                                                    Executor executor)
     {
-        return constructPreindex(journalInstance, positionsFileConstructor, docIdRewriter, workDir,
-                FullPreindexDocuments.compressionEnabled());
+        return IndexMergeOrdering.mergeAll(executor, runs, FullPreindexReference::sizeBytes, (left, right) -> {
+            try {
+                var merged = merge(workDir, left, right, compress);
+                left.delete();
+                right.delete();
+                return merged;
+            }
+            catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
     }
 
-    public static FullPreindex constructPreindex(IndexJournalPage journalInstance,
-                                                 PositionsFileConstructor positionsFileConstructor,
-                                                 DocIdRewriter docIdRewriter,
-                                                 Path workDir,
-                                                 boolean compress) throws IOException
-    {
-        Path segmentWordsFile = Files.createTempFile(workDir, "segment_words", ".dat");
-        Path segmentCountsFile = Files.createTempFile(workDir, "segment_counts", ".dat");
-        Path docsFile = Files.createTempFile(workDir, "docs", ".dat");
-
-        var segments = FullPreindexWordSegments.construct(journalInstance, segmentWordsFile, segmentCountsFile);
-        var docs = FullPreindexDocuments.construct(docsFile, workDir, journalInstance, docIdRewriter, positionsFileConstructor, segments);
-        if (compress) {
-            docs = docs.compress();
-        }
-        return new FullPreindex(segments, docs);
-    }
-
-    /**  Close the associated memory mapped areas and return
-     * a dehydrated page of this object that can be re-opened
-     * later.
-     */
-    public FullPreindexReference closeToReference() {
-        try {
-            return new FullPreindexReference(segments, documents);
-        }
-        finally {
-            documents.force();
-            segments.close();
-            documents.close();
-        }
-    }
-
-    /** Transform the preindex into a reverse index */
     public void finalizeIndex(Path outputFileDocs,
                               Path outputFileDocsValues,
-                              Path outputFileWords) throws IOException
+                              Path outputFileWords,
+                              Path outputFilePositions) throws IOException
     {
         LongArray wordIds = segments.wordIds;
         LongArray counts = segments.counts;
@@ -92,75 +82,123 @@ public class FullPreindex {
 
         Files.deleteIfExists(outputFileWords);
 
-        long wordsSize = ReverseIndexParameters.wordsBTreeContext.calculateSize((int) counts.size());
-        LongArray wordsArray = LongArrayFactory.mmapForWritingConfined(outputFileWords, wordsSize);
+        final long wordsSize = ReverseIndexParameters.wordsBTreeContext.calculateSize((int) counts.size());
+        final long positionsBaseOffset = appendPositionsFile(outputFilePositions);
 
         // Write the docs file
-        try (var transformer = new FullIndexSkipListTransformer(outputFileDocs, outputFileDocsValues, documents.documents))
+        try (var wordsArray = LongArrayFactory.mmapForWritingConfined(outputFileWords, wordsSize);
+             var docsWriter = new SkipListWriter(outputFileDocs, outputFileDocsValues))
         {
             new BTreeWriter(wordsArray, ReverseIndexParameters.wordsBTreeContext)
                 .write(0, (int) counts.size(), mapRegion -> {
-                    long segmentEnd = 0;
+                    long segmentStart = 0;
                     for (long i = 0; i < counts.size(); i++) {
-                        segmentEnd += FullPreindexDocuments.RECORD_SIZE_LONGS * counts.get(i);
+                        int count = Math.toIntExact(counts.get(i));
+                        long segmentEnd = segmentStart + RECORD_SIZE_LONGS * (long) count;
+                        long docsOffset;
+
+                        if (count == 0) {
+                            docsOffset = -1;
+                        }
+                        else {
+                            docsOffset = docsWriter.writeList(
+                                    documents.range(segmentStart, segmentEnd), count, (encodedOffset) -> {
+                                        if (encodedOffset == 0)
+                                            return 0;
+
+                                        // We need to re-encode the position offset with the updated base offset
+                                        return PositionCodec.encode(
+                                                PositionCodec.decodeSize(encodedOffset),
+                                                PositionCodec.decodeOffset(encodedOffset) + positionsBaseOffset
+                                        );
+                                    });
+                        }
 
                         mapRegion.set(2*i, wordIds.get(i));
-                        mapRegion.set(2*i + 1, transformer.transform(i, segmentEnd));
+                        mapRegion.set(2*i + 1, docsOffset);
+
+                        segmentStart = segmentEnd;
                     }
                 });
+            wordsArray.force();
         }
-
-        wordsArray.force();
-        wordsArray.close();
 
         SkipListWriter.writeFooter(outputFileDocs, "skplist-docs-file");
     }
 
-    /** Delete all files associated with this pre-index */
-    public void delete() throws IOException {
-        segments.delete();
-        documents.delete();
+    @Override
+    public void close() {
+        try {
+            documents.close();
+        }
+        finally {
+            segments.close();
+        }
     }
 
-    public static FullPreindexReference merge(Path destDir,
-                                              FullPreindex left,
-                                              FullPreindex right) throws IOException {
-        return merge(destDir, left, right, FullPreindexDocuments.compressionEnabled());
+    private long appendPositionsFile(Path outputFile) throws IOException {
+        try (var os = Files.newOutputStream(outputFile,
+                StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND)) {
+
+            long positionsBaseOffset = Files.size(outputFile);
+
+            if (Files.size(positionsFile) >= (1L << 48) - positionsBaseOffset) {
+                throw new IOException("Positions file exceeds 48-bit offsets");
+            }
+
+            Files.copy(positionsFile, os);
+
+            return positionsBaseOffset;
+        }
     }
 
-    public static FullPreindexReference merge(Path destDir,
-                                              FullPreindex left,
-                                              FullPreindex right,
-                                              boolean compress) throws IOException {
-
-        Path wordsFile = Files.createTempFile(destDir, "segment_words", ".dat");
-        Path countsFile = Files.createTempFile(destDir, "segment_counts", ".dat");
-        Path docsFile = Files.createTempFile(destDir, "docs", compress ? ".dat.zst" : ".dat");
-
-        var leftIter = left.segments.iterator(FullPreindexDocuments.RECORD_SIZE_LONGS);
-        var rightIter = right.segments.iterator(FullPreindexDocuments.RECORD_SIZE_LONGS);
-
-        try (var wordsWriter = LongArrayFileWriter.create(wordsFile);
-             var countsWriter = LongArrayFileWriter.create(countsFile);
-             var docsWriter = new FullPreindexDocWriter(docsFile, compress))
+    static FullPreindexReference merge(Path directory,
+                                      FullPreindexReference leftReference,
+                                      FullPreindexReference rightReference,
+                                      boolean compress) throws IOException
+    {
+        try (var left = leftReference.open();
+             var right = rightReference.open())
         {
-            var plan = new MergePlan(wordsWriter, countsWriter, docsWriter);
+            return merge(directory, left, right, compress);
+        }
+    }
+
+    public static FullPreindexReference merge(Path destDir,
+                                             FullPreindex left,
+                                             FullPreindex right,
+                                             boolean compress) throws IOException {
+        var output = FullPreindexReference.create(destDir, compress);
+
+        var leftIter = left.segments.iterator(RECORD_SIZE_LONGS);
+        var rightIter = right.segments.iterator(RECORD_SIZE_LONGS);
+
+        try (var wordsWriter = LongArrayFileWriter.create(output.wordsFile());
+             var countsWriter = LongArrayFileWriter.create(output.countsFile());
+             var docsWriter = new FullPreindexDocWriter(output.documentsFile(), compress);
+             var positionsWriter = new PositionsFileConstructor(output.positionsFile());
+             var leftPositions = new PositionsFileReader(left.positionsFile);
+             var rightPositions = new PositionsFileReader(right.positionsFile))
+        {
+            var plan = new MergePlan(wordsWriter, countsWriter, docsWriter, positionsWriter);
 
             boolean leftHasMore = leftIter.next();
             boolean rightHasMore = rightIter.next();
 
             while (leftHasMore && rightHasMore) {
                 if (leftIter.wordId < rightIter.wordId) {
-                    plan.copySegment(leftIter, left.documents);
+                    plan.copySegment(leftIter, left.documents, leftPositions);
                     leftHasMore = leftIter.next();
                 }
                 else if (rightIter.wordId < leftIter.wordId) {
-                    plan.copySegment(rightIter, right.documents);
+                    plan.copySegment(rightIter, right.documents, rightPositions);
                     rightHasMore = rightIter.next();
                 }
                 else {
                     // both inputs have documents for the current word
-                    plan.mergeSegments(leftIter, rightIter, left.documents, right.documents);
+                    plan.mergeSegments(leftIter, rightIter,
+                            left.documents, right.documents,
+                            leftPositions, rightPositions);
 
                     leftHasMore = leftIter.next();
                     rightHasMore = rightIter.next();
@@ -168,47 +206,81 @@ public class FullPreindex {
             }
 
             while (leftHasMore) {
-                plan.copySegment(leftIter, left.documents);
+                plan.copySegment(leftIter, left.documents, leftPositions);
                 leftHasMore = leftIter.next();
             }
 
             while (rightHasMore) {
-                plan.copySegment(rightIter, right.documents);
+                plan.copySegment(rightIter, right.documents, rightPositions);
                 rightHasMore = rightIter.next();
             }
         }
 
-        return new FullPreindexReference(wordsFile, countsFile, docsFile, compress);
+        return output;
     }
 
     private record MergePlan(LongArrayFileWriter wordsWriter,
                              LongArrayFileWriter countsWriter,
-                             FullPreindexDocWriter docsWriter)
+                             FullPreindexDocWriter docsWriter,
+                             PositionsFileConstructor positionsWriter)
     {
         void mergeSegments(FullPreindexWordSegments.SegmentIterator leftIter,
                            FullPreindexWordSegments.SegmentIterator rightIter,
-                           FullPreindexDocuments left,
-                           FullPreindexDocuments right) throws IOException
+                           LongArray left,
+                           LongArray right,
+                           PositionsFileReader leftPositions,
+                           PositionsFileReader rightPositions) throws IOException
         {
-            long segSize = docsWriter.merge(
-                    left.documents,
-                    right.documents,
+            long segmentSize = mergeArraysN(RECORD_SIZE_LONGS,
+                    (source, start, end) -> copyPostings(source, start, end,
+                            source == left ? leftPositions : rightPositions),
+                    left, right,
                     leftIter.startOffset, leftIter.endOffset,
                     rightIter.startOffset, rightIter.endOffset);
 
             wordsWriter.put(leftIter.wordId);
-            countsWriter.put(segSize / FullPreindexDocuments.RECORD_SIZE_LONGS);
+            countsWriter.put(segmentSize / RECORD_SIZE_LONGS);
         }
 
         // Straight copy between segments
         void copySegment(FullPreindexWordSegments.SegmentIterator sourceIter,
-                         FullPreindexDocuments srcDocuments) throws IOException
+                         LongArray srcDocuments,
+                         PositionsFileReader positions) throws IOException
         {
-            docsWriter.put(srcDocuments.documents, sourceIter.startOffset, sourceIter.endOffset);
+            copyPostings(srcDocuments, sourceIter.startOffset, sourceIter.endOffset, positions);
 
             wordsWriter.put(sourceIter.wordId);
-            countsWriter.put(sourceIter.size() / FullPreindexDocuments.RECORD_SIZE_LONGS);
+            countsWriter.put(sourceIter.size() / RECORD_SIZE_LONGS);
+        }
+
+        private void copyPostings(LongArray source,
+                                  long start,
+                                  long end,
+                                  PositionsFileReader positionsReader) throws IOException
+        {
+            if (start == end) {
+                return;
+            }
+
+            long firstPositions = source.get(start + 1);
+            long lastPositions = source.get(end - 2);
+            long sourcePositionsStart = PositionCodec.decodeOffset(firstPositions);
+            long sourcePositionsEnd = PositionCodec.decodeOffset(lastPositions) + PositionCodec.decodeSize(lastPositions);
+            long positionsSize = sourcePositionsEnd - sourcePositionsStart;
+
+            long destinationPositionsStart = positionsWriter.copyRange(positionsReader, sourcePositionsStart, positionsSize);
+            long relocationOffset = destinationPositionsStart - sourcePositionsStart;
+
+            for (long i = start; i < end; i += RECORD_SIZE_LONGS) {
+                long encodedOffset = source.get(i + 1);
+                int positionSize = PositionCodec.decodeSize(encodedOffset);
+                long positionOffset = PositionCodec.decodeOffset(encodedOffset) + relocationOffset;
+                long relocatedOffset = PositionCodec.encode(positionSize, positionOffset);
+
+                long documentId = source.get(i);
+                long metadata = source.get(i + 2);
+                docsWriter.put(documentId, relocatedOffset, metadata);
+            }
         }
     }
-
 }

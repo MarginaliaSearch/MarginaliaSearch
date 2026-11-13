@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.longs.LongList;
 import it.unimi.dsi.fastutil.longs.LongSortedSet;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
+import nu.marginalia.array.pool.BufferPool;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -68,6 +69,41 @@ class SkipListWriterTest {
             }
         }
         return LongArrayFactory.wrap(ms);
+    }
+
+    @Test
+    public void testValueTransform() throws IOException {
+        for (int size : new int[] { 3, 800, 20_000 }) {
+            long[] keys = LongStream.rangeClosed(0, size).toArray();
+            long[] query = LongStream.rangeClosed(1, size).toArray();
+            long transformedOffset, plainOffset;
+
+            try (var arena = Arena.ofConfined();
+                 var writer = new SkipListWriter(docsFile, valuesFile))
+            {
+                var input = createArray(arena, keys, keys).shifted(RECORD_SIZE);
+                transformedOffset = writer.writeList(input, size, value -> value + 1000);
+                plainOffset = writer.writeList(input, size);
+
+                for (int i = 0; i < size; i++) {
+                    assertEquals(query[i], input.get((long) RECORD_SIZE * i + 1));
+                }
+            }
+
+            try (var pool = new BufferPool(docsFile, BLOCK_SIZE, 8);
+                 var values = new SkipListValueReader(valuesFile))
+            {
+                long[] transformed = new SkipListReader(pool, values, transformedOffset).getAllValues(query);
+                long[] plain = new SkipListReader(pool, values, plainOffset).getAllValues(query);
+
+                for (int i = 0; i < size; i++) {
+                    assertEquals(query[i] + 1000, transformed[i]);
+                    assertEquals(query[i], transformed[size + i]);
+                    assertEquals(query[i], plain[i]);
+                    assertEquals(query[i], plain[size + i]);
+                }
+            }
+        }
     }
 
     @Test

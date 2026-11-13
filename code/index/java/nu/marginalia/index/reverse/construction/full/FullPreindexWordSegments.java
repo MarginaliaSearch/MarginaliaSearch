@@ -1,119 +1,23 @@
 package nu.marginalia.index.reverse.construction.full;
 
-import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
-import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
-import it.unimi.dsi.fastutil.longs.LongIterator;
 import nu.marginalia.array.LongArray;
-import nu.marginalia.array.LongArrayFactory;
-import nu.marginalia.index.journal.IndexJournalPage;
-import nu.marginalia.slop.SlopTable;
-import nu.marginalia.slop.column.array.LongArrayColumn;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-/** A pair of file-backed arrays of sorted wordIds
- * and the count of documents associated with each termId.
- */
-public class FullPreindexWordSegments {
+/** Sorted term ids and the number of postings associated with each term. */
+public class FullPreindexWordSegments implements AutoCloseable {
     public final LongArray wordIds;
     public final LongArray counts;
 
-    final Path wordsFile;
-    final Path countsFile;
-
-    public FullPreindexWordSegments(LongArray wordIds,
-                                    LongArray counts,
-                                    Path wordsFile,
-                                    Path countsFile)
-    {
+    public FullPreindexWordSegments(LongArray wordIds, LongArray counts) {
         assert wordIds.size() == counts.size();
-
         this.wordIds = wordIds;
         this.counts = counts;
-        this.wordsFile = wordsFile;
-        this.countsFile = countsFile;
-    }
-
-    /** Returns a long-long hash map where each key is a termId,
-     * and each value is the start offset of the data.
-     */
-    public Long2LongOpenHashMap asMap(int recordSize) {
-        if (wordIds.size() > Integer.MAX_VALUE)
-            throw new IllegalArgumentException("Cannot create a map with more than Integer.MAX_VALUE entries");
-
-        Long2LongOpenHashMap ret = new Long2LongOpenHashMap((int) wordIds.size(), 0.75f);
-        var iter = iterator(recordSize);
-
-        while (iter.next()) {
-            ret.put(iter.wordId, iter.startOffset);
-        }
-
-        return ret;
-    }
-
-    public static FullPreindexWordSegments construct(IndexJournalPage instance,
-                                                     Path wordIdsFile,
-                                                     Path countsFile)
-    throws IOException
-    {
-        Long2IntOpenHashMap countsMap = new Long2IntOpenHashMap(100_000, 0.75f);
-        countsMap.defaultReturnValue(0);
-
-        try (var slopTable = new SlopTable(instance.baseDir(), instance.page())) {
-            LongArrayColumn.Reader termIds = instance.openTermIds(slopTable);
-
-            while (termIds.hasRemaining()) {
-                long[] tids = termIds.get();
-                for (long termId : tids) {
-                    countsMap.addTo(termId, 1);
-                }
-            }
-        }
-
-
-        LongArray words = LongArrayFactory.onHeapConfined(countsMap.size());
-        LongArray counts = LongArrayFactory.onHeapConfined(countsMap.size());
-
-        // Create the words file by iterating over the map and inserting them into
-        // the words file in whatever bizarro hash table order they appear in
-        long i = 0;
-        LongIterator iter = countsMap.keySet().iterator();
-        while (iter.hasNext()) {
-            words.set(i++, iter.nextLong());
-        }
-
-        // Sort the words file
-        words.sort(0, counts.size());
-
-        // Populate the counts
-        for (i = 0; i < countsMap.size(); i++) {
-            counts.set(i, countsMap.get(words.get(i)));
-        }
-
-        words.write(wordIdsFile);
-        counts.write(countsFile);
-
-        return new FullPreindexWordSegments(words, counts, wordIdsFile, countsFile);
     }
 
     public SegmentIterator iterator(int recordSize) {
         return new SegmentIterator(recordSize);
     }
 
-    public long totalSize() {
-        return counts.fold(0, 0, counts.size(), Long::sum);
-    }
-
-    public void delete() throws IOException {
-        Files.delete(countsFile);
-        Files.delete(wordsFile);
-
-        counts.close();
-        wordIds.close();
-    }
-
+    @Override
     public void close() {
         wordIds.close();
         counts.close();

@@ -1,15 +1,11 @@
 package nu.marginalia.index.reverse.construction.full;
 
-import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFileWriter;
-import nu.marginalia.array.LongArrayWriter;
 
 import java.io.IOException;
 import java.nio.file.Path;
 
-import static nu.marginalia.array.algo.TwoArrayOperations.mergeArraysN;
-
-final class FullPreindexDocWriter implements LongArrayWriter, AutoCloseable {
+final class FullPreindexDocWriter implements AutoCloseable {
     private final LongArrayFileWriter raw;
     private final CompressedFullPreindexDocuments.Writer compressed;
 
@@ -24,18 +20,15 @@ final class FullPreindexDocWriter implements LongArrayWriter, AutoCloseable {
         }
     }
 
-    @Override
-    public void put(LongArray source, long start, long end) throws IOException {
+    void put(long documentId, long positionOffset, long metadata) throws IOException {
         if (compressed != null) {
-            compressed.put(source, start, end);
+            compressed.put(documentId, positionOffset, metadata);
         }
         else {
-            raw.put(source, start, end);
+            raw.put(documentId);
+            raw.put(positionOffset);
+            raw.put(metadata);
         }
-    }
-
-    long merge(LongArray left, LongArray right, long a, long aEnd, long b, long bEnd) throws IOException {
-        return mergeArraysN(3, this, left, right, a, aEnd, b, bEnd);
     }
 
     @Override

@@ -2,6 +2,7 @@ package nu.marginalia.index.reverse.construction.full;
 
 import nu.marginalia.index.journal.IndexJournalPage;
 import nu.marginalia.index.journal.IndexJournalSlopWriter;
+import nu.marginalia.index.reverse.construction.DocIdRewriter;
 import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.model.processed.SlopDocumentRecord;
 import nu.marginalia.sequence.VarintCodedSequence;
@@ -21,6 +22,22 @@ public class TestJournalFactory {
 
     public void clear() throws IOException {
         TestUtil.clearTempDir(tempDir);
+    }
+
+    public static FullPreindexReference constructPreindex(IndexJournalPage page,
+                                                         DocIdRewriter rewriter,
+                                                         Path directory) throws IOException
+    {
+        return constructPreindex(page, rewriter, directory, FullPreindex.compressionEnabled());
+    }
+
+    public static FullPreindexReference constructPreindex(IndexJournalPage page,
+                                                         DocIdRewriter rewriter,
+                                                         Path directory,
+                                                         boolean compressed) throws IOException
+    {
+        var runs = FullPreindexBuilder.constructRuns(page, rewriter, directory, compressed);
+        return FullPreindex.mergeAll(directory, runs, compressed, Runnable::run).orElseThrow();
     }
 
     public record EntryData(long docId, long docMeta, String... wordIds) {

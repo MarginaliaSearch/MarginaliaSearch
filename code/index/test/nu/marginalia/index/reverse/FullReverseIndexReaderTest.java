@@ -3,8 +3,6 @@ package nu.marginalia.index.reverse;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.index.reverse.construction.DocIdRewriter;
-import nu.marginalia.index.reverse.construction.PositionsFileConstructor;
-import nu.marginalia.index.reverse.construction.full.FullPreindex;
 import nu.marginalia.index.reverse.construction.full.TestJournalFactory;
 import nu.marginalia.index.reverse.construction.full.TestJournalFactory.EntryDataWithWordMeta;
 import org.junit.jupiter.api.AfterEach;
@@ -98,12 +96,12 @@ class FullReverseIndexReaderTest {
         Path docsValuesFile = tempDir.resolve("docs-values.dat");
         Path wordsFile = tempDir.resolve("words.dat");
 
-        try (var positionsFileConstructor = new PositionsFileConstructor(posFile)) {
-            var preindex = FullPreindex.constructPreindex(reader,
-                    positionsFileConstructor,
-                    DocIdRewriter.identity(), tempDir);
-            preindex.finalizeIndex(docsFile, docsValuesFile, wordsFile);
-            preindex.delete();
+        var reference = TestJournalFactory.constructPreindex(reader, DocIdRewriter.identity(), tempDir);
+        try (var preindex = reference.open()) {
+            preindex.finalizeIndex(docsFile, docsValuesFile, wordsFile, posFile);
+        }
+        finally {
+            reference.delete();
         }
 
         return new FullReverseIndexReader("test", List.of(new WordLexicon("en", wordsFile)), docsFile, docsValuesFile, posFile);
