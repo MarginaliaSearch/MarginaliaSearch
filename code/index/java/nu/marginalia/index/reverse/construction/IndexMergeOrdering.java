@@ -7,29 +7,36 @@ import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
 import java.util.function.BinaryOperator;
+import java.util.function.ToLongFunction;
 
-/** Greedy merge of items using a size-sorted priority queue.
- * This should find an <a href="https://xlinux.nist.gov/dads/HTML/optimalMerge.html">optimal merge</a> pattern.
- *
+/** Merges the smallest inputs first to limit repeated copying of large inputs.
+ * Merged sizes are estimated by summing their inputs, allowing the merge tree
+ * to be scheduled before the individual merges finish.
  */
 public final class IndexMergeOrdering {
     private IndexMergeOrdering() {}
 
-    private record SizedFuture<T>(CompletableFuture<T> future, int size)
+    private record SizedFuture<T>(CompletableFuture<T> future, long size)
     implements Comparable<SizedFuture<T>>
     {
-        public SizedFuture(T item) {
-            this(CompletableFuture.completedFuture(item), 1);
-        }
-
         @Override
         public int compareTo(@NotNull IndexMergeOrdering.SizedFuture<T> o) {
-            return Integer.compare(size, o.size);
+            return Long.compare(size, o.size);
         }
     }
 
     public static <T> Optional<T> mergeAll(List<T> items, BinaryOperator<T> merge)
+    {
+        return mergeAll(items, item -> 1L, merge, ForkJoinPool.commonPool());
+    }
+
+    public static <T> Optional<T> mergeAll(List<T> items,
+                                         ToLongFunction<T> size,
+                                         BinaryOperator<T> merge,
+                                         Executor executor)
     {
         if (items.isEmpty()) return Optional.empty();
         if (items.size() == 1) return Optional.of(items.getFirst());
@@ -38,15 +45,16 @@ public final class IndexMergeOrdering {
                 new PriorityQueue<>(items.size());
 
         for (T item : items) {
-            queue.add(new SizedFuture<>(item));
+            queue.add(new SizedFuture<>(CompletableFuture.completedFuture(item), size.applyAsLong(item)));
         }
 
         while (queue.size() > 1) {
             SizedFuture<T> a = queue.poll();
             SizedFuture<T> b = queue.poll();
 
-            CompletableFuture<T> merged = a.future.thenCombineAsync(b.future, merge);
-            queue.add(new SizedFuture<>(merged, a.size + b.size));
+            long mergedSize = Math.addExact(a.size, b.size);
+            CompletableFuture<T> merged = a.future.thenCombineAsync(b.future, merge, executor);
+            queue.add(new SizedFuture<>(merged, mergedSize));
         }
 
         try {
