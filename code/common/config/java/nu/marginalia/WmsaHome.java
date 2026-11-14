@@ -9,6 +9,25 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 public class WmsaHome {
+    static final int serviceNode;
+
+    static {
+        String nodeStr = Objects.requireNonNullElse(
+                System.getenv("WMSA_SERVICE_NODE"),
+                System.getProperty("system.serviceNode", "0")
+        );
+        int nodeVal;
+
+        try { nodeVal = Integer.parseInt(nodeStr); }
+        catch (NumberFormatException nfe) {
+            // eeh
+            nfe.printStackTrace();
+            nodeVal = 0;
+        }
+
+        serviceNode = nodeVal;
+    }
+
     public static UserAgent getUserAgent()  {
         return new UserAgent(
                 System.getProperty("crawler.userAgentString", "Mozilla/5.0 (compatible; Marginalia-like bot; +https://git.marginalia.nu/))"),
@@ -120,5 +139,9 @@ public class WmsaHome {
 
     public static Path getModelPath() {
         return getHomePath().resolve("model");
+    }
+
+    public static int getServiceNode() {
+        return serviceNode;
     }
 }

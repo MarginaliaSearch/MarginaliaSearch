@@ -530,8 +530,6 @@ public class IndexQueryExecution {
             processBatched(batch);
         }
 
-        /** All reads for the batch happen in three batched submissions, then the
-         *  documents are scored without touching the index files */
         private void processBatched(RankableDocument[] batch) {
             try {
                 long[] spansEncoded = fetcher.fetchEntries(batch);

@@ -1,6 +1,8 @@
 package nu.marginalia.index;
 
-import nu.marginalia.ffi.IoUring;
+import io.prometheus.metrics.core.datapoints.CounterDataPoint;
+import io.prometheus.metrics.core.metrics.Counter;
+import nu.marginalia.WmsaHome;
 import nu.marginalia.ffi.LinuxSystemCalls;
 import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
 import nu.marginalia.index.forward.spans.SpansCodec;
@@ -8,29 +10,26 @@ import nu.marginalia.index.model.FeaturesCodec;
 import nu.marginalia.index.model.RankableDocument;
 import nu.marginalia.index.reverse.positions.PositionCodec;
 import nu.marginalia.index.reverse.positions.PositionsBatchDecoder;
-import nu.marginalia.uring.UringQueue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static java.lang.foreign.ValueLayout.JAVA_INT;
-import static java.lang.foreign.ValueLayout.JAVA_LONG;
 import static java.lang.foreign.ValueLayout.JAVA_LONG_UNALIGNED;
 import static nu.marginalia.index.config.ForwardIndexParameters.FEATURES_OFFSET;
 import static nu.marginalia.index.config.ForwardIndexParameters.METADATA_OFFSET;
 import static nu.marginalia.index.config.ForwardIndexParameters.SPANS_OFFSET;
 
-/** Fetches bulk ranking data from the index, using io_uring or mmap depending on
- * a residency heuristic.
- */
+/** Groups nearby ranking reads to amortize syscall overhead. */
 public class RankingBatchFetcher implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(RankingBatchFetcher.class);
@@ -38,61 +37,59 @@ public class RankingBatchFetcher implements AutoCloseable {
     private static final ConcurrentLinkedQueue<RankingBatchFetcher> pool = new ConcurrentLinkedQueue<>();
     private static final AtomicBoolean warnedCreateFailure = new AtomicBoolean();
 
-    private static final int RING_SIZE = 256;
-    private static final int ARRAY_SIZE = 4096;
+    private static final int CLUSTER_SIZE = 16;
+    private static final int MERGE_GAP = 4096;
+    private static final int MAX_READ_SIZE = 64 * 1024;
+    private static final int MAX_ADVICE_SIZE = 1024 * 1024;
 
-    // CAVEAT:  Fragile assumption that the entry size is 4, and that the fourth entry can be skipped
-    // as it contains the text blob pointer
-    private static final int ENTRY_SIZE = 3;
+    // Ranking needs the spans pointer but not the document text pointer that follows it.
+    private static final int ENTRY_BYTES = (SPANS_OFFSET + 1) * Long.BYTES;
+
+    private static final String nodeStr = Integer.toString(WmsaHome.getServiceNode());
+
+    private static final Counter readRequests = Counter.builder()
+            .name("index_ranking_read_requests_total")
+            .labelNames("operation", "node")
+            .help("Nonempty ranking read requests before merging")
+            .register();
+    private static final Counter preads = Counter.builder()
+            .name("index_ranking_preads_total")
+            .labelNames("operation", "node")
+            .help("Ranking pread calls")
+            .register();
+
+    private enum ReadOperation {
+        ENTRIES("entries"), SPANS("spans"), POSITIONS("positions");
+
+        // Cache the labeled data points
+        final CounterDataPoint requests;
+        final CounterDataPoint reads;
+
+        ReadOperation(String label) {
+            requests = readRequests.labelValues(label, nodeStr);
+            reads = preads.labelValues(label, nodeStr);
+        }
+    }
 
     private final CombinedIndexReader owner;
-
     private final PositionsBatchDecoder positionsDecoder = new PositionsBatchDecoder();
 
-    private final UringQueue entriesRing;
-    private final UringQueue spansRing;
-    private final UringQueue positionsRing;
-
-    private final MemorySegment buffers;
-    private final MemorySegment sizes;
-    private final MemorySegment offsets;
-
-    private final MemorySegment mappedData;
-    private final MemorySegment mappedSpans;
-    private final MemorySegment mappedPositions;
+    // Pooling allows a fetcher to move between query threads, so its arena must be shared.
+    private final Arena arena = Arena.ofShared();
+    private final MemorySegment entryBuffer;
 
     public RankingBatchFetcher(CombinedIndexReader cir) {
         this.owner = cir;
-
-        mappedData = cir.mappedForwardData();
-        mappedSpans = cir.mappedForwardSpans();
-        mappedPositions = cir.mappedPositions();
-
-        entriesRing = UringQueue.open(cir.forwardDataFd(), RING_SIZE);
         try {
-            spansRing = UringQueue.open(cir.forwardSpansFd(), RING_SIZE);
+            entryBuffer = arena.allocate(CLUSTER_SIZE * (ENTRY_BYTES + MERGE_GAP), 8);
         }
-        catch (RuntimeException e) {
-            entriesRing.close();
+        catch (RuntimeException | Error e) {
+            arena.close();
             throw e;
         }
-        try {
-            positionsRing = UringQueue.open(cir.positionsFd(), RING_SIZE);
-        }
-        catch (RuntimeException e) {
-            entriesRing.close();
-            spansRing.close();
-            throw e;
-        }
-
-        Arena arena = Arena.global();
-        buffers = arena.allocate(8L * ARRAY_SIZE, 8);
-        sizes = arena.allocate(4L * ARRAY_SIZE, 8);
-        offsets = arena.allocate(8L * ARRAY_SIZE, 8);
     }
 
     public static RankingBatchFetcher claim(CombinedIndexReader index) throws IOException {
-
         RankingBatchFetcher pooled;
         while ((pooled = pool.poll()) != null) {
             if (pooled.owner == index) {
@@ -111,14 +108,12 @@ public class RankingBatchFetcher implements AutoCloseable {
         }
         catch (RuntimeException e) {
             if (!warnedCreateFailure.getAndSet(true)) {
-                logger.warn("Failed to create batch fetcher, using serial reads", e);
+                logger.warn("Failed to create batch fetcher", e);
             }
             throw new IOException("Failed to create batch fetcher", e);
         }
     }
 
-    /** Close and remove all fetchers associated with the index
-     * */
     public static void closeForIndex(CombinedIndexReader combinedIndexReader) {
         pool.removeIf(r -> {
             if (r.owner == combinedIndexReader) {
@@ -129,7 +124,6 @@ public class RankingBatchFetcher implements AutoCloseable {
         });
     }
 
-    /** Return the fetcher to the pool for reuse */
     public void release() {
         pool.add(this);
     }
@@ -142,200 +136,178 @@ public class RankingBatchFetcher implements AutoCloseable {
 
     public long[] fetchEntries(RankableDocument[] batch) {
         long[] spansEncoded = new long[batch.length];
+
         Arrays.fill(spansEncoded, NO_ENTRY);
+
+        MemorySegment[] segments = new MemorySegment[batch.length];
+        List<ReadRequest> requests = new ArrayList<>(batch.length);
+
+        for (int i = 0; i < batch.length; i++) {
+            long offset = owner.forwardDataOffsetForDoc(batch[i].combinedDocumentId);
+            if (offset >= 0) {
+                requests.add(new ReadRequest(offset, ENTRY_BYTES, segments, i));
+            }
+        }
+
+        requests.sort(Comparator.comparingLong(ReadRequest::offset));
 
         var version = owner.forwardVersion();
 
-        for (int i = 0; i < batch.length; i++) {
-            long dataOffset = owner.forwardDataOffsetForDoc(batch[i].combinedDocumentId);
-            if (dataOffset < 0) {
-                continue;
+        for (int from = 0; from < requests.size(); from += CLUSTER_SIZE) {
+            int to = Math.min(requests.size(), from + CLUSTER_SIZE);
+
+            readCluster(owner.forwardDataFd(), requests, from, to,
+                    SegmentAllocator.slicingAllocator(entryBuffer), ReadOperation.ENTRIES);
+
+            for (int j = from; j < to; j++) {
+                int i = requests.get(j).slot;
+                MemorySegment entry = segments[i];
+
+                long features = entry.get(JAVA_LONG_UNALIGNED, 8L * FEATURES_OFFSET);
+
+                batch[i].docMetadata = entry.get(JAVA_LONG_UNALIGNED, 8L * METADATA_OFFSET);
+                batch[i].htmlFeatures = FeaturesCodec.getHtmlFeatures(features);
+                batch[i].docSize = FeaturesCodec.getDocumentSize(features, version);
+
+                spansEncoded[i] = entry.get(JAVA_LONG_UNALIGNED, 8L * SPANS_OFFSET);
             }
-
-            long features = mappedData.get(JAVA_LONG_UNALIGNED, dataOffset + 8L * FEATURES_OFFSET);
-
-            batch[i].docMetadata = mappedData.get(JAVA_LONG_UNALIGNED, dataOffset + 8L * METADATA_OFFSET);
-            batch[i].htmlFeatures = FeaturesCodec.getHtmlFeatures(features);
-            batch[i].docSize = FeaturesCodec.getDocumentSize(features, version);
-
-            spansEncoded[i] = mappedData.get(JAVA_LONG_UNALIGNED, dataOffset + 8L * SPANS_OFFSET);
         }
-
         return spansEncoded;
     }
 
-    /** Fetch the span data the entries point to in one operation.
-     *
-     * Slots are null for documents without an entry.
-     */
+    /** Result slots are null where the encoded offset is NO_ENTRY. */
     public DecodableDocumentSpans[] fetchSpans(long[] spansEncoded, SegmentAllocator allocator) {
-        if (spansResident(spansEncoded)) {
-            return fetchSpansMapped(spansEncoded);
-        }
-
         DecodableDocumentSpans[] ret = new DecodableDocumentSpans[spansEncoded.length];
+
         MemorySegment[] segments = new MemorySegment[spansEncoded.length];
+        List<ReadRequest> requests = new ArrayList<>(spansEncoded.length);
 
-        int n = 0;
         for (int i = 0; i < spansEncoded.length; i++) {
-            if (spansEncoded[i] == NO_ENTRY) {
-                continue;
+            if (spansEncoded[i] != NO_ENTRY) {
+                requests.add(new ReadRequest(SpansCodec.decodeStartOffset(spansEncoded[i]),
+                        SpansCodec.decodeSize(spansEncoded[i]), segments, i));
             }
-
-            int size = SpansCodec.decodeSize(spansEncoded[i]);
-            MemorySegment segment = allocator.allocate(size, 8);
-            segments[i] = segment;
-
-            buffers.setAtIndex(JAVA_LONG, n, segment.address());
-            sizes.setAtIndex(JAVA_INT, n, size);
-            offsets.setAtIndex(JAVA_LONG, n, SpansCodec.decodeStartOffset(spansEncoded[i]));
-            n++;
         }
+        read(owner.forwardSpansFd(), requests, allocator, ReadOperation.SPANS);
 
-        chunkedRead(spansRing, n);
-
-        for (int i = 0; i < spansEncoded.length; i++) {
+        for (int i = 0; i < segments.length; i++) {
             if (segments[i] != null) {
                 ret[i] = new DecodableDocumentSpans(segments[i]);
             }
         }
-        return ret;
-    }
-
-    private DecodableDocumentSpans[] fetchSpansMapped(long[] spansEncoded) {
-        DecodableDocumentSpans[] ret = new DecodableDocumentSpans[spansEncoded.length];
-
-        for (int i = 0; i < spansEncoded.length; i++) {
-            if (spansEncoded[i] == NO_ENTRY) {
-                continue;
-            }
-
-            long start = SpansCodec.decodeStartOffset(spansEncoded[i]);
-            int size = SpansCodec.decodeSize(spansEncoded[i]);
-
-            ret[i] = new DecodableDocumentSpans(mappedSpans.asSlice(start, size));
-        }
 
         return ret;
-    }
-
-    /** Test first viable address for memory residence */
-    private boolean spansResident(long[] spansEncoded) {
-
-        int first = -1;
-        for (int i = 0; i < spansEncoded.length; i++) {
-            if (spansEncoded[i] != NO_ENTRY) {
-                first = i;
-                break;
-            }
-        }
-
-        if (first < 0) {
-            return true;
-        }
-
-        long firstAddress = mappedSpans.address() + SpansCodec.decodeStartOffset(spansEncoded[first]);
-        if (!LinuxSystemCalls.isPageResident(firstAddress)) {
-            return false;
-        }
-
-        return true;
     }
 
     public MemorySegment[][] fetchPositionSegments(RankableDocument[] batch, SegmentAllocator allocator) {
         MemorySegment[][] segments = new MemorySegment[batch.length][];
-        if (batch.length == 0) {
-            return segments;
-        }
+        List<ReadRequest> requests = new ArrayList<>();
 
-        int termCount = batch[0].positionOffsets.length;
-        boolean[] termResident = new boolean[termCount];
-        for (int j = 0; j < termCount; j++) {
-            termResident[j] = termRegionResident(batch, j);
-        }
-
-        int n = 0;
         for (int i = 0; i < batch.length; i++) {
             long[] positionOffsets = batch[i].positionOffsets;
             segments[i] = new MemorySegment[positionOffsets.length];
 
             for (int j = 0; j < positionOffsets.length; j++) {
                 long encodedOffset = positionOffsets[j];
-                if (encodedOffset == 0) {
-                    continue;
-                }
-
-                int size = PositionCodec.decodeSize(encodedOffset);
-
-                if (termResident[j]) {
-                    segments[i][j] = mappedPositions.asSlice(
-                            PositionCodec.decodeOffset(encodedOffset), size);
-                }
-                else {
-                    if (n == ARRAY_SIZE) {
-                        chunkedRead(positionsRing, n);
-                        n = 0;
-                    }
-
-                    MemorySegment segment = allocator.allocate(size, 8);
-                    segments[i][j] = segment;
-
-                    buffers.setAtIndex(JAVA_LONG, n, segment.address());
-                    sizes.setAtIndex(JAVA_INT, n, size);
-                    offsets.setAtIndex(JAVA_LONG, n, PositionCodec.decodeOffset(encodedOffset));
-                    n++;
+                if (encodedOffset != 0) {
+                    requests.add(new ReadRequest(PositionCodec.decodeOffset(encodedOffset),
+                            PositionCodec.decodeSize(encodedOffset), segments[i], j));
                 }
             }
         }
 
-        chunkedRead(positionsRing, n);
+        read(owner.positionsFd(), requests, allocator, ReadOperation.POSITIONS);
 
         return segments;
     }
 
-    /** Test first viable address for memory residence */
-    private boolean termRegionResident(RankableDocument[] batch, int termIdx) {
-
-        int first = -1;
-        for (int i = 0; i < batch.length; i++) {
-            if (batch[i].positionOffsets[termIdx] != 0) {
-                first = i;
-                break;
-            }
+    private record ReadRequest(long offset, int size, MemorySegment[] target, int slot) {
+        long end() {
+            return offset + size;
         }
-
-        if (first < 0) {
-            return true;
-        }
-
-        long firstAddress = mappedPositions.address()
-                + PositionCodec.decodeOffset(batch[first].positionOffsets[termIdx]);
-        if (!LinuxSystemCalls.isPageResident(firstAddress)) {
-            return false;
-        }
-
-        return true;
     }
 
-    private void chunkedRead(UringQueue ring, int n) {
-        for (int done = 0; done < n; done += RING_SIZE) {
-            int chunk = Math.min(RING_SIZE, n - done);
+    private static void read(int fd,
+                             List<ReadRequest> requests,
+                             SegmentAllocator allocator,
+                             ReadOperation operation)
+    {
+        // A zero-length fadvise covers the entire remainder of the file, we don't want that...
+        requests.removeIf(request -> {
+            if (request.size != 0) {
+                return false;
+            }
 
-            long buffersAddr = buffers.address() + 8L * done;
-            long sizesAddr = sizes.address() + 4L * done;
-            long offsetsAddr = offsets.address() + 8L * done;
+            request.target[request.slot] = allocator.allocate(0, 8);
+            return true;
+        });
 
-            int ret = IoUring.readBatchRaw(ring, chunk, buffersAddr, sizesAddr, offsetsAddr);
-            if (ret != chunk) {
-                throw new IllegalStateException("Batch read failed: " + ret + " of " + chunk);
+        requests.sort(Comparator.comparingLong(ReadRequest::offset));
+
+        for (int from = 0; from < requests.size(); from += CLUSTER_SIZE) {
+            int to = Math.min(requests.size(), from + CLUSTER_SIZE);
+            readCluster(fd, requests, from, to, allocator, operation);
+        }
+    }
+
+    private static void readCluster(int fd,
+                                    List<ReadRequest> requests,
+                                    int from,
+                                    int to,
+                                    SegmentAllocator allocator,
+                                    ReadOperation operation)
+    {
+
+        // First advise to let the kernel begin to retrieve the pages we need
+        for (int i = from; i < to;) {
+            long start = requests.get(i).offset;
+            long end = requests.get(i).end();
+            i++;
+
+            while (i < to && canMerge(start, end, requests.get(i), MAX_ADVICE_SIZE)) {
+                end = Math.max(end, requests.get(i).end());
+                i++;
+            }
+
+            LinuxSystemCalls.fadviseWillneed(fd, start, end - start);
+        }
+
+        // Next execute the reads
+        int reads = 0;
+        for (int i = from; i < to;) {
+            int first = i;
+            long start = requests.get(i).offset;
+            long end = requests.get(i).end();
+            i++;
+
+            while (i < to && canMerge(start, end, requests.get(i), MAX_READ_SIZE)) {
+                end = Math.max(end, requests.get(i).end());
+                i++;
+            }
+
+            MemorySegment buffer = allocator.allocate(end - start, 8);
+
+            if (LinuxSystemCalls.readAt(fd, buffer, start) != buffer.byteSize()) {
+                throw new IllegalStateException("pread failed");
+            }
+            reads++;
+
+            for (int j = first; j < i; j++) {
+                ReadRequest request = requests.get(j);
+                request.target[request.slot] = buffer.asSlice(request.offset - start, request.size);
             }
         }
+
+        operation.requests.inc(to - from);
+        operation.reads.inc(reads);
+    }
+
+    private static boolean canMerge(long start, long end, ReadRequest next, int maxSize) {
+        return next.offset <= end + MERGE_GAP && Math.max(end, next.end()) - start <= maxSize;
     }
 
     @Override
     public void close() {
-        entriesRing.close();
-        spansRing.close();
-        positionsRing.close();
+        arena.close();
     }
 }
