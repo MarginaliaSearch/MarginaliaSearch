@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.nio.file.Path;
@@ -24,6 +25,7 @@ public class LinuxSystemCalls {
     private final MethodHandle closeFd;
     private final MethodHandle readAtFd;
     private final MethodHandle readVectoredAtFd;
+    private final MethodHandle bufferedBulkRead;
     private final MethodHandle fadviseRandom;
     private final MethodHandle fadviseWillneed;
     private final MethodHandle fadviseWillneedRange;
@@ -83,6 +85,10 @@ public class LinuxSystemCalls {
 
         handle = libraryLookup.findOrThrow("read_vectored_at");
         readVectoredAtFd = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_LONG, JAVA_INT, JAVA_LONG, JAVA_INT, JAVA_LONG));
+
+        handle = libraryLookup.findOrThrow("buffered_bulk_read");
+        bufferedBulkRead = nativeLinker.downcallHandle(handle, FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, JAVA_LONG, JAVA_LONG, JAVA_LONG));
+
     }
 
     static {
@@ -129,6 +135,7 @@ public class LinuxSystemCalls {
     private static final MethodHandle READ_VECTORED_AT = isAvailable ? instance.readVectoredAtFd : null;
     private static final MethodHandle MADVISE_WILLNEED = isAvailable ? instance.madviseWillneed : null;
     private static final MethodHandle PAGE_RESIDENT = isAvailable ? instance.pageResident : null;
+    private static final MethodHandle BUFFERED_BULK_READ = isAvailable ? instance.bufferedBulkRead : null;
 
     public static int openDirect(Path filename) {
         try (var arena = Arena.ofConfined()) {
@@ -230,6 +237,31 @@ public class LinuxSystemCalls {
             throw new RuntimeException("Failed to invoke native function", t);
         }
     }
+
+    /** Reads up to 16 ranges using arrays of destination addresses, 32-bit lengths,
+     * and 64-bit offsets. The caller must keep all buffers alive across the call.
+     */
+    public static void bufferedBulkRead(int fd, int n,
+                                        MemorySegment destinations,
+                                        MemorySegment lengths,
+                                        MemorySegment offsets) throws IOException
+    {
+        if (n < 0 || n > 16) {
+            throw new IllegalArgumentException("Batch size must be between 0 and 16");
+        }
+
+        final int read;
+        try {
+            read = (int) BUFFERED_BULK_READ.invokeExact(fd, n, destinations.address(), lengths.address(), offsets.address());
+        } catch (Throwable t) {
+            throw new RuntimeException("Failed to invoke native function", t);
+        }
+
+        if (read != n) {
+            throw new IOException("Failed buffered bulk read: result " + read + " for " + n + " requests");
+        }
+    }
+
     public static void closeFd(int fd) {
         try {
             instance.closeFd.invoke(fd);
