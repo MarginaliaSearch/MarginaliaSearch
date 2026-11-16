@@ -12,13 +12,11 @@ import nu.marginalia.api.searchquery.model.query.QueryStrategy;
 import nu.marginalia.api.searchquery.model.results.SearchResultItem;
 import nu.marginalia.api.searchquery.model.results.debug.DebugRankingFactors;
 import nu.marginalia.index.CombinedIndexReader;
-import nu.marginalia.index.ScratchIntListPool;
-import nu.marginalia.index.StatefulIndex;
+import nu.marginalia.index.util.ScratchIntListPool;
 import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.model.*;
 import nu.marginalia.ranking.connectivity.DomainSetConnectivity;
 import nu.marginalia.language.sentence.tag.HtmlTag;
-import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.id.UrlIdCodec;
@@ -26,8 +24,6 @@ import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.sequence.SequenceOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -37,19 +33,11 @@ import static nu.marginalia.api.searchquery.model.compiled.aggregate.CompiledQue
 
 @Singleton
 public class IndexResultRankingService {
-    private static final Logger logger = LoggerFactory.getLogger(IndexResultRankingService.class);
-
-    private final DocumentDbReader documentDbReader;
-    private final StatefulIndex statefulIndex;
     private final DomainRankingOverrides domainRankingOverrides;
 
     @Inject
-    public IndexResultRankingService(DocumentDbReader documentDbReader,
-                                     StatefulIndex statefulIndex,
-                                     DomainRankingOverrides domainRankingOverrides)
+    public IndexResultRankingService(DomainRankingOverrides domainRankingOverrides)
     {
-        this.documentDbReader = documentDbReader;
-        this.statefulIndex = statefulIndex;
         this.domainRankingOverrides = domainRankingOverrides;
     }
 

@@ -2,8 +2,8 @@ package nu.marginalia.index.reverse.positions;
 
 import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.ffi.NativeAlgos;
-import nu.marginalia.index.ScratchIntList;
-import nu.marginalia.index.ScratchIntListPool;
+import nu.marginalia.index.util.ScratchIntList;
+import nu.marginalia.index.util.ScratchIntListPool;
 import nu.marginalia.sequence.VarintCodedSequence;
 
 import java.lang.foreign.MemorySegment;

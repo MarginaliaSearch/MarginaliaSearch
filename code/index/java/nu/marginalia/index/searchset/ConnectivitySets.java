@@ -13,6 +13,9 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 
+/** Holds and manages the lifecycle of ConnectivityViews, which are
+ * contain information about how well connected a domain is to a core set of domains in the link graph.
+ */
 @Singleton
 public class ConnectivitySets {
 

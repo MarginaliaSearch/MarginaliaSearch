@@ -1,4 +1,4 @@
-package nu.marginalia.index;
+package nu.marginalia.index.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,21 +11,22 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * Slabs are allocated from the global arena and live for the lifetime of the process.
  * The pool grows to the peak number of concurrently borrowed allocators, which is
  * bounded by the number of simultaneous query executions and their stage threads.
- * <p>
- * When the system property system.scratchAllocatorAutoArena is set, slabs are backed
- * by automatic arenas instead, so that tests do not accumulate permanent allocations.
  */
 public class ScratchSegmentAllocatorFactory
 {
-    private static final Logger logger = LoggerFactory.getLogger(ScratchSegmentAllocatorFactory.class);
-    private static final boolean useAutoArena = Boolean.getBoolean("system.scratchAllocatorAutoArena");
+    private static final Arena arena;
+    static {
+        // Disable global arena for testing
+        if (Boolean.getBoolean("system.scratchAllocatorAutoArena"))
+            arena = Arena.ofAuto();
+        else
+            arena = Arena.global();
+    }
 
-    private final String name;
     private final int slabSize;
     private final ConcurrentLinkedQueue<ScratchSegmentAllocator> pool = new ConcurrentLinkedQueue<>();
 
-    public ScratchSegmentAllocatorFactory(String name, int slabSize) {
-        this.name = name;
+    public ScratchSegmentAllocatorFactory(int slabSize) {
         this.slabSize = slabSize;
     }
 
@@ -35,9 +36,6 @@ public class ScratchSegmentAllocatorFactory
             return allocator;
         }
 
-        logger.debug("Allocating a new {} scratch slab of {} bytes", name, slabSize);
-
-        Arena arena = useAutoArena ? Arena.ofAuto() : Arena.global();
         return new ScratchSegmentAllocator(this, arena.allocate(slabSize, ScratchSegmentAllocator.SLAB_ALIGNMENT));
     }
 

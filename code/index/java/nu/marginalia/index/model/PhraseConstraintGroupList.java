@@ -3,7 +3,7 @@ package nu.marginalia.index.model;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
-import nu.marginalia.index.ScratchIntListPool;
+import nu.marginalia.index.util.ScratchIntListPool;
 import nu.marginalia.language.keywords.KeywordHasher;
 import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.sequence.SequenceOperations;

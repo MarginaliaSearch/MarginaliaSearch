@@ -1,7 +1,7 @@
 package nu.marginalia.index.forward.spans;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectFunction;
-import nu.marginalia.index.ScratchIntList;
+import nu.marginalia.index.util.ScratchIntList;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -24,8 +24,8 @@ public class DecodableDocumentSpans {
         if (segment == null)
             return new DocumentSpans();
 
-        // Unaligned layouts throughout, as the segment may be a slice of a mapped
-        // file at an arbitrary byte offset
+        // We expect unaligned layouts throughout, as the segment may be a slice of a mapped
+        // file at an arbitrary byte offset in a read buffer
         int count = segment.get(ValueLayout.JAVA_INT_UNALIGNED, 0);
         int pos = 4;
         DocumentSpans ret = new DocumentSpans();

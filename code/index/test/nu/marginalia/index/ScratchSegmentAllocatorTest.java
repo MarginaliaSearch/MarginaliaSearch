@@ -1,5 +1,6 @@
 package nu.marginalia.index;
 
+import nu.marginalia.index.util.ScratchSegmentAllocatorFactory;
 import org.junit.jupiter.api.Test;
 
 import java.lang.foreign.MemorySegment;
@@ -11,7 +12,7 @@ class ScratchSegmentAllocatorTest {
 
     @Test
     void testAllocationsAreDisjointAndAligned() {
-        var factory = new ScratchSegmentAllocatorFactory("test", 1024);
+        var factory = new ScratchSegmentAllocatorFactory(1024);
 
         try (var allocator = factory.createAllocator()) {
             MemorySegment a = allocator.allocate(100, 8);
@@ -32,7 +33,7 @@ class ScratchSegmentAllocatorTest {
 
     @Test
     void testOverflowAllocationsAreServed() {
-        var factory = new ScratchSegmentAllocatorFactory("test", 128);
+        var factory = new ScratchSegmentAllocatorFactory(128);
 
         try (var allocator = factory.createAllocator()) {
             MemorySegment small = allocator.allocate(64, 8);
@@ -48,7 +49,7 @@ class ScratchSegmentAllocatorTest {
 
     @Test
     void testSlabSizeIsFixed() {
-        var factory = new ScratchSegmentAllocatorFactory("test", 128);
+        var factory = new ScratchSegmentAllocatorFactory(128);
 
         try (var allocator = factory.createAllocator()) {
             allocator.allocate(1024, 8);
@@ -60,7 +61,7 @@ class ScratchSegmentAllocatorTest {
 
     @Test
     void testResetReusesSlab() {
-        var factory = new ScratchSegmentAllocatorFactory("test", 1024);
+        var factory = new ScratchSegmentAllocatorFactory(1024);
 
         try (var allocator = factory.createAllocator()) {
             MemorySegment first = allocator.allocate(512, 8);
@@ -73,7 +74,7 @@ class ScratchSegmentAllocatorTest {
 
     @Test
     void testCloseReturnsAllocatorToPool() {
-        var factory = new ScratchSegmentAllocatorFactory("test", 1024);
+        var factory = new ScratchSegmentAllocatorFactory(1024);
 
         var first = factory.createAllocator();
         first.allocate(512, 8);
@@ -90,7 +91,7 @@ class ScratchSegmentAllocatorTest {
 
     @Test
     void testPoolServesConcurrentLeases() {
-        var factory = new ScratchSegmentAllocatorFactory("test", 1024);
+        var factory = new ScratchSegmentAllocatorFactory(1024);
 
         var first = factory.createAllocator();
         var second = factory.createAllocator();
@@ -103,7 +104,7 @@ class ScratchSegmentAllocatorTest {
 
     @Test
     void testLargeAlignmentFallsBackToOverflow() {
-        var factory = new ScratchSegmentAllocatorFactory("test", 1024);
+        var factory = new ScratchSegmentAllocatorFactory(1024);
 
         try (var allocator = factory.createAllocator()) {
             MemorySegment segment = allocator.allocate(64, 64);
@@ -113,7 +114,7 @@ class ScratchSegmentAllocatorTest {
 
     @Test
     void testManyAllocationCycles() {
-        var factory = new ScratchSegmentAllocatorFactory("test", 256);
+        var factory = new ScratchSegmentAllocatorFactory(256);
 
         try (var allocator = factory.createAllocator()) {
             for (int cycle = 0; cycle < 1000; cycle++) {

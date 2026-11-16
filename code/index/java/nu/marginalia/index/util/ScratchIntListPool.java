@@ -1,4 +1,4 @@
-package nu.marginalia.index;
+package nu.marginalia.index.util;
 
 /** Resettable pool for IntArrays
  * */

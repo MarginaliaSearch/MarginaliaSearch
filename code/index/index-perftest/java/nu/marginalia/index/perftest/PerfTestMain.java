@@ -14,7 +14,6 @@ import nu.marginalia.language.NounVariants;
 import nu.marginalia.functions.searchquery.query_parser.QueryExpansion;
 import nu.marginalia.index.CombinedIndexReader;
 import nu.marginalia.index.IndexQueryExecution;
-import nu.marginalia.index.StatefulIndex;
 import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.results.DomainRankingOverrides;
@@ -108,8 +107,6 @@ public class PerfTestMain {
 
     private static IndexResultRankingService createIndexResultRankingService(Path indexDir, CombinedIndexReader combinedIndexReader) throws IOException, SQLException {
         return new IndexResultRankingService(
-                new DocumentDbReader(indexDir.resolve("ldbr/documents.db")),
-                new StatefulIndex(combinedIndexReader),
                 new DomainRankingOverrides(null, Path.of("xxxx"))
         );
     }

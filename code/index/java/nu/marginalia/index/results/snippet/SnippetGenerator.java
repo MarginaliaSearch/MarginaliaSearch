@@ -7,6 +7,9 @@ import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
 import nu.marginalia.index.model.RankableDocument;
 import nu.marginalia.index.model.SearchContext;
 import nu.marginalia.index.model.UnrankedSearchContext;
+import nu.marginalia.index.util.ScratchIntListPool;
+import nu.marginalia.index.util.ScratchSegmentAllocator;
+import nu.marginalia.index.util.ScratchSegmentAllocatorFactory;
 import nu.marginalia.language.sentence.tag.HtmlTag;
 import nu.marginalia.sequence.CodedSequence;
 
@@ -14,12 +17,11 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.foreign.MemorySegment;
 import java.util.List;
-import java.util.Objects;
 
 public class SnippetGenerator implements AutoCloseable {
 
     private static final ScratchSegmentAllocatorFactory allocatorFactory
-            = new ScratchSegmentAllocatorFactory("SnippetGeneration", 1 << 20);
+            = new ScratchSegmentAllocatorFactory(1 << 20);
 
     private final CombinedIndexReader index;
 

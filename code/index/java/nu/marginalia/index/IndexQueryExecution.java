@@ -12,7 +12,6 @@ import nu.marginalia.api.searchquery.model.results.debug.DebugRankingFactors;
 import nu.marginalia.array.page.LongQueryBuffer;
 import nu.marginalia.ffi.IoUring;
 import nu.marginalia.index.forward.spans.DecodableDocumentSpans;
-import nu.marginalia.index.forward.spans.DocumentSpans;
 import nu.marginalia.index.model.CombinedDocIdList;
 import nu.marginalia.index.model.RankableDocument;
 import nu.marginalia.index.model.SearchContext;
@@ -20,6 +19,9 @@ import nu.marginalia.index.results.IndexResultRankingService;
 import nu.marginalia.index.results.snippet.SnippetGenerator;
 import nu.marginalia.index.reverse.query.IndexQuery;
 import nu.marginalia.index.reverse.query.IndexSearchBudget;
+import nu.marginalia.index.util.ScratchIntListPool;
+import nu.marginalia.index.util.ScratchSegmentAllocator;
+import nu.marginalia.index.util.ScratchSegmentAllocatorFactory;
 import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.linkdb.model.DocdbUrlDetail;
 import nu.marginalia.model.idx.WordFlags;
@@ -28,7 +30,6 @@ import nu.marginalia.piping.PipeDrain;
 import nu.marginalia.sequence.CodedSequence;
 import nu.marginalia.skiplist.SkipListReader;
 import nu.marginalia.skiplist.ValueBatchContext;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -295,7 +296,7 @@ public class IndexQueryExecution {
         // Slabs are pooled and bounded by peak stage concurrency, so they can be
         // sized generously to keep allocations out of the overflow path
         private static final ScratchSegmentAllocatorFactory allocatorFactory
-                = new ScratchSegmentAllocatorFactory("Preparation", 1 << 20);
+                = new ScratchSegmentAllocatorFactory(1 << 20);
 
         /** Contexts hold a ring on the value file, so they outlive the stage and
          *  are pooled, and are discarded when the index they were opened against
@@ -500,7 +501,7 @@ public class IndexQueryExecution {
     private class RankingStage implements BufferPipe.FinalFunction<RankableDocument[]> {
 
         private static final ScratchSegmentAllocatorFactory allocatorFactory
-                = new ScratchSegmentAllocatorFactory("Ranking", 1 << 20);
+                = new ScratchSegmentAllocatorFactory(1 << 20);
 
         // per-thread instances
         private final ScratchIntListPool pool = new ScratchIntListPool(64);
@@ -605,9 +606,8 @@ public class IndexQueryExecution {
         // scratch buffers by now and must be fetched anew
 
         ScratchIntListPool pool = new ScratchIntListPool(128);
-        ScratchSegmentAllocator segmentAllocator = RankingStage.allocatorFactory.createAllocator();
 
-        try {
+        try (ScratchSegmentAllocator segmentAllocator = RankingStage.allocatorFactory.createAllocator()) {
             for (var doc : results) {
                 pool.reset();
                 segmentAllocator.reset();
@@ -623,8 +623,7 @@ public class IndexQueryExecution {
                 for (int i = 0; i < positions.length; i++) {
                     if (codedPositions[i] != null) {
                         positions[i] = codedPositions[i].values(pool::get);
-                    }
-                    else {
+                    } else {
                         positions[i] = IntList.of();
                     }
                 }
@@ -636,9 +635,6 @@ public class IndexQueryExecution {
                     doc.item = score;
                 }
             }
-        }
-        finally {
-            segmentAllocator.close();
         }
     }
 

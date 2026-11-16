@@ -1,4 +1,4 @@
-package nu.marginalia.index;
+package nu.marginalia.index.util;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
@@ -6,18 +6,10 @@ import java.lang.foreign.SegmentAllocator;
 
 /** Bump allocator for short-lived scratch memory used during query execution.
  * <p>
- * Instances are pooled by their factory and keep their slab across leases, so that
- * steady state query execution performs no native memory allocation.  Requests that
- * do not fit in the slab are served from a temporary overflow arena that lives until
- * the next reset.
- * <p>
- * The returned segments are uninitialized, and slab backed segments remain technically
- * accessible after reset, so callers must treat them strictly as scratch space.
+ * Instances are pooled by their factory and keep their slab across leases,
+ * so that query execution performs no native memory allocation unless they overflow the slab.
  */
 public class ScratchSegmentAllocator implements SegmentAllocator, AutoCloseable {
-    /** Slabs are page aligned, so aligning an offset within the slab aligns the
-     *  address it resolves to, and any request up to this can be served from the
-     *  slab rather than falling out to the overflow arena */
     public static final long SLAB_ALIGNMENT = 4096;
 
     private final ScratchSegmentAllocatorFactory factory;
