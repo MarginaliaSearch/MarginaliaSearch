@@ -26,6 +26,12 @@ To set up a local test environment, follow the instructions in [📄 run/readme.
 
 Further documentation is available at [🌎&nbsp;https://docs.marginalia.nu/](https://docs.marginalia.nu/).
 
+Initialize the SlopData submodule before building or importing the project into an IDE:
+
+```shell
+git submodule update --init --recursive
+```
+
 Before compiling, it's necessary to run [⚙️ run/setup.sh](run/setup.sh). 
 This will download supplementary model data that is necessary to run the code. 
 These are also necessary to run the tests. 

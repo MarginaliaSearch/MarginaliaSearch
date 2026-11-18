@@ -43,7 +43,7 @@ dependencies {
     implementation project(':code:index:index-journal')
 
 
-    implementation libs.slop
+    implementation project(':third-party:slop')
     implementation libs.bundles.slf4j
 
     implementation libs.prometheus

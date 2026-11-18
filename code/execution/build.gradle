@@ -62,7 +62,7 @@ dependencies {
 
 
     implementation libs.gson
-    implementation libs.slop
+    implementation project(':third-party:slop')
     implementation libs.prometheus
     implementation libs.notnull
     implementation dependencies.create(libs.guice.get()) {

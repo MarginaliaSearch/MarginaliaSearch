@@ -36,6 +36,7 @@ It will create the basic runtime directory structure and download some models an
 data that doesn't come with the git repo because git deals poorly with large binary files.
 
 ```shell
+$ git submodule update --init --recursive
 $ run/setup.sh
 ```
 

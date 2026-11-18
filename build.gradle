@@ -69,6 +69,16 @@ ext {
     jibVersion = '3.5.4'
 }
 
+project(':third-party:slop') {
+    plugins.withId('java') {
+        java {
+            toolchain {
+                languageVersion.set(JavaLanguageVersion.of(rootProject.ext.jvmVersion))
+            }
+        }
+    }
+}
+
 apply from: 'dist.gradle'
 
 idea {

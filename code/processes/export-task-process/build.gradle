@@ -54,7 +54,7 @@ dependencies {
     implementation libs.commons.compress
     implementation libs.commons.codec
     implementation libs.jsoup
-    implementation libs.slop
+    implementation project(':third-party:slop')
     implementation libs.jwarc
 
 

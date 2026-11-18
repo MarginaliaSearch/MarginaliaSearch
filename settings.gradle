@@ -108,6 +108,11 @@ include 'third-party:commons-codec'
 include 'third-party:rssreader'
 include 'third-party:encyclopedia-marginalia-nu'
 
+if (!file('third-party/slop/build.gradle').isFile()) {
+    throw new GradleException("SlopData submodule is missing. Run 'git submodule update --init --recursive' before building.")
+}
+include 'third-party:slop'
+
 ext {
     joobyVersion = '4.5.4'
 }
@@ -120,7 +125,6 @@ dependencyResolutionManagement {
         maven { url "https://repo1.maven.org/maven2/" }
         maven { url "https://www2.ph.ed.ac.uk/maven2/" }
         maven { url "https://jitpack.io/" }
-        maven { url "https://artifacts.marginalia.nu/snapshots" }
       //  maven { url "https://artifactory.cronapp.io/public-release/" }
 
         exclusiveContent {
@@ -132,18 +136,6 @@ dependencyResolutionManagement {
             filter {
                 // Only use JitPack for the `gson-record-type-adapter-factory` library
                 includeModule("com.github.Marcono1234", "gson-record-type-adapter-factory")
-            }
-        }
-
-        exclusiveContent {
-            forRepository {
-                maven {
-                    url = uri("https://artifacts.marginalia.nu/snapshots")
-                }
-            }
-            filter {
-                // Only use the Marginalia snapshot repository for the `slop` library
-                includeModule("nu.marginalia", "slop")
             }
         }
     }
@@ -247,7 +239,6 @@ dependencyResolutionManagement {
             library('curator-recipes', 'org.apache.curator','curator-recipes').version('5.9.0')
             library('zookeeper', 'org.apache.zookeeper', 'zookeeper').version('3.9.5')
 
-            library('slop', 'nu.marginalia', 'slop').version('0.0.21-SNAPSHOT')
             library('jooby-netty','io.jooby','jooby-netty').version(joobyVersion)
             library('jooby-jte','io.jooby','jooby-jte').version(joobyVersion)
             library('jooby-apt','io.jooby','jooby-apt').version(joobyVersion)

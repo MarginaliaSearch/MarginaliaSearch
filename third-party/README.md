@@ -5,6 +5,10 @@ or lack an artifact, or to override some default that is inappropriate for the t
 
 ## Sources and Licenses
 
+### Git submodules
+
+* [SlopData](slop/) - MIT, upstream: https://github.com/MarginaliaSearch/SlopData
+
 ### Modified
 * [RDRPosTagger](rdrpostagger/) - GPL3
 * [PorterStemmer](porterstemmer/) - LGPL3

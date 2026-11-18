@@ -32,7 +32,7 @@ dependencies {
     implementation project(':code:functions:search-query')
     implementation project(':code:functions:search-query:api')
 
-    implementation libs.slop
+    implementation project(':third-party:slop')
     implementation libs.roaringbitmap
     implementation libs.bundles.slf4j
     implementation libs.guava

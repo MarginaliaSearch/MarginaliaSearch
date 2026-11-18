@@ -58,7 +58,7 @@ dependencies {
 
     testImplementation project(':code:functions:language-processing')
 
-    implementation libs.slop
+    implementation project(':third-party:slop')
     implementation libs.bundles.slf4j
 
     implementation libs.notnull

@@ -1,0 +1,3 @@
+[submodule "third-party/slop"]
+	path = third-party/slop
+	url = https://github.com/MarginaliaSearch/SlopData.git
