@@ -1,9 +1,9 @@
-FROM amazoncorretto:26.0.0 AS jre-base
+FROM amazoncorretto:27.0.1 AS jre-base
 
 FROM debian:bookworm-slim
 
 # Copy JRE from Amazon Corretto
-COPY --from=jre-base /usr/lib/jvm/java-26-amazon-corretto /opt/java
+COPY --from=jre-base /usr/lib/jvm/java-27-amazon-corretto /opt/java
 
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends chromium chromium-driver

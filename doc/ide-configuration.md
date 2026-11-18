@@ -5,13 +5,13 @@ more than capable.
 It may be possible to use other IDEs, but the code uses a relatively advanced build system and some IDEs get very 
 confused by this.
 
-## JDK 21 (+preview)
-The codebase uses Java 21 preview features.  You may need to configure your IDE to use Java 21, or set the language version to 21 (preview).  Usually it's 
+## JDK 27 (+preview)
+The codebase uses Java 27 preview features.  You may need to configure your IDE to use Java 27, or set the language version to 27 (preview).  Usually it's
 smart enough to figure it out, but sometimes it's not.
 
-Go to `File > Project Structure > Project`, ensure it's set to use a JDK21 SDK, and set the Project SDK to 21 (preview).
+Go to `File > Project Structure > Project`, ensure it's set to use a JDK 27 SDK, and set the language level to 27.
 
-![Project Structure](ide_docs/java21.png)
+Configure the IDE to use the project's Gradle wrapper (9.8.0) and JDK 27 as the Gradle JVM.
 
 ## Lombok, other plugins
 
