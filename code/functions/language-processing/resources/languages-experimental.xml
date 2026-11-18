@@ -20,7 +20,7 @@
 
         <!ELEMENT unicodeNormalization EMPTY>
         <!ATTLIST unicodeNormalization
-            algorithm (minimal|e-accents|german|maximal-latin) #REQUIRED
+            algorithm (minimal|latin|e-accents|german|maximal-latin) #REQUIRED
             >
 
         <!ELEMENT stemmer (pospattern?)>
@@ -52,11 +52,11 @@
 <languages>
     <language isoCode="en" name="English" display="ltr">
         <keywordHash algorithm="asciish" />
+        <unicodeNormalization algorithm="maximal-latin" />
         <stemmer algorithm="porter">
             <pospattern>!(IN TO CC DT)</pospattern>
         </stemmer>
         <sentenceDetector algorithm="opennlp"/>
-        <unicodeNormalization algorithm="maximal-latin" />
         <rdrTagger dictId="pos-dict-en" rdrId="pos-rdr-en" />
         <ngrams type="name">
             <pospattern>NNP*</pospattern>
@@ -88,61 +88,338 @@
             <pospattern>!CC * * !(IN DT TO)</pospattern>
         </ngrams>
         <ngrams type="keyword">
-            <!-- length = 1 -->
             <pospattern>(N* VBG VBN JJ* R* VBG)</pospattern>
-            <!-- length = 2 -->
             <pospattern>(N* VBG VBN JJ* R* VBG) (N* VBG VBN)</pospattern>
             <pospattern>(N* VBG VBN) CD</pospattern>
-            <!-- length = 3 -->
             <pospattern>(N* VBG VBN JJ* R* VBG) (N* VBG VBN JJ* R* VBG) (N* VBG VBN)</pospattern>
             <pospattern>NNP* (IN TO CC NNP*) (N* VBG VBN)</pospattern>
             <pospattern>(N* VBG VBN) (N* VBG VBN) CD</pospattern>
-            <!-- length = 4 -->
             <pospattern>(N* VBG VBN JJ* R* VBG) (N* VBG VBN JJ* R* VBG) (N* VBG VBN JJ* R* VBG) (N* VBG VBN)</pospattern>
             <pospattern>NNP* (DT IN TO CC) (IN TO CC) NNP*</pospattern>
         </ngrams>
 
     </language>
+
     <language isoCode="sv" name="Swedish" display="ltr">
         <keywordHash algorithm="asciish" />
+        <unicodeNormalization algorithm="e-accents" />
         <stemmer algorithm="snowball" variant="SWEDISH" />
         <sentenceDetector algorithm="opennlp"/>
-        <unicodeNormalization algorithm="e-accents" />
         <rdrTagger dictId="pos-dict-sv" rdrId="pos-rdr-sv" />
         <ngrams type="name">
             <pospattern>PROPN</pospattern>
             <pospattern>PROPN PROPN</pospattern>
             <pospattern>PROPN PROPN PROPN</pospattern>
             <pospattern>PROPN PROPN PROPN PROPN</pospattern>
+            <pospattern>PROPN ADP PROPN</pospattern>
+            <pospattern>PROPN ADP DET PROPN</pospattern>
+        </ngrams>
+        <ngrams type="noun">
+            <pospattern>(NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP DET (NOUN PROPN)</pospattern>
+        </ngrams>
+        <ngrams type="subject-suffix">
+            <pospattern>(AUX VERB)</pospattern>
+        </ngrams>
+        <ngrams type="title">
+            <pospattern>(NOUN PROPN ADJ VERB NUM)</pospattern>
+            <pospattern>(NOUN PROPN ADJ VERB NUM) (NOUN PROPN ADJ VERB NUM)</pospattern>
+            <pospattern>(NOUN PROPN ADJ VERB NUM) * (NOUN PROPN ADJ VERB NUM)</pospattern>
+            <pospattern>(NOUN PROPN ADJ VERB NUM) * * (NOUN PROPN ADJ VERB NUM)</pospattern>
+        </ngrams>
+        <ngrams type="keyword">
+            <pospattern>(NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP DET (NOUN PROPN)</pospattern>
+            <pospattern>(ADJ VERB)</pospattern>
         </ngrams>
     </language>
+
     <language isoCode="fr" name="French" display="ltr">
         <keywordHash algorithm="asciish" />
+        <unicodeNormalization algorithm="latin" />
         <stemmer algorithm="snowball" variant="FRENCH" />
         <sentenceDetector algorithm="opennlp"/>
         <rdrTagger dictId="pos-dict-fr" rdrId="pos-rdr-fr" />
+        <ngrams type="name">
+            <pospattern>PROPN</pospattern>
+            <pospattern>PROPN PROPN</pospattern>
+            <pospattern>PROPN PROPN PROPN</pospattern>
+            <pospattern>PROPN PROPN PROPN PROPN</pospattern>
+            <pospattern>PROPN ADP PROPN</pospattern>
+            <pospattern>PROPN ADP DET PROPN</pospattern>
+        </ngrams>
+        <ngrams type="noun">
+            <pospattern>(NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP DET (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADJ</pospattern>
+            <pospattern>ADJ (NOUN PROPN) ADJ</pospattern>
+            <pospattern>(NOUN PROPN) ADJ ADJ</pospattern>
+        </ngrams>
+        <ngrams type="subject-suffix">
+            <pospattern>(AUX VERB)</pospattern>
+        </ngrams>
+        <ngrams type="title">
+            <pospattern>(NOUN PROPN ADJ VERB NUM)</pospattern>
+            <pospattern>(NOUN PROPN ADJ VERB NUM) (NOUN PROPN ADJ VERB NUM)</pospattern>
+            <pospattern>(NOUN PROPN ADJ VERB NUM) * (NOUN PROPN ADJ VERB NUM)</pospattern>
+            <pospattern>(NOUN PROPN ADJ VERB NUM) * * (NOUN PROPN ADJ VERB NUM)</pospattern>
+        </ngrams>
+        <ngrams type="keyword">
+            <pospattern>(NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP DET (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADJ</pospattern>
+            <pospattern>ADJ (NOUN PROPN) ADJ</pospattern>
+            <pospattern>(NOUN PROPN) ADJ ADJ</pospattern>
+            <pospattern>(ADJ VERB)</pospattern>
+        </ngrams>
     </language>
+
     <language isoCode="de" name="German" display="ltr">
         <keywordHash algorithm="asciish" />
+        <unicodeNormalization algorithm="german" />
         <stemmer algorithm="snowball" variant="GERMAN" />
         <sentenceDetector algorithm="opennlp"/>
-        <unicodeNormalization algorithm="german" />
         <rdrTagger dictId="pos-dict-de" rdrId="pos-rdr-de" />
+        <ngrams type="name">
+            <pospattern>NE</pospattern>
+            <pospattern>NE NE</pospattern>
+            <pospattern>NE NE NE</pospattern>
+            <pospattern>NE NE NE NE</pospattern>
+            <pospattern>NE APPR NE</pospattern>
+            <pospattern>NE APPR ART NE</pospattern>
+        </ngrams>
+        <ngrams type="noun">
+            <pospattern>(NN NE NNE)</pospattern>
+            <pospattern>ADJA (NN NE NNE)</pospattern>
+            <pospattern>ADJA ADJA (NN NE NNE)</pospattern>
+            <pospattern>(NN NE NNE) (NN NE NNE)</pospattern>
+            <pospattern>(NN NE NNE) APPR (NN NE NNE)</pospattern>
+            <pospattern>(NN NE NNE) APPR ART (NN NE NNE)</pospattern>
+        </ngrams>
+        <ngrams type="subject-suffix">
+            <pospattern>(VAFIN VMFIN VVFIN)</pospattern>
+        </ngrams>
+        <ngrams type="title">
+            <pospattern>(NN NE NNE ADJA ADJD VVINF CARD)</pospattern>
+            <pospattern>(NN NE NNE ADJA ADJD VVINF CARD) (NN NE NNE ADJA ADJD VVINF CARD)</pospattern>
+            <pospattern>(NN NE NNE ADJA ADJD VVINF CARD) * (NN NE NNE ADJA ADJD VVINF CARD)</pospattern>
+            <pospattern>(NN NE NNE ADJA ADJD VVINF CARD) * * (NN NE NNE ADJA ADJD VVINF CARD)</pospattern>
+        </ngrams>
+        <ngrams type="keyword">
+            <pospattern>(NN NE NNE)</pospattern>
+            <pospattern>ADJA (NN NE NNE)</pospattern>
+            <pospattern>ADJA ADJA (NN NE NNE)</pospattern>
+            <pospattern>(NN NE NNE) (NN NE NNE)</pospattern>
+            <pospattern>(NN NE NNE) APPR (NN NE NNE)</pospattern>
+            <pospattern>(NN NE NNE) APPR ART (NN NE NNE)</pospattern>
+            <pospattern>(ADJA ADJD VVINF VVPP)</pospattern>
+        </ngrams>
     </language>
-    <!--
-    <language isoCode="fa" name="Farsi" display="rtl">
-        <keywordHash algorithm="utf8" />
-        <stemmer algorithm="none" />
+
+    <language isoCode="nl" name="Dutch" display="ltr">
+        <keywordHash algorithm="asciish" />
+        <unicodeNormalization algorithm="latin" />
+        <stemmer algorithm="snowball" variant="DUTCH" />
         <sentenceDetector algorithm="opennlp"/>
-        <unicodeNormalization algorithm="minimal" />
+        <rdrTagger dictId="pos-dict-nl" rdrId="pos-rdr-nl" />
+        <ngrams type="name">
+            <pospattern>PROPN</pospattern>
+            <pospattern>PROPN PROPN</pospattern>
+            <pospattern>PROPN PROPN PROPN</pospattern>
+            <pospattern>PROPN PROPN PROPN PROPN</pospattern>
+            <pospattern>PROPN ADP PROPN</pospattern>
+            <pospattern>PROPN ADP DET PROPN</pospattern>
+        </ngrams>
+        <ngrams type="noun">
+            <pospattern>(NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP DET (NOUN PROPN)</pospattern>
+        </ngrams>
+        <ngrams type="subject-suffix">
+            <pospattern>(AUX VERB)</pospattern>
+        </ngrams>
+        <ngrams type="title">
+            <pospattern>(NOUN PROPN ADJ VERB NUM)</pospattern>
+            <pospattern>(NOUN PROPN ADJ VERB NUM) (NOUN PROPN ADJ VERB NUM)</pospattern>
+            <pospattern>(NOUN PROPN ADJ VERB NUM) * (NOUN PROPN ADJ VERB NUM)</pospattern>
+            <pospattern>(NOUN PROPN ADJ VERB NUM) * * (NOUN PROPN ADJ VERB NUM)</pospattern>
+        </ngrams>
+        <ngrams type="keyword">
+            <pospattern>(NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP DET (NOUN PROPN)</pospattern>
+            <pospattern>(ADJ VERB)</pospattern>
+        </ngrams>
     </language>
-    -->
-    <resource id="pos-dict-en" md5="" path="rdr/English.DICT" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/POS/English.DICT" />
-    <resource id="pos-rdr-en" md5="" path="rdr/English.RDR" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/POS/English.RDR" />
-    <resource id="pos-dict-sv" md5="" path="rdr/Swedish.DICT" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/ud-treebanks-v2.4/UD_Swedish-Talbanken/sv_talbanken-ud-train.conllu.UPOS.DICT" />
-    <resource id="pos-rdr-sv" md5="" path="rdr/Swedish.RDR"   href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/ud-treebanks-v2.4/UD_Swedish-Talbanken/sv_talbanken-ud-train.conllu.UPOS.RDR" />
-    <resource id="pos-rdr-de" md5="" path="rdr/German.RDR"   href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/POS/German.RDR" />
-    <resource id="pos-dict-de" md5="" path="rdr/German.DICT"   href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/POS/German.DICT" />
-    <resource id="pos-rdr-fr" md5="" path="rdr/French.RDR"   href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/POS/French.RDR" />
-    <resource id="pos-dict-fr" md5="" path="rdr/French.DICT"   href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/refs/heads/master/Models/POS/French.DICT" />
+
+    <language isoCode="es" name="Spanish" display="ltr">
+        <keywordHash algorithm="asciish" />
+        <unicodeNormalization algorithm="latin" />
+        <stemmer algorithm="snowball" variant="SPANISH" />
+        <sentenceDetector algorithm="opennlp"/>
+        <rdrTagger dictId="pos-dict-es" rdrId="pos-rdr-es" />
+        <ngrams type="name">
+            <pospattern>PROPN</pospattern>
+            <pospattern>PROPN PROPN</pospattern>
+            <pospattern>PROPN PROPN PROPN</pospattern>
+            <pospattern>PROPN PROPN PROPN PROPN</pospattern>
+            <pospattern>PROPN ADP PROPN</pospattern>
+            <pospattern>PROPN ADP DET PROPN</pospattern>
+        </ngrams>
+        <ngrams type="noun">
+            <pospattern>(NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP DET (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADJ</pospattern>
+            <pospattern>ADJ (NOUN PROPN) ADJ</pospattern>
+            <pospattern>(NOUN PROPN) ADJ ADJ</pospattern>
+        </ngrams>
+        <ngrams type="subject-suffix">
+            <pospattern>(AUX VERB)</pospattern>
+        </ngrams>
+        <ngrams type="title">
+            <pospattern>(NOUN PROPN ADJ VERB NUM)</pospattern>
+            <pospattern>(NOUN PROPN ADJ VERB NUM) (NOUN PROPN ADJ VERB NUM)</pospattern>
+            <pospattern>(NOUN PROPN ADJ VERB NUM) * (NOUN PROPN ADJ VERB NUM)</pospattern>
+            <pospattern>(NOUN PROPN ADJ VERB NUM) * * (NOUN PROPN ADJ VERB NUM)</pospattern>
+        </ngrams>
+        <ngrams type="keyword">
+            <pospattern>(NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP DET (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADJ</pospattern>
+            <pospattern>ADJ (NOUN PROPN) ADJ</pospattern>
+            <pospattern>(NOUN PROPN) ADJ ADJ</pospattern>
+            <pospattern>(ADJ VERB)</pospattern>
+        </ngrams>
+    </language>
+
+    <language isoCode="it" name="Italian" display="ltr">
+        <keywordHash algorithm="asciish" />
+        <unicodeNormalization algorithm="latin" />
+        <stemmer algorithm="snowball" variant="ITALIAN" />
+        <sentenceDetector algorithm="opennlp"/>
+        <rdrTagger dictId="pos-dict-it" rdrId="pos-rdr-it" />
+        <ngrams type="name">
+            <pospattern>PROPN</pospattern>
+            <pospattern>PROPN PROPN</pospattern>
+            <pospattern>PROPN PROPN PROPN</pospattern>
+            <pospattern>PROPN PROPN PROPN PROPN</pospattern>
+            <pospattern>PROPN ADP PROPN</pospattern>
+            <pospattern>PROPN ADP DET PROPN</pospattern>
+        </ngrams>
+        <ngrams type="noun">
+            <pospattern>(NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP DET (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADJ</pospattern>
+            <pospattern>ADJ (NOUN PROPN) ADJ</pospattern>
+            <pospattern>(NOUN PROPN) ADJ ADJ</pospattern>
+        </ngrams>
+        <ngrams type="subject-suffix">
+            <pospattern>(AUX VERB)</pospattern>
+        </ngrams>
+        <ngrams type="title">
+            <pospattern>(NOUN PROPN ADJ VERB NUM)</pospattern>
+            <pospattern>(NOUN PROPN ADJ VERB NUM) (NOUN PROPN ADJ VERB NUM)</pospattern>
+            <pospattern>(NOUN PROPN ADJ VERB NUM) * (NOUN PROPN ADJ VERB NUM)</pospattern>
+            <pospattern>(NOUN PROPN ADJ VERB NUM) * * (NOUN PROPN ADJ VERB NUM)</pospattern>
+        </ngrams>
+        <ngrams type="keyword">
+            <pospattern>(NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP DET (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADJ</pospattern>
+            <pospattern>ADJ (NOUN PROPN) ADJ</pospattern>
+            <pospattern>(NOUN PROPN) ADJ ADJ</pospattern>
+            <pospattern>(ADJ VERB)</pospattern>
+        </ngrams>
+    </language>
+
+    <language isoCode="pt" name="Portuguese" display="ltr">
+        <keywordHash algorithm="asciish" />
+        <unicodeNormalization algorithm="latin" />
+        <stemmer algorithm="snowball" variant="PORTUGUESE" />
+        <sentenceDetector algorithm="opennlp"/>
+        <rdrTagger dictId="pos-dict-pt" rdrId="pos-rdr-pt" />
+        <ngrams type="name">
+            <pospattern>PROPN</pospattern>
+            <pospattern>PROPN PROPN</pospattern>
+            <pospattern>PROPN PROPN PROPN</pospattern>
+            <pospattern>PROPN PROPN PROPN PROPN</pospattern>
+            <pospattern>PROPN ADP PROPN</pospattern>
+            <pospattern>PROPN ADP DET PROPN</pospattern>
+        </ngrams>
+        <ngrams type="noun">
+            <pospattern>(NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP DET (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADJ</pospattern>
+            <pospattern>ADJ (NOUN PROPN) ADJ</pospattern>
+            <pospattern>(NOUN PROPN) ADJ ADJ</pospattern>
+        </ngrams>
+        <ngrams type="subject-suffix">
+            <pospattern>(AUX VERB)</pospattern>
+        </ngrams>
+        <ngrams type="title">
+            <pospattern>(NOUN PROPN ADJ VERB NUM)</pospattern>
+            <pospattern>(NOUN PROPN ADJ VERB NUM) (NOUN PROPN ADJ VERB NUM)</pospattern>
+            <pospattern>(NOUN PROPN ADJ VERB NUM) * (NOUN PROPN ADJ VERB NUM)</pospattern>
+            <pospattern>(NOUN PROPN ADJ VERB NUM) * * (NOUN PROPN ADJ VERB NUM)</pospattern>
+        </ngrams>
+        <ngrams type="keyword">
+            <pospattern>(NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(ADJ NOUN PROPN) (ADJ NOUN PROPN) (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADP DET (NOUN PROPN)</pospattern>
+            <pospattern>(NOUN PROPN) ADJ</pospattern>
+            <pospattern>ADJ (NOUN PROPN) ADJ</pospattern>
+            <pospattern>(NOUN PROPN) ADJ ADJ</pospattern>
+            <pospattern>(ADJ VERB)</pospattern>
+        </ngrams>
+    </language>
+
+    <resource id="pos-dict-en" md5="356d96a8832b62eb5e0ddac6f0301ada" path="rdr/English.DICT" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/eb8b11d2d75b8c39665dc5500b10e06e5a73a1e9/Models/POS/English.DICT" />
+    <resource id="pos-rdr-en" md5="bec40a1160e12c33a1dd0563677104e4" path="rdr/English.RDR" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/eb8b11d2d75b8c39665dc5500b10e06e5a73a1e9/Models/POS/English.RDR" />
+    <resource id="pos-dict-sv" md5="0948f44ce03c6122c701bee2cb96766d" path="rdr/Swedish.DICT" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/eb8b11d2d75b8c39665dc5500b10e06e5a73a1e9/Models/ud-treebanks-v2.4/UD_Swedish-Talbanken/sv_talbanken-ud-train.conllu.UPOS.DICT" />
+    <resource id="pos-rdr-sv" md5="edeb10b52ee53da1947b28d9d4e3b700" path="rdr/Swedish.RDR" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/eb8b11d2d75b8c39665dc5500b10e06e5a73a1e9/Models/ud-treebanks-v2.4/UD_Swedish-Talbanken/sv_talbanken-ud-train.conllu.UPOS.RDR" />
+    <resource id="pos-dict-fr" md5="950847fa1bc19d16b2b498153bda745b" path="rdr/French-GSD.DICT" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/eb8b11d2d75b8c39665dc5500b10e06e5a73a1e9/Models/ud-treebanks-v2.4/UD_French-GSD/fr_gsd-ud-train.conllu.UPOS.DICT" />
+    <resource id="pos-rdr-fr" md5="3d7b89b7105ea9082308fb84f6c1efc5" path="rdr/French-GSD.RDR" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/eb8b11d2d75b8c39665dc5500b10e06e5a73a1e9/Models/ud-treebanks-v2.4/UD_French-GSD/fr_gsd-ud-train.conllu.UPOS.RDR" />
+    <resource id="pos-dict-de" md5="e66ab39adda47a8274ee81d111adae95" path="rdr/German.DICT" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/eb8b11d2d75b8c39665dc5500b10e06e5a73a1e9/Models/POS/German.DICT" />
+    <resource id="pos-rdr-de" md5="f0bd2adb3f2d8a49d002a8ca090fe4ca" path="rdr/German.RDR" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/eb8b11d2d75b8c39665dc5500b10e06e5a73a1e9/Models/POS/German.RDR" />
+    <resource id="pos-dict-nl" md5="e8bcbc6a0a3ac90aef9e482bee244837" path="rdr/Dutch.DICT" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/eb8b11d2d75b8c39665dc5500b10e06e5a73a1e9/Models/ud-treebanks-v2.4/UD_Dutch-Alpino/nl_alpino-ud-train.conllu.UPOS.DICT" />
+    <resource id="pos-rdr-nl" md5="4e55a4f43af5d983a921ca38bc8183cb" path="rdr/Dutch.RDR" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/eb8b11d2d75b8c39665dc5500b10e06e5a73a1e9/Models/ud-treebanks-v2.4/UD_Dutch-Alpino/nl_alpino-ud-train.conllu.UPOS.RDR" />
+    <resource id="pos-dict-es" md5="143c24bc77f05d571c1e2a53de2af9b2" path="rdr/Spanish.DICT" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/eb8b11d2d75b8c39665dc5500b10e06e5a73a1e9/Models/ud-treebanks-v2.4/UD_Spanish-AnCora/es_ancora-ud-train.conllu.UPOS.DICT" />
+    <resource id="pos-rdr-es" md5="91330f54aafba33516c26cb9bfc94ff9" path="rdr/Spanish.RDR" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/eb8b11d2d75b8c39665dc5500b10e06e5a73a1e9/Models/ud-treebanks-v2.4/UD_Spanish-AnCora/es_ancora-ud-train.conllu.UPOS.RDR" />
+    <resource id="pos-dict-it" md5="621600e4ec5e98e0b7aee0f542a4915e" path="rdr/Italian.DICT" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/eb8b11d2d75b8c39665dc5500b10e06e5a73a1e9/Models/ud-treebanks-v2.4/UD_Italian-ISDT/it_isdt-ud-train.conllu.UPOS.DICT" />
+    <resource id="pos-rdr-it" md5="ee56a4917e98cc52c267d866f74c3bbb" path="rdr/Italian.RDR" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/eb8b11d2d75b8c39665dc5500b10e06e5a73a1e9/Models/ud-treebanks-v2.4/UD_Italian-ISDT/it_isdt-ud-train.conllu.UPOS.RDR" />
+    <resource id="pos-dict-pt" md5="ee1f6f129c5af4c2e5302082e0db4e4e" path="rdr/Portuguese.DICT" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/eb8b11d2d75b8c39665dc5500b10e06e5a73a1e9/Models/ud-treebanks-v2.4/UD_Portuguese-Bosque/pt_bosque-ud-train.conllu.UPOS.DICT" />
+    <resource id="pos-rdr-pt" md5="9254b950d3c92d869e43cf79ac174e01" path="rdr/Portuguese.RDR" href="https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/eb8b11d2d75b8c39665dc5500b10e06e5a73a1e9/Models/ud-treebanks-v2.4/UD_Portuguese-Bosque/pt_bosque-ud-train.conllu.UPOS.RDR" />
 </languages>

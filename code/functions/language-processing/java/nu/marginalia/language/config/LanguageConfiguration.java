@@ -169,6 +169,7 @@ public class LanguageConfiguration {
 
         return switch(algorithm) {
             case "minimal" -> new UnicodeNormalization.JustNormalizeQuotes();
+            case "latin" -> new UnicodeNormalization.PreserveLatin();
             case "e-accents" -> new UnicodeNormalization.FlattenEAccents();
             case "german" -> new UnicodeNormalization.Flattenß();
             case "maximal-latin" -> new UnicodeNormalization.FlattenAllLatin();

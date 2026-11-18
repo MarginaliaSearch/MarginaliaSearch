@@ -7,11 +7,9 @@ public interface UnicodeNormalization {
     String flattenUnicode(String s);
     Pattern wordBreakPattern();
 
-    static Pattern basicWordBreaks = Pattern.compile("((\\s+[(]?)|[|,]|([.;\\-()]+(\\s+|$)))");
-    static Pattern europeanWordBreaks = Pattern.compile("([^/<>$:_#@.a-zA-Z'+\\-0-9\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]+)|[|]|(\\.(\\s+|$))");
-
-    static final boolean NO_FLATTEN_UNICODE =
-            Boolean.getBoolean("system.noFlattenUnicode");
+    Pattern basicWordBreaks = Pattern.compile("((\\s+[(]?)|[|,]|([.;\\-()]+(\\s+|$)))");
+    Pattern europeanWordBreaks = Pattern.compile("([^/<>$:_#@.a-zA-Z'+\\-0-9\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]+)|[|]|(\\.(\\s+|$))");
+    boolean NO_FLATTEN_UNICODE = Boolean.getBoolean("system.noFlattenUnicode");
 
     class JustNormalizeQuotes implements UnicodeNormalization {
 
@@ -42,6 +40,13 @@ public interface UnicodeNormalization {
             }
 
             return sb.toString();
+        }
+    }
+
+    class PreserveLatin extends JustNormalizeQuotes {
+        @Override
+        public Pattern wordBreakPattern() {
+            return NO_FLATTEN_UNICODE ? basicWordBreaks : europeanWordBreaks;
         }
     }
 

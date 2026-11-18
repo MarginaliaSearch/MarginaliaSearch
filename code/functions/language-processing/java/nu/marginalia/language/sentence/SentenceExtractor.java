@@ -276,7 +276,7 @@ public class SentenceExtractor {
                     }
 
                     try {
-                        stemmed[i] = stemmer.stem(tokens[i]);
+                        stemmed[i] = stemmer.stem(tokensLc[i]);
                     }
                     catch (Exception ex) {
                         stemmed[i] = "NN"; // ???

@@ -29,7 +29,7 @@ public sealed interface Stemmer {
     }
 
     final class Snowball implements Stemmer {
-        private final SnowballStemmer snowballStemmer;
+        private final ThreadLocal<SnowballStemmer> snowballStemmer;
         @Nullable
         private final PosPattern inclusionPattern;
 
@@ -37,7 +37,7 @@ public sealed interface Stemmer {
             this.inclusionPattern = inclusionPattern;
 
             SnowballStemmer.ALGORITHM algorithm = SnowballStemmer.ALGORITHM.valueOf(algorithmName.toUpperCase());
-            snowballStemmer = new SnowballStemmer(algorithm);
+            snowballStemmer = ThreadLocal.withInitial(() -> new SnowballStemmer(algorithm));
         }
 
         @Nullable
@@ -49,7 +49,7 @@ public sealed interface Stemmer {
         public String stem(String input) {
             // Snowball impl declares return value as CharSequence,
             // but in practice always returns a String
-            return (String) snowballStemmer.stem(input);
+            return (String) snowballStemmer.get().stem(input);
         }
     }
 

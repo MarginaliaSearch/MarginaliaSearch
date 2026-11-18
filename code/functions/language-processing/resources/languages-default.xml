@@ -20,7 +20,7 @@
 
         <!ELEMENT unicodeNormalization EMPTY>
         <!ATTLIST unicodeNormalization
-            algorithm (minimal|e-accents|german|maximal-latin) #REQUIRED
+            algorithm (minimal|latin|e-accents|german|maximal-latin) #REQUIRED
             >
 
         <!ELEMENT stemmer (pospattern?)>
@@ -52,11 +52,11 @@
 <languages>
     <language isoCode="en" name="English" display="ltr">
         <keywordHash algorithm="asciish" />
+        <unicodeNormalization algorithm="maximal-latin" />
         <stemmer algorithm="porter">
             <pospattern>!(IN TO CC DT)</pospattern>
         </stemmer>
         <sentenceDetector algorithm="opennlp"/>
-        <unicodeNormalization algorithm="maximal-latin" />
         <rdrTagger dictId="pos-dict-en" rdrId="pos-rdr-en" />
         <ngrams type="name">
             <pospattern>NNP*</pospattern>
