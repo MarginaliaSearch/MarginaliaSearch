@@ -140,10 +140,10 @@ class FullPreindexDocsTest {
             return id;
         };
 
-        var exception = assertThrows(IllegalStateException.class,
+        var exception = assertThrows(IOException.class,
                 () -> constructIndex(page, rewriter, "en"));
 
-        assertSame(failure, exception);
+        assertSame(failure, exception.getCause());
         assertDirectoryEmpty();
     }
 
